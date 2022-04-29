@@ -1,0 +1,17 @@
+name: VUE pro
+desc: 解锁PRO会员，享用专业功能
+
+http:
+  mitm:
+    - "api.vuevideo.net"
+  script:
+    - match: https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare)
+      name: VUE pro
+      type: response
+      require-body: true
+      timeout: 10
+      
+script-providers:
+  VUE pro:
+    url: https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js
+    interval: 3600
