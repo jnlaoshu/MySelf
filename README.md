@@ -1,0 +1,38 @@
+# 源自网络，感谢分享！自用配置，谨慎使用！
+
+### 特别感谢：
+
+* [DivineEngine[ConnersHua]](https://github.com/DivineEngine/Profiles/tree/master)
+* [NobyDa](https://github.com/NobyDa)
+* [Yichahucha](https://github.com/yichahucha/surge/tree/master)
+* [KOP-XIAO（Shawn）](https://github.com/KOP-XIAO)
+* [Peng-YM](https://github.com/Peng-YM)
+* [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts)
+* [Semporia](https://github.com/Semporia)
+* [fishingworld](https://github.com/fishingworld/something)
+* [Sunert](https://github.com/Sunert/Script)
+* [zZPiglet](https://github.com/zZPiglet/Task.git)
+* [Cuttlefish](https://github.com/ddgksf2013/Cuttlefish)
+* [VirgilClyne](https://github.com/VirgilClyne)
+* [app2smile](https://github.com/app2smile/rules)
+* [mieqq](https://github.com/mieqq/mieqq)
+* [Neurogram-R](https://github.com/Neurogram-R)
+* [Tartarus2014](https://github.com/Tartarus2014)
+* [nzw9314](https://github.com/nzw9314)
+* [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script)
+* [Koolson](https://github.com/Koolson/Qure) Qure 图标
+* [Orz-3](https://github.com/Orz-3) 
+* [Brian（TributePaulWalker）](https://github.com/TributePaulWalker/) 
+* [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)
+* [lhie1](https://github.com/lhie1)
+* [Hackl0us](https://github.com/Hackl0us)
+* [scomper](https://github.com/scomper/Surge)
+* [maicoo](https://github.com/blankmagic/surge)
+* [Choler](https://github.com/Choler)
+* [lowking](https://github.com/lowking/Scripts)
+* [id77](https://github.com/id77/QuantumultX/tree/master)
+* [dompling-2Y](https://github.com/dompling?tab=repositories)
+* [anker1209](https://github.com/anker1209/Scriptable)
+* [Honye](https://github.com/Honye/scriptable-scripts/blob/master/README.zh.md)
+* [githubdulong（MuTu）](https://github.com/githubdulong/Script)
+* [yy168](https://github.com/yyn618/QuantumultX-Script) QuantumultX
