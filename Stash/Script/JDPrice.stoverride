@@ -1,0 +1,17 @@
+name: 京东历史价格
+desc: 京东历史价格
+
+http:
+  mitm:
+    - "api.m.jd.com"
+  script:
+    - match: ^https?://api\.m\.jd\.com/(client\.action|api)\?functionId=(wareBusiness|serverConfig|basicConfig|lite_wareBusiness|pingou_item)
+      name: JDPrice
+      type: response
+      require-body: true
+      timeout: 10
+      
+script-providers:
+  JDPrice:
+    url: https://raw.githubusercontent.com/githubdulong/Script/master/jd_price.js
+    interval: 3600
