@@ -1,0 +1,17 @@
+name: 有道云笔记
+desc: 解锁VIP高级功能
+
+http:
+  mitm:
+    - "note.youdao.com"
+  script:
+    - match: https://note.youdao.com/yws/(mapi/payment|api/self)
+      name: youdao
+      type: response
+      require-body: true
+      timeout: 10
+      
+script-providers:
+  youdao:
+    url: https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js
+    interval: 3600
