@@ -1,0 +1,17 @@
+name: Notability
+desc: Notability解锁订阅
+
+http:
+  mitm:
+    - "notability.com"
+  script:
+    - match: ^https?:\/\/notability\.com\/subscriptions
+      name: notability
+      type: response
+      require-body: true
+      timeout: 10
+      
+script-providers:
+  notability:
+    url: https://raw.githubusercontent.com/yqc007/QuantumultX/master/NotabilityProCrack.js
+    interval: 3600
