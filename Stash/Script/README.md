@@ -17,6 +17,8 @@
 
 * [Notability解锁订阅] https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Script/Notability.stoverride
 
+* [YouTube去广告]https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Stash/Script/YouTubeAdblock.stoverride
+
 * [酷我音乐] https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Script/KuWoMusic.stoverride
 
 * [全能扫描王] https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Script/CamScanner.stoverride
