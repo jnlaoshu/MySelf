@@ -10,6 +10,6 @@
 
 * [lhie1](https://github.com/lhie1)  * [Hackl0us](https://github.com/Hackl0us)  * [Honye](https://github.com/Honye/scriptable-scripts/blob/master/README.zh.md)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories)
 
-* [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [yy168](https://github.com/yyn618/QuantumultX-Script)   * [githubdulong（MuTu）](https://github.com/githubdulong/Script)  * [TributePaulWalker](https://github.com/TributePaulWalker/)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
+* [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [yy168](https://github.com/yyn618/QuantumultX-Script)   * [githubdulong](https://github.com/githubdulong/Script)  * [TributePaulWalker](https://github.com/TributePaulWalker/)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
  
 * [Koolson](https://github.com/Koolson/Qure)   * [Orz-3](https://github.com/Orz-3) 
