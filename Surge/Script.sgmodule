@@ -124,22 +124,5 @@ VSCO 解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/subscribe
 # > 通用解锁（试用订阅）buy.itunes.apple.com
 //通用解锁 = type=http-response,pattern=^https:\/\/buy\.itunes\.apple\.com\/verifyReceipt$,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/langkhach270389/Quantumult-X-LK/master/Scripts/langkhach/verify_receipt.js,script-update-interval=0
 
-# > 模块订阅(单独添加)
-//官方模块 https://raw.githubusercontent.com/githubdulong/Script/master/Surge/Surge.sgmodule
-//复写去广告 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rewrite/Surge/Advertising/Advertising.sgmodule
-//Advanced Settings & URL Redirect https://raw.githubusercontent.com/DivineEngine/Profiles/master/Surge/Module/General.sgmodule
-//Block Advertising https://raw.githubusercontent.com/DivineEngine/Profiles/master/Surge/Module/Block/Advertising.sgmodule
-//AllInOne https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rewrite/Surge/AllInOne/AllInOne.sgmodule
-//什么值得买去广告 https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_remove_ads.sgmodule
-//贴吧去除广告 https://raw.githubusercontent.com/app2smile/rules/master/module/tieba.sgmodule
-//spotify解锁 https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
-//解锁Siri建议与搜索（BETA） https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Siri_Suggestions_for_Uppercase_PROXY.sgmodule
-//解锁Siri建议与搜索 https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Siri_Suggestions_for_Proxy.sgmodule
-//浏览器搜索 https://raw.githubusercontent.com/githubdulong/Script/master/Surge/Q-Search_All_in_one.sgmodule
-//跳过代理检测 https://raw.githubusercontent.com/mieqq/mieqq/master/skip-proxy-lists.sgmodule
-//SUB订阅管理 https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/config/Surge.sgmodule
-//美标天气AQI https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Apple_Weather.sgmodule
-//模块更新捷径 https://www.icloud.com/shortcuts/67c3ace4fb3a4f9ebbe8d3184cd82e39
-
 [MITM]
 hostname =  %INSERT% -*.amemv.com, -*.snssdk.com,raw.githubusercontent.com,boxjs.com, vsco.co, api.revenuecat.com,pan.baidu.com,spclient.wg.spotify.com, ap?.bilibili.com, ap?.biliapi.net, api.live.bilibili.com, www.bilibili.com, btrace.qq.com, security.wechat.com, weixin110.qq.com, vip1.kuwo.cn,bmall.camera360.com, *.tiktokv.com,*.byteoversea.com,*.tik-tokapi.com,security.wechat.com, api.weibo.cn, mapi.weibo.com, *.uve.weibo.com,api.m.jd.com, gab.122.gov.cn, weather-data.apple.com, as.xiaojukeji.com, pt-starimg.didistatic.com, security.xiaojukeji.com, guard.sec.xiaojukeji.com, conf.diditaxi.com.cn, api.udache.com, res.xiaojukeji.com, img-ys011.didistatic.com, wallet.95516.com, pgdt.gtimg.cn, c.l.qq.com, api.pinduoduo.com, bkw-legacy.oss-cn-shenzhen.aliyuncs.com,ap*.intsig.net, edith.xiaohongshu.com, api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com
