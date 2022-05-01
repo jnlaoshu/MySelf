@@ -2,7 +2,6 @@
 
 * 只是搬运和同步更新（[@FEI](https://github.com/Infatuation-Fei/rule/tree/main/Stash)）等大佬脚本，不负责维护脚本.
 
----
 ### 全局配置：
 
 * [Config.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml)
@@ -13,8 +12,6 @@
 ### TikTok 解锁：
 
 * [TikTok](https://github.com/jnlaoshu/MySelf/tree/main/Stash/Script/TikTokUnlock) 解锁 + 换区 + 发布视频 + 直播 + 点赞评论
-
----
 
 使用说明
 ---
