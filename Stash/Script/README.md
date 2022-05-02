@@ -35,6 +35,4 @@
 
 * [去除微信微博部分广告] https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Script/WxWbAD.stoverride
 
-* [Notability 解锁订阅] https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Script/Notability.stoverride
-
 * [TikTok解锁] https://github.com/jnlaoshu/MySelf/tree/master/Stash/Script/TikTokUnlock
