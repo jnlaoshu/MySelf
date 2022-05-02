@@ -1,18 +1,18 @@
-// 代理切换𝑼𝑹𝑳： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js
-// 𝑭𝒓𝒐𝒎：https://raw.githubusercontent.com/fishingworld/something/main/groupPanel.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.04.29 15:30
+// 代理切换𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js
+// 𝐅𝐫𝐨𝐦： https://raw.githubusercontent.com/fishingworld/something/main/groupPanel.js
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.02 17:00
 
 /*
 
 [Script]
-代理选择 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#86abee&group=𝐏𝐫𝐨𝐱𝐲
+代理切换 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#86abee&group=𝐏𝐫𝐨𝐱𝐲
   对应参数：
 	icon：图标
 	color：图标颜色
 	group：策略组名称
 	
 [Panel]
-代理选择 = script-name=代理选择,update-interval=5
+代理切换 = script-name=代理切换,title=代理切换,content=请刷新,update-interval=1
 
 */
 
