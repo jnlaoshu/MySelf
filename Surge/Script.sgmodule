@@ -61,16 +61,7 @@ URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,�
 (^https?:\/\/*\.\w{4}okv.com\/.+&.+)(\d{2}\.3\.\d)(.+) $118.0$3 302
 ^(https?:\/\/(tnc|dm)[\w-]+\.\w+\.com\/.+)(\?)(.+) $1$3 302
 
-[Panel]
-启动时长 = script-name=启动时长,update-interval=60
-代理切换 = script-name=代理切换,update-interval=60
-
 [Script]
-# > 策略面板
-#可显示启动时长,点击刷新为重载配置
-启动时长 = type=generic,timeout=15,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js,argument=icon=power.circle&color=#FF2121&title=𝕊𝕦𝕣𝕘𝕖ℙ𝕣𝕠
-代理切换 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#86abee&group=𝐏𝐫𝐨𝐱𝐲
-
 # > 机场信息 
 机场信息 = type=http-request,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
 # > Boxjs（稳定版）
