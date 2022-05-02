@@ -13,14 +13,6 @@
 
 * [Task.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Task.sgmodule) 定时任务订阅
 
-* [NetInfo.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js) 网络详情面板
-
-* [Switch.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js) 代理切换面板
-
-* [StartTime.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js) Surge启动时长面板
-
-* [Trafficstatistics.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js) 机场流量统计
-
 ### TikTok 解锁：
 
 * [TikTok](https://github.com/jnlaoshu/MySelf/blob/main/Surge/TikTokUnlock_README.md) 解锁 + 换区 + 发布视频 + 直播 + 点赞评论
