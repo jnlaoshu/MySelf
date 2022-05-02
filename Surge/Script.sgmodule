@@ -62,8 +62,6 @@ URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,�
 ^(https?:\/\/(tnc|dm)[\w-]+\.\w+\.com\/.+)(\?)(.+) $1$3 302
 
 [Script]
-# > 机场信息 
-机场信息 = type=http-request,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
 # > Boxjs（稳定版）
 会话数据 = type=http-request,pattern=^https?:\/\/boxjs\.com,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/chavy.box.js, requires-body=true, timeout=120
 
