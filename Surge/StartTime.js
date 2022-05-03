@@ -1,6 +1,18 @@
 // Surge启动时长面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
 // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/githubdulong/Script/master/surgepro_flushdns.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.04.14 15:00
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.03 10:00
+
+/*
+[Script]
+启动时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js,argument=icon=power.circle&color=#FF2121&title=𝕊𝕦𝕣𝕘𝕖ℙ𝕣𝕠
+  对应参数：
+	icon：图标
+	color：图标颜色
+	title：显示名称
+	
+[Panel]
+启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
+*/
 
 let params = getParams($argument)
 
