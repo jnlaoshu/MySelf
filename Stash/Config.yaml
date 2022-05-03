@@ -126,7 +126,7 @@ proxy-groups:
       - 韩国
       - 新加坡
       - 其他
-
+      
   - name: NETFLIX
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Netflix.png
@@ -141,7 +141,7 @@ proxy-groups:
       - 新加坡
       - 其他	
       - DIRECT
-	  
+      
   - name: Spotify
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png
