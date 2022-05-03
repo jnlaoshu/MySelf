@@ -1,16 +1,14 @@
  // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
- // 𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
- // 𝑭𝒓𝒐𝒎：https://raw.githubusercontent.com/Nebulosa-Cat/Surge/main/Panel/Network-Info/Network-Info.sgmodule
+ // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
+ // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/Nebulosa-Cat/Surge/main/Panel/Network-Info/Network-Info.sgmodule
  // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.03 10:00
  
 /*
 [Script]
 网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
-
 	
 [Panel]
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info
-
 */
 
 const { wifi, v4, v6 } = $network;
