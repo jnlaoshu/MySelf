@@ -7,9 +7,9 @@
 DNS刷新 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/FlushDNS.js,argument=title=DNS刷新&icon=arrow.clockwise&color=#5d84f8&server=false
   对应参数：
     title：显示名称
-	icon：图标
-	color：图标颜色
-	server：
+    icon：图标
+    color：图标颜色
+    server：
 
 [Panel]
 DNS刷新 = script-name=DNS刷新,title=DNS刷新,content=请刷新,update-interval=600
