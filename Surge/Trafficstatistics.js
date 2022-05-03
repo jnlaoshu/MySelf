@@ -1,7 +1,17 @@
-// 流量统计𝑼𝑹𝑳：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js
-// 𝑭𝒓𝒐𝒎：https://raw.githubusercontent.com/fishingworld/something/main/PanelScripts/trafficstatistics.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.04.29 15:30
+// 流量统计𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js
+// 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/fishingworld/something/main/PanelScripts/trafficstatistics.js
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.03 10:00
 
+/*
+[Script]
+流量统计 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js,argument=icon=arrow.up.arrow.down.circle&color=#5d84f8
+  对应参数：
+    icon：图标
+    color：图标颜色
+	
+[Panel]
+流量统计 = script-name=流量统计,title=流量统计,content=请刷新,update-interval=1
+*/
 
 let params = getParams($argument)
 
