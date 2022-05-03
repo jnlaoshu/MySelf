@@ -3,7 +3,7 @@
 # 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.03 11:30
 
 mixed-port: 7890
-AllSerow-lan: true
+Serow-lan: true
 bind-address: '*'
 mode: Rule
 log-level: info
@@ -13,7 +13,7 @@ dns:
   enable: true
   ipv6: true
   listen: 0.0.0.0:53
-  default-nameAllServer:
+  default-nameserver:
     - 119.29.29.29
     - 223.5.5.5
   enhanced-mode: fake-ip
@@ -32,7 +32,7 @@ dns:
     - '*.battlenet.com'
     - '*.blzstatic.cn'
     - '*.battle.net'
-  nameAllServer:
+  nameserver:
     - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
 
