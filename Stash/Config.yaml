@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.03 14:00
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.05 10:00
 
 mixed-port: 7890
 Serow-lan: true
@@ -16,6 +16,8 @@ dns:
   default-nameserver:
     - 119.29.29.29
     - 223.5.5.5
+    - 8.8.4.4
+    - 1.1.1.1
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
@@ -39,7 +41,7 @@ dns:
 proxy-providers:
 
   #全部节点
-  AllServer: &Server
+  AllServer: &Ser
     type: http
     url: "https://api.v1.mk/sub?target=clash&url=https://subscribe.bityun.org/api/v1/client/subscribe?token=025987e2232f11dde7f121ba4d3754|https://raw.githubusercontent.com/bibibile/subscribe/main|https://api.ikuuu.science/link/nvij6IRZaxVsfw6P?sub=318&extend=1&list=true&udp=true"
     interval: 3600
@@ -51,37 +53,37 @@ proxy-providers:
 
   #美国    
   US:
-    <<: *Server
-    filter: 美|🇺🇲|美国|US|(?i)States|American
+    <<: *Ser
+    filter: 美|🇺🇲|US|(?i)States|American
     
   #香港
   HK:
-    <<: *Server
-    filter: 港|🇭🇰|香港|HK|(?i)Hong
+    <<: *Ser
+    filter: 港|🇭🇰|HK|(?i)Hong
 
   #日本
   JP:
-    <<: *Server
-    filter: 日|🇯🇵|日本|JP|(?i)Japan
+    <<: *Ser
+    filter: 日|🇯🇵|东京|JP|(?i)Japan
  
   #台湾
   TW:
-    <<: *Server
-    filter: 台|🇹🇼|台湾|TW|(?i)Tai
+    <<: *Ser
+    filter: 台|🇹🇼|TW|(?i)Tai
  
   #韩国
   KR:
-    <<: *Server
-    filter: 韩|🇰🇷|韓|韩国|KOR|(?i)Korea
+    <<: *Ser
+    filter: 韩|🇰🇷|韓|KOR|(?i)Korea
   
   #新加坡
   SG:
-    <<: *Server
+    <<: *Ser
     filter: 坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore
  
   #其他
   other:
-    <<: *Server
+    <<: *Ser
     filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$
     
 classical: &c
@@ -141,7 +143,81 @@ proxy-groups:
       - 新加坡节点
       - 其他节点
       - DIRECT
-      
+ 
+  - name: Google
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google.png
+    proxies:
+      - 手动选择
+      - 自动切换
+      - 香港节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 新加坡节点
+      - 其他节点
+      - DIRECT
+
+  - name: GoogleDrive
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GoogleDrive.png
+    proxies:
+      - 手动选择
+      - 自动切换
+      - 香港节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 新加坡节点
+      - 其他节点
+      - DIRECT
+
+  - name: GoogleVoice
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/GoogleVoice.png
+    proxies:
+      - 手动选择
+      - 自动切换
+      - 香港节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 新加坡节点
+      - 其他节点
+      - DIRECT
+
+  - name: OneDrive
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/OneDrive.png
+    proxies:
+      - 手动选择
+      - 自动切换
+      - 香港节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 新加坡节点
+      - 其他节点
+      - DIRECT
+
+  - name: PayPal
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Paypal.png
+    proxies:
+      - 美国节点
+      - 手动选择
+      - 香港节点
+      - 日本节点
+      - 台湾节点
+      - 韩国节点
+      - 新加坡节点
+      - 其他节点
+      - DIRECT
+     
   - name: Spotify
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png
@@ -171,7 +247,7 @@ proxy-groups:
 
   - name: Twitter
     type: select
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Twitter.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
     proxies:
       - 手动选择
       - 自动切换
@@ -185,7 +261,7 @@ proxy-groups:
 
   - name: Telegram
     type: select
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Telegram.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
     proxies:
       - 手动选择
       - 自动切换
@@ -196,7 +272,22 @@ proxy-groups:
       - 韩国节点
       - 新加坡节点
       - 其他节点
-      
+
+  - name: WeChat
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
+    proxies:
+      - 新加坡节点
+      - 手动选择
+      - 自动切换
+      - 香港节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 其他节点
+      - DIRECT
+                 
   - name: AdBlock
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
@@ -256,7 +347,7 @@ proxy-groups:
 
   - name: BiliBili
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/bilibili_3.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/bilibili.png
     proxies:
       - DIRECT
       - 自动切换
@@ -359,38 +450,63 @@ rule-providers:
 
   Direct:
     <<: *c
-    url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml"
     path: ./ruleset/direct.yaml
 
   Adblock-Domain:
     <<: *d
-    url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml"
     path: ./ruleset/AdDomain.yaml
         
   YouTube:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/YouTube/YouTube.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
     path: ./ruleset/YouTube.yaml
 
   Netflix:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Netflix/Netflix.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml"
     path: ./ruleset/Netflix.yaml
     
   Apple:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Apple/Apple.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
     path: ./ruleset/Apple.yaml
 
   Microsoft:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Microsoft/Microsoft.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml"
     path: ./ruleset/Microsoft.yaml
 
   NeteaseMusic:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/NetEaseMusic/NetEaseMusic.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/NetEaseMusic/NetEaseMusic.yaml"
     path: ./ruleset/NetEaseMusic.yaml
+
+  Google:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
+    path: ./ruleset/Google.yaml
+
+  GoogleDrive:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleDrive/GoogleDrive.yaml"
+    path: ./ruleset/GoogleDrive.yaml
+
+  GoogleVoice:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GoogleVoice/GoogleVoice.yaml"
+    path: ./ruleset/GoogleVoice.yaml
+
+  OneDrive:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml"
+    path: ./ruleset/OneDrive.yaml
+
+  PayPal:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml"
+    path: ./ruleset/PayPal.yaml
 
   Spotify:
     <<: *c
@@ -399,42 +515,47 @@ rule-providers:
 
   TikTok:
     <<: *c
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/release/rule/Clash/TikTok/TikTok.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml"
     path: ./ruleset/TikTok.yaml
 
   Telegram:
     <<: *c
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/release/rule/Clash/Telegram/Telegram.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
     path: ./ruleset/Telegram.yaml
 
   Twitter:
     <<: *c
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/release/rule/Clash/Twitter/Twitter.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml"
     path: ./ruleset/Twitter.yaml
-    
+
+  WeChat:
+    <<: *c
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml"
+    path: ./ruleset/WeChat.yaml
+        
   BiliBili:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/BiliBili/BiliBili.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.yaml"
     path: ./ruleset/BiliBili.yaml
 
   China:
     <<: *c
-    url: "https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/China/China.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml"
     path: ./ruleset/China.yaml
 
   Global:
     <<: *c
-    url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.yaml"
     path: ./ruleset/Global.yaml
 
   Global-Domain:
     <<: *d
-    url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Domain.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Domain.yaml"
     path: ./ruleset/Global-Domain.yaml
 
   Lan:
     <<: *c
-    url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml"
+    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml"
     path: ./ruleset/lan.yaml
 
 rules:
@@ -442,10 +563,16 @@ rules:
   - RULE-SET,Adblock-Domain,AdBlock
   - RULE-SET,YouTube,YouTube
   - RULE-SET,Netflix,NETFLIX
+  - RULE-SET,GoogleVoice,GoogleVoice
+  - RULE-SET,Google,Google
+  - RULE-SET,GoogleDrive,GoogleDrive
+  - RULE-SET,OneDrive,OneDrive
+  - RULE-SET,PayPal,PayPal
   - RULE-SET,Spotify,Spotify
   - RULE-SET,TikTok,TikTok
   - RULE-SET,Telegram,Telegram
   - RULE-SET,Twitter,Twitter
+  - RULE-SET,WeChat,WeChat
   - RULE-SET,Apple,Apple
   - RULE-SET,Microsoft,Microsoft
   - RULE-SET,NeteaseMusic,NeteaseMusic
