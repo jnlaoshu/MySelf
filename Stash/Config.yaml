@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.05 11:00
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.06 08:00
 
 mixed-port: 7890
 Serow-lan: true
@@ -404,60 +404,60 @@ proxy-groups:
       - DIRECT
       
   - name: 香港节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - HK
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
 
   - name: 台湾节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
     use:
       - TW
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
       
   - name: 日本节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - JP
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
      
   - name: 新加坡节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - SG
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
 
   - name: 美国节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - US
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
       
   - name: 韩国节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
     use:
       - KR
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
   
   - name: 其他节点
-    type: select
+    type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
     use:
       - other
-    proxies:
-      - DIRECT
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
 
 rule-providers:
 
