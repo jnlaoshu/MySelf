@@ -8,7 +8,7 @@ http:
     - match: https://note.youdao.com/yws/(mapi/payment|api/self)
       name: youdao
       type: response
-      require-body: true
+      requires-body: true
       timeout: 10
       
 script-providers:
