@@ -25,12 +25,11 @@ URL-REGEX,^https:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,𝑹𝑬𝑱𝑬𝑪�
 URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,𝑹𝑬𝑱𝑬𝑪𝑻
 
 [Script]
-# notability
+# notability notability.com,
 notability = type=http-response ^https:\/\/notability\.com\/subscriptions script-path=https://raw.githubusercontent.com/PoetryU/Scientist/master/Scripts/notabilityvip.js, tag=notability,request-body=true
 
 # VUE PRO会员 api.vuevideo.net,
-VUE PRO会员 = type=http-response https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare) requires-body=true,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js, tag=VUE PRO会员
-
+VUE PRO会员 = type=http-response ^https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare)  script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js,requires-body=true, tag=VUE PRO会员
 # > VSCO 会员解锁 vsco.co, api.revenuecat.com,
 VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/subscribers\/\d+$  script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Script/VSCO.js, requires-bpdy=true, tag=VSCO会员解锁
 
@@ -66,4 +65,4 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 //通用解锁 = type=http-response,pattern=^https:\/\/buy\.itunes\.apple\.com\/verifyReceipt$,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/langkhach270389/Quantumult-X-LK/master/Scripts/langkhach/verify_receipt.js,script-update-interval=0
 
 [MITM]
-hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,api.vuevideo.net,vsco.co, api.revenuecat.com,pan.baidu.com,api.m.jd.com,vip1.kuwo.cn,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com,note.youdao.com,buy.itunes.apple.com
+hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com,pan.baidu.com,api.m.jd.com,vip1.kuwo.cn,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com,note.youdao.com,buy.itunes.apple.com
