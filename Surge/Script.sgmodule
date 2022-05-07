@@ -7,7 +7,7 @@ force-http-engine-hosts = %APPEND% boxjs.com
 
 [Rule]
 # > 天气数据 日本 
-#DOMAIN,api.waqi.info,🇯🇵日本
+DOMAIN,api.waqi.info,🇯🇵日本
 
 # > Safari 防跳转
 DOMAIN,app-site-association.cdn-apple.com,𝑹𝑬𝑱𝑬𝑪𝑻
