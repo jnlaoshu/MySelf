@@ -1,0 +1,17 @@
+name: VSCO活跃会员
+desc: 解锁会员
+
+http:
+  mitm:
+    - "vsco.co, api.revenuecat.com"
+  script:
+    - match: ^https:\/\/(api\.revenuecat\.com\/v\d\/subscribers|vsco\.co\/api\/subscriptions\/\d\.\d\/user-subscriptions)\/
+      name: VSCO活跃会员
+      type: response
+      require-body: true
+      timeout: 10
+      
+script-providers:
+  VSCO活跃会员:
+    url: https://raw.githubusercontent.com/NobyDa/Script/master/QuantumultX/File/vsco.js
+    interval: 3600
