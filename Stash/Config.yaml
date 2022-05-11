@@ -1,14 +1,15 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.06 08:00
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.11 16:30
 
 mixed-port: 7890
 Serow-lan: true
 bind-address: '*'
-mode: Rule
+mode: rule
 log-level: info
 ipv6: true
 external-controller: 127.0.0.1:9090
+
 dns:
   enable: true
   ipv6: true
@@ -16,8 +17,7 @@ dns:
   default-nameserver:
     - 119.29.29.29
     - 223.5.5.5
-    - 8.8.4.4
-    - 1.1.1.1
+    - 114.114.114.114
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
@@ -85,17 +85,7 @@ proxy-providers:
   other:
     <<: *Ser
     filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$
-    
-classical: &c
-  type: http
-  behavior: classical
-  interval: 86400
-
-domain: &d
-  type: http
-  behavior: domain
-  interval: 86400
-    
+   
 proxies:
             
 proxy-groups:
@@ -144,7 +134,6 @@ proxy-groups:
       - 韩国节点
       - 新加坡节点
       - 其他节点
-      - DIRECT
  
   - name: Google
     type: select
@@ -458,6 +447,16 @@ proxy-groups:
       - other
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+
+classical: &c
+  type: http
+  behavior: classical
+  interval: 86400
+
+domain: &d
+  type: http
+  behavior: domain
+  interval: 86400
 
 rule-providers:
 
