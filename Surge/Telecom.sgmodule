@@ -1,0 +1,17 @@
+#!name=中国电信Telecom流量面板
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.05.12 09:20
+#𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Telecom.sgmodule
+
+/*
+#先网页打开e.189.cn登陆一下
+#再访问https://e.189.cn/store/user/package_detail.do
+*/
+
+[Script]
+telecom = type=http-request,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
+
+[Panel]
+telecom = script-name=telecom,update-interval=3600
+
+[MITM]
+hostname = %APPEND% e.189.cn:443
