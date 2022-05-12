@@ -1,7 +1,8 @@
-#!name=Telecom
-#!desc=电信流量信息
-#先网页打开e.189.cn登陆一下
-#再访问https://e.189.cn/store/user/package_detail.do
+#!name=中国电信Telecom流量面板
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.05.12 09:20
+#𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Telecom.sgmodule
+#先从网页登陆一下：e.189.cn
+#再访问： https://e.189.cn/store/user/package_detail.do
 [Script]
 Telecom = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
 
