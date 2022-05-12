@@ -1,10 +1,3 @@
-/*
-中国电信流量信息
-𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js
-𝐅𝐫𝐨𝐦：https://github.com/mieqq/mieqq/blob/master/telecom.js
-𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.12 09:00
-*/
-
 const url = "https://e.189.cn/store/user/package_detail.do";
 const url2 = "https://e.189.cn/store/user/balance_new.do";
 
