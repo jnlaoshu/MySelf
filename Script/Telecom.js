@@ -1,3 +1,23 @@
+ // 中国电信Telecom流量信息
+ // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js
+ // 𝐅𝐫𝐨𝐦：https://github.com/mieqq/mieqq/blob/master/telecom.js
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.12 13:50
+ 
+/*
+#先从网页登陆一下：e.189.cn
+#再访问： https://e.189.cn/store/user/package_detail.do
+
+==================【Surge】============
+[Script]
+Telecom = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
+
+[Panel]
+Telecom = script-name=Telecom,update-interval=3600
+
+[MITM]
+hostname = %APPEND% e.189.cn:443
+*/
+
 const url = "https://e.189.cn/store/user/package_detail.do";
 const url2 = "https://e.189.cn/store/user/balance_new.do";
 
