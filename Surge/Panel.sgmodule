@@ -8,10 +8,13 @@
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info
 流量统计 = script-name=流量统计,title=流量统计,content=请刷新,update-interval=1
 DNS刷新 = script-name=DNS刷新,title=DNS刷新,content=请刷新,update-interval=600
+
+#流媒体解锁检测 = script-name=流媒体解锁检测, title=流媒体解锁检测, content="请刷新面板", update-interval=-1
+
 YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
 #Netflix策略控制 = script-name=Netflix策略控制, update-interval=100
 #Disney+策略控制 = script-name=Disney+策略控制, update-interval=100
-#流媒体解锁检测 = script-name=流媒体解锁检测, title=流媒体解锁检测, content="请刷新面板", update-interval=-1
+
 #YouTube Premium 解锁检测 = script-name=YouTube Premium 解锁检测,title=YouTube Premium 解锁检测,update-interval=10
 #Netflix 解锁检测 = script-name=Netflix 解锁检测,title=Netflix 解锁检测,content=请刷新,update-interval=10
 #Disney+ 解锁检测 = script-name=Disney+ 解锁检测,title=Disney+ 解锁检测,content=请刷新,update-interval=10
@@ -24,20 +27,19 @@ YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
 流量统计 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js ,argument=icon=arrow.up.arrow.down.circle&color=#5d84f8
 机场信息 = type=http-request,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
 DNS刷新 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/FlushDNS.js,argument=title=DNS刷新&icon=arrow.clockwise&color=#5d84f8&server=false
+
+#流媒体解锁检测 = type=generic, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js,timeout=15, script-update-interval=86400,control-api=1
+
 # > YouTube策略控制
 YouTube策略控制 = type=generic, script-path=https://raw.githubusercontent.com/fishingworld/something/main/YouTubeSelect/youtubecontroller.js, argument=icon1=play.rectangle.on.rectangle.circle&color1=#55ba94&icon2=xmark.shield&color2=#AF52DE&YouTubeGroup=𝐘𝐨𝐮𝐓𝐮𝐛𝐞,timeout=3600
 YouTubeChecker = type=cron,cronexp=10 0-23/4 * * *,wake-system=0,timeout=3600,script-path=https://raw.githubusercontent.com/fishingworld/something/main/YouTubeSelect/youtubechecker.js,script-update-interval=86400,control-api=1
 # > YouTube策略控制捷径执行
 YouTubeShortcut = type=cron,cronexp=5 0 31 1 2000,wake-system=0,timeout=3600,script-path=https://raw.githubusercontent.com/fishingworld/something/main/YouTubeSelect/youtubeshortcut.js,script-update-interval=86400,control-api=1
-
 # > Netflix策略控制
 #Netflix策略控制 = type=generic, script-path=https://raw.githubusercontent.com/fishingworld/something/main/NetflixSelect/netflixcontroller.js, timeout=3600, argument=icon1=checkmark.circle&color1=55ba94&icon2=checkmark.circle.trianglebadge.exclamationmark&color2=#9a9ced&icon3=hand.raised.circle&color3=#ea5532&netflixGroup=𝐍𝐞𝐭𝐟𝐥𝐢𝐱
 #NetflixChecker = type=cron,cronexp=10 * * * *,wake-system=0,timeout=3600,script-path=https://raw.githubusercontent.com/fishingworld/something/main/NetflixSelect/netflixchecker.js,script-update-interval=86400,control-api=1
 # > Netflix策略控制捷径执行
 #NetflixShortcut = type=cron,cronexp=5 * 31 1 2000,wake-system=0,timeout=3600,script-path=https://raw.githubusercontent.com/fishingworld/something/main/NetflixSelect/netflixshortcut.js,script-update-interval=86400,control-api=1
-
-#流媒体解锁检测 = type=generic, timeout=15, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js
-
 # > Disney+策略控制
 #Disney+策略控制 = type=generic, script-path=https://raw.githubusercontent.com/fishingworld/something/main/DisneySelect/disneycontroller.js, timeout=3600,argument=icon1=checkmark.circle&color1=#55ba94&icon2=cursorarrow.click.badge.clock&color2=#ed6c84&icon3=xmark.shield&color3=#AF52DE&disneyGroup=𝐃𝐢𝐬𝐧𝐞𝐲
 #DisneyChecker = type=cron,cronexp=13 0-23/4 * * *,wake-system=0,timeout=3600,script-path=https://raw.githubusercontent.com/fishingworld/something/main/DisneySelect/disneychecker.js,script-update-interval=86400,control-api=1
