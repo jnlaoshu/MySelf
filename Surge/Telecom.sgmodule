@@ -1,12 +1,12 @@
-#!name=telecom
+#!name=Telecom
 #!desc=电信流量信息
 #先网页打开e.189.cn登陆一下
 #再访问https://e.189.cn/store/user/package_detail.do
 [Script]
-telecom = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
+Telecom = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
 
 [Panel]
-telecom = script-name=telecom,update-interval=3600
+Telecom = script-name=Telecom,update-interval=3600
 
 [MITM]
 hostname = %APPEND% e.189.cn:443
