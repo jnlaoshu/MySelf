@@ -28,12 +28,6 @@ http:
       type: response
       require-body: true
       timeout: 10
-# 小爱音箱
-    - match: ^https?:\/\/hd\.mina\.mi\.com\/splashscreen\/alert
-      name: xiaoai
-      type: response
-      require-body: true
-      timeout: 10  
 # 京东
     - match: ^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start
       name: jingdong
@@ -45,20 +39,16 @@ script-providers:
 # 嘀嗒出行
   dida:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
-    interval: 3600
+    interval: 86400
 # BiliBili
   biliAD:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/bilibili/bilibili_plus.js
-    interval: 3600
+    interval: 86400
 # 美团外卖
   meituan:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
-    interval: 3600
-# 小爱音箱
-  xiaoai:
-    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
-    interval: 3600
+    interval: 86400
 # 京东
   jingdong:
     url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
-    interval: 3600
+    interval: 86400
