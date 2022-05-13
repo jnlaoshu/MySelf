@@ -29,7 +29,8 @@ URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,�
 notability = type=http-response ^https:\/\/notability\.com\/subscriptions script-path=https://raw.githubusercontent.com/PoetryU/Scientist/master/Scripts/notabilityvip.js, tag=notability,request-body=true
 
 # VUE PRO会员 api.vuevideo.net,
-VUE PRO会员 = type=http-response ^https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare)  script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js,requires-body=true, tag=VUE PRO会员
+VUE PRO会员 = type=http-response https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare) requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js
+
 # > VSCO 会员解锁 vsco.co, api.revenuecat.com,
 VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/subscribers\/\d+$  script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Script/VSCO.js, requires-bpdy=true, tag=VSCO会员解锁
 
@@ -37,7 +38,7 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 百度云盘 = type=http-response,pattern=https:\/\/pan\.baidu\.com\/rest\/2\.0\/membership\/user,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/bdcloud.js,script-update-interval=0
 
 # > 京东App 历史价格 api.m.jd.com,
-京东历史价格 = type=http-response,requires-body=1,pattern=^https?://api\.m\.jd\.com/client\.action\?functionId=(wareBusiness|serverConfig|basicConfig),script-path=https://raw.githubusercontent.com/githubdulong/Script/master/jd_price.js
+京东历史价格 = type=http-response,requires-body=1,pattern=^https?://api\.m\.jd\.com/client\.action\?functionId=(wareBusiness|serverConfig|basicConfig),script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/JDPrice.js
 
 # > 酷我音乐VIP vip1.kuwo.cn,
 酷我音乐VIP = type=http-response,pattern=^https?:\/\/vip1\.kuwo\.cn\/(vip\/v2\/user\/vip|vip\/spi/mservice),requires-body=1,max-size=0,timeout=60,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/Kuwo.js
