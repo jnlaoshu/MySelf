@@ -43,7 +43,7 @@ YouTubeShortcut = type=cron,cronexp=5 0 31 1 2000,wake-system=0,timeout=3600,scr
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info
 流量统计 = script-name=流量统计,title=流量统计,content=请刷新,update-interval=1
 #DNS刷新 = script-name=DNS刷新,title=DNS刷新,content=请刷新,update-interval=600
-Telecom = script-name=Telecom流量,update-interval=3600
+Telecom流量 = script-name=Telecom流量,update-interval=3600
 #流媒体解锁检测 = script-name=流媒体解锁检测, title=流媒体解锁检测, content="请刷新面板", update-interval=-1
 
 YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
