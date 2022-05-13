@@ -14,4 +14,4 @@ http:
 script-providers:
   JDPrice:
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/JDPrice.js
-    interval: 3600
+    interval:  86400
