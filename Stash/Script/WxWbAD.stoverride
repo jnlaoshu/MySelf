@@ -29,11 +29,11 @@ script-providers:
   # 微信公众号去广告
   wx:
     url: https://raw.githubusercontent.com/NobyDa/Script/master/QuantumultX/File/Wechat.js
-    interval: 3600
+    interval: 86400
   # 微博去广告
   wb:
     url: https://raw.githubusercontent.com/yichahucha/surge/master/wb_launch.js
-    interval: 3600
+    interval: 86400
   wb2:
     url: https://raw.githubusercontent.com/yichahucha/surge/master/wb_ad.js
-    interval: 3600
+    interval: 86400
