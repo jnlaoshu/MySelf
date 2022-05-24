@@ -115,7 +115,7 @@ proxy-groups:
        - AllServer
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-	   
+   
   - name: Apple
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
