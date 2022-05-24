@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.11 16:30
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.05.24 09:20
 
 mixed-port: 7890
 Serow-lan: true
@@ -35,8 +35,10 @@ dns:
     - '*.blzstatic.cn'
     - '*.battle.net'
   nameserver:
-    - https://doh.pub/dns-query
     - https://dns.alidns.com/dns-query
+
+#机场流量信息	
+subscribe-url: https://subscribe.bityun.org/api/v1/client/subscribe?token=025987e2232f11dde7f121ba4d3754
 
 proxy-providers:
 
@@ -44,7 +46,7 @@ proxy-providers:
   AllServer: &Ser
     type: http
     url: "https://api.v1.mk/sub?target=clash&url=https://subscribe.bityun.org/api/v1/client/subscribe?token=025987e2232f11dde7f121ba4d3754|https://raw.githubusercontent.com/bibibile/subscribe/main|https://api.ikuuu.science/link/nvij6IRZaxVsfw6P?sub=318&extend=1&list=true&udp=true"
-    interval: 3600
+    interval: 86400
     path: ./all.yaml
     health-check:
       enable: true
@@ -96,6 +98,7 @@ proxy-groups:
       - AllServer
     proxies:
       - 自动切换
+      - 故障转移	  
 
   - name: 自动切换
     type: url-test
@@ -104,13 +107,22 @@ proxy-groups:
        - AllServer
     url: "http://www.gstatic.com/generate_204"
     interval: 300
-  
+
+  - name: 故障转移
+    type: fallback
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bypass.png
+    use: 
+       - AllServer
+    url: "http://www.gstatic.com/generate_204"
+    interval: 300
+	   
   - name: Apple
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -127,6 +139,7 @@ proxy-groups:
       - DIRECT
       - 自动切换
       - 手动选择
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -141,6 +154,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -155,6 +169,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -169,6 +184,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -183,6 +199,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -204,6 +221,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -219,6 +237,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -234,6 +253,7 @@ proxy-groups:
     proxies:
       - 美国节点
       - 手动选择
+      - 故障转移
       - 香港节点
       - 日本节点
       - 台湾节点
@@ -248,6 +268,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -262,6 +283,7 @@ proxy-groups:
     proxies:
       - 日本节点
       - 台湾节点
+      - 故障转移
       - 手动选择
       - 自动切换
       - 美国节点
@@ -275,6 +297,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -290,6 +313,7 @@ proxy-groups:
       - 手动选择
       - 自动切换
       - 香港节点
+      - 故障转移
       - 日本节点
       - 美国节点
       - 台湾节点
@@ -303,6 +327,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 台湾节点
       - 日本节点
@@ -319,6 +344,7 @@ proxy-groups:
       - 新加坡节点
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -333,6 +359,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -353,6 +380,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -369,6 +397,7 @@ proxy-groups:
       - DIRECT
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
@@ -383,6 +412,7 @@ proxy-groups:
     proxies:
       - 手动选择
       - 自动切换
+      - 故障转移
       - 香港节点
       - 日本节点
       - 美国节点
