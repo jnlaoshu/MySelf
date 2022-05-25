@@ -2,7 +2,7 @@
 
 ### 特别感谢：
 
-* [DivineEngine](https://github.com/DivineEngine/Profiles/tree/master)  * [Tartarus2014](https://github.com/Tartarus2014)  * [nzw9314](https://github.com/nzw9314)  * [Cuttlefish](https://github.com/ddgksf2013/Cuttlefish)  * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something) * [mieqq](https://github.com/mieqq/mieqq)   
+* [DivineEngine](href="https://github.com/DivineEngine/Profiles/tree/master" target="_blank")  * [Tartarus2014](https://github.com/Tartarus2014)  * [nzw9314](https://github.com/nzw9314)  * [Cuttlefish](https://github.com/ddgksf2013/Cuttlefish)  * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something) * [mieqq](https://github.com/mieqq/mieqq)   
 
 * [NobyDa](https://github.com/NobyDa)    * [Yichahucha](https://github.com/yichahucha/surge/tree/master)  * [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts)  * [Sunert](https://github.com/Sunert/Script)  * [app2smile](https://github.com/app2smile/rules)   * [zZPiglet](https://github.com/zZPiglet/Task/tree/master)  * [VirgilClyne](https://github.com/VirgilClyne) 
 
