@@ -14,6 +14,8 @@
 启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
 */
 
+let params = getParams($argument)
+
 !(async () => {
 let traffic = (await httpAPI("/v1/traffic","GET"));
 let dateNow = new Date();
@@ -89,4 +91,13 @@ function httpAPI(path = "", method = "POST", body = null) {
       resolve(result);
     });
   });
+}
+
+function getParams(param) {
+  return Object.fromEntries(
+    $argument
+      .split("&")
+      .map((item) => item.split("="))
+      .map(([k, v]) => [k, decodeURIComponent(v)])
+  );
 }
