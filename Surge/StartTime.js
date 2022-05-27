@@ -1,6 +1,6 @@
 // Surge启动时长面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
 // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/tcqgg2018/surge/main/function_timeTransform.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 09:30
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 11:30
 
 /*
 [Script]
@@ -13,8 +13,6 @@
 [Panel]
 启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
 */
-
-let params = getParams($argument)
 
 !(async () => {
 let traffic = (await httpAPI("/v1/traffic","GET"));
@@ -50,10 +48,10 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:title,
-    content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitM:"+icon_status(mitm_status.enabled)+"  Rewrite:"+icon_status(rewrite_status.enabled)+"  Scripting:"+icon_status(scripting_status.enabled),
+    title:"SurgePRO",
+    content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+" 𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"  𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
     icon: icon_s?"power.circle":"exclamationmark.triangle",
-   "icon-color":icon_s?"#FF2121":"#F20C00"
+   "icon-color":icon_s?"#EACD76":"#F20C00"
 });
 })();
 function icon_status(status){
@@ -91,13 +89,4 @@ function httpAPI(path = "", method = "POST", body = null) {
       resolve(result);
     });
   });
-}
-
-function getParams(param) {
-  return Object.fromEntries(
-    $argument
-      .split("&")
-      .map((item) => item.split("="))
-      .map(([k, v]) => [k, decodeURIComponent(v)])
-  );
 }
