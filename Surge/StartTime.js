@@ -48,7 +48,7 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:title,
+    title:"Surge👑Pro™ ",
     content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitm:"+icon_status(mitm_status.enabled)+"  Rewrite:"+icon_status(rewrite_status.enabled)+"  Scripting:"+icon_status(scripting_status.enabled),
     icon: icon_s?"crown.fill":"exclamationmark.triangle",
    "icon-color":icon_s?"#EACD76":"#F20C00"
@@ -89,14 +89,4 @@ function httpAPI(path = "", method = "POST", body = null) {
       resolve(result);
     });
   });
-}
-
-
-function getParams(param) {
-  return Object.fromEntries(
-    $argument
-      .split("&")
-      .map((item) => item.split("="))
-      .map(([k, v]) => [k, decodeURIComponent(v)])
-  );
 }
