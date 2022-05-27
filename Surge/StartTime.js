@@ -14,20 +14,18 @@
 启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
 */
 
-let params = getParams($argument)
-
 !(async () => {
-/* 时间获取 */
-let traffic = (await httpAPI("/v1/traffic","GET"))
-let dateNow = new Date()
-let dateTime = Math.floor(traffic.startTime*1000)
-let startTime = timeTransform(dateNow,dateTime)
-let title = params.title
-
+let traffic = (await httpAPI("/v1/traffic","GET"));
+let dateNow = new Date();
+let dateTime = Math.floor(traffic.startTime*1000);
+let startTime = timeTransform(dateNow,dateTime);
 let mitm_status = (await httpAPI("/v1/features/mitm","GET"));
 let rewrite_status = (await httpAPI("/v1/features/rewrite","GET"));
 let scripting_status = (await httpAPI("/v1/features/scripting","GET"));
 let icon_s = mitm_status.enabled&&rewrite_status.enabled&&scripting_status.enabled;
+//点击按钮，刷新dns
+//if ($trigger == "button") await httpAPI("/v1/dns/flush");
+//点击按钮，重载配置（同时刷新dns）
 
 Date.prototype.Format = function (fmt) {
     var o = {
@@ -49,16 +47,13 @@ if ($trigger == "button") {
 	await httpAPI("/v1/profiles/reload");
 	$notification.post("配置重载","配置重载成功","")
 };
-
-  $done({
-      title:title,
+$done({
+    title:title,
     content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitm:"+icon_status(mitm_status.enabled)+"  Rewrite:"+icon_status(rewrite_status.enabled)+"  Scripting:"+icon_status(scripting_status.enabled),
-		icon: params.icon,
-		"icon-color":params.color
-    });
-
+    icon: icon_s?"crown.fill":"exclamationmark.triangle",
+   "icon-color":icon_s?"#EACD76":"#F20C00"
+});
 })();
-
 function icon_status(status){
   if (status){
     return "\u2611";
@@ -66,7 +61,6 @@ function icon_status(status){
       return "\u2612"
     }
 }
-
 function timeTransform(dateNow,dateTime) {
 let dateDiff = dateNow - dateTime;
 let days = Math.floor(dateDiff / (24 * 3600 * 1000));//计算出相差天数
@@ -89,11 +83,20 @@ if(days==0){
         return(`${days}天${hours}时${minutes}分`)
 	}
 }
-
 function httpAPI(path = "", method = "POST", body = null) {
   return new Promise((resolve) => {
     $httpAPI(method, path, body, (result) => {
       resolve(result);
     });
   });
+}
+
+
+function getParams(param) {
+  return Object.fromEntries(
+    $argument
+      .split("&")
+      .map((item) => item.split("="))
+      .map(([k, v]) => [k, decodeURIComponent(v)])
+  );
 }
