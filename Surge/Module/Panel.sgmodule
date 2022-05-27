@@ -15,7 +15,8 @@
 #再访问： https://e.189.cn/store/user/package_detail.do
 Telecom流量 = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
 
-#流媒体解锁检测 = type=generic, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js,timeout=15, script-update-interval=86400,control-api=1
+流媒体解锁检测 = type=generic, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js,timeout=15, script-update-interval=86400,control-api=1
+stream_unlock = type=generic, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Stream_unlock.js
 
 # > YouTube策略控制
 YouTube策略控制 = type=generic, script-path=https://raw.githubusercontent.com/fishingworld/something/main/YouTubeSelect/youtubecontroller.js, argument=icon1=play.rectangle.on.rectangle.circle&color1=#55ba94&icon2=xmark.shield&color2=#AF52DE&YouTubeGroup=𝐘𝐨𝐮𝐓𝐮𝐛𝐞,timeout=3600
@@ -44,7 +45,9 @@ YouTubeShortcut = type=cron,cronexp=5 0 31 1 2000,wake-system=0,timeout=3600,scr
 流量统计 = script-name=流量统计,title=流量统计,content=请刷新,update-interval=1
 #DNS刷新 = script-name=DNS刷新,title=DNS刷新,content=请刷新,update-interval=600
 Telecom流量 = script-name=Telecom流量,update-interval=3600
-#流媒体解锁检测 = script-name=流媒体解锁检测, title=流媒体解锁检测, content="请刷新面板", update-interval=-1
+
+流媒体解锁检测 = script-name=流媒体解锁检测, title=流媒体解锁检测, content="请刷新面板", update-interval=-1
+stream_unlock = script-name=stream_unlock, title="流媒体解锁检测", content="请刷新", update-interval=86400
 
 YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
 #Netflix策略控制 = script-name=Netflix策略控制, update-interval=100
