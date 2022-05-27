@@ -4,7 +4,7 @@
 
 /*
 [Script]
-启动时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js,argument=icon=power.circle&color=#FF2121&title=𝕊𝕦𝕣𝕘𝕖ℙ𝕣𝕠
+启动时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
   对应参数：
 	icon：图标
 	color：图标颜色
@@ -13,7 +13,6 @@
 [Panel]
 启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
 */
-let params = getParams($argument)
 
 !(async () => {
 let traffic = (await httpAPI("/v1/traffic","GET"));
@@ -49,7 +48,7 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:title,
+    title:"𝕊𝕦𝕣𝕘𝕖ℙ𝕣𝕠 | 2023-04-07",
     content: "现在时刻："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
     icon: icon_s?"power.circle":"exclamationmark.triangle",
    "icon-color":icon_s?"#FF2121":"#F20C00"
@@ -90,13 +89,4 @@ function httpAPI(path = "", method = "POST", body = null) {
       resolve(result);
     });
   });
-}
-
-function getParams(param) {
-  return Object.fromEntries(
-    $argument
-      .split("&")
-      .map((item) => item.split("="))
-      .map(([k, v]) => [k, decodeURIComponent(v)])
-  );
 }
