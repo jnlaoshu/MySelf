@@ -1,6 +1,6 @@
 // Surge启动时长面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
 // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/tcqgg2018/surge/main/function_timeTransform.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 08:30
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 09:30
 
 /*
 [Script]
@@ -48,10 +48,10 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:"Surge👑Pro™ ",
-    content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitm:"+icon_status(mitm_status.enabled)+"  Rewrite:"+icon_status(rewrite_status.enabled)+"  Scripting:"+icon_status(scripting_status.enabled),
-    icon: icon_s?"crown.fill":"exclamationmark.triangle",
-   "icon-color":icon_s?"#EACD76":"#F20C00"
+    title:title,
+    content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitM"+icon_status(mitm_status.enabled)+"  Rewrite"+icon_status(rewrite_status.enabled)+"  Scripting"+icon_status(scripting_status.enabled),
+    icon: params.icon,
+   "icon-color":params.color
 });
 })();
 function icon_status(status){
