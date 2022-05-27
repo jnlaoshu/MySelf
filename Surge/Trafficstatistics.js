@@ -1,6 +1,6 @@
 // 流量统计𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js
 // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/fishingworld/something/main/PanelScripts/trafficstatistics.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.03 10:00
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 14:00
 
 /*
 [Script]
@@ -71,9 +71,9 @@ if(net=="en0") {
 
   $done({
       title:"流量统计 | "+netType,
-      content:`流量 ➟ ${upload} | ${download}\n`+
-      `速度 ➟ ${outCurrentSpeed} | ${inCurrentSpeed}\n` +
-		`峰值 ➟ ${outMaxSpeed} | ${inMaxSpeed}`,
+      content:`流量: ${upload} | ${download}\n`+
+      `速度: ${outCurrentSpeed} | ${inCurrentSpeed}\n` +
+		`峰值: ${outMaxSpeed} | ${inMaxSpeed}`,
 		icon: params.icon,
 		  "icon-color":params.color
     });
