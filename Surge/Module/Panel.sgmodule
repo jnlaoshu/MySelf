@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 自用面板
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.05.13 08:00
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.05.27 14:15
 #𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Module/Panel.sgmodule
 
 [Script]
@@ -56,6 +56,3 @@ YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
 
 [MITM]
 hostname = %APPEND% e.189.cn:443
-
-[Host]
-ip-api.com = 208.95.112.1
