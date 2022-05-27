@@ -29,13 +29,13 @@ let icon_s = mitm_status.enabled&&rewrite_status.enabled&&scripting_status.enabl
 
 Date.prototype.Format = function (fmt) {
     var o = {
-        "M+": this.getMonth() + 1, 
-        "d+": this.getDate(), 
-        "H+": this.getHours(), 
-        "m+": this.getMinutes(),
-        "s+": this.getSeconds(), 
-        "q+": Math.floor((this.getMonth() + 3) / 3), 
-        "S": this.getMilliseconds() 
+        "M+": this.getMonth() + 1, //月份 
+        "d+": this.getDate(), //日 
+        "H+": this.getHours(), //小时 
+        "m+": this.getMinutes(), //分 
+        "s+": this.getSeconds(), //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds() //毫秒 
     };
     if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
     for (var k in o)
@@ -48,10 +48,10 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:title,
-    content: "北京时间："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\nMitM"+icon_status(mitm_status.enabled)+"  Rewrite"+icon_status(rewrite_status.enabled)+"  Scripting"+icon_status(scripting_status.enabled),
-    icon: params.icon,
-   "icon-color":params.color
+    title:"𝐒𝐮𝐫𝐠𝐞♚⏰"+new Date().Format("yyyy-MM-dd HH:mm:ss"),
+    content: "启动时长："+startTime + "\n𝐌𝐢𝐭𝐌:"+icon_status(mitm_status.enabled)+"  𝐑𝐞𝐰𝐫𝐢𝐭𝐞:"+icon_status(rewrite_status.enabled)+"  𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠:"+icon_status(scripting_status.enabled),
+    icon: icon_s?"crown.fill":"exclamationmark.triangle",
+   "icon-color":icon_s?"#EACD76":"#F20C00"
 });
 })();
 function icon_status(status){
