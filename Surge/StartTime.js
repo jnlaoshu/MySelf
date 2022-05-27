@@ -48,8 +48,8 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:"SurgePRO",
-    content: "现在时刻："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"  𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"  𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
+    title:title,
+    content: "现在时刻："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
     icon: icon_s?"power.circle":"exclamationmark.triangle",
    "icon-color":icon_s?"#FF2121":"#F20C00"
 });
