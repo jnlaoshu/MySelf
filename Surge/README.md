@@ -32,14 +32,16 @@
 
 * [spotify解锁] https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
 
-* [解锁Siri建议与搜索] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Siri_Suggestions_for_Proxy.sgmodule
+* [全面自定义Siri与搜索] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Siri.sgmodule
 
-* [浏览器搜索] https://raw.githubusercontent.com/githubdulong/Script/master/Surge/Q-Search_All_in_one.sgmodule
+* [流媒体平台字幕增强及双语模块] https://raw.githubusercontent.com/DualSubs/DualSubs/main/sgmodule/DualSubs.sgmodule
+ 
+* [YouTube字幕增强及双语模块] https://raw.githubusercontent.com/DualSubs/DualSubs/main/sgmodule/DualSubs.YouTube.sgmodule
  
 * [跳过代理检测] https://raw.githubusercontent.com/mieqq/mieqq/master/skip-proxy-lists.sgmodule
 
 * [SUB订阅管理] https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/config/Surge.sgmodule
 
-* [美标天气AQI] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Apple_Weather.sgmodule
+* [美标天气AQI] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Weather.sgmodule* 
 
 * [模块更新捷径] https://www.icloud.com/shortcuts/67c3ace4fb3a4f9ebbe8d3184cd82e39
