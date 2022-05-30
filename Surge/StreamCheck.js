@@ -1,6 +1,6 @@
 // 流媒体解锁检测 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js
 // 𝐅𝐫𝐨𝐦： https://raw.githubusercontent.com/LucaLin233/Luca_Conf/main/Surge/JS/stream-all.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.05 11:30
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.30 15:30
 
 /*
 [Script]
@@ -43,17 +43,17 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
  let disney_result=""
     if (status==STATUS_COMING) {
         //console.log(1)
-        disney_result="Disney+: 即将登陆~"+region.toUpperCase()
+        disney_result="Disney+：即将登陆~"+region.toUpperCase()
       } else if (status==STATUS_AVAILABLE){
         //console.log(2)
         console.log(region)
-        disney_result="Disney+: 已解锁，区域: "+region.toUpperCase()
+        disney_result="Disney+：已解锁，区域: "+region.toUpperCase()
         // console.log(result["Disney"])
       } else if (status==STATUS_NOT_AVAILABLE) {
         //console.log(3)
-        disney_result="Disney+: 未支持 🚫 "
+        disney_result="Disney+：未支持 🚫 "
       } else if (status==STATUS_TIMEOUT) {
-        disney_result="Disney+: 检测超时 🚦"
+        disney_result="Disney+：检测超时 🚦"
       }
 result.push(disney_result)
 console.log(result)
@@ -99,7 +99,7 @@ panel_result['content'] = content
       })
     }
   
-    let youtube_check_result = 'YouTube: '
+    let youtube_check_result = 'YouTube：'
   
     await inner_check()
       .then((code) => {
@@ -155,7 +155,7 @@ panel_result['content'] = content
       })
     }
   
-    let netflix_check_result = 'Netflix: '
+    let netflix_check_result = 'Netflix：'
   
     await inner_check(81215567)
       .then((code) => {
