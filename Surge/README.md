@@ -7,6 +7,8 @@
 * [Config.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Config.conf)
 
 ### 脚本订阅配置：
+* [Panel.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Module/Panel.sgmodule) 面板订阅
+
 * [Script.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule) 脚本订阅
 
 * [Cookie.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Cookie.sgmodule) 获取Cookie订阅
@@ -42,6 +44,6 @@
 
 * [SUB订阅管理] https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/config/Surge.sgmodule
 
-* [美标天气AQI] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Weather.sgmodule* 
+* [美标天气AQI] https://raw.githubusercontent.com/VirgilClyne/iRingo/main/sgmodule/Weather.sgmodule
 
 * [模块更新捷径] https://www.icloud.com/shortcuts/67c3ace4fb3a4f9ebbe8d3184cd82e39
