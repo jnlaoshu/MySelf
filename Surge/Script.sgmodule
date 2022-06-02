@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.05.07 09:00
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.06.02 15:50
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [General]
@@ -18,8 +18,11 @@ DOMAIN,boxjs.com,𝐏𝐫𝐨𝐱𝐲
 # > 交管12123 去广告 gab.122.gov.cn,
 URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,𝑹𝑬𝑱𝑬𝑪𝑻
 
+# > 携程
+URL-REGEX,^https?:\/\/socketio\.ctrip\.com\/api,𝑹𝑬𝑱𝑬𝑪𝑻
+
 # > 云闪付 去广告 wallet.95516.com,
-URL-REGEX,^https:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,𝑹𝑬𝑱𝑬𝑪𝑻
+URL-REGEX,^https?:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,𝑹𝑬𝑱𝑬𝑪𝑻
 
 # > 拼多多 去广告 api.pinduoduo.com,
 URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,𝑹𝑬𝑱𝑬𝑪𝑻
@@ -34,8 +37,14 @@ http-response https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitl
 # > VSCO 会员解锁 vsco.co, api.revenuecat.com,
 VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/subscribers\/\d+$  script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Script/VSCO.js, requires-bpdy=true, tag=VSCO会员解锁
 
+# > 百度搜索防跳转 App Store by app2smile
+百度搜索防跳转 = type=http-response,pattern=^https?:\/\/boxer\.baidu\.com\/scheme\?scheme,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/baidu-no-redirect.js
+
 # > 百度云盘 解锁 pan.baidu.com,
 百度云盘 = type=http-response,pattern=https:\/\/pan\.baidu\.com\/rest\/2\.0\/membership\/user,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/bdcloud.js,script-update-interval=0
+
+# > 京东去开屏广告 by blackmatrix7
+京东去开屏广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
 
 # > 京东App 历史价格 api.m.jd.com,
 京东历史价格 = type=http-response,requires-body=1,pattern=^https?://api\.m\.jd\.com/client\.action\?functionId=(wareBusiness|serverConfig|basicConfig),script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/JDPrice.js
@@ -49,15 +58,23 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 # > 美图秀秀 api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,
 美图秀秀 = requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/githubdulong/Script/master/Mtxx.js,type=http-response,pattern=^https?://(api|h5).xiuxiu.meitu.com/(v1/user/show.json|v1/vip/vip_show.json|v1/vip/prompt/query.json|v1/h5/vip/sub_detail.json|v1/h5/user/self_show.json|v1/h5/vip/user_detail.json|v1/vip/prompt/query.json|v1/vip/prompt/query.json)
 
+# > 美团外卖去开屏广告 by blackmatrix7
+美团外卖去开屏广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/wmapi\.meituan\.com\/api\/v\d+\/loadInfo?,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
+
 # > 扫描全能王高级会员 ap*.intsig.net,
 扫描全能王高级会员 = requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Script/CamScanner.js,type=http-response,pattern=https:\/\/(api|api-cs)\.intsig\.net\/purchase\/cs\/query_property\?,script-update-interval=0
 
-# > 小红书 去广告 edith.xiaohongshu.com,
-小红书广告 = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/system_service\/splash_config,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chouchoui/QuanX/master/Scripts/xiaohongshu/xiaohongshu.ad.js
+# > 小红书去开屏广告 by chouchoui edith.xiaohongshu.com,
+小红书广告 = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/system_service\/splash_config,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chouchoui/QuanX/master/Scripts/xiaohongshu/xiaohongshu.ad.js,script-update-interval=0
 
-# > 新浪微博 去广告 api.weibo.cn, mapi.weibo.com, *.uve.weibo.com,
-微博广告 = requires-body=1,script-path=https://raw.githubusercontent.com/yichahucha/surge/master/wb_launch.js,type=http-response,pattern=^https?://(sdk|wb)app\.uve\.weibo\.com(/interface/sdk/sdkad.php|/wbapplua/wbpullad.lua)
-微博广告 = type=http-response,requires-body=1,max-size=-1,pattern=^https?://m?api\.weibo\.c(n|om)/2/(statuses/(unread|extend|positives/get|(friends|video)(/|_)(mix)?timeline)|stories/(video_stream|home_list)|(groups|fangle)/timeline|profile/statuses|comments/build_comments|photo/recommend_list|service/picfeed|searchall|cardlist|page|!/photos/pic_recommend_status|video/tiny_stream_video_list),script-path=https://raw.githubusercontent.com/yichahucha/surge/master/wb_ad.js
+# > 微博应用内去广告 by yichahucha
+微博应用内去广告 = type=http-response,requires-body=1,max-size=-1,pattern=^https?:\/\/m?api\.weibo\.c(n|om)\/2\/(statuses\/(unread|extend|positives\/get|(friends|video)(\/|_)(mix)?timeline)|stories\/(video_stream|home_list)|(groups|fangle)\/timeline|profile\/statuses|comments\/build_comments|photo\/recommend_list|service\/picfeed|searchall|cardlist|page|!\/(photos\/pic_recommend_status|live\/media_homelist)|video\/tiny_stream_video_list|photo\/info|remind\/unread_count),script-path=https://raw.githubusercontent.com/yichahucha/surge/master/wb_ad.js
+
+# > 微博启动页去广告 by yichahucha
+微博启动页去广告 = type=http-response,requires-body=1,pattern=^https?:\/\/(sdk|wb)app\.uve\.weibo\.com(\/interface\/sdk\/sdkad.php|\/wbapplua\/wbpullad.lua),script-path=https://raw.githubusercontent.com/yichahucha/surge/master/wb_launch.js
+
+# > 微信公众号去广告 by Choler&yjqiang
+微信公众号去广告 = type=http-response,requires-body=1,max-size=-1,pattern=^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\?,script-path=https://raw.githubusercontent.com/yjqiang/surge_scripts/main/scripts/wechat/wechat_public_accounts.js
 
 # 有道云笔记VIP note.youdao.com,
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
@@ -66,4 +83,4 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 //通用解锁 = type=http-response,pattern=^https:\/\/buy\.itunes\.apple\.com\/verifyReceipt$,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/langkhach270389/Quantumult-X-LK/master/Scripts/langkhach/verify_receipt.js,script-update-interval=0
 
 [MITM]
-hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com,pan.baidu.com,api.m.jd.com,vip1.kuwo.cn,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com,note.youdao.com,buy.itunes.apple.com
+hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com,boxer.baidu.com,pan.baidu.com,api.m.jd.com,vip1.kuwo.cn,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn,mapi.weibo.com,*.uve.weibo.com,mp.weixin.qq.com,note.youdao.com,buy.itunes.apple.com
