@@ -1,17 +1,17 @@
 // Surge启动时长面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
 // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/tcqgg2018/surge/main/function_timeTransform.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.27 11:30
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.05 17:30
 
 /*
 [Script]
-启动时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
+运行时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
   对应参数：
 	icon：图标
 	color：图标颜色
 	title：显示名称
 	
 [Panel]
-启动时长 = script-name=启动时长,title=启动时长,content=请刷新,update-interval=1
+运行时长 = script-name=运行时长,title=运行时长,content=请刷新,update-interval=1
 */
 
 !(async () => {
@@ -49,7 +49,7 @@ if ($trigger == "button") {
 };
 $done({
     title:"𝕊𝕦𝕣𝕘𝕖ℙ𝕣𝕠 | 2023-04-07",
-    content: "现在时刻："+ (new Date()).Format("yyyy-MM-dd HH:mm:ss")+"\n启动时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
+    content: "运行时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
     icon: icon_s?"power.circle":"exclamationmark.triangle",
    "icon-color":icon_s?"#FF2121":"#F20C00"
 });
