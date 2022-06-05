@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.05 18:30
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.05 19:30
 
 mixed-port: 7890
 allow-lan: true
@@ -59,7 +59,7 @@ script-providers:
     interval: 86400
 
 # 机场流量信息
-subscribe-url: https://sub.store/download/collection/Bityun
+subscribe-url: https://sub.store/download/Bityun
 
 proxy-providers:
   #全部节点
