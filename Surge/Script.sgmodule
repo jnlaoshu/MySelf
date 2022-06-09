@@ -22,14 +22,14 @@ URL-REGEX,^https?:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,REJECT
 URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,REJECT
 
 [Script]
-# notability notability.com,
+# > notability notability.com,
 notability = type=http-response ^https:\/\/notability\.com\/subscriptions script-path=https://raw.githubusercontent.com/PoetryU/Scientist/master/Scripts/notabilityvip.js, tag=notability,request-body=true
 
-# VUE PRO会员 api.vuevideo.net,
+# > VUE PRO会员 api.vuevideo.net,
 http-response https:\/\/api\.vuevideo\.net\/api\/v1\/(users\/.+\/profile|subtitle\/prepare) requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/VUE.js
 
 # > VSCO 会员解锁 vsco.co, api.revenuecat.com,
-VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/subscribers\/\d+$  script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Script/VSCO.js, requires-bpdy=true, tag=VSCO会员解锁
+http-response ^https:\/\/(api\.revenuecat\.com\/v\d\/subscribers|vsco\.co\/api\/subscriptions\/\d\.\d\/user-subscriptions)\/ requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/QuantumultX/File/vsco.js
 
 # > 百度搜索防跳转 App Store by app2smile
 百度搜索防跳转 = type=http-response,pattern=^https?:\/\/boxer\.baidu\.com\/scheme\?scheme,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/baidu-no-redirect.js
@@ -44,13 +44,13 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 京东历史价格 = type=http-response,requires-body=1,pattern=^https?://api\.m\.jd\.com/client\.action\?functionId=(wareBusiness|serverConfig|basicConfig),script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/JDPrice.js
 
 # > 酷我音乐VIP vip1.kuwo.cn,
-酷我音乐VIP = type=http-response,pattern=^https?:\/\/vip1\.kuwo\.cn\/(vip\/v2\/user\/vip|vip\/spi/mservice),requires-body=1,max-size=0,timeout=60,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/Kuwo.js
+酷我音乐解锁SVIP = type=http-response,pattern=^https?:\/\/vip1\.kuwo\.cn\/(vip\/v2\/user\/vip|vip\/spi/mservice),requires-body=1,script-path=https://raw.githubusercontent.com/28413761/QX/main/jiaoben/Kuwo.js,script-update-interval=0,max-size=0
 
 # > 空气质量 US weather-data.apple.com,
 空气质量 = type=http-response, pattern=^https?:\/\/weather-data\.apple\.com\/(v1|v2)\/weather.*(?!dataSets=forecastNextHour)(include=.*air_quality.*|dataSets=.*airQuality.*).*(country=[A-Z]{2})?.*, requires-body=1, timeout=15, script-path=https://raw.githubusercontent.com/VirgilClyne/iRingo/main/js/Weather.js
 
-# > 美图秀秀 api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,
-美图秀秀 = requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/githubdulong/Script/master/Mtxx.js,type=http-response,pattern=^https?://(api|h5).xiuxiu.meitu.com/(v1/user/show.json|v1/vip/vip_show.json|v1/vip/prompt/query.json|v1/h5/vip/sub_detail.json|v1/h5/user/self_show.json|v1/h5/vip/user_detail.json|v1/vip/prompt/query.json|v1/vip/prompt/query.json)
+# > 美图秀秀(2022.01.17) 解锁高级V（包括但不限于：付费海报模板、高级滤镜、高级素材等），无须登陆! api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,
+美图秀秀(2022.01.17) = type=http-response,pattern=^https?:\/\/(h5|api)\.xiuxiu\.meitu\.com\/v\d\/(h\d\/vip|vip|user)\/,requires-body=1,script-path=https://raw.githubusercontent.com/28413761/QX/main/jiaoben/MeiTuXiuXiu.js,script-update-interval=0,max-size=0
 
 # > 美团外卖去开屏广告 by blackmatrix7
 美团外卖去开屏广告 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/wmapi\.meituan\.com\/api\/v\d+\/loadInfo?,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/startup/startup.js
@@ -70,7 +70,10 @@ VSCO 会员解锁 = type=http-response ^https:\/\/api\.revenuecat\.com\/v\d\/sub
 # > 微信公众号去广告 by Choler&yjqiang
 微信公众号去广告 = type=http-response,requires-body=1,max-size=-1,pattern=^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad\?,script-path=https://raw.githubusercontent.com/yjqiang/surge_scripts/main/scripts/wechat/wechat_public_accounts.js
 
-# 有道云笔记VIP note.youdao.com,
+# > 微信自动阅读
+微信自动阅读 = type=http-response,pattern=^https?://mp\.weixin\.qq\.com/s.+?,requires-body=1,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/replace-body.js, argument="</script>->setTimeout(()=>window.history.back(),6000); </script>"
+
+# > 有道云笔记VIP note.youdao.com,
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
