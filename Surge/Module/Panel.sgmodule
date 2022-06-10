@@ -4,7 +4,7 @@
 
 [Script]
 运行时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
-代理切换 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#86abee&group=𝐏𝐫𝐨𝐱𝐲
+代理切换 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#5d84f8&group=𝐏𝐫𝐨𝐱𝐲
 网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
 流量统计 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js ,argument=icon=arrow.up.arrow.down.circle&color=#5d84f8
 机场信息 = type=http-request,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
