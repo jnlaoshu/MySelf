@@ -67,8 +67,8 @@ if (!v4.primaryAddress && !v6.primaryAddress) {
       content:
         (v4.primaryAddress ? `本机IPV4：${v4.primaryAddress} \n` : '') +
         (v6.primaryAddress ? `本机IPv6：${v6.primaryAddress}\n` : '') +
-        (v4.primaryRouter && wifi.ssid ? `路由器IPv4：${v4.primaryRouter}\n` : '') +
-        (v6.primaryRouter && wifi.ssid ? `路由器IPv6：${v6.primaryRouter}\n` : '') +
+        (v4.primaryRouter && wifi.ssid ? `路由器IP：${v4.primaryRouter}\n` : '') +
+        (v6.primaryRouter && wifi.ssid ? `路由器IP：${v6.primaryRouter}\n` : '') +
         `节点 IP：${info.query}\n` +
         `节点 ISP：${info.isp}\n` +
         `节点位置：${getFlagEmoji(info.countryCode)} | ${info.country} - ${info.city
