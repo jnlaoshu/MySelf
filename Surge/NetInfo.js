@@ -1,8 +1,7 @@
  // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
  // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // https://github.com/Rabbit-Spec/Surge/blob/main/JS/Network-Info.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.11 17:30
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.11 18:00
  
 /*
 [Script]
@@ -65,13 +64,13 @@ if (!v4.primaryAddress && !v6.primaryAddress) {
     $done({
       title: wifi.ssid ? wifi.ssid : cellularInfo,
       content:
-        (v4.primaryAddress ? `本机V4：${v4.primaryAddress} \n` : '') +
-        (v6.primaryAddress ? `本机V6：${v6.primaryAddress}\n` : '') +
+        (v4.primaryAddress ? `本机v4：${v4.primaryAddress} \n` : '') +
+        (v6.primaryAddress ? `本机v6：${v6.primaryAddress}\n` : '') +
         (v4.primaryRouter && wifi.ssid ? `路由器：${v4.primaryRouter}\n` : '') +
         (v6.primaryRouter && wifi.ssid ? `路由器：${v6.primaryRouter}\n` : '') +
         `节点IP：${info.query}\n` +
         `营运商：${info.isp}\n` +
-        `所在地：${getFlagEmoji(info.countryCode)} | ${info.country} - ${info.city
+        `所在地：${getFlagEmoji (info.countryCode)}${info.country} - ${info.city
         }`,
       icon: wifi.ssid ? 'wifi' : 'simcard',
       'icon-color': wifi.ssid ? '#005CAF' : '#F9BF45',
