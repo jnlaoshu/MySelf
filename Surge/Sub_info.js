@@ -1,4 +1,4 @@
- // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
+ // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 机场信息
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Sub_info.js
  // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
  // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.13 09:10
