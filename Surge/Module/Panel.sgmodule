@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 自用面板
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.06.05 17:30
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.06.13 09:10
 #𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Module/Panel.sgmodule
 
 [Script]
@@ -7,13 +7,13 @@
 代理切换 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Switch.js,argument=icon=network&color=#5d84f8&group=𝐏𝐫𝐨𝐱𝐲
 网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetInfo.js
 流量统计 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Trafficstatistics.js ,argument=icon=arrow.up.arrow.down.circle&color=#5d84f8
-机场信息 = type=http-request,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/sub_info.js
+机场信息 = type=http-request,timeout=10,pattern=http://sub\.info,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Sub_info.js
 #DNS刷新 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/FlushDNS.js,argument=title=DNS刷新&icon=arrow.clockwise&color=#5d84f8&server=false
 
 #中国电信Telecom流量
 #先从网页登陆一下：e.189.cn
 #再访问： https://e.189.cn/store/user/package_detail.do
-Telecom流量 = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
+Telecom流量 = type=http-request,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0
 
 流媒体解锁检测 = type=generic, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StreamCheck.js,timeout=15, script-update-interval=86400,control-api=1
 
