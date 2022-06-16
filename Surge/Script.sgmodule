@@ -7,7 +7,7 @@ force-http-engine-hosts = %APPEND% boxjs.com
 
 [Rule]
 # > boxjs代理
-DOMAIN,boxjs.com,𝐏𝐫𝐨𝐱𝐲
+DOMAIN,boxjs.com,节点选择
 
 # > 交管12123 去广告 gab.122.gov.cn,
 URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,REJECT
