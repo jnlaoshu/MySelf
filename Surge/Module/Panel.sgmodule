@@ -57,3 +57,6 @@ YouTube策略控制 = script-name=YouTube策略控制, update-interval=100
 
 [MITM]
 hostname = %APPEND% e.189.cn:443
+
+[Host]
+ip-api.com = 208.95.112.1
