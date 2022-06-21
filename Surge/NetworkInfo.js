@@ -1,7 +1,7 @@
 // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
  // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.21 10:10
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.21 10:12
  
 /*
 [Script]
