@@ -201,7 +201,7 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
         getIP() +
         `节点IP：${info.query}\n` +
         `运营商：${info.isp}\n` +
-        `所在地：${getFlagEmoji(info.countryCode)} | ${info.country} - ${info.city}`,
+        `所在地：${info.country} - ${info.city}`,
       icon: getSSID() ? 'wifi' : 'simcard',
       'icon-color': getSSID() ? '#005CAF' : '#F9BF45',
     });
