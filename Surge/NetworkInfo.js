@@ -1,7 +1,7 @@
 // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
  // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.21 10:12
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.21 10:21
  
 /*
 [Script]
@@ -174,10 +174,10 @@ function getIP() {
   if (!v4 && !v6) {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
-    if (v4?.primaryAddress) info.push(`本机V4：${v4?.primaryAddress}`);
-    if (v6?.primaryAddress) info.push(`本机V6：${v6?.primaryAddress}`);
-    if (v4?.primaryRouter && getSSID()) info.push(`Router v4 @ ${v4?.primaryRouter}`);
-    if (v6?.primaryRouter && getSSID()) info.push(`Router IPv6 @ ${v6?.primaryRouter}`);
+    if (v4?.primaryAddress) info.push(`本机v4：${v4?.primaryAddress}`);
+    if (v6?.primaryAddress) info.push(`本机v6：${v6?.primaryAddress}`);
+    if (v4?.primaryRouter && getSSID()) info.push(`路由器v4：${v4?.primaryRouter}`);
+    if (v6?.primaryRouter && getSSID()) info.push(`路由器v6：${v6?.primaryRouter}`);
   }
   info = info.join("\n");
   return info + "\n";
