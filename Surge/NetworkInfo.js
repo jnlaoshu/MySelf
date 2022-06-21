@@ -174,8 +174,8 @@ function getIP() {
   if (!v4 && !v6) {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
-    if (v4?.primaryAddress) info.push(`本机IP： ${v4?.primaryAddress}`);
-    if (v6?.primaryAddress) info.push(`本机IP： ${v6?.primaryAddress}`);
+    if (v4?.primaryAddress) info.push(`本机V4：${v4?.primaryAddress}`);
+    if (v6?.primaryAddress) info.push(`本机V6：${v6?.primaryAddress}`);
     if (v4?.primaryRouter && getSSID()) info.push(`Router v4 @ ${v4?.primaryRouter}`);
     if (v6?.primaryRouter && getSSID()) info.push(`Router IPv6 @ ${v6?.primaryRouter}`);
   }
@@ -199,9 +199,9 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
       title: getSSID() ?? getCellularInfo(),
       content:
         getIP() +
-        `节点IP： ${info.query}\n` +
-        `运营商： ${info.isp}\n` +
-        `所在地： ${getFlagEmoji(info.countryCode)} | ${info.country} - ${info.city}`,
+        `节点IP：${info.query}\n` +
+        `运营商：${info.isp}\n` +
+        `所在地：${getFlagEmoji(info.countryCode)} | ${info.country} - ${info.city}`,
       icon: getSSID() ? 'wifi' : 'simcard',
       'icon-color': getSSID() ? '#005CAF' : '#F9BF45',
     });
