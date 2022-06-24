@@ -126,7 +126,7 @@ proxy-groups:
     interval: 300
     use:
       - AllServer
-	  
+  
   - name: 手动切换
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
@@ -140,7 +140,7 @@ proxy-groups:
     interval: 300
     use:
       - AllServer
-      
+
   - name: 港台网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/HongKong.png
@@ -148,7 +148,7 @@ proxy-groups:
       - 香港节点
       - 台湾节点
       - DIRECT
-	  
+
   - name: 大陆网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China_Map.png
@@ -161,7 +161,7 @@ proxy-groups:
       - 韩国节点
       - 狮城节点
       - 其他节点
-	  
+
   - name: 国外网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
@@ -175,19 +175,19 @@ proxy-groups:
       - 狮城节点
       - 其他节点
       - DIRECT
-	  
+
   - name: 香港节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - HK
-      
+
   - name: 台湾节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
     use:
       - TW
-      
+
   - name: 日本节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
@@ -199,7 +199,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
       - US
-      
+
   - name: 韩国节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
@@ -211,13 +211,13 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - SG
-    
+
   - name: 其他节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
     use:
       - other
-  
+
 classical: &c
   type: http
   behavior: classical
@@ -227,7 +227,7 @@ domain: &d
   type: http
   behavior: domain
   interval: 86400
-  
+
 rule-providers:
 
   大陆网站:
