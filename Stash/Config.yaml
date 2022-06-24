@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.05 19:30
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.24 16:00
 
 mixed-port: 7890
 allow-lan: true
@@ -65,7 +65,7 @@ proxy-providers:
   #全部节点
   AllServer: &AllSer 
     type: http
-    url: "https://sub.store/download/collection/All"
+    url: "https://sub.store/download/collection/Stash"
     interval: 86400
     path: ./all.yaml
     health-check:
@@ -96,9 +96,9 @@ proxy-providers:
   #韩国节点
   KR:
     <<: *AllSer
-    filter: 韩|🇰🇷|韓|KOR|(?i)Korea
+    filter: 韩|🇰🇷|韓|KR|KOR|(?i)Korea
   
-  #新加坡节点
+  #狮城节点
   SG:
     <<: *AllSer
     filter: 坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore
@@ -111,18 +111,6 @@ proxy-providers:
 proxies:
 
 proxy-groups:
-
-  - name: SSID Auto Mode
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/SSID.png
-    proxies:
-      - 节点选择
-      - DIRECT  
-    ssid-policy:
-      Jinniu-EDU: DIRECT  
-      cellular: 节点选择
-      default: 节点选择
-
   - name: 节点选择
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png
@@ -131,17 +119,17 @@ proxy-groups:
       - 手动切换
       - 故障转移
 
-  - name: 手动切换
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
-    use:
-      - AllServer
-
   - name: 自动选择
     type: url-test
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     url: "http://www.gstatic.com/generate_204"
     interval: 300
+    use:
+      - AllServer
+	  
+  - name: 手动切换
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     use:
       - AllServer
 
@@ -153,114 +141,41 @@ proxy-groups:
     use:
       - AllServer
       
-  - name: Global Proxy
+  - name: 港台网站
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    proxies: &GP
-      - SSID Auto Mode
-      - DIRECT
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/HongKong.png
+    proxies:
       - 香港节点
-      - 日本节点
-      - 美国节点
       - 台湾节点
-      - 韩国节点
-      - 新加坡节点
-      - 其他节点
-
-  - name: Global Direct
+      - DIRECT
+	  
+  - name: 大陆网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China_Map.png
-    proxies: &GD
+    proxies: 
       - DIRECT
-      - SSID Auto Mode
-
-  - name: Final
+      - 香港节点
+      - 台湾节点	  
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 狮城节点
+      - 其他节点
+	  
+  - name: 国外网站
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
-    proxies:
-      - SSID Auto Mode
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+    proxies: 
+      - 节点选择	
+      - 香港节点
+      - 台湾节点	  
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 狮城节点
+      - 其他节点
       - DIRECT
-
-  - name: Apple
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
-    proxies:
-      *GD
-
-  - name: Google
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
-    proxies:
-      *GP
-      
-  - name: Microsoft
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
-    proxies:
-      *GD
-     
-  - name: NeteaseMusic
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Netease_Music.png
-    proxies:
-      - DIRECT
-
-  - name: NETFLIX
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Netflix.png
-    proxies:
-      *GP
-
-  - name: PayPal
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
-    proxies:
-      *GP
-      
-  - name: Spotify
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png
-    proxies:
-      *GP
-      
-  - name: TikTok
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/TikTok.png
-    proxies:
-      *GP
-
-  - name: Twitter
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
-    proxies:
-      *GP
-      
-  - name: Telegram
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
-    proxies:
-      *GP
-      
-  - name: WeChat
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
-    proxies:
-      - 新加坡节点
-      - DIRECT
-      
-  - name: YouTube
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
-    proxies:
-      *GP
-      
-  - name: AD Block
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
-    proxies:
-      - REJECT
-
-
+	  
   - name: 香港节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
@@ -291,7 +206,7 @@ proxy-groups:
     use:
       - KR
 
-  - name: 新加坡节点
+  - name: 狮城节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
@@ -315,12 +230,12 @@ domain: &d
   
 rule-providers:
 
-  Global Direct:
+  大陆网站:
     <<: *c
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml"
     path: ./ruleset/direct.yaml
 
-  AD Block:
+  ADBlock:
     <<: *d
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml"
     path: ./ruleset/AdDomain.yaml
@@ -390,7 +305,7 @@ rule-providers:
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml"
     path: ./ruleset/China.yaml
 
-  Global Proxy:
+  国外网站:
     <<: *d
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Domain.yaml"
     path: ./ruleset/Global-Domain.yaml
@@ -401,22 +316,22 @@ rule-providers:
     path: ./ruleset/lan.yaml
 
 rules:
-  - RULE-SET,Global Direct,Global Direct
-  - RULE-SET,AD Block,AD Block
-  - RULE-SET,Apple,Apple
-  - RULE-SET,Google,Google
-  - RULE-SET,Microsoft,Microsoft
-  - RULE-SET,NeteaseMusic,NeteaseMusic
-  - RULE-SET,Netflix,NETFLIX
-  - RULE-SET,PayPal,PayPal
-  - RULE-SET,Spotify,Spotify
-  - RULE-SET,TikTok,TikTok
-  - RULE-SET,Telegram,Telegram
-  - RULE-SET,Twitter,Twitter
-  - RULE-SET,WeChat,WeChat
-  - RULE-SET,YouTube,YouTube
-  - RULE-SET,Global Proxy,Global Proxy
-  - RULE-SET,China,Global Direct
+  - RULE-SET,大陆网站,大陆网站
+  - RULE-SET,ADBlock,REJECT
+  - RULE-SET,Apple,大陆网站
+  - RULE-SET,Google,国外网站
+  - RULE-SET,Microsoft,大陆网站
+  - RULE-SET,NeteaseMusic,大陆网站
+  - RULE-SET,Netflix,国外网站
+  - RULE-SET,PayPal,国外网站
+  - RULE-SET,Spotify,国外网站
+  - RULE-SET,TikTok,国外网站
+  - RULE-SET,Telegram,国外网站
+  - RULE-SET,Twitter,国外网站
+  - RULE-SET,WeChat,大陆网站
+  - RULE-SET,YouTube,国外网站
+  - RULE-SET,国外网站,国外网站
+  - RULE-SET,China,大陆网站
   - RULE-SET,Lan,DIRECT
-  - GEOIP,CN,Global Direct
-  - MATCH,Final
+  - GEOIP,CN,DIRECT
+  - MATCH,DIRECT
