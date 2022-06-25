@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.25 13:10
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.25 13:50
 
 mixed-port: 7890
 allow-lan: true
@@ -58,21 +58,21 @@ proxy-providers:
     use:
       - AllServer
     filter: (?=.*(港|🇭🇰|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$
-	
+
   - name: 台湾节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
     use:
       - AllServer
     filter: (?=.*(台|🇹🇼|湾|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
-	  
+
   - name: 日本节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
       - AllServer
     filter: (?=.*(日|🇯🇵|东京|JP|(?i)Japan))^((?!(港|台|韩|新|美)).)*$
-     
+
   - name: 狮城节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
@@ -86,7 +86,7 @@ proxy-providers:
     use:
       - AllServer
     filter: (?=.*(美|🇺🇸|US|(?i)States|American))^((?!(港|台|日|韩|新)).)*$
-	
+
   - name: 其他节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
@@ -95,7 +95,7 @@ proxy-providers:
     filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$  
 
 proxies:
-            
+  
 proxy-groups:
   - name: 手动切换
     type: select
@@ -113,7 +113,7 @@ proxy-groups:
        - AllServer
     url: "http://cp.cloudflare.com/generate_204"
     interval: 300
-    
+
   - name: 故障转移
     type: fallback
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bypass.png
@@ -121,7 +121,7 @@ proxy-groups:
     interval: 300
     use: 
        - AllServer
-	   
+
   - name: 港台网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/HongKong.png
@@ -129,7 +129,7 @@ proxy-groups:
       - 香港节点
       - 台湾节点
       - DIRECT
-	  
+
   - name: 大陆网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China_Map.png
@@ -145,7 +145,7 @@ proxy-groups:
       - 狮城节点
       - 美国节点
       - 其他节点
-	  
+
   - name: 国外网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
@@ -160,7 +160,7 @@ proxy-groups:
       - 狮城节点
       - 美国节点
       - 其他节点
-	
+
 classical: &c
   type: http
   behavior: classical
