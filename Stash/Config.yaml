@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.24 16:00
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.25 13:10
 
 mixed-port: 7890
 allow-lan: true
@@ -17,7 +17,6 @@ dns:
   default-nameserver:
     - 119.29.29.29
     - 223.5.5.5
-    - 114.114.114.114
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   fake-ip-filter:
@@ -36,34 +35,14 @@ dns:
     - '*.battle.net'
   nameserver:
     - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query
-
-http:
-  mitm:
-    - g.cn
-    - "*.google.cn"
-    - "www.firefox.com.cn"
-    - sub.store
-  script:
-    - match: ^https?:\/\/sub\.store
-      name: sub-store
-      type: request
-      require-body: true
-      timeout: 120
-  rewrite:
-    - ^https?:\/\/(www.)?(g|google)\.cn https://www.google.com 302
-    - ^https?:\/\/(www.)?firefox\.com\.cn\/(download\/)?$ https://www.mozilla.org/zh-CN/firefox/new/ 302
-script-providers:
-  sub-store:
-    url: https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/backend/sub-store.min.js
-    interval: 86400
+    - https://233.5.5.5/dns-query
 
 # 机场流量信息
 subscribe-url: https://sub.store/download/Bityun
 
 proxy-providers:
   #全部节点
-  AllServer: &AllSer 
+  AllServer: 
     type: http
     url: "https://sub.store/download/collection/Stash"
     interval: 86400
@@ -71,76 +50,78 @@ proxy-providers:
     health-check:
       enable: true
       interval: 600
-      url: http://www.gstatic.com/generate_204
+      url: http://cp.cloudflare.com/generate_204
 
-  #美国节点
-  US:
-    <<: *AllSer
-    filter: 美|🇺🇲|US|(?i)States|American
-
-  #香港节点
-  HK:
-    <<: *AllSer
-    filter: 港|🇭🇰|HK|(?i)Hong
-
-  #日本节点
-  JP:
-    <<: *AllSer
-    filter: 日|🇯🇵|东京|JP|(?i)Japan
-
-  #台湾节点
-  TW:
-    <<: *AllSer
-    filter: 台|🇹🇼|湾|TW|(?i)Tai
- 
-  #韩国节点
-  KR:
-    <<: *AllSer
-    filter: 韩|🇰🇷|韓|KR|KOR|(?i)Korea
-  
-  #狮城节点
-  SG:
-    <<: *AllSer
-    filter: 坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore
- 
-  #其他节点
-  other:
-    <<: *AllSer
-    filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$
-
-proxies:
-
-proxy-groups:
-  - name: 节点选择
+  - name: 香港节点
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png
-    proxies:
-      - 自动选择
-      - 手动切换
-      - 故障转移
-
-  - name: 自动选择
-    type: url-test
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
-    url: "http://www.gstatic.com/generate_204"
-    interval: 300
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
       - AllServer
-  
+    filter: (?=.*(港|🇭🇰|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$
+	
+  - name: 台湾节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - AllServer
+    filter: (?=.*(台|🇹🇼|湾|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
+	  
+  - name: 日本节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+    use:
+      - AllServer
+    filter: (?=.*(日|🇯🇵|东京|JP|(?i)Japan))^((?!(港|台|韩|新|美)).)*$
+     
+  - name: 狮城节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - AllServer
+    filter: (?=.*(坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore))^((?!(港|台|日|韩|美)).)*$
+
+  - name: 美国节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+    use:
+      - AllServer
+    filter: (?=.*(美|🇺🇸|US|(?i)States|American))^((?!(港|台|日|韩|新)).)*$
+	
+  - name: 其他节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - AllServer	
+    filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$  
+
+proxies:
+            
+proxy-groups:
   - name: 手动切换
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     use:
       - AllServer
+    proxies:
+      - 自动选择
+      - 故障转移
 
+  - name: 自动选择
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    use: 
+       - AllServer
+    url: "http://cp.cloudflare.com/generate_204"
+    interval: 300
+    
   - name: 故障转移
     type: fallback
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bypass.png
-    url: 'http://www.gstatic.com/generate_204'
+    url: 'http://cp.cloudflare.com/generate_204'
     interval: 300
-    use:
-      - AllServer
-
+    use: 
+       - AllServer
+	   
   - name: 港台网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/HongKong.png
@@ -148,76 +129,38 @@ proxy-groups:
       - 香港节点
       - 台湾节点
       - DIRECT
-
+	  
   - name: 大陆网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China_Map.png
-    proxies: 
+    proxies:
       - DIRECT
+      - 手动切换
+      - 自动选择
+      - 故障转移
       - 香港节点
-      - 台湾节点	  
+      - 台湾节点
       - 日本节点
-      - 美国节点
       - 韩国节点
       - 狮城节点
+      - 美国节点
       - 其他节点
-
+	  
   - name: 国外网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    proxies: 
-      - 节点选择	
+    proxies:
+      - 手动切换
+      - 自动选择
+      - 故障转移
       - 香港节点
-      - 台湾节点	  
+      - 台湾节点
       - 日本节点
-      - 美国节点
       - 韩国节点
       - 狮城节点
+      - 美国节点
       - 其他节点
-      - DIRECT
-
-  - name: 香港节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
-    use:
-      - HK
-
-  - name: 台湾节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
-    use:
-      - TW
-
-  - name: 日本节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
-    use:
-      - JP
-
-  - name: 美国节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
-    use:
-      - US
-
-  - name: 韩国节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
-    use:
-      - KR
-
-  - name: 狮城节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
-    use:
-      - SG
-
-  - name: 其他节点
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
-    use:
-      - other
-
+	
 classical: &c
   type: http
   behavior: classical
@@ -229,11 +172,6 @@ domain: &d
   interval: 86400
 
 rule-providers:
-
-  大陆网站:
-    <<: *c
-    url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml"
-    path: ./ruleset/direct.yaml
 
   ADBlock:
     <<: *d
@@ -305,7 +243,7 @@ rule-providers:
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml"
     path: ./ruleset/China.yaml
 
-  国外网站:
+  Global:
     <<: *d
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global_Domain.yaml"
     path: ./ruleset/Global-Domain.yaml
@@ -316,7 +254,6 @@ rule-providers:
     path: ./ruleset/lan.yaml
 
 rules:
-  - RULE-SET,大陆网站,大陆网站
   - RULE-SET,ADBlock,REJECT
   - RULE-SET,Apple,大陆网站
   - RULE-SET,Google,国外网站
@@ -330,8 +267,8 @@ rules:
   - RULE-SET,Twitter,国外网站
   - RULE-SET,WeChat,大陆网站
   - RULE-SET,YouTube,国外网站
-  - RULE-SET,国外网站,国外网站
+  - RULE-SET,Global,国外网站
   - RULE-SET,China,大陆网站
   - RULE-SET,Lan,DIRECT
-  - GEOIP,CN,DIRECT
-  - MATCH,DIRECT
+  - GEOIP,CN,大陆网站
+  - MATCH,国外网站
