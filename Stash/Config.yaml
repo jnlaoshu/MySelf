@@ -1,18 +1,31 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.25 15:02
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.26 11:18
 
 mixed-port: 7890
 allow-lan: true
 bind-address: '*'
-mode: rule
+mode: Rule
 log-level: info
 ipv6: true
-external-controller: 127.0.0.1:9090
+external-controller: :9090
 
 # 机场流量信息
 subscribe-url: https://sub.store/download/Bityun
 
+#面板信息
+tiles:
+  - name: ip
+    interval: 600
+    title: '获取IP'
+    content: 'IP地址'
+    icon: 'theatermasks.circle.fill' # 或 https://stash.ws/amazing.png
+    backgroundColor: '#663399'
+script-providers:
+  ip:
+    url: https://raw.githubusercontent.com/QGCliveDavis/ShadowRocket_Module/main/GETIP.js
+    interval: 86400
+    
 proxy-providers:
   All:
     type: http
@@ -22,7 +35,7 @@ proxy-providers:
     health-check:
       enable: true
       interval: 600
-      url: http://www.gstatic.com/generate_204
+      url: http://cp.cloudflare.com/generate_204
 
 dns:
   enable: true
@@ -68,77 +81,48 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     use: 
        - All
-    url: "http://www.gstatic.com/generate_204"
+    url: "http://cp.cloudflare.com/generate_204"
     interval: 300
     
   - name: 故障转移
     type: fallback
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bypass.png
-    url: 'http://www.gstatic.com/generate_204'
-    interval: 300
+    url: 'http://cp.cloudflare.com/generate_204'
+    interval: 180
     use: 
        - All
        
   - name: 国外网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    proxies: &G
+    proxies: 
       - 手动切换
       - 自动选择
       - 故障转移
       - 香港节点
+      - 台湾节点     
       - 日本节点
+      - 韩国节点
+      - 狮城节点
       - 美国节点
-      - 台湾节点
+      - 其他节点
+      - DIRECT
 
   - name: 国内网站
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/China_Map.png
-    proxies: &C
+    proxies: 
       - DIRECT
       - 手动切换
       - 自动选择
       - 故障转移
       - 香港节点
+      - 台湾节点     
       - 日本节点
+      - 韩国节点
+      - 狮城节点
       - 美国节点
-      - 台湾节点
-      
-  - name: YouTube
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
-    proxies:
-      *G
-
-  - name: 苹果服务
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
-    proxies:
-      *C
-
-  - name: 微软服务
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
-    proxies:
-      *G
-
-  - name: 网易音乐
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Netease_Music.png
-    proxies:
-      - DIRECT
-
-  - name: AdBlock
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
-    proxies:
-      - REJECT
-      
-  - name: 漏网之鱼
-    type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
-    proxies:
-      *G
+      - 其他节点
 
   - name: 香港节点
     type: select
@@ -146,7 +130,14 @@ proxy-groups:
     use:
       - All
     filter: (?=.*(港|🇭🇰|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$
-      
+
+  - name: 台湾节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    use:
+      - All
+    filter: (?=.*(台|🇹🇼|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
+    
   - name: 日本节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
@@ -154,13 +145,20 @@ proxy-groups:
       - All
     filter: (?=.*(日|🇯🇵|JP|(?i)Japan))^((?!(港|台|韩|新|美)).)*$
      
-  - name: 台湾节点
+  - name: 狮城节点
     type: select
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
       - All
-    filter: (?=.*(台|🇨🇳|🇹🇼|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
-
+    filter: (?=.*(坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore))^((?!(港|日|韩|台|美)).)*$
+     
+  - name: 韩国节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
+    use:
+      - All
+    filter: (?=.*(韩|🇰🇷|韓|KOR|(?i)Korea))^((?!(港|日|台|新|美)).)*$
+    
   - name: 美国节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
@@ -168,9 +166,16 @@ proxy-groups:
       - All
     filter: (?=.*(美|🇺🇸|US|(?i)States|American))^((?!(港|台|日|韩|新)).)*$
 
+  - name: 其他节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
+    use:
+      - All
+    filter: ^([^台美港日韩坡狮WSPGKao]|[^T]W|[^Ud]S|[^J]P|[^S]G|[^H]K|[^J]a|[^H]o)+$ 
+    
 rule-providers:
 
-  Adblock-Domain:
+  Adblock:
     type: http
     behavior: domain
     url: "https://ghproxy.com/https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AdvertisingLite/AdvertisingLite_Domain.yaml"
@@ -227,13 +232,13 @@ rule-providers:
     interval: 86400
     
 rules:
-  - RULE-SET,Adblock-Domain,AdBlock
-  - RULE-SET,YouTube,YouTube
-  - RULE-SET,Apple,苹果服务
-  - RULE-SET,Microsoft,微软服务
-  - RULE-SET,NetEaseMusic,网易音乐
+  - RULE-SET,Adblock,REJECT
+  - RULE-SET,YouTube,国外网站
+  - RULE-SET,Apple,国内网站
+  - RULE-SET,Microsoft,国内网站
+  - RULE-SET,NetEaseMusic,国内网站
   - RULE-SET,Global,国外网站
   - RULE-SET,China,国内网站
   - RULE-SET,Lan,DIRECT
   - GEOIP,CN,国内网站
-  - MATCH,漏网之鱼
+  - MATCH,国外网站
