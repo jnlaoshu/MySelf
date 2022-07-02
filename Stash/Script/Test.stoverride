@@ -2,10 +2,10 @@ name: 电信流量面板
 desc: 用于显示中国电信流量的面板 (Stash2.0)
 
 tiles:
-  - name: Telecom
+  - name: NetworkInfo
     interval: 43200
 
 script-providers:
-  Telecom:
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js
+  NetworkInfo:
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
     interval: 86400
