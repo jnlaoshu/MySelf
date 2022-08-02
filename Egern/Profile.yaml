@@ -4,7 +4,7 @@
 # > 导入配置后,添加机场订阅链接,之后更新订阅规则。
 # > 如何导入订阅 https://t.me/egern_news/5 
 # > 点击配置-证书管理-生成新的CA证书，之后进入「设置」>「通用」>「描述文件」, 安装Egern的证书, 并在「设置」>「通用」>「关于本机」>「证书信任设置」开启对Egern证书的信任。
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.08.02 12:30
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.08.02 12:50
 ---
 policy_groups:
   - select:
@@ -59,28 +59,28 @@ policy_groups:
       filter: ^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$
 rules:
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Unbreak.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Unbreak.yaml"
       policy: DIRECT
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Advertising.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Advertising.yaml"
       policy: REJECT
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Privacy.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Privacy.yaml"
       policy: REJECT
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Hijacking.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Hijacking.yaml"
       policy: REJECT
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Streaming.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Streaming.yaml"
       policy: Proxy
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Global.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Global.yaml"
       policy: Proxy
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/Apple.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Apple.yaml"
       policy: DIRECT
   - rule_set:
-      match: "https://raw.githubusercontent.com/Coldvvater/Egern/master/Rule/China.yaml"
+      match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/China.yaml"
       policy: DIRECT
   - ip_cidr:
       match: 192.168.0.0/16
