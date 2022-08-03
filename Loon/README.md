@@ -4,6 +4,8 @@
 
 ### 全局配置：
 
+* [Profile.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Loon/Profile.conf)
+
 * [Config.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Loon/Config.conf)
 
 ### 脚本订阅配置：
