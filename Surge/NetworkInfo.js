@@ -1,7 +1,7 @@
 // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
  // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.06.21 14:05
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.10.09 08:28
  
 /*
 [Script]
@@ -83,6 +83,11 @@ function randomString(e = 6) {
 }
 
 function getFlagEmoji(countryCode) {
+
+if (countryCode.toUpperCase() == 'TW') {
+    countryCode = 'CN'
+  }
+
   const codePoints = countryCode
     .toUpperCase()
     .split('')
