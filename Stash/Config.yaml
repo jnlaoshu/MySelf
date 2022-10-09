@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.12.09 12:50
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.12.09 13:03
 
 mixed-port: 7890
 allow-lan: true
@@ -13,19 +13,6 @@ external-controller: :9090
 # > 机场流量信息
 subscribe-url: https://sub.store/download/Bityun
 
-# > 面板信息
-tiles:
-  - name: ip
-    interval: 600
-    title: '获取IP'
-    content: 'IP地址'
-    icon: 'theatermasks.circle.fill' # 或 https://stash.ws/amazing.png
-    backgroundColor: '#663399'
-script-providers:
-  ip:
-    url: https://raw.githubusercontent.com/QGCliveDavis/ShadowRocket_Module/main/GETIP.js
-    interval: 86400
-    
 proxy-providers:
   All:
     type: http
@@ -71,7 +58,7 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Rocket.png
     use:
-       - All
+      - All
     proxies:
       - 自动选择
       - 故障转移
@@ -81,14 +68,14 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     use: 
        - All
-    url: "http://cp.cloudflare.com/generate_204"
+    url: "http://www.gstatic.com/generate_204"
     interval: 300
     
   - name: 故障转移
     type: fallback
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bypass.png
-    url: 'http://cp.cloudflare.com/generate_204'
-    interval: 180
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
     use: 
        - All
 
@@ -128,49 +115,49 @@ proxy-groups:
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
-       - All
+      - All
     filter: (?=.*(港|🇭🇰|HK|(?i)Hong))^((?!(台|日|韩|新|美)).)*$
 
   - name: 台湾节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
     use:
-       - All
-    filter: (?=.*(台|🇹🇼|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
+      - All
+    filter: (?=.*(台|🇨🇳|🇹🇼|TW|(?i)Taiwan))^((?!(港|日|韩|新|美)).)*$
     
   - name: 日本节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     use:
-       - All
+      - All
     filter: (?=.*(日|🇯🇵|JP|(?i)Japan))^((?!(港|台|韩|新|美)).)*$
      
   - name: 狮城节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     use:
-       - All
+      - All
     filter: (?=.*(坡|🇸🇬|新加坡|狮城|SG|(?i)Singapore))^((?!(港|日|韩|台|美)).)*$
      
   - name: 韩国节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
     use:
-       - All
+      - All
     filter: (?=.*(韩|🇰🇷|韓|KR|KOR|(?i)Korea))^((?!(港|日|台|新|美)).)*$
     
   - name: 美国节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     use:
-       - All
+      - All
     filter: (?=.*(美|🇺🇸|US|(?i)States|American))^((?!(港|台|日|韩|新)).)*$
 
   - name: 其他节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
     use:
-       - All
+      - All
     filter: ^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$,
     
 rule-providers:
