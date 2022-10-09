@@ -124,7 +124,7 @@ proxy-groups:
       - 其他节点
       - DIRECT
 
- - name: 香港节点
+  - name: 香港节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
