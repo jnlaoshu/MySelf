@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.06.29 18:00
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.10.09 12:12
 
 mixed-port: 7890
 allow-lan: true
@@ -124,7 +124,7 @@ proxy-groups:
       - 其他节点
       - DIRECT
 
-- name: 香港节点
+  - name: 香港节点
     type: select
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     use:
