@@ -45,22 +45,22 @@
 
 **日本**
 ```
-https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTokJP.plugin
+https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTok-JP.plugin
 ```
 
 **台湾**
 ```
-https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTokTW.plugin
+https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTok-TW.plugin
 ```
 
 **韩国**
 ```
-https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTokKR.plugin
+https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTok-KR.plugin
 ```
 
 **美国**
 ```
-https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTokUS.plugin
+https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Loon/TikTok-US.plugin
 ```
 
 3、在`[Remote Rule]`下面添加TikTok分流规则，示例如下：
