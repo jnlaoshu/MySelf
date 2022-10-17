@@ -4,7 +4,7 @@
 # > 导入配置后,添加机场订阅链接,之后更新订阅规则。
 # > 如何导入订阅 https://t.me/egern_news/5 
 # > 点击配置-证书管理-生成新的CA证书，之后进入「设置」>「通用」>「描述文件」, 安装Egern的证书, 并在「设置」>「通用」>「关于本机」>「证书信任设置」开启对Egern证书的信任。
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.08.02 12:50
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.10.17 16:30
 ---
 policy_groups:
   - select:
@@ -25,37 +25,37 @@ policy_groups:
   - external:
       name: 香港节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 港|🇭🇰|香港|HK|Hong
   - external:
       name: 台湾节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 台|🇹🇼|台湾|TW|Tai
   - external:
       name: 日本节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 日|🇯🇵|日本|JP|Japan
   - external:
       name: 狮城节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 坡|🇸🇬|新加坡|狮城|SG|Singapore
   - external:
       name: 美国节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 美|🇺🇲|美国|US|States|American
   - external:
       name: 韩国节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: 韩|韓|🇰🇷|韩国|KR|KOR|Korea
   - external:
       name: 其他节点
       type: select
-      url: "https://sub.store/download/collection/Egern"
+      url: "https://sub.store/download/collection/AllServer"
       filter: ^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$
 rules:
   - rule_set:
