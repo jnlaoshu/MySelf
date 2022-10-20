@@ -1,0 +1,32 @@
+# Twitter (推特分流)
+
+domain_keyword_set:
+  - twitter
+domain_suffix_set:
+  - ads-twitter.com
+  - periscope.tv
+  - pscp.tv
+  - t.co
+  - tellapart.com
+  - tweetdeck.com
+  - twimg.co
+  - twimg.com
+  - twimg.org
+  - twitpic.com
+  - twitter.com
+  - twitter.jp
+  - twitterinc.com
+  - twitteroauth.com
+  - twitterstat.us
+  - twtrdns.net
+  - twttr.com
+  - vine.co
+ip_cidr_set:
+  - IP-CIDR,104.244.42.0/21,no-resolve
+  - IP-CIDR,192.133.76.0/22,no-resolve
+  - IP-CIDR,199.16.156.0/22,no-resolve
+  - IP-CIDR,199.59.148.0/22,no-resolve
+  - IP-CIDR,199.96.56.0/21,no-resolve
+  - IP-CIDR,202.160.128.0/22,no-resolve
+  - IP-CIDR,209.237.192.0/19,no-resolve
+  - IP-CIDR,69.195.160.0/19,no-resolve
