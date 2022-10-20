@@ -1,20 +1,14 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 花样字体生成： https://qwerty.dev/fancy-font-generator/
-# > 导入配置后,添加机场订阅链接,之后更新订阅规则。
-# > 如何导入订阅 https://t.me/egern_news/5 
-# > 点击配置-证书管理-生成新的CA证书，之后进入「设置」>「通用」>「描述文件」, 安装Egern的证书, 并在「设置」>「通用」>「关于本机」>「证书信任设置」开启对Egern证书的信任。
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.10.17 16:30
+# > 如何导入订阅： https://t.me/egern_news/5 
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2022.10.20 09:00
 ---
 policy_groups:
   - select:
-      name: Final
+      name: 全球加速
       policies:
-        - Proxy
-        - DIRECT
-  - select:
-      name: Proxy
-      policies:
+        - 自动选择
+        - 故障转移
         - 香港节点
         - 台湾节点
         - 日本节点
@@ -23,40 +17,76 @@ policy_groups:
         - 韩国节点
         - 其他节点
   - external:
+      name: 自动选择
+      type: auto_test
+      url: "https://sub.store/download/collection/AllServer"
+  - external:
+      name: 故障转移
+      type: fallback
+      url: "https://sub.store/download/collection/AllServer"
+  - select:
+      name: 国内网站
+      policies:
+        - DIRECT
+        - 全球加速
+        - 自动选择
+        - 故障转移
+        - 香港节点
+        - 台湾节点
+        - 日本节点
+        - 狮城节点
+        - 美国节点
+        - 韩国节点
+        - 其他节点
+  - select:
+      name: 国外网站
+      policies:
+        - 全球加速
+        - 自动选择
+        - 故障转移
+        - 香港节点
+        - 台湾节点
+        - 日本节点
+        - 狮城节点
+        - 美国节点
+        - 韩国节点
+        - 其他节点
+        - DIRECT
+  - external:
       name: 香港节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 港|🇭🇰|香港|HK|Hong
+      filter: 港|🇭🇰|HK|Hong
   - external:
       name: 台湾节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 台|🇹🇼|台湾|TW|Tai
+      filter: 台|🇹🇼|TW|Tai
   - external:
       name: 日本节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 日|🇯🇵|日本|JP|Japan
+      filter: 日|🇯🇵|JP|Japan
   - external:
       name: 狮城节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 坡|🇸🇬|新加坡|狮城|SG|Singapore
+      filter: 坡|🇸🇬|狮城|SG|Singapore
   - external:
       name: 美国节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 美|🇺🇲|美国|US|States|American
+      filter: 美|🇺🇲|US|States|American
   - external:
       name: 韩国节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: 韩|韓|🇰🇷|韩国|KR|KOR|Korea
+      filter: 韩|韓|🇰🇷|KR|KOR|Korea
   - external:
       name: 其他节点
       type: select
       url: "https://sub.store/download/collection/AllServer"
-      filter: ^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$
+      filter: ^((?!港|HK|Hong Kong|台|TW|TaiWan|坡|SG|Singapore|日|JP|Japan|韩|KR|KOR|Korea|美|US|States|American|Music).)*$
 rules:
   - rule_set:
       match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Unbreak.yaml"
@@ -72,10 +102,22 @@ rules:
       policy: REJECT
   - rule_set:
       match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Streaming.yaml"
-      policy: Proxy
+      policy: 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Global.yaml"
-      policy: Proxy
+      policy: 全球加速
+  - rule_set:
+      match: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml"
+      policy: 国外网站     
+  - rule_set:
+      match: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml"
+      policy: 国外网站
+  - rule_set:
+      match: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml"
+      policy: 国外网站
+  - rule_set:
+      match: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml"
+      policy: 国外网站
   - rule_set:
       match: "https://raw.githubusercontent.com/jnlaoshu/Egern/master/Rule/Apple.yaml"
       policy: DIRECT
@@ -101,14 +143,18 @@ rules:
       match: CN
       policy: DIRECT
   - default:
-      policy: Final
+      policy: 全球加速
 url_rewrites:
   - match: "(.*google)\\\\.com"
     location: $1.cn
     status_code: 307
 mitm:
   enable: true
+  ca_p12: egern.p12
   ca_passphrase: egern
-  ca_p12: MIIJ/gIBAzCCCcgGCSqGSIb3DQEHAaCCCbkEggm1MIIJsTCCBD8GCSqGSIb3DQEHBqCCBDAwggQsAgEAMIIEJQYJKoZIhvcNAQcBMBwGCiqGSIb3DQEMAQYwDgQIzt7rtqt97fwCAggAgIID+GlyknjiPLzR5ORhMpmCGGE54E9KlWsRbVVNv4hMlt6LD0UcQcBaDHcjSGTEfw943F6v19tGOiPY7Gr33zXkQQ1T6JPx5iaqe10FNFMcYf4fTZ4EfWSAvN1rSXLElbuI7kbCEz8pCOiEgV4GLH8Qm5XTcpqERIZkhOK90LNR0seRFQbfStJQRFQTGnAr48a/WvOPoOoBhV2cnkYkfbFJf5rUpHQhKeWvUJyndI7h8+X1drZXlmdyIst6EY8r/14xWmuX2L4iSz2/Dt22TA2blzQ7vKU3gO8SHBR7LUlYB92gMaY+kjLQlXPyl/0P4IHfRiEcZ+vkuFxzqzS/754pCF/dbE9BgWxt+ZOp9q+bKGLS8WwrNVqMTRGhmHCqYRVpLkK3b+Q9Iyli3B8EaM30sUzf4CZ3u/Q9VaC8XedjtCmIRxRSQfsQz8XKfShUidbgoemuZMQfx1zLYrpCNI/1b4S/GmVZc/pRNl9pr1NNiOXiyXJWRqyel3jPpoe6yGSEJoKcEM+QiamwDJG4dbKHxKQi09dvoGbEB6X34MGylypN2oUSzSP4BK5qt/qulJR/PQHK6yI9Gg4VjZEmc9gfs5VPKpCcRGZtgZO3LlMpaf/y//HgP73mR5B0ijkwxPD1uKeSiR7OxEAjKHDwXqo/iQ3Yvf1g7IzgtqSBtuQnzukHG86JdEGn/Q5tz/WvKZxh1cGHD4gBmQ5TPuE2/SdmxDkEDB6aE1egKzfck3oiUSdeQy0aetu+Jg+aQSyAL5rnj65PoM7ObUTOaOPAd7tDzKG2HmZSW1r+eKQ08xp3K3Sj05sXqLOFGqlIWB3rRDIdn3x4L30h9dA9kqTWWRBnh1kX0hwr/EBvsaBRIhGZQQdNEp3snnGkUyGahjbLDJz3Q6bS1ict+STZk92qWFDIlvSIa8HBXGvbG2uT0OYIw2Ea5rRz5SCs4REU7gghnoR+w5kW5BAOT4Qclj/0p/yHuMpORTMUeR8uoq1aVa3aok93p4vEmXfI9KEVyUsFn1V/qwJ7LT9qRIEYV8zsQLVgcIZMcC7YBerFDjmyIXTf2A+h3UDseQpJVNAGc0WCRHRn8Rdp7KRgqpTy+lOz6C4esaalbFDw/C/ifCjaKATA/3NBcYzsuZRL/rHcRXGGjZv1g72s//9H+L5IuVe0tDpgEG4lcLVhqYQO7hpxeKubYbKQKAQ6iMKHx0t0e3cwRbTm2JOO62bqgQsHhWXm78k8b0RDDvt6aVL2u/WeYq3oVPqG33d3KC2Dhg7ggZh+5dOJfAEZYrEik6w+FPgvuEIaUjLOgltrexGzk6ZSJSMckXi+YSamg6W5krVi5VSNO19q/9LlvJ/erYjKMIIFagYJKoZIhvcNAQcBoIIFWwSCBVcwggVTMIIFTwYLKoZIhvcNAQwKAQKgggTuMIIE6jAcBgoqhkiG9w0BDAEDMA4ECA+qGjmlrOrYAgIIAASCBMiWEv+q2+9qIuMN+z2AjToO/j226ZJpbawXL6/QTYHc4YPvYzJBWvFglO59k/DdInhj6pw01SPBhcpGg0jPGmTdpxVXcNJk8LJziEN1WUyf/PpsB3+0Igrc2Eilgx++MKY2OTBUkTLG7wKx31ASzRLe/v6yb841px8S9CHZKdCDDIPbDnpELIz7KK1ntp5X+rO6fGpNq5k8YqUuLgnZegwcKxRrEHkTNI8/vnreWgmC+Vwc3zA8M32BVgEtQscsmn8tNkMVzfIIJHXmob6w8o1b+2380amTLrgHpwwNc8Lnwu6n6QiiXA3DP+pLZaQDJSzqGHrWqGjvyIlP44F+FuCZGZO1NOFqJFIlzLsLkXSCgIRtUnCqxghmntS+WHAeSLWqWJH/I1qSC4yJL9x8RwQHdQ7l/lTux6F9aAV8VdYNo3nLfMj3hRV4dRXJaqoFMPB5tmtFzRkaP4JqMjDOzxrtl2iZwg/N8ULhSOrRoMPxku4fa1c6Msc8XVJphmLcvuZc/kvHiItukqyzJFP4iapsp8LG9K/w4Zv7E2/5rYEIiqNsaij8TGlr2nnJhdko6/wF8UvJh5+QzEkFeGQ7ElNV0T6XcsZhikMp7Z8iBkIpCLTJSaQylovV5cU74T/mTw1H1Pix2YwJbgsvTgBWGg4XLTHZpXyltP/f/ZCn8PUQTh+KJILdamTGSz4lKmsllLaGhKQue1Jq+/3qYMd1z98G4vQsM2IuZDmjOqSPVcP+1X4WF/df8f3//dDqNgBiOfSZusHdTjw1xLICkzasYVuc39aHpF+hzpjLRQdKHdCPjjwrLNSOITq4LQ1kQyQIgtvZV6FxHF8Nxp13svYVda/83W7LDBiWXEGJZYl0khDHDS3abLhvDuGqE1rcRlxeosTakDp2H1AdSrbhDOL6Wsxs2nxqp4gbccQcVsbutZJgnhd2rVPhY3IKbfgRU/qWX4BdRwXI0ghaJXCEtD/5AxxYSUlUnXeOfD6ghafWwge3fN6WzuYcW1DdMkx7qj1Fx4ZzUJ/MTdrw4R+iZodmMrn7ZbABIa2hr73oNoPPaX4BsA4NgIFmxO1fcSImGJZQzFw7uxHHPId+6jzHF1hCw3gbzjfW8YvXyzogD38urS/ggkkcYLiVzc3EYCAyc51frGUnc6e0nYEvi5eKeaJtJ8EuZHoPFKymF39IML+6GUmECF3OGumFwRc1ttzyDKFn0IwWirkwXrL8W+wlMydIn1LTenr0hgQCyIMHd9ncvai2clvBXGSocFqiypWAt0ynxXw2vg7OZEes6nM08Q4TBsDl84ueIrJF4dmCz9oSrAz9mdEbdgxbaJedhYp2vN+6Om2D9cpAKbW6d6iqcgTB/B34mQUuDNKoALVkMK9r2es4n37bSA255V5nhT0OeXWfrxX9qRHj9DlpKPTGWumi0hqlO76ZAhxwf26BUFQ6Fn7AHE/5PE02Tuk84CkYculBdJCGc1hcq0SeuwfXY9JuKSJXsHQep7BZ7FPqCDOFUiSp1j7BDS2lZDc2aMqZedlohaEWLrXHc3/jWNpCV0ZcbXbYVLpX6He1Er56eMcawK+yz3x8C+opa8XLRtbDgTQYa0gRNRl8ku6Bn0RnH9c03cHRr86kHpNxV+MxTjAjBgkqhkiG9w0BCRUxFgQUtevvvbbzSS+DRVzf8RJcB0XMs4wwJwYJKoZIhvcNAQkUMRoeGABwADEAMgBfAGUAZwBlAHIAbgBfAGMAYTAtMCEwCQYFKw4DAhoFAAQUJ6tMjwV0oFBu5oGUUVFR3QyzqEkECBM7hV5EYpB1
   hostnames:
+    - sub-store.com
     - www.google.com
+modules:
+  - url: "https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/backend/sub-store.min.js"
+    enabled: true
