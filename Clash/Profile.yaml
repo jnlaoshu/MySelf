@@ -1,0 +1,422 @@
+# 𝐥𝐚𝐨𝐬𝐡𝐮 自用配置
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/Profile.yaml
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2022.10.20 10:43
+
+mixed-port: 7890
+  # 本地混合代理(http和socks5合并）端口
+allow-lan: true
+  # 允许局域网连接(false/true)
+bind-address:
+  # 监听IP白名单（当allow-lan：true），只允许列表设备
+  '*'
+  # 全部设备
+  # 192.168.122.11
+  #单个ip4地址
+  # "[aaaa::a8aa:ff:fe09:57d8]"
+  #单个ip6地址
+mode: rule
+  # clash工作模式（rule/global/direct）
+log-level: debug
+  # 日志等级（info/warning/error/debug/silent）
+external-controller: 127.0.0.1:9090
+  # 控制器监听地址
+dns:
+  enable: true
+  # DNS开关(false/true)
+  listen: 0.0.0.0:1053
+  # DNS监听地址
+  ipv6: false
+  # IP6解析开关；如果为false，将返回ip6结果为空
+  default-nameserver:
+  # 解析非IP的dns用的dns服务器,只支持纯IP
+    - 223.5.5.5
+    - 119.29.29.29
+  enhanced-mode: fake-ip
+  # DNS模式(redir-host/fake-ip)
+  fake-ip-range: 198.18.0.1/16
+  # Fake-IP解析地址池
+  fake-ip-filter:
+  # Fake-ip过滤，列表中的域名返回真实ip
+  # Local Area Network
+    - '*.lan'
+  # Stun Services
+    - '+.stun.*.*'
+    - '+.stun.*.*.*'
+    - '+.stun.*.*.*.*'
+    - '+.stun.*.*.*.*.*'
+  # Google Voices
+    - 'lens.l.google.com'
+  # Nintendo Switch
+    - '*.n.n.srv.nintendo.net'
+  # PlayStation
+    - '+.stun.playstation.net'
+  # XBox
+    - 'xbox.*.*.microsoft.com'
+    - '*.*.xboxlive.com'
+  # Microsoft
+    - '*.msftncsi.com'
+    - '*.msftconnecttest.com'
+  # Bilibili CDN
+    - '*.mcdn.bilivideo.cn'
+  nameserver:
+  # 默认DNS服务器，支持udp/tcp/dot/doh/doq
+    - https://223.6.6.6/dns-query
+    - https://doh.pub/dns-query
+
+proxies:
+  # 本地服务器
+
+proxy-providers:
+
+  #全部节点
+  All: &All #建立锚点
+    type: http
+    url: ""
+    # 请使用Clash类型订阅链接填入引号""内使用。
+    # 或可使用通用订阅链接通过Sub-Store进行订阅转换。
+    interval: 3600
+    path: ./all.yaml
+    health-check:
+      enable: true
+      interval: 600
+      url: http://cp.cloudflare.com/generate_204
+    
+  #香港节点
+  HK:
+    <<: *All #引用锚点内容
+    filter: 港|🇭🇰|HK|(?i)Hong
+ 
+  #台湾节点
+  TW:
+    <<: *All
+    filter: 台|🇹🇼|TW|(?i)Taiwan
+ 
+  #日本节点
+  JP:
+    <<: *All
+    filter: 日|🇯🇵|JP|(?i)Japan
+    
+  #狮城节点
+  SG:
+    <<: *All
+    filter: 坡|🇸🇬|狮城|SG|(?i)Singapore
+    
+  #韩国节点
+  KR:
+    <<: *All
+    filter: 韩|🇰🇷|韓|KR|KOR|(?i)Korea
+    
+  #美国节点    
+  US:
+    <<: *All
+    filter: 美|🇺🇲|US|(?i)States|American
+
+proxy-groups:
+  # 策略组
+
+  - name: Final # 漏网之鱼
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Final.png
+    proxies:
+      - Proxy
+
+  - name: Proxy # 节点选择
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Rocket.png
+    proxies:
+      - AutoTest
+      - Fallback
+      - Others
+
+  - name: AutoTest # 自动筛选
+    type: url-test
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Auto.png
+    use: 
+       - All
+    url: "http://cp.cloudflare.com/generate_204"
+    interval: 300
+
+  - name: Fallback #故障转移
+    type: fallback
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Available.png
+    use:
+      - All
+    url: "http://cp.cloudflare.com/generate_204"
+    interval: 300
+
+  - name: Foreign # 国外网站
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Global.png
+    proxies: &F
+      - Proxy
+      - AutoTest
+      - Fallback
+      - HongKong
+      - TaiWan
+      - Japan
+      - Singapore
+      - Korea
+      - America
+      - Others
+      - DIRECT
+
+  - name: Domestic # 国内网站
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/China_Map.png
+    proxies: &D
+      - DIRECT
+      - Proxy
+      - AutoTest
+      - Fallback
+      - HongKong
+      - TaiWan
+      - Japan
+      - Singapore
+      - Korea
+      - America
+      - Others
+
+  - name: BiliBili # 哔哩哔哩
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/bilibili.png
+    proxies:
+      *D
+
+  - name: Spotify # 声田音乐
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Spotify.png
+    proxies:
+      *F
+
+  - name: TikTok # 海外抖音
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/TikTok.png
+    proxies:
+      *F
+
+  - name: Streaming # 国际媒体
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/GlobalMedia.png
+    proxies:
+      *F
+
+  - name: Telegram # 电报信息
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Telegram_X.png
+    proxies:
+      *F
+
+  - name: Apple # 苹果服务
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Apple.png
+    proxies:
+      *D
+
+  - name: Microsoft # 微软服务
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Microsoft.png
+    proxies:
+      *D
+
+  - name: ADblock # 广告拦截
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Advertising.png
+    proxies:
+      - REJECT
+      - DIRECT
+
+  - name: HongKong # 香港节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Hong_Kong.png
+    use:
+      - HK
+    
+  - name: TaiWan # 台湾节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/China.png
+    use:
+      - TW
+    
+  - name: Japan # 日本节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Japan.png
+    use:
+      - JP
+      
+  - name: Singapore # 狮城节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Singapore.png
+    use:
+      - SG
+    
+  - name: Korea # 韩国节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Korea.png
+    use:
+      - KR
+
+  - name: America # 美国节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png
+    use:
+      - US
+
+  - name: Others # 其他节点
+    type: select
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Airport.png
+    use: 
+       - All
+    proxies:
+      - DIRECT
+
+rule-providers:
+  # 远程规则集
+
+  Unbreak: # 规则修正
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/DivineEngine/Profiles/master/Clash/RuleSet/Unbreak.yaml
+    path: ./ruleset/Unbreak.yaml
+    interval: 86400
+
+  AD-Ban: # 广告拦截
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml
+    path: ./ruleset/Advertising.yaml
+    interval: 86400
+
+  Privacy: # 隐私保护
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Privacy/Privacy.yaml
+    path: ./ruleset/Privacy.yaml
+    interval: 86400
+
+  Hijacking: # 运营劫持
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Hijacking/Hijacking.yaml
+    path: ./ruleset/Hijacking.yaml
+    interval: 86400
+
+  BiliBili: # 哔哩哔哩
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/BiliBili/BiliBili.yaml
+    path: ./ruleset/BiliBili.yaml
+    interval: 86400
+
+  Spotify: # 声田音乐
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml
+    path: ./ruleset/Spotify.yaml
+    interval: 86400
+
+  YouTube: # 油管视频
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml
+    path: ./ruleset/YouTube.yaml
+    interval: 86400
+
+  TikTok: # 海外抖音
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
+    path: ./ruleset/TikTok.yaml
+    interval: 86400
+
+  Streaming: # 国际媒体
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/ACL4SSR/ACL4SSR/master/Clash/Providers/ProxyMedia.yaml
+    path: ./ruleset/Streaming.yaml
+    interval: 86400
+
+  Telegram: # 电报信息
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml
+    path: ./ruleset/Telegram.yaml
+    interval: 86400
+
+  Twitter: # 推特分流
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml
+    path: ./ruleset/Twitter.yaml
+    interval: 86400
+
+  Google: # 谷歌分流
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml
+    path: ./ruleset/Google.yaml
+    interval: 86400
+
+  Github: # Github
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml
+    path: ./ruleset/Github.yaml
+    interval: 86400
+
+  Foreign: # 国外网站
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/ACL4SSR/ACL4SSR/master/Clash/Providers/ProxyLite.yaml
+    path: ./ruleset/Foreign.yaml
+    interval: 86400
+
+  Apple: # 苹果服务
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml
+    path: ./ruleset/Apple.yaml
+    interval: 86400
+
+  Microsoft: # 微软服务
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml
+    path: ./ruleset/Microsoft.yaml
+    interval: 86400
+
+  Domestic: # 国内网站
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/ACL4SSR/ACL4SSR/master/Clash/Providers/ChinaDomain.yaml
+    path: ./ruleset/Domestic.yaml
+    interval: 86400
+
+  LAN: # 局域网
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontents.com/ACL4SSR/ACL4SSR/master/Clash/Providers/LocalAreaNetwork.yaml
+    path: ./ruleset/Lan.yaml
+    interval: 86400
+
+rules:
+  # 分流规则引用
+  - RULE-SET,Unbreak,DIRECT
+  - RULE-SET,AD-Ban,ADblock
+  - RULE-SET,Privacy,ADblock
+  - RULE-SET,Hijacking,ADblock
+  - RULE-SET,BiliBili,BiliBili
+  - RULE-SET,Spotify,Spotify
+  - RULE-SET,YouTube,Foreign
+  - RULE-SET,TikTok,TikTok
+  - RULE-SET,Streaming,Streaming
+  - RULE-SET,Telegram,Telegram
+  - RULE-SET,Twitter,Foreign
+  - RULE-SET,Google,Foreign
+  - RULE-SET,Github,Foreign
+  - RULE-SET,Foreign,Foreign
+  - RULE-SET,Apple,Apple
+  - RULE-SET,Microsoft,Microsoft
+  - RULE-SET,Domestic,Domestic
+  - RULE-SET,LAN,DIRECT
+  - GEOIP,CN,Domestic
+  - MATCH,Final
