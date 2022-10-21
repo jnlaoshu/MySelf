@@ -10,7 +10,7 @@
 
 * [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script) * [28413761](https://github.com/28413761/QX) * [jsj0622](https://github.com/jsj0622/Surge) * [lhie1](https://github.com/lhie1)  * [Hackl0us](https://github.com/Hackl0us)   * [Honye](https://github.com/Honye/scriptable-scripts/blob/master/README.zh.md)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories)
 
-* [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [Coldvvater](https://github.com/Coldvvater)   * [MuTu](https://github.com/githubdulong/Script)  * [Brain](https://github.com/TributePaulWalker/Profiles)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
+* [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [Coldvvater](https://github.com/Coldvvater)   * [MuTu](https://github.com/githubdulong/Script)  * [Brian](https://github.com/TributePaulWalker/Profiles)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
 
 * [temppw](https://github.com/temppw/surge) * [yu-steven](https://github.com/yu-steven/openit) * [bihai](https://proxies.bihai.cf/) 
 
