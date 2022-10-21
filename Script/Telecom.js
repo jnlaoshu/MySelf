@@ -1,7 +1,7 @@
  // 中国电信Telecom流量信息
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js
  // 𝐅𝐫𝐨𝐦：https://github.com/mieqq/mieqq/blob/master/telecom.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.05.12 13:50
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.10.21 10:00
  
 /*
 #先从网页登陆一下：e.189.cn
@@ -40,9 +40,9 @@ const url2 = "https://e.189.cn/store/user/balance_new.do";
   let args = getArgs();
   $done({
     title: `${args.title || "中国电信"} | ${getTime()}`,
-    content: `流量：${bytesToSize(used)} | ${bytesToSize(total)}\n余额：${
+    content: `共享流量：${bytesToSize(used)} | ${bytesToSize(total)}\n账户余额：${
       fee / 100
-    } 元\n语音：${voice} 分钟`,
+    } 元\n剩余语音：${voice} 分钟`,
     icon: args.icon || "antenna.radiowaves.left.and.right.circle",
     "icon-color": args.color || "#5E5CDE",
   });
