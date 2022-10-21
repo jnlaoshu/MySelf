@@ -1,7 +1,7 @@
 // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
  // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.10.21 09:00
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.10.21 09:10
  
 /*
 [Script]
@@ -206,7 +206,7 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
         getIP() +
         `节点IP：${info.query}\n` +
         `运营商：${info.isp}\n` +
-        `IP位置：${emoji}${country} - ${info.city}`, 
+        `IP位置：${getFlagEmoji(info.countryCode)} ${info.country} - ${info.city}`, 
       icon: getSSID() ? 'wifi' : 'simcard',
       'icon-color': getSSID() ? '#005CAF' : '#F9BF45',
     });
