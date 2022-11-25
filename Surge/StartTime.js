@@ -26,32 +26,15 @@ let icon_s = mitm_status.enabled&&rewrite_status.enabled&&scripting_status.enabl
 //点击按钮，刷新dns
 //if ($trigger == "button") await httpAPI("/v1/dns/flush");
 //点击按钮，重载配置（同时刷新dns）
-
-Date.prototype.Format = function (fmt) {
-    var o = {
-        "M+": this.getMonth() + 1, 
-        "d+": this.getDate(), 
-        "H+": this.getHours(), 
-        "m+": this.getMinutes(),
-        "s+": this.getSeconds(), 
-        "q+": Math.floor((this.getMonth() + 3) / 3), 
-        "S": this.getMilliseconds() 
-    };
-    if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
-    for (var k in o)
-    if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
-    return fmt;
-}
-
 if ($trigger == "button") {
 	await httpAPI("/v1/profiles/reload");
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:"SurgePro | 2023-04-07",
-    content: "运行时长："+startTime + "\n𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
-    icon: icon_s?"power.circle":"exclamationmark.triangle",
-   "icon-color":icon_s?"#FF2121":"#F20C00"
+    title:"Surge  已运行"+startTime,
+    content:"Mitm:"+icon_status(mitm_status.enabled)+"  Rewrite:"+icon_status(rewrite_status.enabled)+"  Scripting:"+icon_status(scripting_status.enabled),
+    icon: icon_s?"checkmark.seal":"exclamationmark.triangle",
+   "icon-color":icon_s?"#16A951":"#FF7500"
 });
 })();
 function icon_status(status){
