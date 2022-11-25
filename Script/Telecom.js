@@ -6,14 +6,11 @@
 /*
 #先从网页登陆一下：e.189.cn
 #再访问： https://e.189.cn/store/user/package_detail.do
-
 ==================【Surge】============
 [Script]
 Telecom = type=http-request,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Telecom.js,pattern=https://e.189.cn/store/user/package_detail.do,requires-body=1,max-size=0,timeout=10
-
 [Panel]
 Telecom = script-name=Telecom,update-interval=3600
-
 [MITM]
 hostname = %APPEND% e.189.cn:443
 */
@@ -40,9 +37,9 @@ const url2 = "https://e.189.cn/store/user/balance_new.do";
   let args = getArgs();
   $done({
     title: `${args.title || "中国电信"} | ${getTime()}`,
-    content: `流量：${bytesToSize(used)} | ${bytesToSize(total)}\n余额：${
+    content: `共享流量：${bytesToSize(used)} | ${bytesToSize(total)}\n账户余额：${
       fee / 100
-    } 元\n语音：${voice} 分钟`,
+    } 元\n剩余语音：${voice} 分钟`,
     icon: args.icon || "antenna.radiowaves.left.and.right.circle",
     "icon-color": args.color || "#5E5CDE",
   });
