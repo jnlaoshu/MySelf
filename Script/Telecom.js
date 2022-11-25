@@ -40,9 +40,9 @@ const url2 = "https://e.189.cn/store/user/balance_new.do";
   let args = getArgs();
   $done({
     title: `${args.title || "中国电信"} | ${getTime()}`,
-    content: `共享流量：${bytesToSize(used)} | ${bytesToSize(total)}\n账户余额：${
+    content: `流量：${bytesToSize(used)} | ${bytesToSize(total)}\n余额：${
       fee / 100
-    } 元\n剩余语音：${voice} 分钟`,
+    } 元\n语音：${voice} 分钟`,
     icon: args.icon || "antenna.radiowaves.left.and.right.circle",
     "icon-color": args.color || "#5E5CDE",
   });
