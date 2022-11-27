@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.11.27 17:12
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.11.27 17:52
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -7,6 +7,9 @@
 http-request ^https?:\/\/(?!d\.pcs).*(?<!map)\.baidu\.com header-replace-regex User-Agent .+iPhone.+ "Mozilla/5.0 (iPhone; CPU iPhone OS 13_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.1 Mobile/15E148 Safari/16C50 Quark/604.1 T7/10.3 SearchCraft/2.6.3 (Baidu; P1 8.0.0)"
 
 [Script]
+# > Nicegram会员 restore-access.indream.app
+Nicegram会员 = type=http-request,pattern=^https?:\/\/restore-access\.indream\.app\/restoreAccess\?id=\w+$,requires-body=0,max-size=0,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Nicegram.js,script-update-interval=0
+
 # > notability notability.com,
 notability = type=http-response ^https:\/\/notability\.com\/subscriptions script-path=https://raw.githubusercontent.com/PoetryU/Scientist/master/Scripts/notabilityvip.js, tag=notability,request-body=true
 
@@ -57,4 +60,4 @@ http-response ^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad requires-body=1,m
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
-hostname =  %INSERT% notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com, note.youdao.com
+hostname =  %INSERT% restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com, note.youdao.com
