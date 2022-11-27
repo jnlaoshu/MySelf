@@ -28,8 +28,8 @@ http-response ^https:\/\/(api\.revenuecat\.com\/v\d\/subscribers|vsco\.co\/api\/
 # > 京东App 历史价格 api.m.jd.com,
 京东历史价格 = type=http-response,requires-body=1,pattern=^https?://api\.m\.jd\.com/client\.action\?functionId=(wareBusiness|serverConfig|basicConfig),script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/JDPrice.js
 
-# > 酷我音乐VIP vip1.kuwo.cn,
-酷我音乐解锁SVIP = type=http-response,pattern=^https?:\/\/vip1\.kuwo\.cn\/(vip\/v2\/user\/vip|vip\/spi/mservice),requires-body=1,script-path=https://raw.githubusercontent.com/28413761/QX/main/jiaoben/Kuwo.js,script-update-interval=0,max-size=0
+# > 酷我音乐VIP *.kuwo.cn, *.lrts.me
+酷我音乐=type=http-response,pattern=^https?:\/\/.*\.(kuwo|lrts)\.(cn|me)\/(a\.p|music\.pay|(vip\/(v2|enc)\/(theme|user\/vip))|(EcomResource|(Mobile)?Ad)Serv(er|ice)).*,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/nameking77/Qx/main/rewrite/kw.js,script-update-interval=0
 
 # > 空气质量 US weather-data.apple.com,
 空气质量 = type=http-response, pattern=^https?:\/\/weather-data\.apple\.com\/(v1|v2)\/weather.*(?!dataSets=forecastNextHour)(include=.*air_quality.*|dataSets=.*airQuality.*).*(country=[A-Z]{2})?.*, requires-body=1, timeout=15, script-path=https://raw.githubusercontent.com/VirgilClyne/iRingo/main/js/Weather.js
@@ -65,4 +65,4 @@ http-response ^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad requires-body=1,m
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
-hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com,*.baidu.com,api.m.jd.com,vip1.kuwo.cn,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn,mapi.weibo.com,*.uve.weibo.com,mp.weixin.qq.com,note.youdao.com,buy.itunes.apple.com
+hostname =  %INSERT% boxjs.com,gab.122.gov.cn,wallet.95516.com,api.pinduoduo.com,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com,*.baidu.com,api.m.jd.com,*.kuwo.cn, *.lrts.me,weather-data.apple.com,api.xiuxiu.meitu.com, h5.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,edith.xiaohongshu.com,api.weibo.cn,mapi.weibo.com,*.uve.weibo.com,mp.weixin.qq.com,note.youdao.com,buy.itunes.apple.com
