@@ -2,7 +2,7 @@
 
 ### 特别感谢：
 
-* [DivineEngine](https://github.com/DivineEngine/Profiles/tree/master)  * [Tartarus2014](https://github.com/Tartarus2014)  * [nzw9314](https://github.com/nzw9314)  * [Cuttlefish](https://ddgksf2013.notion.site/ddgksf2013/Cuttlefish-37a8a0cfac2247609d408db3d963c6d2)  * [R·E]https://github.com/I-am-R-E/Functional-Store-Hub)  * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something)   
+* [DivineEngine](https://github.com/DivineEngine/Profiles/tree/master)  * [Tartarus2014](https://github.com/Tartarus2014)  * [nzw9314](https://github.com/nzw9314)  * [Cuttlefish](https://ddgksf2013.notion.site/ddgksf2013/Cuttlefish-37a8a0cfac2247609d408db3d963c6d2)  * [R·E](https://github.com/I-am-R-E/Functional-Store-Hub)  * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something)   
 
 * [NobyDa](https://github.com/NobyDa)   * [Yichahucha](https://github.com/yichahucha/surge/tree/master)  * [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts) * [mieqq](https://github.com/mieqq/mieqq)   * [Sunert](https://github.com/Sunert/Script)  * [app2smile](https://github.com/app2smile/rules)   * [zZPiglet](https://github.com/zZPiglet/Task/tree/master)   
 
