@@ -7,7 +7,7 @@
 * [Config.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Config.conf)
 
 ### 脚本订阅配置：
-* [Panel.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Module/Panel.sgmodule) 面板订阅
+* [Panel.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Panel.sgmodule) 面板订阅
 
 * [Script.sgmodule](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule) 脚本订阅
 
