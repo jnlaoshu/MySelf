@@ -1,5 +1,6 @@
 /*
 脚本功能：解锁Nicegram会员
+脚本URL：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Nicegram.js
 脚本作者：R·E （https://github.com/I-am-R-E/Functional-Store-Hub/blob/Master/Nicegram/Script/Nicegram.js）
 支持版本：商店最新 1.0.7
 更新时间：2022.09.23
