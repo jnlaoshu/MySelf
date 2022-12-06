@@ -119,8 +119,12 @@ http-response ^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad requires-body=1,m
 # > 微信自动阅读
 微信自动阅读 = type=http-response,pattern=^https?://mp\.weixin\.qq\.com/s.+?,requires-body=1,script-path=https://raw.githubusercontent.com/mieqq/mieqq/master/replace-body.js, argument="</script>->setTimeout(()=>window.history.back(),6000); </script>"
 
+# > 小红书 去广告
+开屏广告 = type=http-response,pattern=^https?:\/\/edith\.xiaohongshu\.com\/api\/sns\/v2\/system_service\/splash_config,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chouchoui/QuanX/master/Scripts/xiaohongshu/xiaohongshu.ad.js,script-update-interval=0
+推荐广告 = type=http-response,pattern=^https:\/\/edith\.xiaohongshu\.com\/api\/sns\/v6\/homefeed\?,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chouchoui/QuanX/master/Scripts/xiaohongshu/xiaohongshu.ad.js,script-update-interval=0
+
 # > 有道云笔记VIP note.youdao.com,
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
-hostname =  %INSERT% gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, as.xiaojukeji.com, pt-starimg.didistatic.com, security.xiaojukeji.com, guard.sec.xiaojukeji.com, conf.diditaxi.com.cn, api.udache.com, res.xiaojukeji.com, shop-gw.chengxinyouxuan.com, img-ys011.didistatic.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, *.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com, note.youdao.com
+hostname =  %INSERT% gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, as.xiaojukeji.com, pt-starimg.didistatic.com, security.xiaojukeji.com, guard.sec.xiaojukeji.com, conf.diditaxi.com.cn, api.udache.com, res.xiaojukeji.com, shop-gw.chengxinyouxuan.com, img-ys011.didistatic.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, *.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com,edith.xiaohongshu.com,note.youdao.com
