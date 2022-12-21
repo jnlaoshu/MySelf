@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.12.02 09:30
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.12.21 08:52
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -17,7 +17,7 @@ AND,((PROTOCOL,UDP), (DEST-PORT,443)),REJECT-NO-DROP
 # > 拒绝国家反诈中心请求
 DOMAIN-SUFFIX,gjfzpt.cn,REJECT
 # > VSCO 代理
-DOMAIN,measurement.com,全球加速
+DOMAIN,measurement.com,🚀 全球加速
 # > 爱奇艺 去广告
 DOMAIN-SUFFIX,cupid.iqiyi.com,REJECT
 # > 优酷 去广告
