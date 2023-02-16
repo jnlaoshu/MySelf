@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.12.21 08:52
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.02.16 15:50
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -10,6 +10,10 @@ http-request ^https?:\/\/(?!d\.pcs).*(?<!map)\.baidu\.com header-replace-regex U
 https:\/\/api\.revenuecat\.com header-del x-revenuecat-etag
 
 [Rule]
+# > ChatGPT 代理 
+DOMAIN-SUFFIX, openai.com,🇸🇬 狮城节点
+DOMAIN, cdn.auth0.com,🇸🇬 狮城节点
+DOMAIN, openaiapi-site.azureedge.net,🇸🇬 狮城节点
 # > Safari 防跳转
 DOMAIN,app-site-association.cdn-apple.com,REJECT
 # > 屏蔽HTTP3/QUIC协议
@@ -22,13 +26,10 @@ DOMAIN,measurement.com,🚀 全球加速
 DOMAIN-SUFFIX,cupid.iqiyi.com,REJECT
 # > 优酷 去广告
 DOMAIN, iyes.youku.com,REJECT
-URL-REGEX,^http:\/\/.*\.cp31\.ott\.cibntv\.net\/youku\/,REJECT
-# > 交管12123 去广告
-URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,REJECT
-# > 京东 去广告
-URL-REGEX,^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start$,REJECT
-# > 京东金融 去广告
-URL-REGEX,^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture,REJECT
+URL-REGEX,^http:\/\/.*\.cp31\.ott\.cibntv\.net\/youku\/,REJECT-TINYGIF
+# > 腾讯视频 修正+去开屏
+DOMAIN,vv.video.qq.com,DIRECT
+OR,((DOMAIN,pgdt.gtimg.cn), (AND,((USER-AGENT,live4iphoneRel*), (IP-CIDR,0.0.0.0/0,no-resolve)))),REJECT-DROP
 # > 滴滴出行 去广告
 //01 安全提示横幅
 URL-REGEX,^https:\/\/guard\.sec\.xiaojukeji\.com\/api\/guard\/psg\/v2\/getShieldStatus,REJECT
@@ -49,6 +50,12 @@ URL-REGEX,^https:\/\/shop-gw\.chengxinyouxuan\.com\/(route|indexConfig|apolloCon
 URL-REGEX,^https:\/\/img-ys011\.didistatic\.com\/static,REJECT
 //09 骑行
 URL-REGEX,^https:\/\/pt-starimg\.didistatic\.com\/static,REJECT
+# > 交管12123 去广告
+URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,REJECT
+# > 京东 去广告
+URL-REGEX,^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start$,REJECT
+# > 京东金融 去广告
+URL-REGEX,^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture,REJECT
 # > 云闪付 去广告
 URL-REGEX,^https:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,REJECT
 # > 向日葵 去广告
@@ -67,6 +74,13 @@ URL-REGEX,^https?:\/\/img\.meituan\.net\/(adunion|display|midas)\/\w+\.(gif|jpg|
 URL-REGEX,^https?:\/\/(s3plus|flowplus)\.meituan\.net\/v\d\/\w+\/linglong\/\w+\.(gif|jpg|mp4),REJECT
 URL-REGEX,^https?:\/\/p\d\.meituan\.net\/(bizad|wmbanner)\/\w+\.jpg,REJECT
 URL-REGEX,^https?:\/\/p\d\.meituan\.net\/movie\/\w+\.jpg\?may_covertWebp,REJECT
+# > 中国电信 去开屏
+DOMAIN,ad.21cn.com,REJECT
+DOMAIN,ad.k.21cn.com,REJECT
+DOMAIN,admarket.21cn.com,REJECT
+DOMAIN,adshows.21cn.com,REJECT
+# > 作业帮 去广告
+URL-REGEX,^https:\/\/syh\.zybang\.com\/com\/adx\/impress$,REJECT-TINYGIF
 
 [Script]
 # > Nicegram会员 restore-access.indream.app
