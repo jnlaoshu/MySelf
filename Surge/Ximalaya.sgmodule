@@ -1,5 +1,7 @@
 #!name=喜马拉雅去广告+解锁会员
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.11.28 11:40
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.02.17 09:00
+# @ddgksf2013 参考去广告
+# @clydetime  解锁会员
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Ximalaya.sgmodule
 
 [General]
@@ -48,9 +50,9 @@ URL-REGEX,^https?:\/\/.*\.xima.*\.com\/ting\/(loading|feed|home)?,REJECT
 [Script]
 # 首页滚动_Ad、Tab页滚动_Ad、我的页面_Ad
 喜马拉雅 = type=http-response,pattern=^https?:\/\/.*\.xima.*\.com\/(discovery-feed|category|mobile-user)\/v\d\/(mix|category|homePage),requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/xmly_json.js,script-update-interval=0
-# 解锁会员+共享（低调使用）
-喜马拉雅 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/(mobile|mobilehera|mobwsa|mwsa|m|ar)\.ximalaya\.com\/(mobile\/(v\d\/album\/track|album\/paid\/info)|nyx\/history\/query\/detail|starwar\/task|vip\/(check|tabs|v\d\/recommand)|mobile-(user|album\/album\/page|playpage\/(playpage\/(tabs|recommendInfo)|track))|product\/(promotion|detail\/v1\/basicInfo)|business-vip-|(playlist|rec-association\/recommend)\/album),script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/XMLY/xmly.js
-喜马拉雅 = type=http-request,requires-body=0,max-size=0,pattern=^https?:\/\/(mobile|mobilehera|mobwsa|pns)\.ximalaya\.com\/(mobile-playpage|mobile\/(quickplay|acceptapn)|comment-mobile/get|sound-guide-portal\/(sound\/guide|display)),script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/XMLY/xmly_crack.js
+# 会员共享解锁（临时）
+解锁会员 = type=http-response,requires-body=1,max-size=0,pattern=^https?:\/\/(mobile|mobilehera|mobwsa|mwsa|m|ar)\.ximalaya\.com\/(mobile\/(v\d\/album\/track|album\/paid\/info)|nyx\/history\/query\/detail|starwar\/task|vip\/(check|tabs|v\d\/recommand)|mobile-(user|album\/album\/page|playpage\/(playpage\/(tabs|recommendInfo)|track))|product\/(promotion|detail\/v1\/basicInfo)|business-vip-|(playlist|rec-association\/recommend)\/album),script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/XMLY/xmly.js
+共享会员 = type=http-request,requires-body=0,max-size=0,pattern=^https?:\/\/(mobile|mobilehera|mobwsa|pns)\.ximalaya\.com\/(mobile-playpage|mobile\/(quickplay|acceptapn)|comment-mobile/get|sound-guide-portal\/(sound\/guide|display)),script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/XMLY/xmly_crack.js
 
 [MITM]
 hostname = %APPEND% *.xima*.*, *.xmcdn.*
