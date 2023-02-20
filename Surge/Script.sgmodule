@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.02.17 08:35
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.02.20 10:00
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -10,14 +10,21 @@ http-request ^https?:\/\/(?!d\.pcs).*(?<!map)\.baidu\.com header-replace-regex U
 https:\/\/api\.revenuecat\.com header-del x-revenuecat-etag
 
 [Rule]
+# > Boxjs 代理
+DOMAIN-KEYWORD,jsdelivr.net,🚀 全球加速
 # > ChatGPT 代理 
 DOMAIN-SUFFIX, openai.com,🇸🇬 狮城节点
 DOMAIN, cdn.auth0.com,🇸🇬 狮城节点
 DOMAIN, openaiapi-site.azureedge.net,🇸🇬 狮城节点
-# > Safari 防跳转
+# > Safari 访问防跳转 App
 DOMAIN,app-site-association.cdn-apple.com,REJECT
 # > 屏蔽HTTP3/QUIC协议
-AND,((PROTOCOL,UDP), (DEST-PORT,443)),REJECT-NO-DROP
+# 阻止所有UDP流量进入443端口，使HTTP3请求回落到TCP流量
+AND,((PROTOCOL,UDP),(DEST-PORT,443)),REJECT-NO-DROP
+# > 屏蔽YouTube的UDP
+AND,((PROTOCOL,UDP),(DOMAIN-SUFFIX,googlevideo.com)),REJECT-NO-DROP
+# > 绕过App企业证书过期
+DOMAIN,ocsp.apple.com,REJECT
 # > 拒绝国家反诈中心请求
 DOMAIN-SUFFIX,gjfzpt.cn,REJECT
 # > VSCO 代理
