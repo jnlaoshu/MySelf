@@ -1,6 +1,16 @@
 // Surge节假日提醒面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/TimeCard.js
 // 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/timecard.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.23 11:03
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.23 17:08
+
+/*
+[Panel]
+策略面板 = script-name=假日信息,titlt=假日信息,content=请刷新,style=info,update-interval=3600
+[Script]
+假日信息 = type = generic,timeout=30,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/TimeCard.js
+或者直接添加定时任务：
+[Script]
+假日信息 = type = cron,timeout=30,wake-system=1,cronexp=30 7 * * *, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/TimeCard.js
+*/
 
 var tlist = {
   1: ["中秋", "2022-09-10"],
