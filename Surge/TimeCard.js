@@ -1,6 +1,6 @@
 // Surge节假日提醒面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/TimeCard.js
 // 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/timecard.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.25 09:25
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.25 10:55
 
 /*
 [Panel]
