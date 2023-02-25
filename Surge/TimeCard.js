@@ -781,7 +781,8 @@ function title_random(num){
   let r = Math.floor((Math.random()*10)+1);
   let dic = {
     1: nowlunar,
-    2: nowsolar
+    2: nowsolar,
+    3: "小乌龟慢慢爬"
   };
   return num==0?"节日快乐，万事大吉":dic[r]
 }
@@ -791,3 +792,4 @@ title:title_random(tnumcount(Number(nowlist))),
 icon:icon_now(tnumcount(Number(nowlist))),
 content:tlist[nowlist][0]+":"+today(tnumcount(nowlist))+","+tlist[Number(nowlist) + Number(1)][0] +":"+ tnumcount(Number(nowlist) + Number(1))+ "天,"+tlist[Number(nowlist) + Number(2)][0]+":"+tnumcount(Number(nowlist) + Number(2))+"天"
 })
+
