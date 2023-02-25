@@ -1,6 +1,6 @@
 // Surge节假日提醒面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/TimeCard.js
 // 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/timecard.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.23 17:28
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.02.25 09:25
 
 /*
 [Panel]
@@ -28,6 +28,7 @@ var tlist = {
   13: ["春节", "2024-02-10"],
   14: ["情人节", "2024-02-14"],
   15: ["元宵节", "2024-02-24"]
+  
 };
 let tnow = new Date();
 let tnowf =
@@ -779,9 +780,9 @@ var nowlunar = lunar.IMonthCn+lunar.IDayCn+' '+lunar.gzYear+lunar.gzMonth+lunar.
 function title_random(num){
   let r = Math.floor((Math.random()*10)+1);
   let dic = {
-    1:nowlunar,
-    2:nowsolar
-   };
+    1: nowlunar,
+    2: nowsolar
+  };
   return num==0?"节日快乐，万事大吉":dic[r]
 }
 
