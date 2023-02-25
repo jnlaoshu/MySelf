@@ -780,10 +780,16 @@ var nowlunar = lunar.IMonthCn+lunar.IDayCn+' '+lunar.gzYear+lunar.gzMonth+lunar.
 function title_random(num){
   let r = Math.floor((Math.random()*10)+1);
   let dic = {
-    1:"今日宜：吃饭饭  忌：减肥",
-    2: nowlunar,
-    3: nowsolar,
-    4: "小乌龟慢慢爬"
+    1:nowsolar,
+    2:nowlunar,
+    3:"上班好累呀，下顿吃啥？",
+    4:"努力，我还能加班24小时！",
+    5:"今日宜：吃饭饭  忌：减肥",
+    6:"躺平中，等放假",
+    7:"只有摸鱼才是赚老板的钱",
+    8:"距离放假，还要摸鱼多少天？", 
+    9:"坚持住，就快放假啦！",
+    10:"小乌龟慢慢爬"
   };
   return num==0?"节日快乐，万事大吉":dic[r]
 }
