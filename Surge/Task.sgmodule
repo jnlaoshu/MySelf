@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐓𝐚𝐬𝐤定时脚本
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2022.04.29 15:30
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.03.06 10:00
 # 𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Task.sgmodule
 
 [Script]
@@ -10,10 +10,6 @@
 哔哩哔哩 = type=cron,cronexp=30 6 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/bilibili/bilibili.js,script-update-interval=0
 哔哩哔哩大会员特权领取 = type=cron,cronexp="0 1 0 1 * ?",script-path=https://raw.githubusercontent.com/lowking/Scripts/master/bilibili/privilegeReceive.js,script-update-interval=0
 哔哩哔哩大会员特权领取cookie = type=http-request,pattern=https:\/\/data.bilibili.com\/log\/mobile,script-path=https://raw.githubusercontent.com/lowking/Scripts/master/bilibili/privilegeReceive.js
-
-# > 电信签到
-电信签到 = type=cron,cronexp=0 5 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/10000/10000.js,script-update-interval=0
-中国电信 = type=cron,cronexp=30 55 9 * * *,wake-system=1,timeout=3600,script-path=https://raw.githubusercontent.com/Sunert/Script/master/Task/backup/telecomSky.js,script-update-interval=0
 
 # > 京东同步检测
 京东账号同步 = type=cron,cronexp="0 3 6,14,23 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/dompling/Script/master/jd/ql_sync_box.js,script-update-interval=0
@@ -27,11 +23,8 @@
 # > 美团
 美团签到 = type=cron,cronexp=0 2 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/meituan/meituan.js,script-update-interval=0
 
-# > 什么值得买(签到+任务)
-值得买签到 = type=cron,cronexp=0 4 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_signin.js,script-update-interval=0
-值得买任务 = type=cron,cronexp=30 4 0 1 * *,wake-system=1,script-path=https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/smzdm/smzdm_mission.js,script-update-interval=0
-
-腾讯视频 = type=cron,cronexp="10 0 0 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/videoqq/videoqq.js
+# > 腾讯视频
+腾讯视频签到任务 = type=cron,cronexp=0 5 * * *,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/videoqq.js,timeout=15,wake-system=1
 
 # > 网易云音乐
 网易音乐 = type=cron,cronexp=30 2 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/neteasemusic/neteasemusic.js,script-update-interval=0
