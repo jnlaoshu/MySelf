@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.02.20 10:00
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.03.10 14:35
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -40,26 +40,6 @@ URL-REGEX,^http:\/\/.*\.cp31\.ott\.cibntv\.net\/youku\/,REJECT-TINYGIF
 # > 腾讯视频 修正+去开屏
 DOMAIN,vv.video.qq.com,DIRECT
 OR,((DOMAIN,pgdt.gtimg.cn), (AND,((USER-AGENT,live4iphoneRel*), (IP-CIDR,0.0.0.0/0,no-resolve)))),REJECT-DROP
-# > 滴滴出行 去广告
-//01 安全提示横幅
-URL-REGEX,^https:\/\/guard\.sec\.xiaojukeji\.com\/api\/guard\/psg\/v2\/getShieldStatus,REJECT
-//02 底部打车&代价推荐
-URL-REGEX,^https:\/\/conf\.diditaxi\.com\.cn\/one,REJECT
-//03 福利专区-金融服务-公交-骑车-滴滴乐园
-URL-REGEX,^https:\/\/conf\.diditaxi\.com\.cn\/nav\/widget,REJECT
-//04 接送机-优惠商城
-URL-REGEX,^https:\/\/api\.udache\.com\/gulfstream,REJECT
-//05 主页 领任务
-URL-REGEX,^https:\/\/conf\.diditaxi\.com\.cn\/api\/(component|fusion|dynamicmodule|usercenter),REJECT
-URL-REGEX,^https:\/\/conf\.diditaxi\.com\.cn\/dynamic,REJECT
-//06 主页 非主流式悬浮挂件
-URL-REGEX,^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget,REJECT
-//07 商城
-URL-REGEX,^https:\/\/shop-gw\.chengxinyouxuan\.com\/(route|indexConfig|apolloConfig|getShopTuanInfos),REJECT
-//08 开屏广告
-URL-REGEX,^https:\/\/img-ys011\.didistatic\.com\/static,REJECT
-//09 骑行
-URL-REGEX,^https:\/\/pt-starimg\.didistatic\.com\/static,REJECT
 # > 交管12123 去广告
 URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,REJECT
 # > 京东 去广告
@@ -155,4 +135,4 @@ http-response ^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad requires-body=1,m
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
-hostname =  %INSERT% mbd.baidu.com,*.ximalaya.com,gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, as.xiaojukeji.com, pt-starimg.didistatic.com, security.xiaojukeji.com, guard.sec.xiaojukeji.com, conf.diditaxi.com.cn, api.udache.com, res.xiaojukeji.com, shop-gw.chengxinyouxuan.com, img-ys011.didistatic.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, *.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com,edith.xiaohongshu.com,note.youdao.com
+hostname =  %INSERT% mbd.baidu.com,*.ximalaya.com,gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, *.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com,edith.xiaohongshu.com,note.youdao.com
