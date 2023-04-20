@@ -1,7 +1,7 @@
 // 𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 网络信息详情面板
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
- // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/test/Panel/Network-Info/cn/networkCheck_CN.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2022.12.19 15:52
+ // 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/cn/net-info-panel_CN.js
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2023.04.20 11:45
  
 /*
 [Script]
@@ -10,6 +10,7 @@
 [Panel]
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info,update-interval=1
 */
+
 /**
  * 网络请求封装为 Promise
  * Usage: httpMethod.get(option).then(response => { logger.log(data) }).catch(error => { logger.log(error) })
@@ -60,19 +61,23 @@ class httpMethod {
   }
 }
 
-class logger {
-  static id = randomString();
+class loggerUtil {
+  constructor() {
+    this.id = randomString();
+  }
 
-  static log(message) {
+  log(message) {
     message = `[${this.id}] [ LOG ] ${message}`;
     console.log(message);
   }
 
-  static error(message) {
+  error(message) {
     message = `[${this.id}] [ERROR] ${message}`;
     console.log(message);
   }
 }
+
+var logger = new loggerUtil();
 
 function randomString(e = 6) {
   var t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678",
@@ -83,11 +88,6 @@ function randomString(e = 6) {
 }
 
 function getFlagEmoji(countryCode) {
-
-if (countryCode.toUpperCase() == 'TW') {
-    countryCode = 'CN'
-  }
-
   const codePoints = countryCode
     .toUpperCase()
     .split('')
@@ -160,10 +160,10 @@ function getCellularInfo() {
   if ($network['cellular-data']) {
     const carrierId = $network['cellular-data'].carrier;
     const radio = $network['cellular-data'].radio;
-    if (carrierId && radio) {
+    if ($network.wifi?.ssid == null && radio) {
       cellularInfo = carrierNames[carrierId] ?
-        carrierNames[carrierId] + ' | ' + radioGeneration[radio] + ' - ' + radio :
-        '蜂窝数据 | ' + radioGeneration[radio] + ' - ' + radio;
+        `${carrierNames[carrierId]} | ${radioGeneration[radio]} - ${radio} ` :
+        `蜂窝数据 | ${radioGeneration[radio]} - ${radio}`;
     }
   }
   return cellularInfo;
@@ -180,9 +180,9 @@ function getIP() {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
     if (v4?.primaryAddress) info.push(`本机v4IP：${v4?.primaryAddress}`);
-   /* if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);*/
+    /* if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);*/
     if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);
-   /*if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
+    /* if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
   }
   info = info.join("\n");
   return info + "\n";
@@ -206,7 +206,7 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
         getIP() +
         `现用节点：${info.query}\n` +
         `节点运营：${info.isp}\n` +
-        `节点位置：${info.country} - ${info.city}`, 
+        `节点位置：${info.country} - ${info.city}`,
       icon: getSSID() ? 'wifi' : 'simcard',
       'icon-color': getSSID() ? '#005CAF' : '#F9BF45',
     });
