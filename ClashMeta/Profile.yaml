@@ -1,0 +1,226 @@
+# 𝐂𝐥𝐚𝐬𝐡𝐌𝐞𝐭𝐚&𝐌𝐅𝐈_𝐥𝐚𝐨𝐬𝐡𝐮自用配置
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/ClashMeta/Profile.yaml
+# 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.03 18:50
+#
+
+#port: 7890           # HTTP(S) 代理服务器端口
+#socks-port: 7891     # SOCKS5 代理端口
+#redir-port: 7892     # Linux 和 macOS 的透明代理端口
+mixed-port: 10801     # HTTP(S) 和 SOCKS 代理混合端口
+geodata-mode: true    #【Meta专属】使用geoip.dat数据库(默认：false使用mmdb数据库)
+tcp-concurrent: true  #【Meta专属】TCP 并发连接所有 IP, 将使用最快握手的 TCP
+allow-lan: true       # 允许局域网的连接（可用来共享代理）
+bind-address: "*"     # 绑定 IP 地址，仅在将allow-lan设置为true时适用,"*"表示绑定所有IP地址
+find-process-mode: strict
+ipv6: false           # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
+mode: rule            # 规则模式：rule（规则）/global（全局代理）/direct（全局直连）/script (脚本)
+log-level: info       # 日志等级 silent/error/warning/info/debug
+external-controller: 0.0.0.0:9093   # RESTful API 监听地址
+
+geox-url:             #自定义 geodata url
+  geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+  mmdb: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb"
+  
+profile:
+  store-selected: true # 存储 select 选择记录
+  store-fake-ip: true  # 持久化 fake-ip
+  
+sniffer:               # 嗅探域名 可选配置
+  enable: true
+  parse-pure-ip: true  # 是否使用嗅探结果作为实际访问，默认 true
+  sniff:
+    TLS:               # TLS 默认如果不配置 ports 默认嗅探 443
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+  force-domain:        # 强制对此域名进行嗅探
+  - "+.netflix.com"
+  - "+.nflxvideo.net"
+  - "+.amazonaws.com"
+  - "+.media.dssott.com"
+  - 'google.com'
+  sniffing:            # 需要嗅探协议
+    - tls
+    - http
+      
+tun:                   # Tun 配置
+  enable: true
+  stack: system        # 可选： system/gvisor/lwip
+                       # tun模式堆栈,如无使用问题,建议使用 system 栈;
+                       # MacOS 用户推荐 gvisor栈,IOS无法使用system栈
+  dns-hijack:          # dns劫持,一般设置为 any:53 即可, 即劫持所有53端口的udp流量
+    - 'any:53'
+# strict_route: true   # 将所有连接路由到tun来防止泄漏，但你的设备将无法其他设备被访问
+  auto-route: true     # 自动设置全局路由，可以自动将全局流量路由进入tun网卡。
+  auto-detect-interface: true   # 自动识别出口网卡
+        
+dns:
+  enable: true             # 关闭将使用系统 DNS
+  prefer-h3: true          # 开启 DoH 支持 HTTP/3，将并发尝试
+  ipv6: false              # IPV6解析开关；如果为false，将返回ipv6结果为空
+  enhanced-mode: fake-ip   # 模式：redir-host或fake-ip
+  listen: 0.0.0.0:53       # 开启 DNS 服务器监听
+  default-nameserver:      # 解析非IP的dns用的dns服务器,只支持纯IP
+    - 223.5.5.5
+    - 119.29.29.29
+  fake-ip-range: 198.18.0.1/16    # Fake-IP解析地址池
+  fake-ip-filter:          # fake ip 白名单列表,以下地址不会下发fakeip映射用于连接
+     - '*.lan'
+     - localhost.ptlogin2.qq.com
+     - '+.srv.nintendo.net'
+     - '+.stun.playstation.net'
+     - '+.msftconnecttest.com'
+     - '+.msftncsi.com'
+     - '+.xboxlive.com'
+     - 'msftconnecttest.com'
+     - 'xbox.*.microsoft.com'
+     - '*.battlenet.com.cn'
+     - '*.battlenet.com'
+     - '*.blzstatic.cn'
+     - '*.battle.net'
+     - '*.mcdn.bilivideo.cn'
+  nameserver:             # 默认DNS服务器，支持udp/tcp/dot/doh/doq
+     - 223.5.5.5
+     - 119.29.29.29
+     - tls://223.5.5.5:853 # DNS over TLS
+     - https://doh.pub/dns-query # DNS over HTTPS
+     - https://dns.alidns.com/dns-query#h3=true # 强制 HTTP/3，与 perfer-h3 无关，强制开启 DoH 的 HTTP/3 支持，若不支持将无法使用
+     - https://mozilla.cloudflare-dns.com/dns-query#DNS&h3=true # 指定策略组和使用 HTTP/3
+     - dhcp://en0 # dns from dhcp
+     - quic://dns.adguard.com:784 # DNS over QUIC     
+  fallback:               # 解析国外域名的DNS服务器
+     - https://doh.pub/dns-query
+     - https://dns.alidns.com/dns-query
+  fallback-filter:        # 配置 fallback 使用条件
+    geoip: true           # 配置是否使用 geoip
+    geoip-code: CN        # 当 nameserver 域名的 IP 查询 geoip 库为 CN 时，不使用 fallback 中的 DNS 查询结果
+    geosite:              # 配置强制 fallback，优先于 IP 判断，具体分类自行查看 geosite 库
+      - gfw
+      - geolocation-!cn
+    ipcidr:               # 在这个网段内的 IP 地址会被考虑为被污染的 IP
+      - 240.0.0.0/4
+    domain:               # 这些域名被视为已污染,匹配到这些域名,会直接使用fallback解析,不去使用nameserver
+      - '+.google.com'
+      - '+.github.com'
+      - '+.youtube.com'  
+      - "+.bing.com"
+      - "+.bing.net"
+      - "+.microsoft.com"
+      - "+.microsoftapp.net"
+      - "+.msn.com"
+      - "+.trafficmanager.com"
+      
+###开始建立锚点
+    
+# 策略组引用相关
+pr: &pr {type: select, proxies: [🚀 自动切换, 🚀 手动切换, 🇭🇰 香港节点, 🇯🇵 日本节点, 🇺🇲 美国节点, 🇹🇼 台湾节点, 🇸🇬 狮城节点, 🇰🇷 韩国节点, 🇮🇳 其他节点, DIRECT]}
+
+# 订阅更新和延迟测试相关
+p: &p {type: http, interval: 86400, health-check: {enable: true, url: http://cp.cloudflare.com/generate_204, interval: 1800}}
+
+# 自动选择相关
+auto: &auto {type: url-test, lazy: true, url: http://cp.cloudflare.com/generate_204, interval: 900, use: [Subscribe]}
+
+# 手动选择相关
+use: &use {type: select, use: [Subscribe]}
+
+# classical规则相关
+c: &c {type: http, behavior: classical, interval: 86400}
+
+# domain规则相关
+d: &d {type: http, behavior: domain, interval: 86400}
+
+# ipcidr规则相关
+i: &i {type: http, behavior: ipcidr, interval: 86400}
+
+###结束建立锚点
+
+proxy-providers:
+  Subscribe:
+    <<: *p
+    url: "https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33"
+    path: ./all.yaml
+    # Meta支持机场通用订阅
+          
+proxies: null
+
+proxy-groups:
+
+ #分流分组
+
+ - {name: 🌏 国外网站, <<: *pr}
+
+ - {name: 📹 国际媒体, <<: *pr}
+
+ - {name: 🍎 苹果服务, <<: *pr}
+
+ - {name: 🧩 微软服务, <<: *pr}
+
+ - {name: 🌌 谷歌服务, <<: *pr}
+
+ - {name: 📟 电报消息, <<: *pr}
+
+ - {name: 🐦 推特消息, <<: *pr}
+ 
+ - {name: 🤖 OpenAI, <<: *pr}
+
+ - {name: 🎮 游戏平台, <<: *pr}
+  
+ - {name: 📺 哔哩哔哩, type: select, proxies: [DIRECT, 🇭🇰 香港节点, 🇹🇼 台湾节点]}
+
+ - {name: 🌏 国内网站, type: select, proxies: [DIRECT, 🚀 手动切换]}
+  
+ - {name: 🛑 AdBlock, type: select, proxies: [REJECT, DIRECT]}
+  
+ - {name: 🐟 漏网之鱼, <<: *pr}
+ 
+ #节点地区分组
+ 
+ - {name: 🚀 手动切换, <<: *use}
+
+ - {name: 🚀 自动切换, <<: *auto}
+
+ - {name: 🇭🇰 香港节点, <<: *auto, filter: "🇭🇰|HK|港|(?i)Hong"}
+
+ - {name: 🇯🇵 日本节点, <<: *auto, filter: "🇯🇵|JP|日|东京|(?i)Japan"}
+
+ - {name: 🇺🇲 美国节点, <<: *auto, filter: "🇺🇸|US|美|(?i)States|American"}
+
+ - {name: 🇹🇼 台湾节点, <<: *auto, filter: "🇹🇼|TW|台|湾|(?i)Taiwan"}
+
+ - {name: 🇸🇬 狮城节点, <<: *auto, filter: "🇸🇬|SG|狮|坡|singapore|(?i)Singapore"}
+  
+ - {name: 🇰🇷 韩国节点, <<: *auto, filter: "🇰🇷|KR|韩|korea|(?i)Kingdom"}
+  
+ - {name: 🇮🇳 其他节点, <<: *auto, filter: "(?i)^(?!.*(?:us)).*🇬🇧|英|uk|united kingdom|unitedkingdom|🇹🇭|泰|TH|Thailand|🇩🇪|德|de|germany|🇨🇦|加拿大|ca|canada|🇦🇺|澳|澳大利亚|au|australia|🇮🇳|印|in|indian|🇰🇷|韩|kr|korea|🇹🇷|土|火鸡|tr.*"}
+
+    
+rules:
+  - GEOSITE,category-ads-all,🛑 AdBlock
+  - GEOSITE,private,DIRECT
+  - GEOIP,private,DIRECT
+  - GEOSITE,category-games,🎮 游戏平台
+  - GEOSITE,youtube,📹 国际媒体
+  - GEOIP,netflix,📹 国际媒体
+  - GEOSITE,netflix,📹 国际媒体
+  - GEOSITE,hbo,📹 国际媒体
+  - GEOSITE,disney,📹 国际媒体
+  - GEOSITE,primevideo,📹 国际媒体
+  - GEOSITE,openai,🤖 OpenAI
+  - GEOSITE,github,🧩 微软服务
+  - GEOSITE,bilibili,📺 哔哩哔哩
+  - GEOSITE,telegram,📟 电报消息
+  - GEOIP,telegram,📟 电报消息
+  - GEOIP,twitter,🐦 推特消息
+  - GEOSITE,twitter,🐦 推特消息
+  - GEOSITE,apple,🍎 苹果服务
+  - GEOSITE,microsoft,🧩 微软服务
+  - GEOIP,google,🌌 谷歌服务
+  - GEOSITE,google,🌌 谷歌服务
+  - GEOSITE,bilibili,📺 哔哩哔哩
+  - GEOSITE,geolocation-!cn,🌏 国外网站
+  - GEOSITE,cn,🌏 国内网站
+  - GEOIP,CN,🌏 国内网站
+  - MATCH,兜底分流
