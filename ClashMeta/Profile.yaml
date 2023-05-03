@@ -1,6 +1,6 @@
 # 𝐂𝐥𝐚𝐬𝐡𝐌𝐞𝐭𝐚&𝐌𝐅𝐈_𝐥𝐚𝐨𝐬𝐡𝐮自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/ClashMeta/Profile.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.03 18:50
+# 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.03 18:58
 #
 
 #port: 7890           # HTTP(S) 代理服务器端口
@@ -223,4 +223,4 @@ rules:
   - GEOSITE,geolocation-!cn,🌏 国外网站
   - GEOSITE,cn,🌏 国内网站
   - GEOIP,CN,🌏 国内网站
-  - MATCH,兜底分流
+  - MATCH,🐟 漏网之鱼
