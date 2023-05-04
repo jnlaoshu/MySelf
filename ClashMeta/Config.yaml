@@ -1,0 +1,161 @@
+# 𝐂𝐥𝐚𝐬𝐡𝐌𝐞𝐭𝐚&𝐌𝐅𝐈_𝐥𝐚𝐨𝐬𝐡𝐮自用配置
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/ClashMeta/Config.yaml
+# 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.04 15:15
+
+######### 锚点 Start #######
+# 策略组引用相关
+pr: &pr {type: select, proxies: [默认,🇭🇰 香港节点,🇹🇼 台湾节点,🇯🇵 日本节点,🇸🇬 狮城节点,🇺🇲 美国节点,🇰🇷 韩国节点,🇰🇷 韩国节点,🇮🇳 其他地区,🚀 全部节点,🔀 自动筛选,DIRECT]}
+
+# 订阅更新和延迟测试相关
+p: &p {type: http, interval: 3600, health-check: {enable: true, url: https://www.gstatic.com/generate_204, interval: 300}}
+
+# 手动选择相关
+use: &use
+  type: select
+  use:
+  - Server1
+  - Server2
+
+######### 锚点 End #######
+
+
+# url 里填写自己的订阅,名称和path（文件位置）均不能重复
+proxy-Servers:
+  Server1:
+    <<: *p
+    url: "https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33"
+    path: ./proxy_Servers/Server1.yaml
+
+  Server2:
+    <<: *p
+    url: "https://api.sub-100.one/link/uVrQwu01Div7XAV?sub=3&extend=1"
+    path: ./proxy_Servers/Server2.yaml
+
+mode: rule            # 规则模式：rule（规则）/global（全局代理）/direct（全局直连）/script (脚本)
+ipv6: true            # 开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
+log-level: info       # 日志等级 silent/error/warning/info/debug
+allow-lan: true       # 允许局域网的连接（可用来共享代理）
+mixed-port: 7890      # HTTP(S) 和 SOCKS 代理混合端口
+unified-delay: false
+tcp-concurrent: true  #【Meta专属】TCP 并发连接所有 IP, 将使用最快握手的 TCP
+
+external-controller: 0.0.0.0:9090  # RESTful API 监听地址
+#external-ui: ui
+secret: ""
+
+geodata-mode: true    #【Meta专属】使用geoip.dat数据库(默认：false使用mmdb数据库)
+geox-url:             #自定义 geodata url
+  geoip: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geoip.dat"
+  geosite: "https://cdn.jsdelivr.net/gh/Loyalsoldier/v2ray-rules-dat@release/geosite.dat"
+  mmdb: "https://cdn.jsdelivr.net/gh/Loyalsoldier/geoip@release/Country.mmdb"
+
+find-process-mode: strict
+global-client-fingerprint: chrome
+
+profile:
+  store-selected: true # 存储 select 选择记录
+  store-fake-ip: true  # 持久化 fake-ip
+
+sniffer:               # 嗅探域名 可选配置
+  enable: true
+  sniff:               # TLS 默认如果不配置 ports 默认嗅探 443
+    TLS:
+      ports: [443, 8443]
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+
+tun:                   # Tun 配置
+  enable: true
+  stack: system        # 可选： system/gvisor/lwip
+                       # tun模式堆栈,如无使用问题,建议使用 system 栈;
+                       # MacOS 用户推荐 gvisor栈,IOS无法使用system栈
+  dns-hijack:          # dns劫持,一般设置为 any:53 即可, 即劫持所有53端口的udp流量
+    - 'any:53'
+# strict_route: true   # 将所有连接路由到tun来防止泄漏，但你的设备将无法其他设备被访问
+  auto-route: true     # 自动设置全局路由，可以自动将全局流量路由进入tun网卡。
+  auto-detect-interface: true   # 自动识别出口网卡
+
+dns:
+  enable: true             # 关闭将使用系统 DNS
+  listen: :1053            # 开启 DNS 服务器监听  
+  prefer-h3: true          # 开启 DoH 支持 HTTP/3，将并发尝试
+  ipv6: true               # IPV6解析开关；如果为false，将返回ipv6结果为空
+  enhanced-mode: fake-ip   # 模式：redir-host或fake-ip
+  fake-ip-range: 28.0.0.1/8    # Fake-IP解析地址池
+  fake-ip-filter:          # fake ip 白名单列表,以下地址不会下发fakeip映射用于连接
+    - '*'
+    - '+.lan'
+  default-nameserver:      # 解析非IP的dns用的dns服务器,只支持纯IP
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:              # 默认DNS服务器，支持udp/tcp/dot/doh/doq
+    - 'tls://8.8.4.4#dns'
+    - 'tls://1.0.0.1#dns'
+  proxy-server-nameserver:
+    - https://doh.pub/dns-query
+  nameserver-policy:
+    "geosite:cn,private":
+      - https://doh.pub/dns-query
+      - https://dns.alidns.com/dns-query
+
+proxy-groups:
+
+  - {name: 默认, type: select, proxies: [DIRECT, 🇭🇰 香港节点, 🇹🇼 台湾节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🇮🇳 其他地区, 🚀 全部节点, 🔀 自动筛选]}
+
+  - {name: Dns, type: select, proxies: [DIRECT, 🔀 自动筛选, 默认, 🇭🇰 香港节点, 🇹🇼 台湾节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🇮🇳 其他地区, 🚀 全部节点]}
+
+  - {name: Github, <<: *pr}
+  
+  - {name: Google, <<: *pr}
+  
+  - {name: OpenAI, <<: *pr}
+
+  - {name: Spotify, <<: *pr}
+  
+  - {name: Telegram, <<: *pr}
+
+  - {name: Twitter, <<: *pr}
+
+  - {name: YouTube, <<: *pr}
+
+  - {name: 🌏 国内直连, type: select, proxies: [DIRECT, 默认, 🇭🇰 香港节点, 🇹🇼 台湾节点, 🇯🇵 日本节点, 🇸🇬 狮城节点, 🇺🇲 美国节点, 🇰🇷 韩国节点, 🇮🇳 其他地区, 🚀 全部节点, 🔀 自动筛选]}
+
+  - {name: 🐟 漏网之鱼, <<: *pr}
+
+#节点地区分组
+
+  - {name: 🇭🇰 香港节点, <<: *use,filter: "(?i)🇭🇰|HK|港|hk|Hong"}
+
+  - {name: 🇹🇼 台湾节点, <<: *use, filter: "(?i)🇹🇼|TW|台|湾|Tai"}
+
+  - {name: 🇯🇵 日本节点, <<: *use, filter: "(?i)🇯🇵|JP|日|东京|Japan"}
+
+  - {name: 🇺🇲 美国节点, <<: *use, filter: "(?i)🇺🇸|US|美|States|American"}
+
+  - {name: 🇸🇬 狮城节点, <<: *use, filter: "(?i)(🇸🇬|SG|狮|坡|Singapore)"}
+
+  - {name: 🇰🇷 韩国节点, <<: *use, filter: "(?i)(🇰🇷|KR|韩|KOR|korea)"}
+  
+  - {name: 🇮🇳 其他地区, <<: *use, filter: "(?i)^(?!.*(?:🇭🇰|HK|港|hk|Hong|🇹🇼|TW|台|湾|Tai|🇯🇵|JP|日|东京|Japan|🇺🇸|US|美|States|American|🇸🇬|SG|狮|坡|Singapore|🇰🇷|KR|韩|KOR|korea)).*"}
+
+  - {name: 🚀 全部节点, <<: *use}
+
+  - {name: 🔀 自动筛选, <<: *use, tolerance: 2, type: url-test}
+
+rules:
+  - GEOSITE,github,Github
+  - GEOSITE,google,Google
+  - GEOSITE,openai,OpenAI
+  - GEOSITE,spotify,Spotify
+  - GEOSITE,telegram,Telegram
+  - GEOSITE,twitter,Twitter
+  - GEOSITE,youtube,YouTube
+  - GEOSITE,geolocation-!cn,🐟 漏网之鱼
+
+  - GEOIP,google,Google
+  - GEOIP,telegram,Telegram
+  - GEOIP,twitter,Twitter
+  - GEOSITE,CN,🌏 国内直连
+  - GEOIP,CN,🌏 国内直连
+  - MATCH,🐟 漏网之鱼
