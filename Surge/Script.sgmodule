@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.03.10 14:35
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.05.05 09:15
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -12,10 +12,6 @@ https:\/\/api\.revenuecat\.com header-del x-revenuecat-etag
 [Rule]
 # > Boxjs 代理
 DOMAIN-KEYWORD,jsdelivr.net,🚀 全球加速
-# > ChatGPT 代理 
-DOMAIN-SUFFIX, openai.com,🇸🇬 狮城节点
-DOMAIN, cdn.auth0.com,🇸🇬 狮城节点
-DOMAIN, openaiapi-site.azureedge.net,🇸🇬 狮城节点
 # > Safari 访问防跳转 App
 DOMAIN,app-site-association.cdn-apple.com,REJECT
 # > 屏蔽HTTP3/QUIC协议
@@ -43,9 +39,7 @@ OR,((DOMAIN,pgdt.gtimg.cn), (AND,((USER-AGENT,live4iphoneRel*), (IP-CIDR,0.0.0.0
 # > 交管12123 去广告
 URL-REGEX,^https:\/\/gab\.122\.gov\.cn\/eapp\/m\/sysquery\/adver$,REJECT
 # > 京东 去广告
-URL-REGEX,^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start$,REJECT
-# > 京东金融 去广告
-URL-REGEX,^https?:\/\/ms\.jr\.jd\.com\/gw\/generic\/aladdin\/(new)?na\/m\/getLoadingPicture,REJECT
+URL-REGEX,^https?:\/\/api\.m\.jd\.com\/client\.action\?functionId=start$,REJECT-TINYGIF
 # > 云闪付 去广告
 URL-REGEX,^https:\/\/wallet\.95516\.com\/s\/wl\/icon\/long,REJECT
 # > 向日葵 去广告
@@ -58,12 +52,8 @@ DOMAIN,push.oray.com,REJECT
 DOMAIN-SUFFIX,offline-adv.oray.com,REJECT
 DOMAIN-KEYWORD,upload-cdn.orayimg.com-upload-activity,REJECT
 # > 美团 去广告
-URL-REGEX,^https?:\/\/img\.meituan\.net\/(bizad|brandCpt)\/\w+\.(png|jpg),REJECT
-URL-REGEX,^https?:\/\/peisongapi\.meituan\.com\/client\/getInitiateImage,REJECT
-URL-REGEX,^https?:\/\/img\.meituan\.net\/(adunion|display|midas)\/\w+\.(gif|jpg|jpg\.webp)$,REJECT
-URL-REGEX,^https?:\/\/(s3plus|flowplus)\.meituan\.net\/v\d\/\w+\/linglong\/\w+\.(gif|jpg|mp4),REJECT
-URL-REGEX,^https?:\/\/p\d\.meituan\.net\/(bizad|wmbanner)\/\w+\.jpg,REJECT
-URL-REGEX,^https?:\/\/p\d\.meituan\.net\/movie\/\w+\.jpg\?may_covertWebp,REJECT
+URL-REGEX,^https:\/\/flowplus\.meituan\.net\/v1\/mss_\w+\/linglong\/\d+\.jpg$,REJECT
+URL-REGEX,^https:\/\/s3plus\.meituan\.net\/v1\/mss_\w+\/(brandcpt-vedio|waimai-alita)\/\w+\.zip$,REJECT
 # > Ximalaya
 URL-REGEX,^https?:\/\/((25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\.){3}(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)\/(ting|soundPatch|chase_recommend|anchor-sell),REJECT
 URL-REGEX,^https?:\/\/.*\.ximalaya\.com\/(discovery-feed|anchor-sell),REJECT
@@ -73,8 +63,8 @@ DOMAIN,ad.21cn.com,REJECT
 DOMAIN,ad.k.21cn.com,REJECT
 DOMAIN,admarket.21cn.com,REJECT
 DOMAIN,adshows.21cn.com,REJECT
-# > 作业帮 去广告
-URL-REGEX,^https:\/\/syh\.zybang\.com\/com\/adx\/impress$,REJECT-TINYGIF
+# > 拼多多 去开屏
+URL-REGEX,^https?:\/\/api\.(pinduoduo|yangkeduo)\.com\/api\/cappuccino\/splash,REJECT
 
 [Script]
 # > Nicegram会员 restore-access.indream.app
@@ -135,4 +125,4 @@ http-response ^https?:\/\/mp\.weixin\.qq\.com\/mp\/getappmsgad requires-body=1,m
 有道云笔记VIP = type=http-response,  https://note.youdao.com/yws/(mapi/payment|api/self) script-path=https://raw.githubusercontent.com/Alex0510/Eric/master/surge/Script/ydybj.js, requires-body=true, timeout=10, tag=有道云笔记VIP
 
 [MITM]
-hostname =  %INSERT% mbd.baidu.com,*.ximalaya.com,gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, *.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com,edith.xiaohongshu.com,note.youdao.com
+hostname =  %INSERT% mbd.baidu.com,*.ximalaya.com,gab.122.gov.cn, api.m.jd.com,ms.jr.jd.com, wallet.95516.com, api-access.pangolin-sdk-toutiao.com,dm.toutiao.com,*.oray.com,*.orayimg.com, api.pinduoduo.com,*.meituan.net, *.meituan.com, restore-access.indream.app,notability.com,api.vuevideo.net,vsco.co, api.revenuecat.com, boxer.baidu.com, api.m.jd.com,*.kuwo.cn, *.lrts.me,h5.xiuxiu.meitu.com, api.xiuxiu.meitu.com,wmapi.meituan.com,ap*.intsig.net,api.weibo.cn, mapi.weibo.com, *.uve.weibo.com, -*.weibo.com, mp.weixin.qq.com, security.wechat.com, weixin110.qq.com,edith.xiaohongshu.com,note.youdao.com
