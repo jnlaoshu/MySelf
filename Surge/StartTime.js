@@ -1,6 +1,6 @@
 // Surge启动时长面板𝐔𝐑𝐋：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
 // 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/functionstatus.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.05 16:17
+// 𝐔𝐩𝐝𝐚𝐭𝐞：2023.05.06 09:00
 
 /*
 [Script]
@@ -31,7 +31,7 @@ if ($trigger == "button") {
 	$notification.post("配置重载","配置重载成功","")
 };
 $done({
-    title:"SurgePro | 运行时长："+startTime + "",
+    title:"SurgePro 已运行"+startTime + "",
     content: "𝐌𝐢𝐭𝐌"+icon_status(mitm_status.enabled)+"   𝐑𝐞𝐰𝐫𝐢𝐭𝐞"+icon_status(rewrite_status.enabled)+"   𝐒𝐜𝐫𝐢𝐩𝐭𝐢𝐧𝐠"+icon_status(scripting_status.enabled),
     icon: icon_s?"power.circle":"exclamationmark.triangle",
    "icon-color":icon_s?"#FF2121":"#F20C00"
