@@ -1,7 +1,7 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
 # > 如何导入订阅： https://t.me/egern_news/5 
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.05.12 16:10
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.05.13 10:00
 ---
 policy_groups:
   - select:
@@ -153,5 +153,5 @@ mitm:
     - sub-store.com
     - www.google.com
 modules:
-  - url: "https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/backend/sub-store.min.js"
+  - url: "https://github.com/jnlaoshu/MySelf/blob/main/Egern/Rule/Sub-Store.yaml"
     enabled: true
