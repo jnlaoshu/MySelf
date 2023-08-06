@@ -1,0 +1,226 @@
+# 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:10
+
+proxy-providers:
+  服务提供商-1:
+    url: https://sub.store/download/collection/AllServer
+    interval: 600
+  # 服务提供商-2:
+  #   url: http://your-another-service-provider
+  #   interval: 600  
+
+# > 机场流量信息
+subscribe-url: https://sub.store/download/Server1
+
+proxy-groups:
+  # 功能分组
+  - name: 选择代理
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png
+    type: select
+    proxies: &proxies
+      - 自动选择
+      - 手动选择
+      - 香港节点
+      - 台湾节点
+      - 狮城节点
+      - 日本节点
+      - 美国节点
+      - 韩国节点
+      - 其他节点      
+      - DIRECT
+
+  - name: 国外网站
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
+    type: select
+    proxies: *proxies
+
+  - name: OpenAI
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
+    type: select
+    proxies: [美国节点, 手动选择]
+ 
+  - name: Spotify
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png
+    type: select
+    proxies: *proxies
+    
+  - name: YouTube
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    type: select
+    proxies: *proxies
+    
+  - name: 广告拦截
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
+    type: select
+    proxies: [REJECT, DIRECT]
+    
+  - name: 默认
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
+    type: select
+    proxies:
+      - 选择代理
+      - DIRECT
+      
+  # 基于地区分组
+  - name: 香港节点
+    filter: "港|🇭🇰|HK|(?i)Hong"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 台湾节点
+    filter: "台|🇹🇼|湾|TW|(?i)Taiwan"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 狮城节点
+    filter: "新加坡|坡|狮城|🇸🇬|SG|(?i)Singapore"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 日本节点
+    filter: "日|🇯🇵|东京|JP|(?i)Japan"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 美国节点
+    filter: "美|🇺🇲|US|(?i)States|America"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 韩国节点
+    filter: "韩|🇰🇷|韓|KR|KOR|(?i)Korea"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 其他节点
+    filter: "^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$,"
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 自动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
+    interval: 120
+    lazy: true
+    type: select
+    include-all: true
+    
+rules:
+  - SCRIPT,quic,REJECT
+  - GEOSITE,category-ads-all,广告拦截
+  - GEOSITE,private,DIRECT
+  - GEOIP,private,DIRECT
+  # OpenAI 
+  - GEOSITE,openai,OpenAI
+  # Spotify
+  - GEOSITE,spotify,Spotify
+  # GitHub
+  - GEOSITE,github,选择代理
+  # Telegram
+  - IP-ASN,62014,选择代理,no-resolve
+  - IP-ASN,59930,选择代理,no-resolve
+  - IP-ASN,44907,选择代理,no-resolve
+  - IP-ASN,211157,选择代理,no-resolve
+  - PROCESS-NAME,Telegram.exe,选择代理
+  - PROCESS-NAME,Telegram,选择代理
+  - GEOSITE,telegram,选择代理
+  # YouTube
+  - GEOSITE,youtube,YouTube
+  # Google
+  - GEOSITE,google,选择代理
+  # Twitter
+  - GEOSITE,twitter,选择代理
+  - DOMAIN-SUFFIX,tapbots.com,选择代理
+  # Instagram
+  - GEOSITE,instagram,选择代理
+  # Facebook
+  - GEOSITE,facebook,选择代理
+  # Steam
+  - GEOSITE,steam@cn,DIRECT
+  - GEOSITE,steam,选择代理
+  # Apple LBS
+  - DOMAIN-SUFFIX,iphone-ld.apple.com,DIRECT
+  - DOMAIN-SUFFIX,lcdn-locator.apple.com,DIRECT
+  - DOMAIN-SUFFIX,lcdn-registration.apple.com,DIRECT
+  - DOMAIN-SUFFIX,push.apple.com,DIRECT
+  # Apple OCSP
+  - PROCESS-NAME,trustd,选择代理
+  # Microsoft
+  - GEOSITE,microsoft@cn,DIRECT
+  - GEOSITE,microsoft,选择代理
+  - GEOSITE,xbox,选择代理
+  # common proxy utils
+  - PROCESS-NAME,v2ray,DIRECT
+  - PROCESS-NAME,Surge,DIRECT
+  - PROCESS-NAME,ss-local,DIRECT
+  - PROCESS-NAME,privoxy,DIRECT
+  - PROCESS-NAME,trojan,DIRECT
+  - PROCESS-NAME,trojan-go,DIRECT
+  - PROCESS-NAME,naive,DIRECT
+  - PROCESS-NAME,CloudflareWARP,DIRECT
+  - PROCESS-NAME,Cloudflare WARP,DIRECT
+  - IP-CIDR,162.159.193.0/24,DIRECT,no-resolve
+  - PROCESS-NAME,p4pclient,DIRECT
+  - PROCESS-NAME,Thunder,DIRECT
+  - PROCESS-NAME,DownloadService,DIRECT
+  - PROCESS-NAME,qbittorrent,DIRECT
+  - PROCESS-NAME,Transmission,DIRECT
+  - PROCESS-NAME,fdm,DIRECT
+  - PROCESS-NAME,aria2c,DIRECT
+  - PROCESS-NAME,Folx,DIRECT
+  - PROCESS-NAME,NetTransport,DIRECT
+  - PROCESS-NAME,uTorrent,DIRECT
+  - PROCESS-NAME,WebTorrent,DIRECT
+  - GEOSITE,geolocation-!cn,国外网站  
+  - GEOIP,LAN,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,默认
+script:
+  shortcuts:
+    quic: network == 'udp' and dst_port == 443
+dns:
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - system
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+log-level: warning
+mode: Rule
