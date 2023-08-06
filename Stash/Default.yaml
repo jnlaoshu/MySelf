@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:10
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:30
 
 proxy-providers:
   服务提供商-1:
@@ -29,24 +29,24 @@ proxy-groups:
       - 韩国节点
       - 其他节点      
       - DIRECT
-
+    
+  - name: 自动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
+    interval: 120
+    lazy: true
+    tolerance: 50
+    type: url-test
+    include-all: true
+    
+  - name: 手动选择
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
+    interval: 120
+    lazy: true
+    type: select
+    include-all: true
+    
   - name: 国外网站
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    type: select
-    proxies: *proxies
-
-  - name: OpenAI
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Bot.png
-    type: select
-    proxies: [美国节点, 手动选择]
- 
-  - name: Spotify
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png
-    type: select
-    proxies: *proxies
-    
-  - name: YouTube
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
     type: select
     proxies: *proxies
     
@@ -55,7 +55,7 @@ proxy-groups:
     type: select
     proxies: [REJECT, DIRECT]
     
-  - name: 默认
+  - name: 默认规则
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
     type: select
     proxies:
@@ -125,31 +125,16 @@ proxy-groups:
     tolerance: 50
     type: url-test
     include-all: true
-    
-  - name: 自动选择
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
-    interval: 120
-    lazy: true
-    tolerance: 50
-    type: url-test
-    include-all: true
-    
-  - name: 手动选择
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Static.png
-    interval: 120
-    lazy: true
-    type: select
-    include-all: true
-    
+
 rules:
   - SCRIPT,quic,REJECT
   - GEOSITE,category-ads-all,广告拦截
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT
   # OpenAI 
-  - GEOSITE,openai,OpenAI
+  - GEOSITE,openai,美国节点
   # Spotify
-  - GEOSITE,spotify,Spotify
+  - GEOSITE,spotify,选择代理
   # GitHub
   - GEOSITE,github,选择代理
   # Telegram
@@ -161,7 +146,7 @@ rules:
   - PROCESS-NAME,Telegram,选择代理
   - GEOSITE,telegram,选择代理
   # YouTube
-  - GEOSITE,youtube,YouTube
+  - GEOSITE,youtube,选择代理
   # Google
   - GEOSITE,google,选择代理
   # Twitter
@@ -210,7 +195,7 @@ rules:
   - GEOSITE,geolocation-!cn,国外网站  
   - GEOIP,LAN,DIRECT
   - GEOIP,CN,DIRECT
-  - MATCH,默认
+  - MATCH,默认规则
 script:
   shortcuts:
     quic: network == 'udp' and dst_port == 443
