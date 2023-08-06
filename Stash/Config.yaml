@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.05.12 16:20
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 18:36
 
 mixed-port: 7890
 allow-lan: true
@@ -209,7 +209,7 @@ rule-providers:
     type: http
     behavior: classical
     url: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
-    path: ./ruleset/Telegram.yaml
+    path: ./ruleset/OpenAI.yaml
     interval: 86400
     
   Twitter: 
@@ -226,7 +226,7 @@ rule-providers:
     path: ./ruleset/YouTube.yaml
     interval: 86400
 
-  TikTok: # 海外抖音
+  TikTok: 
     type: http
     behavior: classical
     url: https://raw.githubusercontents.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml
@@ -263,10 +263,7 @@ rule-providers:
     
 rules:
   # 分流规则引用
-  - RULE-SET,Unbreak,DIRECT
   - RULE-SET,Adblock,REJECT
-  - RULE-SET,Privacy,REJECT
-  - RULE-SET,Hijacking,REJECT
   - RULE-SET,Apple,国内网站
   - RULE-SET,Google,国外网站  
   - RULE-SET,Microsoft,国内网站
