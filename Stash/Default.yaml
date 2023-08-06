@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:30
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:40
 
 proxy-providers:
   服务提供商-1:
@@ -19,7 +19,7 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Proxy.png
     type: select
     proxies: &proxies
-      - 自动选择
+      - 自动切换
       - 手动选择
       - 香港节点
       - 台湾节点
@@ -30,7 +30,7 @@ proxy-groups:
       - 其他节点      
       - DIRECT
     
-  - name: 自动选择
+  - name: 自动切换
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     interval: 120
     lazy: true
