@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.07 10:30
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.07 15:10
 
 proxy-providers:
   服务提供商-1:
@@ -28,7 +28,8 @@ proxy-groups:
       - 美国节点
       - 韩国节点
       - 其他节点      
-    
+      - DIRECT
+      
   - name: 自动切换
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
     interval: 120
@@ -54,7 +55,6 @@ proxy-groups:
     type: select
     proxies:
       - 选择代理
-      - DIRECT
       
   # 基于地区分组
   - name: 香港节点
@@ -127,6 +127,8 @@ rules:
   - GEOIP,private,DIRECT
   # OpenAI 
   - GEOSITE,openai,美国节点
+  # PayPal 
+  - GEOSITE,PayPal,美国节点 
   # Spotify
   - GEOSITE,spotify,选择代理
   # GitHub
