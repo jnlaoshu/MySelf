@@ -1,10 +1,11 @@
 # 源自网络，感谢分享！自用配置，谨慎使用！
 
-* 只是搬运和同步更新（[@FEI](https://github.com/Infatuation-Fei/rule/tree/main/Stash)）等大佬脚本，不负责维护脚本.
+* 只是搬运和同步更新大佬脚本，不负责维护脚本.
 
 ### 全局配置：
 
-* [Config.conf](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml)
+* [Config.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Config.yaml)
+* [Default.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml)
 
 ### 覆写脚本列表：
 * [Script](https://github.com/jnlaoshu/MySelf/tree/main/Stash/Script)
