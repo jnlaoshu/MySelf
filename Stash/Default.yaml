@@ -1,6 +1,6 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.06 22:40
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.07 10:30
 
 proxy-providers:
   服务提供商-1:
@@ -28,7 +28,6 @@ proxy-groups:
       - 美国节点
       - 韩国节点
       - 其他节点      
-      - DIRECT
     
   - name: 自动切换
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Auto.png
@@ -45,11 +44,6 @@ proxy-groups:
     type: select
     include-all: true
     
-  - name: 国外网站
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Global.png
-    type: select
-    proxies: *proxies
-    
   - name: 广告拦截
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
     type: select
@@ -64,7 +58,7 @@ proxy-groups:
       
   # 基于地区分组
   - name: 香港节点
-    filter: "港|🇭🇰|HK|(?i)Hong"
+    filter: "🇭🇰|港|HK|Hong"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
     interval: 120
     lazy: true
@@ -73,7 +67,7 @@ proxy-groups:
     include-all: true
     
   - name: 台湾节点
-    filter: "台|🇹🇼|湾|TW|(?i)Taiwan"
+    filter: "🇹🇼|台|TW|Tai"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
     interval: 120
     lazy: true
@@ -82,7 +76,7 @@ proxy-groups:
     include-all: true
     
   - name: 狮城节点
-    filter: "新加坡|坡|狮城|🇸🇬|SG|(?i)Singapore"
+    filter: "🇸🇬|坡|狮城|SG|Singapore"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
     interval: 120
     lazy: true
@@ -91,7 +85,7 @@ proxy-groups:
     include-all: true
     
   - name: 日本节点
-    filter: "日|🇯🇵|东京|JP|(?i)Japan"
+    filter: "🇯🇵|日|JP|Japan"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
     interval: 120
     lazy: true
@@ -100,7 +94,7 @@ proxy-groups:
     include-all: true
     
   - name: 美国节点
-    filter: "美|🇺🇲|US|(?i)States|America"
+    filter: "🇺🇸|美|US|States|American"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
     interval: 120
     lazy: true
@@ -109,7 +103,7 @@ proxy-groups:
     include-all: true
     
   - name: 韩国节点
-    filter: "韩|🇰🇷|韓|KR|KOR|(?i)Korea"
+    filter: "🇰🇷|韩|KR|KOR|Korea"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png
     interval: 120
     lazy: true
@@ -118,7 +112,7 @@ proxy-groups:
     include-all: true
     
   - name: 其他节点
-    filter: "^((?!香港|HK|Hong Kong|台湾|TW|TaiWan|新加坡|SG|Singapore|日本|JP|Japan|韩国|KR|KOR|Korea|美国|US|States|American|Music).)*$,"
+    filter: "^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$"           
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
     interval: 120
     lazy: true
@@ -192,7 +186,7 @@ rules:
   - PROCESS-NAME,NetTransport,DIRECT
   - PROCESS-NAME,uTorrent,DIRECT
   - PROCESS-NAME,WebTorrent,DIRECT
-  - GEOSITE,geolocation-!cn,国外网站  
+  - GEOSITE,geolocation-!cn,选择代理  
   - GEOIP,LAN,DIRECT
   - GEOIP,CN,DIRECT
   - MATCH,默认规则
