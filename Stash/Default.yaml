@@ -112,7 +112,7 @@ proxy-groups:
     include-all: true
     
   - name: 其他节点
-    filter: "^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$"           
+    filter: "^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$"
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Server.png
     interval: 120
     lazy: true
