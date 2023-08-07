@@ -1,123 +1,120 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 如何导入订阅： https://t.me/egern_news/5 
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.05.13 10:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.07 16:10
 ---
 policy_groups:
   - select:
-      name: 全球加速
+      name: 🚀 全球加速
       policies:
-        - 自动选择
-        - 故障转移
-        - 香港节点
-        - 台湾节点
-        - 日本节点
-        - 狮城节点
-        - 美国节点
-        - 韩国节点
-        - 其他节点
+        - ♻️ 自动切换
+        - 🇭🇰 香港节点
+        - 🇹🇼 台湾节点
+        - 🇯🇵 日本节点
+        - 🇸🇬 狮城节点
+        - 🇺🇲 美国节点
+        - 🇰🇷 韩国节点
+        - 🇺🇳 其他节点
   - external:
-      name: 自动选择
+      name: ♻️ 自动切换
       type: auto_test
       url: "https://sub.store/download/collection/AllServer"
   - external:
-      name: 故障转移
-      type: fallback
-      url: "https://sub.store/download/collection/AllServer"
-  - select:
-      name: 国内网站
-      policies:
-        - DIRECT
-        - 全球加速
-        - 自动选择
-        - 故障转移
-        - 香港节点
-        - 台湾节点
-        - 日本节点
-        - 狮城节点
-        - 美国节点
-        - 韩国节点
-        - 其他节点
-  - select:
-      name: 国外网站
-      policies:
-        - 全球加速
-        - 自动选择
-        - 故障转移
-        - 香港节点
-        - 台湾节点
-        - 日本节点
-        - 狮城节点
-        - 美国节点
-        - 韩国节点
-        - 其他节点
-        - DIRECT
-  - external:
-      name: 香港节点
-      type: select
+      name: 🇭🇰 香港节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 港|🇭🇰|HK|Hong
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 台湾节点
-      type: select
+      name: 🇹🇼 台湾节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 台|🇹🇼|TW|Tai
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 日本节点
-      type: select
+      name: 🇯🇵 日本节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 日|🇯🇵|JP|Japan
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 狮城节点
-      type: select
+      name: 🇸🇬 狮城节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 坡|🇸🇬|狮城|SG|Singapore
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 美国节点
-      type: select
+      name: 🇺🇲 美国节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 美|🇺🇲|US|States|American
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 韩国节点
-      type: select
+      name: 🇰🇷 韩国节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
       filter: 韩|韓|🇰🇷|KR|KOR|Korea
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
   - external:
-      name: 其他节点
-      type: select
+      name: 🇺🇳 其他节点
+      type: auto_test
       url: "https://sub.store/download/collection/AllServer"
-      filter: ^((?!港|HK|Hong Kong|台|TW|TaiWan|坡|SG|Singapore|日|JP|Japan|韩|KR|KOR|Korea|美|US|States|American|Music).)*$
+      filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$
+      interval: 900
+      timeout: 2
+      tolerance: 150
+      update_interval: 86400      
 rules:
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml"
       policy: REJECT
   - rule_set:
       match: "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Streaming.yaml"
-      policy: 全球加速
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.yaml"
-      policy: 全球加速
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
-      policy: 国外网站
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
-      policy: 国外网站  
+      policy: 🇺🇲 美国节点
+  - rule_set:
+      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml"
+      policy: 🇺🇲 美国节点    
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml"
-      policy: 国外网站
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
-      policy: 国外网站
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
-      policy: 国外网站
+      policy: 🚀 全球加速
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
       policy: DIRECT
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml"
-      policy: 国内网站      
+      policy: DIRECT      
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml"
       policy: DIRECT
@@ -140,7 +137,7 @@ rules:
       match: CN
       policy: DIRECT
   - default:
-      policy: 全球加速
+      policy: 🚀 全球加速
 url_rewrites:
   - match: "(.*google)\\\\.com"
     location: $1.cn
@@ -153,5 +150,9 @@ mitm:
     - sub-store.com
     - www.google.com
 modules:
-  - url: "https://github.com/jnlaoshu/MySelf/blob/main/Egern/Rule/Sub-Store.yaml"
+  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Sub-Store.yaml"
+    enabled: true
+  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml"
+    enabled: true
+  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/KuWoMusic.yaml"
     enabled: true
