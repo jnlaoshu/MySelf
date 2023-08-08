@@ -1,12 +1,13 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.07 16:10
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.08 12:50
 ---
 policy_groups:
   - select:
-      name: 🚀 全球加速
+      name: ✈️ 选择代理
       policies:
         - ♻️ 自动切换
+        -🚀  手动选择
         - 🇭🇰 香港节点
         - 🇹🇼 台湾节点
         - 🇯🇵 日本节点
@@ -14,10 +15,15 @@ policy_groups:
         - 🇺🇲 美国节点
         - 🇰🇷 韩国节点
         - 🇺🇳 其他节点
+        - DIRECT
   - external:
       name: ♻️ 自动切换
       type: auto_test
       url: "https://sub.store/download/collection/AllServer"
+  - external:
+      name: 🚀  手动选择
+      type:  selet
+      url: "https://sub.store/download/collection/AllServer"      
   - external:
       name: 🇭🇰 香港节点
       type: auto_test
@@ -87,13 +93,13 @@ rules:
       policy: REJECT
   - rule_set:
       match: "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Streaming.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
       policy: 🇺🇲 美国节点
@@ -102,13 +108,13 @@ rules:
       policy: 🇺🇲 美国节点    
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
       policy: DIRECT
@@ -137,7 +143,7 @@ rules:
       match: CN
       policy: DIRECT
   - default:
-      policy: 🚀 全球加速
+      policy: ✈️ 选择代理
 url_rewrites:
   - match: "(.*google)\\\\.com"
     location: $1.cn
@@ -147,12 +153,7 @@ mitm:
   ca_p12: egern.p12
   ca_passphrase: egern
   hostnames:
-    - sub-store.com
     - www.google.com
 modules:
-  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Sub-Store.yaml"
-    enabled: true
   - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml"
-    enabled: true
-  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/KuWoMusic.yaml"
     enabled: true
