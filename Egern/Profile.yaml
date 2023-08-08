@@ -1,13 +1,13 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.08 12:50
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.08 13:30
 ---
 policy_groups:
   - select:
       name: ✈️ 选择代理
       policies:
         - ♻️ 自动切换
-        -🚀  手动选择
+        - 🔀 手动选择
         - 🇭🇰 香港节点
         - 🇹🇼 台湾节点
         - 🇯🇵 日本节点
@@ -21,8 +21,8 @@ policy_groups:
       type: auto_test
       url: "https://sub.store/download/collection/AllServer"
   - external:
-      name: 🚀  手动选择
-      type:  selet
+      name: 🔀 手动选择
+      type: select
       url: "https://sub.store/download/collection/AllServer"      
   - external:
       name: 🇭🇰 香港节点
