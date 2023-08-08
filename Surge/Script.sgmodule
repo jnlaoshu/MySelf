@@ -1,5 +1,5 @@
 #!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐒𝐜𝐫𝐢𝐩𝐭合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.06.10 09:42
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.08 13:12
 #𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Script.sgmodule
 
 [Header Rewrite]
@@ -11,7 +11,7 @@ https:\/\/api\.revenuecat\.com header-del x-revenuecat-etag
 
 [Rule]
 # > Boxjs 代理
-DOMAIN-KEYWORD,jsdelivr.net,🚀 全球加速
+DOMAIN-KEYWORD,jsdelivr.net,🚀 选择代理
 # > Safari 访问防跳转 App
 DOMAIN,app-site-association.cdn-apple.com,REJECT
 # > 屏蔽HTTP3/QUIC协议
@@ -24,7 +24,7 @@ DOMAIN,ocsp.apple.com,REJECT
 # > 拒绝国家反诈中心请求
 DOMAIN-SUFFIX,gjfzpt.cn,REJECT
 # > VSCO 代理
-DOMAIN,measurement.com,🚀 全球加速
+DOMAIN,measurement.com,🚀 选择代理
 # > 爱奇艺 去广告
 DOMAIN-SUFFIX,cupid.iqiyi.com,REJECT
 # > Baidu 
