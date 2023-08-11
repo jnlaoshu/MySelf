@@ -1,5 +1,7 @@
 name: TestFlight区域限制解除
-desc: 适用于更新TestFlight App时, 提示"APP不可用"问题.
+desc: 适用于更新TestFlight App时, 提示"APP不可用"问题.⚠️本脚本功能已包含在“TestFlight账户管理”里，可不再单独安装此脚本⚠️
+
+# ⚠️请注意，本脚本功能已包含在“TestFlight账户管理”里，如仅需使用该脚本功能请务必禁用“TestFlight账户管理”，否则可能出现APP安装异常！⚠️
 
 http:
   mitm:
