@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.08.08 13:30
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.05 12:30
 ---
 policy_groups:
   - select:
@@ -155,5 +155,102 @@ mitm:
   hostnames:
     - www.google.com
 modules:
-  - url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml"
-    enabled: true
+- name: 'Sub-Store订阅'
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule
+  enabled: true
+- name: 'Spotify 解锁'
+  url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
+  enabled: true
+- name: ''
+  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/BlockHTTPDNS/BlockHTTPDNS.sgmodule
+  enabled: true
+- name: ''
+  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/General/General.sgmodule
+  enabled: true
+- name: 'Block YouTube Advertising'
+  url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YoutubeAds.sgmodule
+  enabled: true
+- name: '🍿 DualSubs: ▶ YouTube'
+  url: https://github.com/DualSubs/YouTube/raw/main/modules/DualSubs.YouTube.sgmodule
+  enabled: true  
+- name: ''
+  url: https://raw.githubusercontent.com/jkgtw/Surge/master/Modules/boostbandwidth.sgmodule
+  enabled: true
+- name: ''
+  url: https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Surge/TiKTok-JP.sgmodule
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/AdBlock.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/1blocker.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/aptv.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/flomo.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/documents.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/ego.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/pixelance.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/adguard.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/aliyun.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/relens.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/vn.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/vivacut.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/adultraplus.sgmodule
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/bili.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/sgmodule/biliad.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/caiyun.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/emby.sgmodule
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/nicegram.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/notability.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/wechatad.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/weiboad.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/sgmodule/ZhihuBlock.sgmodule
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/sgmodule/weibolitead.module
+  enabled: true
+- name: ''
+  url: https://yfamily.vercel.app/module/fileball.module
+  enabled: true
+- name: ''
+  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/AllInOne/AllInOne.sgmodule
+  enabled: true
