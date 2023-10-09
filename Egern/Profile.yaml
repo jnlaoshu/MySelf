@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.05 13:05
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.09 08:21
 ---
 policy_groups:
   - select:
@@ -101,8 +101,11 @@ rules:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
       policy: ✈️ 选择代理
   - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
+      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml"
       policy: 🇺🇲 美国节点
+  - rule_set:
+      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
+      policy: 🇺🇲 美国节点  
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml"
       policy: 🇺🇲 美国节点    
