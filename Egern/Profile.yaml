@@ -1,7 +1,51 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.09 08:21
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.12 17:20
 ---
+
+dns_servers:
+  - "https://doh.pub/dns-query"
+
+hosts:
+  '*twitter*': 8.8.8.8
+  '*youtube*': 8.8.8.8
+  '*x.com': 8.8.8.8
+  '*telegram*': 8.8.8.8
+  '*googlevideo*': 8.8.8.8
+  '*facebook*': 8.8.8.8
+  '*.taobao.com*': 223.5.5.5
+  '*.tmall.com*': 223.5.5.5
+  '*.alipay.com*': 223.5.5.5
+  '*.alicdn.com*': 223.5.5.5
+  '*.aliyun.com*': 223.5.5.5
+  '*.jd.com*': 119.28.28.28
+  '*.qq.com*': 119.28.28.28
+  '*.bilibili.com*': 119.29.29.29
+  'hdslb.com*': 119.29.29.29
+  '*.163.com*': 119.29.29.29
+  '*.126.com*': 119.29.29.29
+  '*.126.net*': 119.29.29.29
+  '*.127.net*': 119.29.29.29
+  '*.netease.com*': 119.29.29.29
+  '*.mi.com*': 119.29.29.29
+  '*.xiaomi.com*': 119.29.29.29
+  '*.icloud.com*': 119.29.29.29
+  '*.icloud.com.cn*': 119.29.29.29
+  '*.tencent.com*': 119.29.29.29
+  '*.weixin.com*': 119.29.29.29
+  
+#安全的DNS服务器
+secure_dns:
+  servers:
+    - https://8.8.8.8
+  ecs: true
+  public_ip_lookup_url: "https://ifconfig.me/ip"
+  exclude:
+    - localhost
+    - '*.apple.com'
+    - '*.mzstatic.com'    
+
+#策略组配置列表 
 policy_groups:
   - select:
       name: ✈️ 选择代理
@@ -23,7 +67,8 @@ policy_groups:
   - external:
       name: 🔀 手动选择
       type: select
-      url: "https://sub.store/download/collection/AllServer"      
+      url: "https://sub.store/download/collection/AllServer"
+      filter: ^(?=.*(.*))(?!.*((?i)回国|校园|教育|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|到期|过期|已用|联系|邮箱|工单|群|(\b(GAME|USE|USED|TOTAL|EXPIRE|EMAIL)\b|(\d{4}-\d{2}-\d{2}|\dG)))).*$    
   - external:
       name: 🇭🇰 香港节点
       type: auto_test
@@ -86,8 +131,13 @@ policy_groups:
       interval: 900
       timeout: 2
       tolerance: 150
-      update_interval: 86400      
+      update_interval: 86400 
+      
+#代理规则列表      
 rules:
+  - rule_set:
+      match: "https://anti-ad.net/surge.txt"
+      policy: REJECT
   - rule_set:
       match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml"
       policy: REJECT
@@ -147,16 +197,23 @@ rules:
       policy: DIRECT
   - default:
       policy: ✈️ 选择代理
+      
+#URL重写列表
 url_rewrites:
-  - match: "(.*google)\\\\.com"
-    location: $1.cn
-    status_code: 307
+  #Google域名重定向
+  - match: ^https?:\/\/(www.)?(g|google)\.cn
+    location: https://www.google.com
+    status_code: 302
+    
+#MITM配置     
 mitm:
   enable: true
   ca_p12: egern.p12
   ca_passphrase: egern
   hostnames:
     - www.google.com
+
+#模块配置列表  
 modules:
 - name: 'Sub-Store订阅'
   url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule
