@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.12 17:20
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.22 21:20
 ---
 
 dns_servers:
@@ -63,16 +63,16 @@ policy_groups:
   - external:
       name: ♻️ 自动切换
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
   - external:
       name: 🔀 手动选择
       type: select
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: ^(?=.*(.*))(?!.*((?i)回国|校园|教育|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|到期|过期|已用|联系|邮箱|工单|群|(\b(GAME|USE|USED|TOTAL|EXPIRE|EMAIL)\b|(\d{4}-\d{2}-\d{2}|\dG)))).*$    
   - external:
       name: 🇭🇰 香港节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 港|🇭🇰|HK|Hong
       interval: 900
       timeout: 2
@@ -81,7 +81,7 @@ policy_groups:
   - external:
       name: 🇹🇼 台湾节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 台|🇹🇼|TW|Tai
       interval: 900
       timeout: 2
@@ -90,7 +90,7 @@ policy_groups:
   - external:
       name: 🇯🇵 日本节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 日|🇯🇵|JP|Japan
       interval: 900
       timeout: 2
@@ -99,7 +99,7 @@ policy_groups:
   - external:
       name: 🇸🇬 狮城节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 坡|🇸🇬|狮城|SG|Singapore
       interval: 900
       timeout: 2
@@ -108,7 +108,7 @@ policy_groups:
   - external:
       name: 🇺🇲 美国节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 美|🇺🇲|US|States|American
       interval: 900
       timeout: 2
@@ -117,7 +117,7 @@ policy_groups:
   - external:
       name: 🇰🇷 韩国节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: 韩|韓|🇰🇷|KR|KOR|Korea
       interval: 900
       timeout: 2
@@ -126,7 +126,7 @@ policy_groups:
   - external:
       name: 🇺🇳 其他节点
       type: auto_test
-      url: "https://sub.store/download/collection/AllServer"
+      url: "https://sub.store/download/collection/AllServer?target=Surge"
       filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$
       interval: 900
       timeout: 2
