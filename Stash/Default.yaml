@@ -1,40 +1,57 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.10.29 18:25
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.10.29 18:33
 
+#混合端口
 mixed-port: 7890
+#允许局域网
 allow-lan: true
+#绑定地址
 bind-address: '*'
+#模式:rule（规则） / global（全局代理）/ direct（全局直连）
+ipv6: false
+#开启 IPv6 总开关，关闭阻断所有 IPv6 链接和屏蔽 DNS 请求 AAAA 记录
 mode: Rule
+#日志级别（日志输出级别：分级如后silent / info / warning / error / debug级别越高日志输出量越大）
 log-level: info
-ipv6: true
-external-controller: :9090
-
+#外部控制器
+external-controller: 127.0.0.1:9090
+#DNS设置
 dns:
+  enable: true
+  ipv6: false
+  listen: 0.0.0.0:53
+  #DNS服务器
   default-nameserver:
     - 223.5.5.5
-    - 119.29.29.29
+    - 119.28.28.28
     - system
+  #DoH服务器
   nameserver:
     - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-
+    - https://doh.dns.sb/dns-query
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
+  #列表中的域名将不会被解析为fake ip，这些域名相关的解析请求将会返回它们真实的IP地址
   fake-ip-filter:
-    - '*.lan'
+    - '+.lan'
     - localhost.ptlogin2.qq.com
+    - '*.battle.net'
+    - '*.blzstatic.cn'
+    - '*.battlenet.com'
+    - '*.battlenet.com.cn'
+    - 'lens.l.google.com'
     - '+.srv.nintendo.net'
     - '+.stun.playstation.net'
-    - '+.msftconnecttest.com'
     - '+.msftncsi.com'
     - '+.xboxlive.com'
     - 'msftconnecttest.com'
+    - 'xbox.*.*.microsoft.com'
     - 'xbox.*.microsoft.com'
-    - '*.battlenet.com.cn'
-    - '*.battlenet.com'
-    - '*.blzstatic.cn'
-    - '*.battle.net'	
+    - '+.msftconnecttest.com'
+    - '*.msftncsi.com'
+    - '*.msftconnecttest.com'
+    - '*.mcdn.bilivideo.cn'
     
 proxy-providers:
   服务提供商-1:
@@ -52,7 +69,7 @@ proxy-groups:
   - name: 选择代理
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available.png
     type: select
-    proxies: &proxies
+    proxies:
       - 自动切换
       - 手动选择
       - 香港节点
