@@ -1,7 +1,41 @@
 # 𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐭𝐚𝐬𝐡 自用配置
 # 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Stash/Default.yaml
-# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.08.08 15:55
+# 𝐔𝐩𝐝𝐚𝐭𝐞： 2023.10.29 18:25
 
+mixed-port: 7890
+allow-lan: true
+bind-address: '*'
+mode: Rule
+log-level: info
+ipv6: true
+external-controller: :9090
+
+dns:
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - system
+  nameserver:
+    - https://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+	
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter:
+    - '*.lan'
+    - localhost.ptlogin2.qq.com
+    - '+.srv.nintendo.net'
+    - '+.stun.playstation.net'
+    - '+.msftconnecttest.com'
+    - '+.msftncsi.com'
+    - '+.xboxlive.com'
+    - 'msftconnecttest.com'
+    - 'xbox.*.microsoft.com'
+    - '*.battlenet.com.cn'
+    - '*.battlenet.com'
+    - '*.blzstatic.cn'
+    - '*.battle.net'	
+    
 proxy-providers:
   服务提供商-1:
     url: https://sub.store/download/collection/AllServer
@@ -49,12 +83,6 @@ proxy-groups:
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Advertising.png
     type: select
     proxies: [REJECT, DIRECT]
-    
-  - name: 默认规则
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Final.png
-    type: select
-    proxies:
-      - 选择代理
       
   # 基于地区分组
   - name: 香港节点
@@ -191,17 +219,7 @@ rules:
   - GEOSITE,geolocation-!cn,选择代理  
   - GEOIP,LAN,DIRECT
   - GEOIP,CN,DIRECT
-  - MATCH,默认规则
+  - MATCH,选择代理
 script:
   shortcuts:
     quic: network == 'udp' and dst_port == 443
-dns:
-  default-nameserver:
-    - 223.5.5.5
-    - 119.29.29.29
-    - system
-  nameserver:
-    - https://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-log-level: warning
-mode: Rule
