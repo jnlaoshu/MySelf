@@ -2,13 +2,13 @@
 
 ### 特别感谢：
 
-* [DivineEngine](https://github.com/DivineEngine/Profiles/tree/master)  * [Tartarus2014](https://github.com/Tartarus2014)  * [nzw9314](https://github.com/nzw9314)  * [Cuttlefish](https://ddgksf2013.notion.site/ddgksf2013/Cuttlefish-37a8a0cfac2247609d408db3d963c6d2)  * [R·E](https://github.com/I-am-R-E/Functional-Store-Hub)  * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something)   
+ * [Tartarus2014](https://github.com/Tartarus2014) * [Hausd0rff(yqc007)](https://github.com/yqc007/QuantumultX)  * [Semporia](https://github.com/Semporia)  * [fishingworld](https://github.com/fishingworld/something)   
 
-* [NobyDa](https://github.com/NobyDa)   * [Yichahucha](https://github.com/yichahucha/surge/tree/master)  * [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts) * [mieqq](https://github.com/mieqq/mieqq)   * [Sunert](https://github.com/Sunert/Script)  * [app2smile](https://github.com/app2smile/rules)   * [zZPiglet](https://github.com/zZPiglet/Task/tree/master)   
+* [NobyDa](https://github.com/NobyDa)   * [Yichahucha](https://github.com/yichahucha/surge/tree/master)  * [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts) * [mieqq](https://github.com/mieqq/mieqq)  * [app2smile](https://github.com/app2smile/rules)   * [zZPiglet](https://github.com/zZPiglet/Task/tree/master)   
 
 * [Peng-YM](https://github.com/Peng-YM)  * [VirgilClyne](https://github.com/VirgilClyne)  * [KOP-XIAO](https://github.com/KOP-XIAO) * [Neurogram-R](https://github.com/Neurogram-R) * [Nebulosa-Cat](https://github.com/Nebulosa-Cat)
 
-* [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script) * [lhie1](https://github.com/lhie1)  * [fmz200](https://github.com/fmz200/wool_scripts) * [RuCu6](https://github.com/RuCu6)  * [Hackl0us](https://github.com/Hackl0us)   * [Honye](https://github.com/Honye/scriptable-scripts/blob/master/README.zh.md)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories)
+* [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script) * [lhie1](https://github.com/lhie1)  * [fmz200](https://github.com/fmz200/wool_scripts) * [RuCu6](https://github.com/RuCu6)  * [Hackl0us](https://github.com/Hackl0us)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories)
 
 * [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [MuTu](https://github.com/githubdulong/Script)  * [Brian](https://github.com/TributePaulWalker/Profiles)  * [Coldvvater](https://github.com/Coldvvater/Mononoke/tree/master)  * [Rabbit](https://github.com/Rabbit-Spec/Surge) * [Johnshall](https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever) * [Repcz](https://github.com/Repcz/Tool) * [GetSomeCats](https://github.com/getsomecat/GetSomeCats) * [ClashMeta](https://github.com/MetaCubeX/Clash.Meta/blob/Alpha/docs/config.yaml/)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
 
