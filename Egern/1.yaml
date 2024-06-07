@@ -1,32 +1,7 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Egern.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 14:36
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 15:15
 
-# > TUN模式
-vif_only: true
-
-# > 劫持 DNS 服务器
-hijack_dns:
-- '*:53'
-
-# > 自定义MaxMind数据库
-geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-
-# > DNS服务器
-dns_servers:
-- 233.5.5.5
-- 119.29.29.29
-
-# > 安全 DNS 服务器
-secure_dns: 
-  servers: 
-  - quic://223.5.5.5
-  - quic://223.6.6.6
-  - https://1.12.12.12/dns-query
-  - https://120.53.53.53/dns-query
-  ecs: false  # 是否启用 EDNS 客户端子网 (ECS)
-  public_ip_lookup_url: ''  # 公网IP查找URL。这个URL必须返回设备的公网IP地址。
-  
 policy_groups:
 - external:
     name: 所有订阅
@@ -38,64 +13,64 @@ policy_groups:
     name: Apple
     policies:
     - DIRECT
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
 - select:
     name: ChatGPT
     policies:
-    - 分区节点2
+    - 美国优先
     flatten: true
     icon: https://avatars.githubusercontent.com/u/14957082?s=200&v=4    
 - select:
     name: Google
     policies:
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
 - select:
     name: Microsoft
     policies:
     - DIRECT
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
 - select:
     name: PayPal
     policies:
-    - 分区节点2
+    - 美国优先
     - DIRECT
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
 - select:
     name: Spotify
     policies:
-    - 分区节点2
+    - 美国优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png    
 - select:
     name: Telegram
     policies:
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
 - select:
     name: Twitter
     policies:
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
 - select:
     name: WeChat
     policies:
     - DIRECT
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
 - select:
     name: YouTube
     policies:
-    - 分区节点
+    - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
 - fallback:
@@ -141,7 +116,7 @@ policy_groups:
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
 - select:
-    name: 分区节点
+    name: 香港优先
     policies:
     - 香港节点
     - 美国节点
@@ -151,7 +126,7 @@ policy_groups:
     - 其他节点
     icon: 😊
 - select:
-    name: 分区节点2
+    name: 美国优先
     policies:
     - 美国节点
     - 香港节点
