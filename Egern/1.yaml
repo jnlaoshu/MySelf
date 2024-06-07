@@ -1,366 +1,165 @@
-vif_only: true
-dns_servers:
-- 119.29.29.29
-- 233.5.5.5
-hosts:
-  doh.pub: 1.12.12.12
-  dot.pub: 1.12.12.12
-  dns.alidns.com: 223.5.5.5
-secure_dns:
-  servers:
-  - https://dns.alidns.com/dns-query
-  ecs: false
-  public_ip_lookup_url: ''
 policy_groups:
 - select:
-    name: Proxy
+    name: 谷歌
     policies:
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Proxy.png
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
 - select:
-    name: Telegram
+    name: 电报
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Telegram.png
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
 - select:
-    name: Crypto
+    name: 推特
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/CCCAT_C.png
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
 - select:
-    name: PayPal
+    name: 油管
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/PayPal.png
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
 - select:
-    name: Emby
+    name: ChatGPT
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Emby.png
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png
 - select:
-    name: Spotify
+    name: 苹果
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Spotify.png
-- select:
-    name: OpenAI
+    - 直连
+    - 所有地区
+    flatten: true
+    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Apple.png
+- fallback:
+    name: 美国
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Bot.png
-- select:
-    name: Social
+    - 所有代理
+    flatten: true
+    filter: (🇺🇸)|(美)|(States)|(US)
+    icon: 🇺🇸
+- fallback:
+    name: 日本
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Twitter.png
-- select:
-    name: Games
+    - 所有代理
+    flatten: true
+    filter: (🇯🇵)|(日)|(日本)|(JP)
+    icon: 🇯🇵
+- fallback:
+    name: 新加坡
     policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Game.png
+    - 所有代理
+    flatten: true
+    filter: (🇸🇬)|(新)|(新加坡)|(SG)
+    icon: 🇸🇬
 - select:
-    name: Streaming
-    policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Netflix.png
-- select:
-    name: Global
-    policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Global.png
-- select:
-    name: WeChat
+    name: 直连
     policies:
     - DIRECT
-    - HongKong
-    - TaiWan
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/WeChat.png
+    hidden: true
 - select:
-    name: BiliBili
+    name: 所有地区
     policies:
-    - DIRECT
-    - HongKong
-    - TaiWan
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/bilibili.png
-- select:
-    name: Speedtest
-    policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Speedtest.png
-- select:
-    name: Apple
-    policies:
-    - DIRECT
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Apple.png
-- select:
-    name: Google
-    policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Google.png
-- select:
-    name: Microsoft
-    policies:
-    - DIRECT
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Microsoft.png
-- select:
-    name: Final
-    policies:
-    - Proxy
-    - HongKong
-    - TaiWan
-    - Japan
-    - Singapore
-    - America
-    - Substore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Final.png
-- select:
-    name: HongKong
-    policies:
-    - Substore
-    flatten: true
-    filter: ^(?=.*((?i)🇭🇰|港|(\b(HK|Hong)\b)))(?!.*((?i)回国|校园|游戏|(\b(GAME)\b))).*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/HK.png
-- select:
-    name: TaiWan
-    policies:
-    - Substore
-    flatten: true
-    filter: ^(?=.*((?i)🇹🇼|台|(\b(TW|Tai|Taiwan)\b)))(?!.*((?i)回国|校园|游戏|(\b(GAME)\b))).*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/TW.png
-- select:
-    name: Japan
-    policies:
-    - Substore
-    flatten: true
-    filter: ^(?=.*((?i)🇯🇵|日|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan)\b)))(?!.*((?i)回国|校园|游戏|(\b(GAME)\b))).*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/JP.png
-- select:
-    name: Singapore
-    policies:
-    - Substore
-    flatten: true
-    filter: ^(?=.*((?i)🇸🇬|新|狮|(\b(SG|Singapore)\b)))(?!.*((?i)回国|校园|游戏|(\b(GAME)\b))).*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/SG.png
-- select:
-    name: America
-    policies:
-    - Substore
-    flatten: true
-    filter: ^(?=.*((?i)🇺🇸|美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States)\b)))(?!.*((?i)回国|校园|游戏|(\b(GAME)\b))).*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/United_States.png
+    - 美国
+    - 日本
+    - 新加坡
+    icon: 😊
 - external:
-    name: Substore
+    name: 所有订阅
     type: select
     urls:
-    - 订阅链接
-    hidden: false
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/mini/Round_Robin.png
+    - https://sub.store/download/collection/AllServer?target=Surge
+    icon: 🤣
+- select:
+    name: 所有代理
+    policies:
+    - 所有订阅
+    flatten: true
+    icon: 🌹
 rules:
-- rule_set:
-    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/APNs.yaml
-    policy: DIRECT
-- rule_set:
-    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Ads_ConnersHua.yaml
+- domain_regex:
+    match: ^ad\..*|^ads\..*
     policy: REJECT
 - rule_set:
-    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Hijacking_ConnersHua.yaml
+    match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list
     policy: REJECT
 - rule_set:
-    match: https://github.com/Repcz/Tool/raw/X/Egern/Rules/Tracking_ConnersHua.yaml
-    policy: REJECT
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Crypto/Crypto.list
-    policy: Crypto
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
-    policy: PayPal
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    policy: 谷歌
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
-    policy: Telegram
+    policy: 电报
 - rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
-    policy: Google
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    policy: 推特
 - rule_set:
-    match: https://raw.githubusercontent.com/Repcz/Tool/X/Egern/Rules/Twitter.yaml
-    policy: Social
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Reddit/Reddit.list
-    policy: Social
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Facebook/Facebook.list
-    policy: Social
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
-    policy: WeChat
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    policy: 油管
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
-    policy: OpenAI
+    policy: ChatGPT
 - rule_set:
-    match: https://github.com/Repcz/Tool/raw/X/Surge/Rules/Emby.list
-    policy: Emby
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+    policy: 苹果
 - rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Netflix/Netflix.list
-    policy: Streaming
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bahamut/Bahamut.list
-    policy: Streaming
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
-    policy: Spotify
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/TikTok/TikTok.list
-    policy: Streaming
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/BiliBili/BiliBili.list
-    policy: BiliBili
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/NetEaseMusic/NetEaseMusic.list
-    policy: DIRECT
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
-    policy: Global
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-    policy: Global
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Speedtest/Speedtest.list
-    policy: Speedtest
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_All_No_Resolve.list
-    policy: Apple
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
-    policy: Google
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
-    policy: Microsoft
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Game/Game.list
-    policy: Games
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/GlobalMedia/GlobalMedia_All_No_Resolve.list
-    policy: Streaming
-- rule_set:
-    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/Global/Global_All_No_Resolve.list
-    policy: Global
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list
-    policy: DIRECT
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_Domain.list
+    policy: 苹果
+- domain:
+    match: ifconfig.me
+    policy: 直连
+- domain_suffix:
+    match: cn
+    policy: 直连
 - geoip:
     match: CN
-    policy: DIRECT
+    policy: 直连
+- ip_cidr:
+    match: 192.168.0.0/16
+    policy: 直连
+- ip_cidr:
+    match: 10.0.0.0/8
+    policy: 直连
+- ip_cidr:
+    match: 127.0.0.0/8
+    policy: 直连
+- ip_cidr:
+    match: 172.16.0.0/12
+    policy: 直连
+- ip_cidr:
+    match: 192.128.0.0/16
+    policy: 直连
+- ip_cidr:
+    match: 224.0.0.0/24
+    policy: 直连
 - default:
-    policy: Final
+    policy: 所有代理
 mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
 modules:
-- name: 哲也同学
-  url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/script/zheye/zheye.sgmodule
-  enabled: true
-- name: 京东比价
-  url: https://raw.githubusercontent.com/Rabbit-Spec/Surge/Master/Module/Spec/JD_Price/Moore/JD_Price.sgmodule
-  enabled: true
-- name: B站净化
-  url: https://raw.githubusercontent.com/Rabbit-Spec/Surge/Master/Module/Spec/Bilibili/Moore/Bilibili.sgmodule
-  enabled: true
 - name: Boxjs
   url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
   enabled: true
 - name: Scripthub
   url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
   enabled: true
-- name: Substore
-  url: https://raw.githubusercontent.com/Peng-YM/Sub-Store/master/config/Surge.sgmodule
+- name: Sub-Store订阅
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule  
   enabled: true
+- name: ''
+  url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
+  enabled: true
+- name: ''
+  url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
+  enabled: true
+- name: '高德地图去广告'
+  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Amap.sgmodule
+  enabled: true
+- name: '滴滴出行去广告'
+  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Didichuxing.sgmodule
