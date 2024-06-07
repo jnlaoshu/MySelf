@@ -128,7 +128,7 @@ policy_groups:
     name: 所有订阅
     type: select
     urls:
-    - 你的订阅URL
+    - https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33
     icon: 🌹
 - select:
     name: 代理列表
