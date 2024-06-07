@@ -1,8 +1,14 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Egern.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 14:20
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 14:36
 
 policy_groups:
+- external:
+    name: 所有订阅
+    type: select
+    urls:
+    - https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33
+    icon: 🌹
 - select:
     name: Apple
     policies:
@@ -13,12 +19,7 @@ policy_groups:
 - select:
     name: ChatGPT
     policies:
-    - 美国
-    - 香港
-    - 新加坡
-    - 台湾
-    - 日本
-    - 其他
+    - 分区节点2
     flatten: true
     icon: https://avatars.githubusercontent.com/u/14957082?s=200&v=4    
 - select:
@@ -37,14 +38,14 @@ policy_groups:
 - select:
     name: PayPal
     policies:
-    - 美国
+    - 美国节点
     - DIRECT
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
 - select:
     name: Spotify
     policies:
-    - 分区节点
+    - 分区节点2
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png    
 - select:
@@ -71,44 +72,44 @@ policy_groups:
     policies:
     - 分区节点
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube_Letter.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
 - fallback:
-    name: 香港
+    name: 香港节点
     policies:
     - 代理列表
     flatten: true
     filter: 🇭🇰|港|HK|Hong
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
 - fallback:
-    name: 美国
+    name: 美国节点
     policies:
     - 代理列表
     flatten: true
     filter: (🇺🇸)|(美)|(States)|(US)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
 - fallback:
-    name: 台湾
+    name: 台湾节点
     policies:
     - 代理列表
     flatten: true
     filter: 🇹🇼|台|TW|Tai
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
 - fallback:
-    name: 日本
+    name: 日本节点
     policies:
     - 代理列表
     flatten: true
     filter: (🇯🇵)|(日)|(日本)|(JP)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 - fallback:
-    name: 新加坡
+    name: 新加坡节点
     policies:
     - 代理列表
     flatten: true
     filter: (🇸🇬)|(新)|(新加坡)|(SG)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
 - fallback:
-    name: 其他
+    name: 其他节点
     policies:
     - 代理列表
     flatten: true
@@ -117,19 +118,23 @@ policy_groups:
 - select:
     name: 分区节点
     policies:
-    - 香港
-    - 美国
-    - 新加坡
-    - 台湾
-    - 日本
-    - 其他
+    - 香港节点
+    - 美国节点
+    - 新加坡节点
+    - 台湾节点
+    - 日本节点
+    - 其他节点
     icon: 😊
-- external:
-    name: 所有订阅
-    type: select
-    urls:
-    - https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33
-    icon: 🌹
+- select:
+    name: 分区节点2
+    policies:
+    - 美国节点
+    - 香港节点
+    - 新加坡节点
+    - 台湾节点
+    - 日本节点
+    - 其他节点
+    icon: 🤣
 - select:
     name: 代理列表
     policies:
