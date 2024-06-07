@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Egern.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 15:15
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 15:20
 
 policy_groups:
 - external:
@@ -76,42 +76,42 @@ policy_groups:
 - fallback:
     name: 香港节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: 🇭🇰|港|HK|Hong
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
 - fallback:
     name: 美国节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: (🇺🇸)|(美)|(States)|(US)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
 - fallback:
     name: 台湾节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: 🇹🇼|台|TW|Tai
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
 - fallback:
     name: 日本节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: (🇯🇵)|(日)|(日本)|(JP)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 - fallback:
     name: 新加坡节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: (🇸🇬)|(新)|(新加坡)|(SG)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
 - fallback:
     name: 其他节点
     policies:
-    - 代理列表
+    - 所有订阅
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
@@ -135,12 +135,6 @@ policy_groups:
     - 日本节点
     - 其他节点
     icon: 🤣
-- select:
-    name: 代理列表
-    policies:
-    - 所有订阅
-    flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available.png
 rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
@@ -209,7 +203,7 @@ rules:
     match: 224.0.0.0/24
     policy: DIRECT
 - default:
-    policy: 代理列表
+    policy: 所有订阅
 mitm:
   enabled: true
   ca_p12: egern.p12
