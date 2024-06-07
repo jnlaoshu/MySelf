@@ -1,277 +1,231 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
-# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2023.10.22 21:20
----
+# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Egern.yaml
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 15:40
 
-dns_servers:
-  - "https://doh.pub/dns-query"
-
-hosts:
-  '*twitter*': 8.8.8.8
-  '*youtube*': 8.8.8.8
-  '*x.com': 8.8.8.8
-  '*telegram*': 8.8.8.8
-  '*googlevideo*': 8.8.8.8
-  '*facebook*': 8.8.8.8
-  '*.taobao.com*': 223.5.5.5
-  '*.tmall.com*': 223.5.5.5
-  '*.alipay.com*': 223.5.5.5
-  '*.alicdn.com*': 223.5.5.5
-  '*.aliyun.com*': 223.5.5.5
-  '*.jd.com*': 119.28.28.28
-  '*.qq.com*': 119.28.28.28
-  '*.bilibili.com*': 119.29.29.29
-  'hdslb.com*': 119.29.29.29
-  '*.163.com*': 119.29.29.29
-  '*.126.com*': 119.29.29.29
-  '*.126.net*': 119.29.29.29
-  '*.127.net*': 119.29.29.29
-  '*.netease.com*': 119.29.29.29
-  '*.mi.com*': 119.29.29.29
-  '*.xiaomi.com*': 119.29.29.29
-  '*.icloud.com*': 119.29.29.29
-  '*.icloud.com.cn*': 119.29.29.29
-  '*.tencent.com*': 119.29.29.29
-  '*.weixin.com*': 119.29.29.29
-  
-#安全的DNS服务器
-secure_dns:
-  servers:
-    - https://8.8.8.8
-  ecs: true
-  public_ip_lookup_url: "https://ifconfig.me/ip"
-  exclude:
-    - localhost
-    - '*.apple.com'
-    - '*.mzstatic.com'    
-
-#策略组配置列表 
 policy_groups:
-  - select:
-      name: ✈️ 选择代理
-      policies:
-        - ♻️ 自动切换
-        - 🔀 手动选择
-        - 🇭🇰 香港节点
-        - 🇹🇼 台湾节点
-        - 🇯🇵 日本节点
-        - 🇸🇬 狮城节点
-        - 🇺🇲 美国节点
-        - 🇰🇷 韩国节点
-        - 🇺🇳 其他节点
-        - DIRECT
-  - external:
-      name: ♻️ 自动切换
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-  - external:
-      name: 🔀 手动选择
-      type: select
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: ^(?=.*(.*))(?!.*((?i)回国|校园|教育|官网|客服|网站|网址|获取|订阅|流量|到期|机场|下次|版本|官址|备用|到期|过期|已用|联系|邮箱|工单|群|(\b(GAME|USE|USED|TOTAL|EXPIRE|EMAIL)\b|(\d{4}-\d{2}-\d{2}|\dG)))).*$    
-  - external:
-      name: 🇭🇰 香港节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 港|🇭🇰|HK|Hong
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇹🇼 台湾节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 台|🇹🇼|TW|Tai
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇯🇵 日本节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 日|🇯🇵|JP|Japan
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇸🇬 狮城节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 坡|🇸🇬|狮城|SG|Singapore
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇺🇲 美国节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 美|🇺🇲|US|States|American
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇰🇷 韩国节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: 韩|韓|🇰🇷|KR|KOR|Korea
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400      
-  - external:
-      name: 🇺🇳 其他节点
-      type: auto_test
-      url: "https://sub.store/download/collection/AllServer?target=Surge"
-      filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American).)*$
-      interval: 900
-      timeout: 2
-      tolerance: 150
-      update_interval: 86400 
-      
-#代理规则列表      
+- external:
+    name: 所有节点
+    type: select
+    urls:
+    - https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33
+    icon: 🌹
+- select:
+    name: Apple
+    policies:
+    - DIRECT
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
+- select:
+    name: ChatGPT
+    policies:
+    - 美国优先
+    flatten: true
+    icon: https://avatars.githubusercontent.com/u/14957082?s=200&v=4    
+- select:
+    name: Google
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+- select:
+    name: Microsoft
+    policies:
+    - DIRECT
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+- select:
+    name: PayPal
+    policies:
+    - 美国优先
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
+- select:
+    name: Spotify
+    policies:
+    - 美国优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png    
+- select:
+    name: Telegram
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+- select:
+    name: Twitter
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
+- select:
+    name: WeChat
+    policies:
+    - DIRECT
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
+- select:
+    name: YouTube
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+- fallback:
+    name: 香港节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: 🇭🇰|港|HK|Hong
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+- fallback:
+    name: 美国节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: (🇺🇸)|(美)|(States)|(US)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- fallback:
+    name: 台湾节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: 🇹🇼|台|TW|Tai
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+- fallback:
+    name: 日本节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: (🇯🇵)|(日)|(日本)|(JP)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+- fallback:
+    name: 新加坡节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: (🇸🇬)|(新)|(新加坡)|(SG)
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- fallback:
+    name: 其他节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
+- select:
+    name: 香港优先
+    policies:
+    - 香港节点
+    - 美国节点
+    - 新加坡节点
+    - 台湾节点
+    - 日本节点
+    - 其他节点
+    icon: 😊
+- select:
+    name: 美国优先
+    policies:
+    - 美国节点
+    - 香港节点
+    - 新加坡节点
+    - 台湾节点
+    - 日本节点
+    - 其他节点
+    icon: 🤣
 rules:
-  - rule_set:
-      match: "https://anti-ad.net/surge.txt"
-      policy: REJECT
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml"
-      policy: REJECT
-  - rule_set:
-      match: "https://raw.githubusercontent.com/DivineEngine/Profiles/master/Clash/RuleSet/StreamingMedia/Streaming.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Global/Global.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml"
-      policy: 🇺🇲 美国节点
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml"
-      policy: 🇺🇲 美国节点  
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml"
-      policy: 🇺🇲 美国节点    
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml"
-      policy: ✈️ 选择代理
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml"
-      policy: DIRECT
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml"
-      policy: DIRECT      
-  - rule_set:
-      match: "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/China/China.yaml"
-      policy: DIRECT
-  - ip_cidr:
-      match: 192.168.0.0/16
-      policy: DIRECT
-  - ip_cidr:
-      match: 10.0.0.0/8
-      policy: DIRECT
-  - ip_cidr:
-      match: 127.0.0.0/8
-      policy: DIRECT
-  - ip_cidr:
-      match: 172.16.0.0/12
-      policy: DIRECT
-  - ip_cidr:
-      match: 192.128.0.0/16
-      policy: DIRECT
-  - geoip:
-      match: CN
-      policy: DIRECT
-  - default:
-      policy: ✈️ 选择代理
-      
-#URL重写列表
-url_rewrites:
-  #Google域名重定向
-  - match: ^https?:\/\/(www.)?(g|google)\.cn
-    location: https://www.google.com
-    status_code: 302
-    
-#MITM配置     
+- domain_regex:
+    match: ^ad\..*|^ads\..*
+    policy: REJECT
+- rule_set:
+    match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list
+    policy: REJECT
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+    policy: Apple
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_Domain.list
+    policy: Apple
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+    policy: ChatGPT    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    policy: Google
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+    policy: Microsoft
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
+    policy: PayPal    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+    policy: Spotify
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+    policy: Telegram
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    policy: Twitter
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+    policy: WeChat    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    policy: YouTube
+- domain:
+    match: ifconfig.me
+    policy: DIRECT
+- domain_suffix:
+    match: cn
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+- ip_cidr:
+    match: 192.168.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 10.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 127.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 172.16.0.0/12
+    policy: DIRECT
+- ip_cidr:
+    match: 192.128.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 224.0.0.0/24
+    policy: DIRECT
+- default:
+    policy: 所有节点
 mitm:
-  enable: true
+  enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
-  hostnames:
-    - www.google.com
-
-#模块配置列表  
 modules:
-- name: 'Sub-Store订阅'
-  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule
+- name: BoxJs
+  url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
   enabled: true
-- name: 'Spotify 解锁'
+- name: ScriptHub
+  url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
+  enabled: true
+- name: Sub-Store
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule  
+  enabled: true
+- name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
 - name: ''
-  url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YoutubeAds.sgmodule
+  url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
-- name: 'DualSubsYouTube'
-  url: https://github.com/DualSubs/YouTube/raw/main/modules/DualSubs.YouTube.sgmodule
+- name: '高德地图去广告'
+  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Amap.sgmodule
   enabled: true
-- name: 'Nicegram会员'
-  url: https://raw.githubusercontent.com/I-am-R-E/Functional-Store-Hub/Master/Nicegram/Surge.sgmodule
-  enabled: true   
-- name: ''
-  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/BlockHTTPDNS/BlockHTTPDNS.sgmodule
-  enabled: true
-- name: ''
-  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/General/General.sgmodule
-  enabled: true
-- name: ''
-  url: https://raw.githubusercontent.com/Semporia/TikTok-Unlock/master/Surge/TiKTok-JP.sgmodule
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/AdBlock.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/documents.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/adguard.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/aliyun.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/bili.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/sgmodule/biliad.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/notability.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/wechatad.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/module/weiboad.module
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/sgmodule/ZhihuBlock.sgmodule
-  enabled: true
-- name: ''
-  url: https://yfamily.vercel.app/sgmodule/weibolitead.module
-  enabled: true
-- name: ''
-  url: https://github.com/blackmatrix7/ios_rule_script/blob/master/rewrite/Surge/AllInOne/AllInOne.sgmodule
-  enabled: true
+- name: '滴滴出行去广告'
+  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Didichuxing.sgmodule
