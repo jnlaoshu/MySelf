@@ -1,86 +1,141 @@
+# > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
+# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Egern.yaml
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 14:20
+
 policy_groups:
 - select:
-    name: 谷歌
+    name: Apple
     policies:
-    - 所有地区
+    - DIRECT
+    - 分区节点
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
-- select:
-    name: 电报
-    policies:
-    - 所有地区
-    flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
-- select:
-    name: 推特
-    policies:
-    - 所有地区
-    flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
-- select:
-    name: 油管
-    policies:
-    - 所有地区
-    flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
 - select:
     name: ChatGPT
     policies:
-    - 所有地区
+    - 美国
+    - 香港
+    - 新加坡
+    - 台湾
+    - 日本
+    - 其他
     flatten: true
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/OpenAI.png
+    icon: https://avatars.githubusercontent.com/u/14957082?s=200&v=4    
 - select:
-    name: 苹果
+    name: Google
     policies:
-    - 直连
-    - 所有地区
+    - 分区节点
     flatten: true
-    icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Apple.png
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+- select:
+    name: Microsoft
+    policies:
+    - DIRECT
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+- select:
+    name: PayPal
+    policies:
+    - 美国
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
+- select:
+    name: Spotify
+    policies:
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png    
+- select:
+    name: Telegram
+    policies:
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+- select:
+    name: Twitter
+    policies:
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
+- select:
+    name: WeChat
+    policies:
+    - DIRECT
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
+- select:
+    name: YouTube
+    policies:
+    - 分区节点
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube_Letter.png
+- fallback:
+    name: 香港
+    policies:
+    - 代理列表
+    flatten: true
+    filter: 🇭🇰|港|HK|Hong
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
 - fallback:
     name: 美国
     policies:
-    - 所有代理
+    - 代理列表
     flatten: true
     filter: (🇺🇸)|(美)|(States)|(US)
-    icon: 🇺🇸
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+- fallback:
+    name: 台湾
+    policies:
+    - 代理列表
+    flatten: true
+    filter: 🇹🇼|台|TW|Tai
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
 - fallback:
     name: 日本
     policies:
-    - 所有代理
+    - 代理列表
     flatten: true
     filter: (🇯🇵)|(日)|(日本)|(JP)
-    icon: 🇯🇵
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 - fallback:
     name: 新加坡
     policies:
-    - 所有代理
+    - 代理列表
     flatten: true
     filter: (🇸🇬)|(新)|(新加坡)|(SG)
-    icon: 🇸🇬
-- select:
-    name: 直连
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- fallback:
+    name: 其他
     policies:
-    - DIRECT
-    hidden: true
+    - 代理列表
+    flatten: true
+    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
 - select:
-    name: 所有地区
+    name: 分区节点
     policies:
+    - 香港
     - 美国
-    - 日本
     - 新加坡
+    - 台湾
+    - 日本
+    - 其他
     icon: 😊
 - external:
     name: 所有订阅
     type: select
     urls:
-    - https://sub.store/download/collection/AllServer?target=Surge
-    icon: 🤣
+    - 你的订阅URL
+    icon: 🌹
 - select:
-    name: 所有代理
+    name: 代理列表
     policies:
     - 所有订阅
     flatten: true
-    icon: 🌹
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Available.png
 rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
@@ -89,55 +144,67 @@ rules:
     match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list
     policy: REJECT
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
-    policy: 谷歌
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
-    policy: 电报
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
-    policy: 推特
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
-    policy: 油管
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
-    policy: ChatGPT
-- rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
-    policy: 苹果
+    policy: Apple
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_Domain.list
-    policy: 苹果
+    policy: Apple
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+    policy: ChatGPT    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    policy: Google
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+    policy: Microsoft
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
+    policy: PayPal    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+    policy: Spotify
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+    policy: Telegram
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    policy: Twitter
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+    policy: WeChat    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    policy: YouTube
 - domain:
     match: ifconfig.me
-    policy: 直连
+    policy: DIRECT
 - domain_suffix:
     match: cn
-    policy: 直连
+    policy: DIRECT
 - geoip:
     match: CN
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 192.168.0.0/16
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 10.0.0.0/8
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 127.0.0.0/8
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 172.16.0.0/12
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 192.128.0.0/16
-    policy: 直连
+    policy: DIRECT
 - ip_cidr:
     match: 224.0.0.0/24
-    policy: 直连
+    policy: DIRECT
 - default:
-    policy: 所有代理
+    policy: 代理列表
 mitm:
   enabled: true
   ca_p12: egern.p12
