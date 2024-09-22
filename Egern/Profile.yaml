@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.06.07 15:40
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.09.22 10:30
 
 policy_groups:
 - external:
@@ -216,7 +216,7 @@ modules:
   url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
   enabled: true
 - name: Sub-Store
-  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Surge.sgmodule  
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml  
   enabled: true
 - name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
