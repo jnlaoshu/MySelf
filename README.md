@@ -8,7 +8,7 @@
 
 * [Peng-YM](https://github.com/Peng-YM)  * [VirgilClyne](https://github.com/VirgilClyne)  * [KOP-XIAO](https://github.com/KOP-XIAO) * [Neurogram-R](https://github.com/Neurogram-R) * [Nebulosa-Cat](https://github.com/Nebulosa-Cat)
 
-* [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script) * [lhie1](https://github.com/lhie1)  * [fmz200](https://github.com/fmz200/wool_scripts) * [RuCu6](https://github.com/RuCu6)  * [Hackl0us](https://github.com/Hackl0us)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories)
+* [blackmatrix7](https://github.com/blackmatrix7/ios_rule_script) * [fmz200](https://github.com/fmz200/wool_scripts) * [RuCu6](https://github.com/RuCu6)  * [可莉🅥](https://gitlab.com/lodepuly/vpn_tool) * [Hackl0us](https://github.com/Hackl0us)  * [anker1209](https://github.com/anker1209/Scriptable)  * [lowking](https://github.com/lowking/Scripts)  * [dompling-2Y](https://github.com/dompling?tab=repositories) * [lhie1](https://github.com/lhie1)  
 
 * [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [Brian](https://github.com/TributePaulWalker/Profiles)  * [Coldvvater](https://github.com/Coldvvater/Mononoke/tree/master)  * [Rabbit](https://github.com/Rabbit-Spec/Surge) * [Johnshall](https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever) * [Repcz](https://github.com/Repcz/Tool) * [GetSomeCats](https://github.com/getsomecat/GetSomeCats) * [ClashMeta](https://github.com/MetaCubeX/Clash.Meta/blob/Alpha/docs/config.yaml/)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
 
