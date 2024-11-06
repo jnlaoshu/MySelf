@@ -1,7 +1,76 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.09.22 10:30
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.11.06 09:30
 
+allow_external_connections: true
+vif_only: true
+hijack_dns:
+- '*:53'
+geoip_db_url: https://raw.githubusercontent.com/Masaiki/GeoIP2-CN/release/Country.mmdb
+asn_db_url: https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
+proxy_latency_test_url: http://cp.cloudflare.com/generate_204
+direct_latency_test_url: http://www.apple.com/library/test/success.html
+vif_excluded_routes:
+- boc.com
+- cmbchina.com
+include_all_networks: false
+include_cellular_services: false
+dns:
+  bootstrap:
+  - 233.5.5.5 
+  - 119.29.29.29
+  upstreams:
+    Secure DNS:
+    - https://61.139.2.69/dns-query
+    - https://dns.alidns.com/dns-query
+    Open DNS:
+    - https://61.139.2.69/dns-query
+    - https://208.67.222.222/dns-query
+    Google DNS:
+    - tls:8.8.8.8
+  forward:
+  - wildcard:
+      match: apple
+      value: system
+  - wildcard:
+      match: youtube
+      value: tls:8.8.8.8
+  - wildcard:
+      match: google
+      value: tls:8.8.8.8
+  - wildcard:
+      match: chipsfuck
+      value: Open DNS
+  - wildcard:
+      match: pqjc.buzz
+      value: Google DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/ChinaDomain.list
+      value: Secure DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
+      value: Secure DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy.list
+      value: Google DNS
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_Domain.list
+      value: Google DNS
+  - regex:
+      match: ^ad\..*|^ads\..* 
+      value: quic://dns.adguard-dns.com     
+  - wildcard:
+      match: '*'
+      value: Secure DNS
+  hosts:
+    doh.pub: 1.12.12.12
+    dns.alidns.com: 223.5.5.5
+    dot.pub: 1.12.12.12
+    dns.google.com: 8.8.8.8
+    localhost: 127.0.0.1    
+  block_ips:
+  - 157.148.47.204
+  public_ip_lookup_url: ifconfig.me/ip
 policy_groups:
 - external:
     name: 所有节点
@@ -139,6 +208,12 @@ rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
     policy: REJECT
+- domain_suffix:
+    match: dns.google.com
+    policy: 香港优先
+- domain_suffix:
+    match: 8.8.8.8
+    policy: 香港优先    
 - rule_set:
     match: https://raw.githubusercontent.com/ACL4SSR/ACL4SSR/master/Clash/BanAD.list
     policy: REJECT
@@ -224,8 +299,50 @@ modules:
 - name: ''
   url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
-- name: '高德地图去广告'
-  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Amap.sgmodule
+- name: ''
+  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/12306%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
   enabled: true
-- name: '滴滴出行去广告'
-  url: https://raw.githubusercontent.com/Repcz/Tool/X/Surge/Module/NoAds/Didichuxing.sgmodule
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%8F%AF%E8%8E%89%E5%B9%BF%E5%91%8A%E8%BF%87%E6%BB%A4%E5%99%A8.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%B0%8F%E7%BA%A2%E4%B9%A6%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E5%BE%AE%E4%BF%A1%E5%A4%96%E9%83%A8%E9%93%BE%E6%8E%A5%E8%A7%A3%E9%94%81.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E6%8B%BC%E5%A4%9A%E5%A4%9A%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E6%BB%B4%E6%BB%B4%E5%87%BA%E8%A1%8C%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E7%BE%8E%E5%9B%BE%E7%A7%80%E7%A7%80%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E7%BE%8E%E9%A2%9C%E7%9B%B8%E6%9C%BA%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E8%8F%9C%E9%B8%9F%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%85%B7%E6%88%91%E9%9F%B3%E4%B9%90%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%85%B7%E7%8B%97%E9%9F%B3%E4%B9%90%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%97%B2%E9%B1%BC%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%9B%AA%E7%90%83%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%AB%98%E5%BE%B7%E5%9C%B0%E5%9B%BE%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/TikTok%E5%A4%9A%E5%9C%B0%E5%8C%BA%E8%A7%A3%E9%94%81.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/QQ%E9%9F%B3%E4%B9%90%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Spotify%E6%AD%8C%E8%AF%8D%E7%BF%BB%E8%AF%91.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E4%BA%91%E9%97%AA%E4%BB%98%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E4%BA%AC%E4%B8%9C%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E4%BC%98%E9%85%B7%E8%A7%86%E9%A2%91%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E5%93%94%E5%93%A9%E5%93%94%E5%93%A9%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
+  enabled: true  
