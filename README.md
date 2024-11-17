@@ -12,6 +12,4 @@
 
 * [Fei](https://github.com/Infatuation-Fei/rule/tree/main/Stash/)  * [Brian](https://github.com/TributePaulWalker/Profiles)  * [Coldvvater](https://github.com/Coldvvater/Mononoke/tree/master)  * [Rabbit](https://github.com/Rabbit-Spec/Surge) * [Johnshall](https://github.com/Johnshall/Shadowrocket-ADBlock-Rules-Forever) * [Repcz](https://github.com/Repcz/Tool) * [GetSomeCats](https://github.com/getsomecat/GetSomeCats) * [ClashMeta](https://github.com/MetaCubeX/Clash.Meta/blob/Alpha/docs/config.yaml/)  * [maicoo](https://github.com/blankmagic/surge)  * [id77](https://github.com/id77/QuantumultX/tree/master)
 
-* [temppw](https://github.com/temppw/surge) * [yu-steven](https://github.com/yu-steven/openit) * [bihai](https://proxies.bihai.cf/) 
-
 * [Koolson](https://github.com/Koolson/Qure)   * [Orz-3](https://github.com/Orz-3) 
