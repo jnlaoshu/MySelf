@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.11.06 09:30
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 11:20
 
 allow_external_connections: true
 vif_only: true
@@ -86,7 +86,7 @@ policy_groups:
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
 - select:
-    name: ChatGPT
+    name: AIGC
     policies:
     - 美国优先
     flatten: true
@@ -224,8 +224,8 @@ rules:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_Domain.list
     policy: Apple
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
-    policy: ChatGPT    
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Surge/Rules/AI.list
+    policy: AIGC    
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
     policy: Google
