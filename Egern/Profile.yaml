@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 11:20
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 11:40
 
 allow_external_connections: true
 vif_only: true
@@ -76,7 +76,7 @@ policy_groups:
     name: 所有节点
     type: select
     urls:
-    - https://www.v2ny.one/api/v1/client/subscribe?token=137f3ae5248ac71fcb7c26ae4f7f33
+    - https://sub.store/download/collection/AllServer?target=Egern
     icon: 🌹
 - select:
     name: Apple
