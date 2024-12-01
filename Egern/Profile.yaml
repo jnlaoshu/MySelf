@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 11:40
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 12:00
 
 allow_external_connections: true
 vif_only: true
@@ -107,8 +107,7 @@ policy_groups:
 - select:
     name: PayPal
     policies:
-    - 美国优先
-    - DIRECT
+    - 美国节点
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
 - select:
@@ -142,42 +141,42 @@ policy_groups:
     - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
-- fallback:
+- auto_test:
     name: 香港节点
     policies:
     - 所有节点
     flatten: true
     filter: 🇭🇰|港|HK|Hong
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
-- fallback:
+- auto_test:
     name: 美国节点
     policies:
     - 所有节点
     flatten: true
     filter: (🇺🇸)|(美)|(States)|(US)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
-- fallback:
+- auto_test:
     name: 台湾节点
     policies:
     - 所有节点
     flatten: true
     filter: 🇹🇼|台|TW|Tai
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
-- fallback:
+- auto_test:
     name: 日本节点
     policies:
     - 所有节点
     flatten: true
     filter: (🇯🇵)|(日)|(日本)|(JP)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
-- fallback:
+- auto_test:
     name: 新加坡节点
     policies:
     - 所有节点
     flatten: true
     filter: (🇸🇬)|(新)|(新加坡)|(SG)
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
-- fallback:
+- select:
     name: 其他节点
     policies:
     - 所有节点
