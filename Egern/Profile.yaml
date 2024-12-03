@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.01 12:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.03 17:25
 
 allow_external_connections: true
 vif_only: true
@@ -72,12 +72,6 @@ dns:
   - 157.148.47.204
   public_ip_lookup_url: ifconfig.me/ip
 policy_groups:
-- external:
-    name: 所有节点
-    type: select
-    urls:
-    - https://sub.store/download/collection/AllServer?target=Egern
-    icon: 🌹
 - select:
     name: Apple
     policies:
@@ -183,6 +177,12 @@ policy_groups:
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
+- external:
+    name: 所有节点
+    type: select
+    urls:
+    - https://sub.store/download/collection/AllServer?target=Egern
+    icon: 🌹    
 - select:
     name: 香港优先
     policies:
@@ -296,6 +296,9 @@ modules:
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
 - name: ''
+  url: https://github.com/NSRingo/WeatherKit/releases/latest/download/WeatherKit.yaml
+  enabled: true  
+- name: ''
   url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
 - name: ''
@@ -344,4 +347,4 @@ modules:
 - url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E4%BC%98%E9%85%B7%E8%A7%86%E9%A2%91%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
   enabled: true
 - url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E5%93%94%E5%93%A9%E5%93%94%E5%93%A9%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
-  enabled: true  
+  enabled: true
