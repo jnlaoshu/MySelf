@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.03 17:25
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.03 18:25
 
 allow_external_connections: true
 vif_only: true
@@ -27,17 +27,17 @@ dns:
     - https://61.139.2.69/dns-query
     - https://208.67.222.222/dns-query
     Google DNS:
-    - tls:8.8.8.8
+    - tls://8.8.8.8
   forward:
   - wildcard:
       match: apple
       value: system
   - wildcard:
       match: youtube
-      value: tls:8.8.8.8
+      value: tls://8.8.8.8      
   - wildcard:
       match: google
-      value: tls:8.8.8.8
+      value: tls://8.8.8.8
   - wildcard:
       match: chipsfuck
       value: Open DNS
