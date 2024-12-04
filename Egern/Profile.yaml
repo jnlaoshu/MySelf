@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.03 18:25
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.04 09:10
 
 allow_external_connections: true
 vif_only: true
@@ -21,10 +21,8 @@ dns:
   - 119.29.29.29
   upstreams:
     Secure DNS:
-    - https://61.139.2.69/dns-query
     - https://dns.alidns.com/dns-query
     Open DNS:
-    - https://61.139.2.69/dns-query
     - https://208.67.222.222/dns-query
     Google DNS:
     - tls://8.8.8.8
@@ -68,8 +66,6 @@ dns:
     dot.pub: 1.12.12.12
     dns.google.com: 8.8.8.8
     localhost: 127.0.0.1    
-  block_ips:
-  - 157.148.47.204
   public_ip_lookup_url: ifconfig.me/ip
 policy_groups:
 - select:
@@ -117,6 +113,12 @@ policy_groups:
     flatten: true
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
 - select:
+    name: TikTok
+    policies:
+    - 日本优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/TikTok.png    
+- select:
     name: Twitter
     policies:
     - 香港优先
@@ -147,7 +149,7 @@ policy_groups:
     policies:
     - 所有节点
     flatten: true
-    filter: (🇺🇸)|(美)|(States)|(US)
+    filter: 🇺🇸|美|States|US
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
 - auto_test:
     name: 台湾节点
@@ -161,21 +163,28 @@ policy_groups:
     policies:
     - 所有节点
     flatten: true
-    filter: (🇯🇵)|(日)|(日本)|(JP)
+    filter: 🇯🇵|日|日本|JP
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 - auto_test:
     name: 新加坡节点
     policies:
     - 所有节点
     flatten: true
-    filter: (🇸🇬)|(新)|(新加坡)|(SG)
+    filter: 🇸🇬|新|新加坡|SG
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+- auto_test:
+    name: 韩国节点
+    policies:
+    - 所有节点
+    flatten: true
+    filter: 🇰🇷|韩|KR|KOR|Korea
+    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png    
 - select:
     name: 其他节点
     policies:
     - 所有节点
     flatten: true
-    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇺🇸|美|US|States|American|Music).)*$
+    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
 - external:
     name: 所有节点
@@ -191,6 +200,7 @@ policy_groups:
     - 新加坡节点
     - 台湾节点
     - 日本节点
+    - 韩国节点
     - 其他节点
     icon: 😊
 - select:
@@ -201,8 +211,20 @@ policy_groups:
     - 新加坡节点
     - 台湾节点
     - 日本节点
+    - 韩国节点
     - 其他节点
     icon: 🤣
+- select:
+    name: 日本优先
+    policies:
+    - 日本节点    
+    - 美国节点
+    - 台湾节点    
+    - 韩国节点
+    - 新加坡节点
+    - 香港节点
+    - 其他节点
+    icon: 🤣    
 rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
@@ -240,6 +262,9 @@ rules:
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
     policy: Telegram
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Egern/Rule/TikTok.yaml
+    policy: TikTok    
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
     policy: Twitter
@@ -295,7 +320,7 @@ modules:
 - name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
-- name: ''
+- name: 'WeatherKit'
   url: https://github.com/NSRingo/WeatherKit/releases/latest/download/WeatherKit.yaml
   enabled: true  
 - name: ''
@@ -333,8 +358,6 @@ modules:
 - url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%9B%AA%E7%90%83%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
   enabled: true
 - url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/%E9%AB%98%E5%BE%B7%E5%9C%B0%E5%9B%BE%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/TikTok%E5%A4%9A%E5%9C%B0%E5%8C%BA%E8%A7%A3%E9%94%81.sgmodule
   enabled: true
 - url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/QQ%E9%9F%B3%E4%B9%90%E5%8E%BB%E5%B9%BF%E5%91%8A.sgmodule
   enabled: true
