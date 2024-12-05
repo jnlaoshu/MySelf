@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.04 09:10
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.05 09:10
 
 allow_external_connections: true
 vif_only: true
@@ -66,7 +66,7 @@ dns:
     dot.pub: 1.12.12.12
     dns.google.com: 8.8.8.8
     localhost: 127.0.0.1    
-  public_ip_lookup_url: ifconfig.me/ip
+  public_ip_lookup_url: https://ifconfig.me/ip
 policy_groups:
 - select:
     name: Apple
