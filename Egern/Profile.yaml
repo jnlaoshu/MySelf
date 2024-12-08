@@ -139,7 +139,7 @@ dns:
     stun?.l.google.com: system # Google STUN
 
     localhost: 127.0.0.1  # 将localhost解析为本地地址127.0.0.1   
-	
+
 # > 阻止的IP地址或子网列表	
   block_ips:  
   - 1.2.3.4  # 阻止IP地址1.2.3.4。
