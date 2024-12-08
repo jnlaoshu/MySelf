@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.08 14:55
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.08 15:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -51,7 +51,7 @@ dns:
     Domestic: #使用国内公共DNS服务器作为上游服务器
     - https://dns.alidns.com/dns-query
     Foreign: #使用Google的公共DNS服务器作为上游服务器
-    - tls:8.8.8.8
+    - https://dns.google/dns-query
 
 # > 转发DNS请求的规则
   forward:  
