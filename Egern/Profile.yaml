@@ -358,7 +358,7 @@ rules:
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
     policy: YouTube
-	
+
 - domain:
     match: ifconfig.me
     policy: DIRECT
@@ -394,7 +394,7 @@ mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
-  
+
 # > 模块配置列表
 modules:
 - name: BoxJs
