@@ -73,7 +73,7 @@ dns:
 
 # > 本地DNS解析的主机名映射
   hosts: 
-  
+
     # > IPv6
     ip6-localhost: ::1 # IPv6 Localhost
     ip6-loopback: ::1 # IPv6 Loopback
