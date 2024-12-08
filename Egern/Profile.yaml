@@ -338,7 +338,7 @@ mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
-  
+
 # > 模块配置列表
 modules:
 - name: BoxJs
