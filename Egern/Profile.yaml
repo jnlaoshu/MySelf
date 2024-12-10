@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.10 10:10
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.10 10:40
 
 # > 开启ipv6支持
 ipv6: true 
@@ -45,14 +45,14 @@ include_local_networks: false
 
 dns:
   bootstrap:
-    - system  # 使用系统默认的DNS配置作为引导
+    - 119.29.29.29
+    - 223.5.5.5	
   upstreams:  # 定义上游DNS服务器的列表
     Domestic: #使用国内公共DNS服务器作为上游服务器
-    - https://doh.pub/dns-query
-    - https://dns.alidns.com/dns-query  
+    - https://doh.pub/dns-query 
+    - https://dns.alidns.com/dns-query	
     Foreign: #使用Google的公共DNS服务器作为上游服务器
-    - https://dns.google/dns-query
-    - https://dns64.dns.google/dns-query
+    - tls://8.8.8.8
 
 # > 转发DNS请求的规则
   forward:  
@@ -118,7 +118,7 @@ dns:
     fonts.gstatic.com: server:119.29.29.29 # Google Fonts
     stun.l.google.com: system # Google STUN
     stun?.l.google.com: system # Google STU
-
+    
     localhost: 127.0.0.1  # 将localhost解析为本地地址127.0.0.1   
 
 # > 查询公共IP地址的URL，用于获取本机的公网IP地址  
