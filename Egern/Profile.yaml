@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.15 19:30
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2024.12.15 19:35
 
 # > 开启ipv6支持
 ipv6: true 
@@ -528,9 +528,6 @@ modules:
   enabled: true
 - name: fmz200广告拦截净化合集
   url: http://script.hub/file/_start_/https://raw.githubusercontent.com/fmz200/wool_scripts/main/Loon/plugin/blockAds.plugin/_end_/blockAds.sgmodule?type=loon-plugin&target=surge-module&del=true
-  enabled: true
-- name: 常用软件去广告
-  url: https://raw.githubusercontent.com/Ananaskop/Profile/main/Surge/Modules/Common_remove_ads.sgmodule
   enabled: true
 - name: 墨鱼去广告
   url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
