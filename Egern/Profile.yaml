@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.13 12:35
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.13 12:50
 
 # > 开启ipv6支持
 ipv6: true 
@@ -144,7 +144,7 @@ policy_groups:
     policies:
     - 美国优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/ChatGPT.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png    
 - select:
     name: Google
     policies:
