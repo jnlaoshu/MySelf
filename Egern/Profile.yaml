@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.09 21:20
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.13 11:55
 
 # > 开启ipv6支持
 ipv6: true 
@@ -19,7 +19,7 @@ hijack_dns:
 - '*:53'
 
 # > 指定自定义的 GeoIP 数据库 URL
-geoip_db_url: https://raw.githubusercontent.com/Masaiki/GeoIP2-CN/release/Country.mmdb
+geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 # > 指定自定义的 ASN 数据库 URL
 asn_db_url: https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
 
@@ -28,7 +28,7 @@ proxy_latency_test_url: http://cp.cloudflare.com/generate_204
 # > 自定义的直连延迟测试 URL
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
-# > 虚拟网络接口不使用默认的路由，由多个较小的路由切分用于解决某些问题。比如 HomeKit 的摄像头无法使用的问题
+# > 虚拟网络接口不使用默认的路由，由多个较小的路由切分用于解决某些问题。比如HomeKit的摄像头无法使用的问题
 compat_route: false
 
 # > 启用后系统会通过隧道路由网络流量，但为维持预期设备功能所必需的指定系统服务的流量除外
@@ -127,7 +127,7 @@ dns:
 # > 策略组配置列表
 policy_groups:
 - external:
-    name: 所有节点
+    name: AllServer
     type: select
     urls:
     - https://sub.store/download/collection/AllServer?target=Egern
@@ -204,49 +204,49 @@ policy_groups:
 - auto_test:
     name: 香港节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇭🇰|港|HK|Hong
+    filter: 🇭🇰|港|香港|HK|Hong
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
 - auto_test:
     name: 美国节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇺🇸|美|States|US
+    filter: 🇺🇸|美|美国|US|States|American
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
 - auto_test:
     name: 台湾节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇹🇼|台|TW|Tai
+    filter: 🇹🇼|台|台湾|TW|Tai
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
 - auto_test:
     name: 日本节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇯🇵|日|日本|JP
+    filter: 🇯🇵|日|日本|JP|Japan
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
 - auto_test:
     name: 狮城节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇸🇬|新|新加坡|SG
+    filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
 - auto_test:
     name: 韩国节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
-    filter: 🇰🇷|韩|KR|KOR|Korea
+    filter: 🇰🇷|韩|韩国|KR|KOR|Korea
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png    
 - select:
     name: 其他节点
     policies:
-    - 所有节点
+    - AllServer
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
@@ -289,15 +289,16 @@ rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
     policy: REJECT
-- domain_suffix:
-    match: dns.google.com
-    policy: 香港优先
-- domain_suffix:
-    match: 8.8.8.8
-    policy: 香港优先    
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Advertising/Advertising.list
+    policy: REJECT
+    disabled: false
 - rule_set:
     match: https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-clash.yaml
     policy: REJECT
+- rule_set:
+    match: https://https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AppStore/AppStore.list
+    policy: DIRECT	
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
     policy: Apple
@@ -382,33 +383,27 @@ modules:
 - name: Sub-Store
   url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml  
   enabled: true
-- name: TestFlight账户管理
-  url: https://raw.githubusercontent.com/NobyDa/Script/master/Surge/Module/TestFlightAccount.sgmodule
-  enabled: true  
 - name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
-- name: 'WeatherKit'
+- name: ''
+  url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.yaml
+  enabled: true
+- name: ''
+  url: https://github.com/NSRingo/TestFlight/releases/latest/download/iRingo.TestFlight.yaml
+  enabled: true
+- name: ''
+  url: https://github.com/NSRingo/Siri/releases/latest/download/iRingo.Siri.yaml
+  enabled: true
+- name: ''
   url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.yaml
   enabled: true  
 - name: ''
   url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
-- name: 百度地图去广告
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E7%99%BE%E5%BA%A6%E5%9C%B0%E5%9B%BE%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
-  enabled: true
-- name: 滴滴出行去广告
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E6%BB%B4%E6%BB%B4%E5%87%BA%E8%A1%8C%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
-  enabled: true
-- name: 高德地图去广告
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E9%AB%98%E5%BE%B7%E5%9C%B0%E5%9B%BE%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
-  enabled: true
-- name: 同花顺去广告
-  url: http://script.hub/file/_start_/https://raw.githubusercontent.com/androidcn/userscripts/refs/heads/main/tonghuashun.plugin/_end_/tonghuashun.sgmodule?type=loon-plugin&target=surge-module&del=true
-  enabled: true
-- name: 雪球去广告
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E9%9B%AA%E7%90%83%E5%8E%BB%E5%B9%BF%E5%91%8A.beta.sgmodule
-  enabled: true
+- name: 微信外部链接解锁
+  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%BE%AE%E4%BF%A1%E5%A4%96%E9%83%A8%E9%93%BE%E6%8E%A5%E8%A7%A3%E9%94%81.beta.sgmodule
+  enabled: true  
 - name: fmz200重写去广告
   url: http://script.hub/file/_start_/https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/chongxie.txt/_end_/chongxie.sgmodule?n=fmz200%20%E9%87%8D%E5%86%99%E5%8E%BB%E5%B9%BF%E5%91%8A&type=qx-rewrite&target=surge-module&del=true
   enabled: true
