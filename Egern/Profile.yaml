@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.15 09:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.17 21:36
 
 # > 开启ipv6支持
 ipv6: true 
@@ -59,9 +59,6 @@ dns:
   - wildcard:
       match: '*.cn'  # 将所有以.cn结尾的域名请求转发给国内公共DNS服务器
       value: Domestic
-  - proxy_rule_set:  # 匹配 ACL4SSR 的中国域名列表中的域名
-      match: https://github.com/ACL4SSR/ACL4SSR/raw/master/Clash/ChinaDomain.list
-      value: Domestic  # 这些匹配的域名使用国内公共DNS服务器
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       value: Domestic  # 这些匹配的域名使用国内公共DNS服务器
@@ -252,9 +249,6 @@ rules:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
     policy: Apple
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_Domain.list
-    policy: Apple
-- rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Surge/Rules/AI.list
     policy: AIGC    
 - rule_set:
@@ -328,15 +322,6 @@ modules:
 - name: 微信外部链接解锁
   url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%BE%AE%E4%BF%A1%E5%A4%96%E9%83%A8%E9%93%BE%E6%8E%A5%E8%A7%A3%E9%94%81.beta.sgmodule
   enabled: true
-- name: fmz200重写去广告
-  url: http://script.hub/file/_start_/https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/chongxie.txt/_end_/chongxie.sgmodule?n=fmz200%20%E9%87%8D%E5%86%99%E5%8E%BB%E5%B9%BF%E5%91%8A&type=qx-rewrite&target=surge-module&del=true
-  enabled: true
 - name: fmz200广告拦截净化合集
   url: http://script.hub/file/_start_/https://raw.githubusercontent.com/fmz200/wool_scripts/main/Loon/plugin/blockAds.plugin/_end_/blockAds.sgmodule?type=loon-plugin&target=surge-module&del=true
-  enabled: true
-- name: 墨鱼去广告
-  url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
-  enabled: true
-- name: 可莉广告过滤器
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%8F%AF%E8%8E%89%E5%B9%BF%E5%91%8A%E8%BF%87%E6%BB%A4%E5%99%A8.beta.sgmodule
   enabled: true
