@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.17 21:36
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.17 22:26
 
 # > 开启ipv6支持
 ipv6: true 
@@ -250,7 +250,10 @@ rules:
     policy: Apple
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Surge/Rules/AI.list
-    policy: AIGC    
+    policy: AIGC 
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
+    policy: 美国优先
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
     policy: Google
