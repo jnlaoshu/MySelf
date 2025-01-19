@@ -12,11 +12,14 @@ $httpClient.get(url, function(error, response, data){
 	let country =jsonData.country
 	let city =jsonData.city
 	let timezone =jsonData.timezone
+	let lon =jsonData.lon
+	let lat =jsonData.lat
+	let currency =jsonData.currency
     let emoji = getFlagEmoji(jsonData.countryCode)
 const params = getParams($argument);
   body = {
     title: "节点信息",
-    content: `IP：${query}\n ️ISP：${isp}\nASN：${as}\n 国家/地区：${emoji}${country}\n 城市：${city}\n 时区：${timezone}\n`,
+    content: `🗺️IP：${query}\n🖥️ISP：${isp}\n#️⃣ASN：${as}\n🌍国家/地区：${emoji}${country}\n🏙城市：${city}\n🕗时区：${timezone}\n📍经纬度：${lon},${lat}\n🪙货币：${currency}`,
         icon: params.icon,
         "icon-color": params.color
   }
