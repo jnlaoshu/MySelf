@@ -1,5 +1,5 @@
 #!name=Panel信息
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 16:10
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 16:30
 #𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Egern/Module/Panel.yaml
 [Panel]
 IP信息=script-name=IP信息
@@ -11,4 +11,4 @@ IP信息=script-name=IP信息
 IP信息=type=generic,script-path=https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
 
 运行时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/StartTime.js
-网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/NetworkInfo.js
+网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/NetworkInfo.js
