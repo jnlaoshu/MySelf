@@ -205,7 +205,7 @@ policy_groups:
     - AllServer
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/World.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 - select:
     name: 香港优先
     policies:
