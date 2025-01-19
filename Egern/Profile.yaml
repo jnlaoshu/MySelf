@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 16:48
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 20:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -48,10 +48,10 @@ dns:
     - 119.29.29.29
     - 223.5.5.5	
   upstreams:  # 定义上游DNS服务器的列表
-    Domestic: #使用国内公共DNS服务器作为上游服务器
+    Domestic: 
     - https://doh.pub/dns-query 
     - https://dns.alidns.com/dns-query	
-    Foreign: #使用Google的公共DNS服务器作为上游服务器
+    Foreign: 
     - https://dns.google/dns-query
 # > 转发DNS请求的规则
   forward:  
@@ -94,7 +94,7 @@ policy_groups:
     - DIRECT
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Apple.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
 - select:
     name: AIGC
     policies:
@@ -106,106 +106,106 @@ policy_groups:
     policies:
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Google_Search.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google_Search.png
 - select:
     name: Microsoft
     policies:
     - DIRECT
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Microsoft.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
 - select:
     name: PayPal
     policies:
     - 美国节点
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/PayPal.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
 - select:
     name: Spotify
     policies:
     - 美国优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Spotify.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
 - select:
     name: Telegram
     policies:
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Telegram.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
 - select:
     name: TikTok
     policies:
     - 日本优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/TikTok.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
 - select:
     name: Twitter
     policies:
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Twitter.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
 - select:
     name: WeChat
     policies:
     - DIRECT
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/WeChat.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
 - select:
     name: YouTube
     policies:
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/YouTube.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
 - auto_test:
     name: 香港节点
     policies:
     - AllServer
     flatten: true
     filter: 🇭🇰|港|香港|HK|Hong
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Hong_Kong.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Hong_Kong.png
 - auto_test:
     name: 美国节点
     policies:
     - AllServer
     flatten: true
     filter: 🇺🇸|美|美国|US|States|American
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/United_States.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/United_States.png
 - auto_test:
     name: 台湾节点
     policies:
     - AllServer
     flatten: true
     filter: 🇹🇼|台|台湾|TW|Tai
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Taiwan.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
 - auto_test:
     name: 日本节点
     policies:
     - AllServer
     flatten: true
     filter: 🇯🇵|日|日本|JP|Japan
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Japan.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
 - auto_test:
     name: 狮城节点
     policies:
     - AllServer
     flatten: true
     filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Singapore.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 - auto_test:
     name: 韩国节点
     policies:
     - AllServer
     flatten: true
     filter: 🇰🇷|韩|韩国|KR|KOR|Korea
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Korea.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
 - select:
     name: 其他节点
     policies:
     - AllServer
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
-    icon: https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/World_Map.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/World_Map.png
 - select:
     name: 香港优先
     policies:
