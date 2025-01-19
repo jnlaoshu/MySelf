@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 15:15
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 16:48
 
 # > 开启ipv6支持
 ipv6: true 
@@ -307,12 +307,12 @@ modules:
 - name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
+- name: 'BiliBili去广告'
+  url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
+  enabled: true  
 - name: 'BiliBili Enhanced'
   url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.yaml
   enabled: true
-- name: 'BiliBili ADBlock'
-  url: https://github.com/BiliUniverse/ADBlock/releases/latest/download/BiliBili.ADBlock.yaml
-  enabled: true 
 - name: 'iRingo Siri'
   url: https://github.com/NSRingo/Siri/releases/latest/download/iRingo.Siri.yaml
   enabled: true
