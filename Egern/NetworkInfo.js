@@ -1,7 +1,7 @@
-// 网络信息详情面板
- // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/NetworkInfo.js
- // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.19 16:32
+# 网络信息
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/NetworkInfo.js
+# 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
+# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.19 16:32
 
 let url = "http://ip-api.com/json/?fields=8450015&lang=zh-CN"
 $httpClient.get(url, function(error, response, data){
