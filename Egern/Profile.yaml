@@ -163,14 +163,14 @@ policy_groups:
     - AllServer
     flatten: true
     filter: 🇭🇰|港|香港|HK|Hong
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Hong_Kong.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
 - auto_test:
     name: 美国节点
     policies:
     - AllServer
     flatten: true
     filter: 🇺🇸|美|美国|US|States|American
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/United_States.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
 - auto_test:
     name: 台湾节点
     policies:
@@ -205,7 +205,7 @@ policy_groups:
     - AllServer
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/World_Map.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/World.png
 - select:
     name: 香港优先
     policies:
