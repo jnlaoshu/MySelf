@@ -1,0 +1,49 @@
+# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rules/AIGC.list
+
+domain_keyword_set:
+  - openai
+asn_set:
+  - 20473
+domain_set:
+  - browser-intake-datadoghq.com
+  - chat.openai.com.cdn.cloudflare.net
+  - gemini.google.com
+  - o33249.ingest.sentry.io
+  - openai-api.arkoselabs.com
+  - openaiapi-site.azureedge.net
+  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+  - openaicom.imgix.net
+  - openaicomproductionae4b.blob.core.windows.net
+  - production-openaicom-storage.azureedge.net
+  - static.cloudflareinsights.com
+domain_suffix_set:
+  - ai.com
+  - algolia.net
+  - api.statsig.com
+  - auth0.com
+  - chat.com
+  - chatgpt.com
+  - chatgpt.livekit.cloud
+  - client-api.arkoselabs.com
+  - events.statsigapi.net
+  - featuregates.org
+  - host.livekit.cloud
+  - identrust.com
+  - intercom.io
+  - intercomcdn.com
+  - launchdarkly.com
+  - oaistatic.com
+  - oaiusercontent.com
+  - observeit.net
+  - openai.com
+  - openai.com.cdn.cloudflare.net
+  - openaiapi-site.azureedge.net
+  - openaicom.imgix.net
+  - segment.io
+  - sentry.io
+  - sora.com
+  - stripe.com
+  - turn.livekit.cloud
+ip_cidr_set:
+  - 24.199.123.28/32
+  - 64.23.132.171/32  
