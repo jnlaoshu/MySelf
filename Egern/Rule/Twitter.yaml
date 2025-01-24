@@ -1,4 +1,5 @@
-# Twitter (推特分流)
+# 规则名称: Twitter
+# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
 
 domain_keyword_set:
   - twitter
@@ -10,7 +11,9 @@ domain_suffix_set:
   - t.co
   - tellapart.com
   - tweetdeck.com
+  - twimg.co
   - twimg.com
+  - twimg.org
   - twitpic.com
   - twitter.biz
   - twitter.com
