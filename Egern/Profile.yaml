@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.19 20:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.24 21:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -55,12 +55,6 @@ dns:
     - https://dns.google/dns-query
 # > 转发DNS请求的规则
   forward:  
-  - wildcard:
-      match: '*.cn'  # 将所有以.cn结尾的域名请求转发给国内公共DNS服务器
-      value: Domestic
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
-      value: Domestic  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       value: Foreign  	  
@@ -69,7 +63,7 @@ dns:
       value: quic://dns.adguard-dns.com  # 这些广告相关的域名使用AdGuard的QUIC DNS服务器
   - wildcard:
       match: '*'  # 匹配所有其他未被前述规则匹配的域名
-      value: System  # 将这些域名请求转发到系统默认的DNS服务器
+      value: Domestic  
 
 # > 本地DNS解析的主机名映射
   hosts: 
@@ -243,43 +237,40 @@ policy_groups:
 # > 代理规则列表
 rules:
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AppStore/AppStore.list
-    policy: DIRECT	
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
     policy: Apple
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Surge/Rules/AI.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
     policy: AIGC 
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
     policy: 美国优先
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
     policy: Google
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
     policy: Microsoft
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
     policy: PayPal    
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
     policy: Spotify
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
     policy: Telegram
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Egern/Rule/TikTok.yaml
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
     policy: TikTok    
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
     policy: Twitter
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
     policy: WeChat    
 - rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
     policy: YouTube
 - geoip:
     match: CN
@@ -287,14 +278,25 @@ rules:
 - default:
     policy: 香港优先
 
+# > Body重写
+body_rewrites:
+- response_jq:
+    match: ^https?://testflight\.apple\.com/v\d/accounts/.+?/install$
+    filter: .storefrontId = "143441-19,29"
+	
 # > MITM 配置
 mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
+  hostnames:
+    excludes:
+    - testflight.apple.com
 
 # > 模块配置列表
 modules:
+- url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
+  enabled: true
 - name: BoxJs
   url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
   enabled: true
