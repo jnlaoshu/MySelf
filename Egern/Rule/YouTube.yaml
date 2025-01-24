@@ -1,15 +1,24 @@
-# YouTube (油管分流)
+# 规则名称: YouTube
+# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
 
 domain_keyword_set:
   - youtube
+domain_set:
+  - youtubei.googleapis.com
+  - yt3.ggpht.com  
 domain_suffix_set:
   - ggpht.cn
   - ggpht.com
   - googlevideo.com
+  - gvt1.com
   - gvt2.com
+  - video.google.com
+  - wide-youtube.l.google.com
   - withyoutube.com
   - youtu.be
+  - youtube
   - youtube-nocookie.com
+  - youtube-ui.l.google.com
   - youtube.ae
   - youtube.al
   - youtube.am
@@ -105,6 +114,7 @@ domain_suffix_set:
   - youtube.fi
   - youtube.fr
   - youtube.ge
+  - youtube.googleapis.com
   - youtube.gr
   - youtube.gt
   - youtube.hk
@@ -162,6 +172,7 @@ domain_suffix_set:
   - youtube.uy
   - youtube.vn
   - youtubeeducation.com
+  - youtubeembeddedplayer.googleapis.com
   - youtubefanfest.com
   - youtubegaming.com
   - youtubego.co.id
@@ -175,8 +186,9 @@ domain_suffix_set:
   - youtubemobilesupport.com
   - yt.be
   - ytimg.com
+
 ip_cidr_set:
-  - 172.110.32.0/21,no-resolve
-  - 216.73.80.0/20,no-resolve
+  - 172.110.32.0/21
+  - 216.73.80.0/20
 ip_cidr6_set:
-  - 2620:120:e000::/40,no-resolve
+  - 2620:120:e000::/40 
