@@ -1,11 +1,26 @@
-# Telegram (电报分流)
+# 规则名称: Telegram
+# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
+
 domain_keyword_set:
   - nicegram
   - telegram
+asn_set:
+  - 44907
+  - 59930
+  - 62014
+  - 62041
+  - 211157
+domain_set:
+  - api.imem.app
+  - api.swiftgram.app
 domain_suffix_set:
+  - cdn-telegram.org
   - comments.app
   - contest.com
+  - fragment.com
   - graph.org
+  - legra.ph
+  - mbrx.app
   - quiz.directory
   - stel.com
   - t.me
@@ -22,7 +37,7 @@ domain_suffix_set:
   - tg.dev
   - tx.me
   - usercontent.dev
-ip_cidr_set:
+ ip_cidr_set:
   - 109.239.140.0/24,no-resolve
   - 149.154.160.0/20,no-resolve
   - 185.76.151.0/24,no-resolve
@@ -33,4 +48,5 @@ ip_cidr_set:
 ip_cidr6_set:
   - 2001:67c:4e8::/48,no-resolve
   - 2001:b28:f23c::/47,no-resolve
-IP-CIDR6,2001:b28:f23f::/48,no-resol
+  - 2001:b28:f23f::/48
+  - 2a0a:f280::/29
