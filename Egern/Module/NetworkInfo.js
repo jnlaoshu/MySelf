@@ -1,11 +1,11 @@
 # 网络信息
-# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/NetworkInfo.js
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 # 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
-# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 21:53
+# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 22:05
 
 /*
 [Script]
-网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/NetworkInfo.js
+网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 	
 [Panel]
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info,update-interval=1
