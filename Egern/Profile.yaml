@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.24 21:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.25 18:45
 
 # > 开启ipv6支持
 ipv6: true 
@@ -237,40 +237,46 @@ policy_groups:
 # > 代理规则列表
 rules:
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple_All.list
     policy: Apple
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
     policy: AIGC 
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
     policy: 美国优先
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
+    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
+    policy: 香港优先	
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
     policy: Google
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
     policy: Microsoft
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
     policy: PayPal    
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
     policy: Spotify
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
     policy: Telegram
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
+    match: https://raw.gitmirror.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
+    policy: 香港优先	
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TikTok/TikTok.list
     policy: TikTok    
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
     policy: Twitter
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
     policy: WeChat    
 - rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
     policy: YouTube
 - geoip:
     match: CN
@@ -297,36 +303,86 @@ mitm:
 modules:
 - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
   enabled: true
+- name: Sub-Store
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml  
+  enabled: true  
 - name: BoxJs
   url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
   enabled: true
 - name: ScriptHub
   url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
   enabled: true
-- name: Sub-Store
-  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml  
-  enabled: true
-- name: 'Spotify'
-  url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
-  enabled: true
-- name: 'BiliBili去广告'
-  url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
-  enabled: true  
-- name: 'BiliBili Enhanced'
-  url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.yaml
-  enabled: true
 - name: 'iRingo Siri'
   url: https://github.com/NSRingo/Siri/releases/latest/download/iRingo.Siri.yaml
   enabled: true
 - name: 'iRingo WeatherKit'
   url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.yaml
-  enabled: true  
+  enabled: true
+- name: 'Spotify'
+  url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
+  enabled: true
 - name: 'YouTube Enhance'
   url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
-- name: 微信外部链接解锁
-  url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/refs/heads/main/Surge/Beta/%E5%BE%AE%E4%BF%A1%E5%A4%96%E9%83%A8%E9%93%BE%E6%8E%A5%E8%A7%A3%E9%94%81.beta.sgmodule
+- name: 'BiliBili Enhanced'
+  url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.yaml
+  enabled: true  
+- name: 'BiliBili去广告'
+  url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
+  enabled: true  
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/滴滴出行去广告.beta.sgmodule
   enabled: true
-- name: fmz200广告拦截净化合集
-  url: http://script.hub/file/_start_/https://raw.githubusercontent.com/fmz200/wool_scripts/main/Loon/plugin/blockAds.plugin/_end_/blockAds.sgmodule?type=loon-plugin&target=surge-module&del=true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/高德地图去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/百度地图去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/12306去广告.beta.sgmodule
+  enabled: true  
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/闲鱼去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/京东去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/拼多多去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/淘宝去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/瑞幸咖啡去广告.beta.sgmodule
+  enabled: true  
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/什么值得买去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/小红书去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/酷我音乐去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/酷狗音乐去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/QQ音乐去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/网易云音乐去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/喜马拉雅去广告.beta.sgmodule
+  enabled: true  
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/腾讯视频去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/优酷视频去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/爱奇艺视频去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/芒果TV去广告.beta.sgmodule
+  enabled: true  
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/微信公众号去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/微信外部链接解锁.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/云闪付去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/雪球去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/飞客去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/美图秀秀去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/美颜相机去广告.beta.sgmodule
+  enabled: true
+- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/向日葵去广告.beta.sgmodule
   enabled: true
