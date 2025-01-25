@@ -1,49 +1,63 @@
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
 
-domain_keyword_set:
-  - openai
-asn_set:
-  - 20473
-domain_set:
-  - browser-intake-datadoghq.com
-  - chat.openai.com.cdn.cloudflare.net
-  - gemini.google.com
-  - o33249.ingest.sentry.io
-  - openai-api.arkoselabs.com
-  - openaiapi-site.azureedge.net
-  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-  - openaicom.imgix.net
-  - openaicomproductionae4b.blob.core.windows.net
-  - production-openaicom-storage.azureedge.net
-  - static.cloudflareinsights.com
-domain_suffix_set:
-  - ai.com
-  - algolia.net
-  - api.statsig.com
-  - auth0.com
-  - chat.com
-  - chatgpt.com
-  - chatgpt.livekit.cloud
-  - client-api.arkoselabs.com
-  - events.statsigapi.net
-  - featuregates.org
-  - host.livekit.cloud
-  - identrust.com
-  - intercom.io
-  - intercomcdn.com
-  - launchdarkly.com
-  - oaistatic.com
-  - oaiusercontent.com
-  - observeit.net
-  - openai.com
-  - openai.com.cdn.cloudflare.net
-  - openaiapi-site.azureedge.net
-  - openaicom.imgix.net
-  - segment.io
-  - sentry.io
-  - sora.com
-  - stripe.com
-  - turn.livekit.cloud
-ip_cidr_set:
-  - 24.199.123.28/32
-  - 64.23.132.171/32  
+# OpenAI
+# > ChatGPT
+DOMAIN-SUFFIX,chatgpt.com
+DOMAIN-SUFFIX,oaistatic.com
+DOMAIN-SUFFIX,oaiusercontent.com
+DOMAIN-SUFFIX,openai.com
+DOMAIN,api.statsig.com
+DOMAIN,api-iam.intercom.io
+DOMAIN,chatgpt.livekit.cloud
+DOMAIN,o33249.ingest.sentry.io
+DOMAIN,openaiapi-site.azureedge.net
+DOMAIN,sfo3.turn.livekit.cloud
+DOMAIN-KEYWORD,openaicom
+
+# Apple Intelligence
+DOMAIN-SUFFIX,smoot.apple.com
+DOMAIN,apple-relay.apple.com
+DOMAIN,apple-relay.cloudflare.com
+DOMAIN,apple-relay.fastly-edge.com
+DOMAIN,cp4.cloudflare.com
+DOMAIN,guzzoni.apple.com
+
+# Anthropic
+# > Claude
+DOMAIN-SUFFIX,claude.ai
+DOMAIN-SUFFIX,anthropic.com
+
+# Google
+# > Gemini
+DOMAIN,ai.google.dev
+DOMAIN,bard.google.com
+DOMAIN,gemini.google.com
+DOMAIN,generativelanguage.googleapis.com
+DOMAIN,proactivebackend-pa.googleapis.com
+# > AI Studio
+DOMAIN,aistudio.google.com
+DOMAIN,alkalimakersuite-pa.clients6.google.com
+
+# JetBrains AI
+DOMAIN-SUFFIX,grazie.ai
+
+# Microsoft
+# > Copilot
+DOMAIN,copilot.microsoft.com
+DOMAIN,sydney.bing.com
+DOMAIN,www.bing.com
+
+# Meta
+DOMAIN,imagine.meta.com
+DOMAIN-SUFFIX,meta.ai
+
+# GitHub Copilot
+DOMAIN-SUFFIX,githubcopilot.com
+
+# Perplexity
+DOMAIN-SUFFIX,perplexity.ai
+DOMAIN-SUFFIX,pplx.ai
+
+# Cloudflare
+# > AI Gateway
+DOMAIN,gateway.ai.cloudflare.com
