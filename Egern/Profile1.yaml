@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile1.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.26 12:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.26 17:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -237,8 +237,11 @@ policy_groups:
 # > 代理规则列表
 rules:
 - rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
+    policy: 美国优先
+- rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-    policy: Apple
+    policy: Apple	
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
     policy: AIGC 
@@ -260,9 +263,6 @@ rules:
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
     policy: Telegram
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TestFlight.yaml
-    policy: 美国优先
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
     policy: TikTok	
