@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile1.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.26 11:45
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.26 12:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -281,20 +281,11 @@ rules:
 - default:
     policy: 香港优先
 
-# > Body重写
-body_rewrites:
-- response_jq:
-    match: ^https?://testflight\.apple\.com/v\d/accounts/.+?/install$
-    filter: .storefrontId = "143441-19,29"
-
 # > MITM 配置
 mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
-  hostnames:
-    excludes:
-    - testflight.apple.com
 
 # > 模块配置列表
 modules:
