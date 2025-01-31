@@ -44,6 +44,10 @@ domain_suffix_set:
   - 5.28.195.205/32,no-resolve
   - 91.105.192.0/23,no-resolve
   - 91.108.0.0/16,no-resolve
+  - 91.108.4.0/22,no-resolve
+  - 91.108.8.0/21,no-resolve
+  - 91.108.16.0/21,no-resolve
+  - 91.108.56.0/22,no-resolve  
   - 95.161.64.0/20,no-resolve
 ip_cidr6_set:
   - 2001:67c:4e8::/48,no-resolve
