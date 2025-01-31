@@ -46,8 +46,10 @@ include_local_networks: false
 dns:
   # [基础设施层] 元数据解析
   bootstrap:
-    - tls://223.5.5.5@853                          # 阿里 DoT（抗 UDP 污染）
-    - https://1.12.12.12/dns-query                 # DNSPod DoH（IP 直连防劫持）
+    - tls://223.5.5.5@853            # 阿里 DoT（抗 UDP 污染）
+    - https://1.12.12.12/dns-query   # DNSPod DoH（IP 直连防劫持）
+    - https://9.9.9.9/dns-query      # Quad9 DoH（隐私增强）
+    - tls://dot.tiarap.org@853       # 日本 Tiara DoT（高稳定性）
 
   # [资源层] 上游服务器拓扑
   upstreams:
@@ -59,25 +61,36 @@ dns:
       - quic://dns.adguard-dns.com:784             # AdGuard 抗污染
       - https://1.1.1.1/dns-query                  # Cloudflare DoH（隐私）
       - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
+    Sinkhole:
+      - "0.0.0.0"  # 黑洞路由
 
   # [策略层] 分流规则引擎
   forward:
-    # 0. 抗污染加速（国内 CDN 域名直连）
+    # 0. 硬编码黑名单（零延迟拦截）
+    - exact:
+        match: 
+          - "telemetry.windows.com"
+          - "safebrowsing.googleapis.com"
+          - "ocsp.apple.com"       # 苹果在线证书检查
+        value: Sinkhole
+
+    # 1. 抗污染加速（国内 CDN 域名直连）
     - cidr:
         match:
-          - "119.29.29.29/24"    # DNSPod IP 段
-          - "223.5.5.0/24"       # 阿里 DNS IP 段
+          - "119.29.29.29/24"     # DNSPod IP 段
+          - "223.5.5.0/24"        # 阿里 DNS IP 段
         value: Domestic
+        fast: true                # 启用快速路径
 
-    # 1. 广告/追踪核打击（多模式联合拦截）
+    # 2. 广告/追踪核打击（多模式联合拦截）
     - regex:
         match: 
           - "(^|\.)(ad|ads|track|spy|analytics|cdn-adn)[0-9]*\."
           - "\.(adservice|doubleclick|omtrdc|pixel|click)\.[a-z]+$"
         value: quic://dns.adguard-dns.com:784
-        cache: 7200                            # 结果缓存 2 小时
+        cache: 7200              # 结果缓存 2 小时
 
-    # 2. 中文互联网主权区（语义级匹配）
+    # 3. 中文互联网主权区（语义级匹配）
     - suffix:
         match:
           - "cn"
@@ -85,26 +98,31 @@ dns:
           - "政务"
           - "公益"
         value: Domestic
+        ecs: true              # 强制附加 ECS
 
-    # 3. 动态代理规则（智能更新）
+    # 4. 动态代理规则（智能更新）
     - proxy_rule_set:
         match:
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt
-            strategy: cidr                # 按 IP 段匹配
-            interval: 43200               # 12 小时更新
+            strategy: cidr          # 按 IP 段匹配
+            interval: 43200         # 12 小时更新
           - url: https://raw.githubusercontent.com/v2fly/domain-list-community/release/data/gfw
-            strategy: suffix              # 按后缀匹配
+            strategy: suffix        # 按后缀匹配
             interval: 43200
-          - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/telegramcidr.txt
-            strategy: exact              # 精确匹配 Telegram 相关域名
-            interval: 86400              # 24 小时更新
+          - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/telegram.txt
+            strategy: exact         # 精确匹配 Telegram 相关域名
+            interval: 86400         # 24 小时更新
         value: Foreign
 
-    # 4. 全球化智能路由
+    # 5. 全球化智能路由
     - wildcard:
         match: "*"
         value:
-          - Domestic
+          - Domestic (weight=9)     # 90% 流量
+          - Foreign (weight=1)      # 10% 流量
+        policy: 
+          type: latency_based      # 延迟优先
+          threshold: 120ms         # 超过阈值切备用
 
 # > 本地DNS解析的主机名映射
   hosts: 
