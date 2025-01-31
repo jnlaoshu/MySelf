@@ -59,20 +59,10 @@ dns:
       - quic://dns.adguard-dns.com:784             # AdGuard 抗污染
       - https://1.1.1.1/dns-query                  # Cloudflare DoH（隐私）
       - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
-    Sinkhole:
-      - "0.0.0.0"        # 黑洞路由
 
   # [策略层] 分流规则引擎
   forward:
-    # 0. 硬编码黑名单（零延迟拦截）
-    - exact:
-        match: 
-          - "telemetry.windows.com"
-          - "safebrowsing.googleapis.com"
-          - "ocsp.apple.com"      # 苹果在线证书检查
-        value: Sinkhole
-
-    # 1. 抗污染加速（国内 CDN 域名直连）
+    # 0. 抗污染加速（国内 CDN 域名直连）
     - cidr:
         match:
           - "119.29.29.29/24"  # DNSPod IP 段
@@ -80,7 +70,7 @@ dns:
         value: Domestic
         fast: true                   # 启用快速路径
 
-    # 2. 广告/追踪核打击（多模式联合拦截）
+    # 1. 广告/追踪核打击（多模式联合拦截）
     - regex:
         match: 
           - "(^|\.)(ad|ads|track|spy|analytics|cdn-adn)[0-9]*\."
@@ -88,7 +78,7 @@ dns:
         value: quic://dns.adguard-dns.com:784
         cache: 7200                            # 结果缓存 2 小时
 
-    # 3. 中文互联网主权区（语义级匹配）
+    # 2. 中文互联网主权区（语义级匹配）
     - suffix:
         match:
           - "cn"
@@ -98,7 +88,7 @@ dns:
         value: Domestic
         ecs: true  # 强制附加 ECS
 
-    # 4. 动态代理规则（智能更新）
+    # 3. 动态代理规则（智能更新）
     - proxy_rule_set:
         match:
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt
@@ -112,7 +102,7 @@ dns:
             interval: 86400            # 24 小时更新
         value: Foreign
 
-    # 5. 全球化智能路由
+    # 4. 全球化智能路由
     - wildcard:
         match: "*"
         value:
