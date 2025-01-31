@@ -93,21 +93,20 @@ dns:
         match:
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt
             strategy: cidr                # 按 IP 段匹配
-            interval: 43200             # 12 小时更新
+            interval: 43200               # 12 小时更新
           - url: https://raw.githubusercontent.com/v2fly/domain-list-community/release/data/gfw
-            strategy: suffix             # 按后缀匹配
+            strategy: suffix              # 按后缀匹配
             interval: 43200
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/telegramcidr.txt
-            strategy: exact             # 精确匹配 Telegram 相关域名
-            interval: 86400            # 24 小时更新
+            strategy: exact              # 精确匹配 Telegram 相关域名
+            interval: 86400              # 24 小时更新
         value: Foreign
 
     # 4. 全球化智能路由
     - wildcard:
         match: "*"
         value:
-          - Domestic (weight=9)  # 90% 流量
-          - Foreign (weight=1)   # 10% 流量
+          - Domestic
 
 # > 本地DNS解析的主机名映射
   hosts: 
