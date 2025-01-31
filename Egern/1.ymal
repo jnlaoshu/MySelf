@@ -47,18 +47,16 @@ dns:
   # [基础设施层] 元数据解析
   bootstrap:
     - tls://223.5.5.5@853                          # 阿里 DoT（抗 UDP 污染）
-    - https://1.12.12.12/dns-query            # DNSPod DoH（IP 直连防劫持）
-    - https://9.9.9.9/dns-query                  # Quad9 DoH（隐私增强）
-    - tls://dot.tiarap.org@853                    # 日本 Tiara DoT（高稳定性）
+    - https://1.12.12.12/dns-query                 # DNSPod DoH（IP 直连防劫持）
 
   # [资源层] 上游服务器拓扑
   upstreams:
     Domestic:
-      - https://doh.pub/dns-query?ecs=auto&ttl=1    # 腾讯 ECS 智能模式
-      - quic://dns.alidns.com:8853                           # 阿里 DoQ（低延迟）
+      - https://doh.pub/dns-query?ecs=auto&ttl=1   # 腾讯 ECS 智能模式
+      - quic://dns.alidns.com:8853                 # 阿里 DoQ（低延迟）
     Foreign:
-      - https://8.8.8.8/dns-query                   # Google DoH（IP 直连）
-      - quic://dns.adguard-dns.com:784        # AdGuard 抗污染
+      - https://8.8.8.8/dns-query                  # Google DoH（IP 直连）
+      - quic://dns.adguard-dns.com:784             # AdGuard 抗污染
       - https://1.1.1.1/dns-query                  # Cloudflare DoH（隐私）
       - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
     Sinkhole:
