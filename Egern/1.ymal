@@ -52,11 +52,10 @@ dns:
   # [资源层] 上游服务器拓扑
   upstreams:
     Domestic:
-      - https://doh.pub/dns-query?ecs=auto&ttl=1   # 腾讯 ECS 智能模式
+      - https://doh.pub/dns-query                 # 腾讯
       - quic://dns.alidns.com:8853                 # 阿里 DoQ（低延迟）
     Foreign:
       - https://8.8.8.8/dns-query                  # Google DoH（IP 直连）
-      - https://1.1.1.1/dns-query                  # Cloudflare DoH（隐私）
       - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
 
   # [策略层] 分流规则引擎
@@ -85,7 +84,6 @@ dns:
           - "政务"
           - "公益"
         value: Domestic
-        ecs: true              # 强制附加 ECS
 
     # 4. 动态代理规则（智能更新）
     - proxy_rule_set:
