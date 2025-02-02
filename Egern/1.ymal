@@ -100,8 +100,7 @@ dns:
     - wildcard:
         match: "*"
         value:
-          - Domestic (weight=9)     # 90% 流量
-          - Foreign (weight=1)      # 10% 流量
+          - Domestic
 
 # > 本地DNS解析的主机名映射
   hosts: 
