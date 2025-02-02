@@ -79,7 +79,6 @@ dns:
     - proxy_rule_set:
         match:
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt
-          - url: https://raw.githubusercontent.com/v2fly/domain-list-community/release/data/gfw
         value: Foreign
 
     # 5. 全球化智能路由
