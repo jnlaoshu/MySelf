@@ -46,7 +46,7 @@ include_local_networks: false
 dns:
   # [基础设施层] 元数据解析
   bootstrap:
-    - tls://223.5.5.5@853            # 阿里 DoT（抗 UDP 污染）
+    - tls://223.5.5.5            # 阿里 DoT（抗 UDP 污染）
     - https://1.12.12.12/dns-query   # DNSPod DoH（IP 直连防劫持）
 
   # [资源层] 上游服务器拓扑
