@@ -66,7 +66,6 @@ dns:
           - "119.29.29.29/24"     # DNSPod IP 段
           - "223.5.5.0/24"        # 阿里 DNS IP 段
         value: Domestic
-        fast: true                # 启用快速路径
 
     # 2. 广告/追踪核打击（多模式联合拦截）
     - regex:
@@ -74,7 +73,6 @@ dns:
           - "(^|\.)(ad|ads|track|spy|analytics|cdn-adn)[0-9]*\."
           - "\.(adservice|doubleclick|omtrdc|pixel|click)\.[a-z]+$"
         value: quic://dns.adguard-dns.com:784
-        cache: 7200              # 结果缓存 2 小时
 
     # 3. 中文互联网主权区（语义级匹配）
     - suffix:
