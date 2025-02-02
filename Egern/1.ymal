@@ -72,7 +72,7 @@ dns:
         match: 
           - "(^|\.)(ad|ads|track|spy|analytics|cdn-adn)[0-9]*\."
           - "\.(adservice|doubleclick|omtrdc|pixel|click)\.[a-z]+$"
-        value: quic://dns.adguard-dns.com:784
+        value: quic://dns.adguard-dns.com
 
     # 3. 中文互联网主权区（语义级匹配）
     - suffix:
