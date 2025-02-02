@@ -102,9 +102,6 @@ dns:
         value:
           - Domestic (weight=9)     # 90% 流量
           - Foreign (weight=1)      # 10% 流量
-        policy: 
-          type: latency_based      # 延迟优先
-          threshold: 120ms         # 超过阈值切备用
 
 # > 本地DNS解析的主机名映射
   hosts: 
