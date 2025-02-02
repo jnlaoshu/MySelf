@@ -59,13 +59,6 @@ dns:
 
   # [策略层] 分流规则引擎
   forward:
-    # 1. 抗污染加速（国内 CDN 域名直连）
-    - cidr:
-        match:
-          - "119.29.29.29/24"     # DNSPod IP 段
-          - "223.5.5.0/24"        # 阿里 DNS IP 段
-        value: Domestic
-
     # 2. 广告/追踪核打击（多模式联合拦截）
     - regex:
         match: 
