@@ -53,10 +53,10 @@ dns:
   upstreams:
     Domestic:
       - https://doh.pub/dns-query                 # 腾讯
-      - quic://dns.alidns.com:8853                 # 阿里 DoQ（低延迟）
+      - quic://dns.alidns.com                 # 阿里 DoQ（低延迟）
     Foreign:
       - https://8.8.8.8/dns-query                  # Google DoH（IP 直连）
-      - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
+      - quic://dns.nextdns.io                  # NextDNS（全球优化）
 
   # [策略层] 分流规则引擎
   forward:
