@@ -1,6 +1,6 @@
-# > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
-# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.31 17:20
+# > Test配置
+# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/1.yaml
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.02 21:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -48,8 +48,6 @@ dns:
   bootstrap:
     - tls://223.5.5.5@853            # 阿里 DoT（抗 UDP 污染）
     - https://1.12.12.12/dns-query   # DNSPod DoH（IP 直连防劫持）
-    - https://9.9.9.9/dns-query      # Quad9 DoH（隐私增强）
-    - tls://dot.tiarap.org@853       # 日本 Tiara DoT（高稳定性）
 
   # [资源层] 上游服务器拓扑
   upstreams:
@@ -58,22 +56,11 @@ dns:
       - quic://dns.alidns.com:8853                 # 阿里 DoQ（低延迟）
     Foreign:
       - https://8.8.8.8/dns-query                  # Google DoH（IP 直连）
-      - quic://dns.adguard-dns.com:784             # AdGuard 抗污染
       - https://1.1.1.1/dns-query                  # Cloudflare DoH（隐私）
       - quic://dns.nextdns.io:853                  # NextDNS（全球优化）
-    Sinkhole:
-      - "0.0.0.0"  # 黑洞路由
 
   # [策略层] 分流规则引擎
   forward:
-    # 0. 硬编码黑名单（零延迟拦截）
-    - exact:
-        match: 
-          - "telemetry.windows.com"
-          - "safebrowsing.googleapis.com"
-          - "ocsp.apple.com"       # 苹果在线证书检查
-        value: Sinkhole
-
     # 1. 抗污染加速（国内 CDN 域名直连）
     - cidr:
         match:
@@ -109,9 +96,6 @@ dns:
           - url: https://raw.githubusercontent.com/v2fly/domain-list-community/release/data/gfw
             strategy: suffix        # 按后缀匹配
             interval: 43200
-          - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/telegram.txt
-            strategy: exact         # 精确匹配 Telegram 相关域名
-            interval: 86400         # 24 小时更新
         value: Foreign
 
     # 5. 全球化智能路由
