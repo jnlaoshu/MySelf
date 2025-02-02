@@ -56,7 +56,6 @@ dns:
       - quic://dns.alidns.com                 # 阿里 DoQ（低延迟）
     Foreign:
       - https://8.8.8.8/dns-query                  # Google DoH（IP 直连）
-      - quic://dns.nextdns.io                  # NextDNS（全球优化）
 
   # [策略层] 分流规则引擎
   forward:
@@ -88,10 +87,8 @@ dns:
         match:
           - url: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/gfw.txt
             strategy: cidr          # 按 IP 段匹配
-            interval: 43200         # 12 小时更新
           - url: https://raw.githubusercontent.com/v2fly/domain-list-community/release/data/gfw
             strategy: suffix        # 按后缀匹配
-            interval: 43200
         value: Foreign
 
     # 5. 全球化智能路由
