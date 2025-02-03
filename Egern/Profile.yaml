@@ -131,6 +131,7 @@ policy_groups:
     name: Netfilx
     policies:
     - 香港优先
+    flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
 - select:
     name: PayPal
