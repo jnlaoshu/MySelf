@@ -1,9 +1,15 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.01.26 17:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.03 18:16
 
 # > 开启ipv6支持
 ipv6: true 
+
+# > HTTP 代理端口号。默认值是 3080
+http_port: 3080
+
+# > SOCKS 代理端口号。默认值是 3090
+socks_port: 3090
 
 # > 允许外部连接通过 Wi-Fi 访问设备上的代理
 allow_external_connections: true
@@ -81,6 +87,7 @@ policy_groups:
     type: select
     urls:
     - https://sub.store/download/collection/AllServer?target=Egern
+    interval: 120	
     icon: 🌹   
 - select:
     name: Apple
@@ -94,7 +101,13 @@ policy_groups:
     policies:
     - 美国优先
     flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+- select:
+    name: Disney
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png    
 - select:
     name: Google
     policies:
@@ -102,12 +115,23 @@ policy_groups:
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
 - select:
+    name: HBO
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
+- select:
     name: Microsoft
     policies:
     - DIRECT
     - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+- select:
+    name: Netfilx
+    policies:
+    - 香港优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
 - select:
     name: PayPal
     policies:
@@ -236,6 +260,9 @@ policy_groups:
 
 # > 代理规则列表
 rules:
+- domain_regex:
+    match: ^ad\..*|^ads\..*
+    policy: REJECT
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
     policy: 美国优先
@@ -249,11 +276,20 @@ rules:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
     policy: 美国优先
 - rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
+    policy: Disney	
+- rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
     policy: Google
 - rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
+    policy: HBO	
+- rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
     policy: Microsoft
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
+    policy: Netfilx	
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
     policy: PayPal    
@@ -275,8 +311,41 @@ rules:
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
     policy: YouTube
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
+    policy: 香港优先
+- domain:
+    match: ifconfig.me
+    policy: DIRECT	
+- domain_suffix:
+    match: cn
+    policy: DIRECT
 - geoip:
     match: CN
+    policy: DIRECT
+    no_resolve: true
+    disabled: false
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
+    policy: DIRECT
+    disabled: false
+- ip_cidr:
+    match: 192.168.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 10.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 127.0.0.0/8
+    policy: DIRECT
+- ip_cidr:
+    match: 172.16.0.0/12
+    policy: DIRECT
+- ip_cidr:
+    match: 192.128.0.0/16
+    policy: DIRECT
+- ip_cidr:
+    match: 224.0.0.0/24
     policy: DIRECT
 - default:
     policy: 香港优先
