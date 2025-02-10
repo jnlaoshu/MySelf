@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.03 18:16
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.10 19:10
 
 # > 开启ipv6支持
 ipv6: true 
@@ -53,10 +53,11 @@ dns:
   bootstrap:
     - 119.29.29.29
     - 223.5.5.5	
-  upstreams:  # 定义上游DNS服务器的列表
+# >  定义上游DNS服务器的列表
+  upstreams:  
     Domestic: 
+    - quic://dns.alidns.com:853		
     - https://doh.pub/dns-query 
-    - https://dns.alidns.com/dns-query	
     Foreign: 
     - https://dns.google/dns-query
 # > 转发DNS请求的规则
@@ -82,13 +83,61 @@ dns:
 
 # > 策略组配置列表
 policy_groups:
-- external:
-    name: AllServer
-    type: select
-    urls:
-    - https://sub.store/download/collection/AllServer?target=Egern
-    interval: 120	
-    icon: 🌹   
+- auto_test:
+    name: 香港节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇭🇰|港|香港|HK|Hong
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+- auto_test:
+    name: 美国节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇺🇸|美|美国|US|States|American
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+- auto_test:
+    name: 台湾节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇹🇼|台|台湾|TW|Tai
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+- auto_test:
+    name: 日本节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇯🇵|日|日本|JP|Japan
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+- auto_test:
+    name: 狮城节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+- auto_test:
+    name: 韩国节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: 🇰🇷|韩|韩国|KR|KOR|Korea
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
+- select:
+    name: 其他节点
+    policies:
+    - AllServer
+    flatten: true
+    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+- select:
+    name: AIGC
+    policies:
+    - 美国优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
     name: Apple
     policies:
@@ -96,12 +145,6 @@ policy_groups:
     - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
-- select:
-    name: AIGC
-    policies:
-    - 美国优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
     name: Disney
     policies:
@@ -176,55 +219,12 @@ policy_groups:
     - 香港优先
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
-- auto_test:
-    name: 香港节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇭🇰|港|香港|HK|Hong
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
-- auto_test:
-    name: 美国节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇺🇸|美|美国|US|States|American
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
-- auto_test:
-    name: 台湾节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇹🇼|台|台湾|TW|Tai
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
-- auto_test:
-    name: 日本节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇯🇵|日|日本|JP|Japan
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
-- auto_test:
-    name: 狮城节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
-- auto_test:
-    name: 韩国节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: 🇰🇷|韩|韩国|KR|KOR|Korea
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
-- select:
-    name: 其他节点
-    policies:
-    - AllServer
-    flatten: true
-    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+- external:
+    name: AllServer
+    type: select
+    urls:
+    - https://sub.store/download/collection/AllServer?target=Egern
+    icon: 🌹 
 - select:
     name: 香港优先
     policies:
@@ -258,12 +258,15 @@ policy_groups:
     - 香港节点
     - 其他节点
     icon: 😊
-
+	
 # > 代理规则列表
 rules:
 - domain_regex:
     match: ^ad\..*|^ads\..*
     policy: REJECT
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
+    policy: REJECT	
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
     policy: 美国优先
@@ -370,21 +373,12 @@ modules:
 - name: ScriptHub
   url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
   enabled: true
-- name: 'iRingo Siri'
-  url: https://github.com/NSRingo/Siri/releases/latest/download/iRingo.Siri.yaml
-  enabled: true
-- name: 'iRingo WeatherKit'
-  url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.yaml
-  enabled: true
 - name: 'Spotify'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
   enabled: true
 - name: 'YouTube Enhance'
   url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
   enabled: true
-- name: 'BiliBili Enhanced'
-  url: https://github.com/BiliUniverse/Enhanced/releases/latest/download/BiliBili.Enhanced.yaml
-  enabled: true  
 - name: 'BiliBili去广告'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
   enabled: true  
