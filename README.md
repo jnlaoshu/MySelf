@@ -2,7 +2,7 @@
 
 ### 特别感谢：
 
-* [qingr](https://surge.qingr.moe/) * [Semporia](https://github.com/Semporia)   * [mieqq](https://github.com/mieqq/mieqq)  * [app2smile](https://github.com/app2smile/rules)  * [Maasea](https://github.com/Maasea/sgmodule) 
+* [qingr](https://surge.qingr.moe/) * [Semporia](https://github.com/Semporia)   * [mieqq](https://github.com/mieqq/mieqq)  * [app2smile](https://github.com/app2smile/rules)  * [Maasea](https://github.com/Maasea/sgmodule) * [ddgksf2013](https://github.com/ddgksf2013/Modules) 
 
 * [NobyDa](https://github.com/NobyDa)   * [Yichahucha](https://github.com/yichahucha/surge/tree/master)  * [chavyleung](https://github.com/chavyleung)/[gitee](https://gitee.com/chavyleung/scripts) * [zZPiglet](https://github.com/zZPiglet/Task/tree/master)   
 
