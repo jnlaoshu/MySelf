@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.10 19:19
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.11 21:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -132,6 +132,7 @@ policy_groups:
     flatten: true
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+    hidden: true
 - select:
     name: AIGC
     policies:
@@ -381,59 +382,6 @@ modules:
 - name: 'BiliBili去广告'
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
   enabled: true  
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/滴滴出行去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/高德地图去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/百度地图去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/12306去广告.beta.sgmodule
-  enabled: true  
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/闲鱼去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/京东去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/拼多多去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/淘宝去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/瑞幸咖啡去广告.beta.sgmodule
-  enabled: true  
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/什么值得买去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/小红书去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/酷我音乐去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/酷狗音乐去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/QQ音乐去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/网易云音乐去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/喜马拉雅去广告.beta.sgmodule
-  enabled: true  
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/腾讯视频去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/优酷视频去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/爱奇艺视频去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/芒果TV去广告.beta.sgmodule
-  enabled: true  
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/微信公众号去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/微信外部链接解锁.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/云闪付去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/雪球去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/飞客去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/美图秀秀去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/美颜相机去广告.beta.sgmodule
-  enabled: true
-- url: https://raw.githubusercontent.com/QingRex/LoonKissSurge/main/Surge/Beta/向日葵去广告.beta.sgmodule
+- name: 墨鱼去广告模块
+  url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
   enabled: true
