@@ -1,7 +1,7 @@
-/*
-https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TimeCard.js
-From：https://raw.githubusercontent.com/smartmimi/conf/master/surge/timecard.js
- */
+ // 节假日信息
+ // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TimeCard.js
+ // 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/smartmimi/conf/master/surge/timecard.js
+ // 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.12 17:30
 
 var tlist = {
   1: ["元旦节", "2025-01-01","辞旧迎新岁月长，四季更替展宏图。祝君新年多喜乐，岁岁年年福安康。"],
