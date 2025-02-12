@@ -4,8 +4,8 @@
 
 [Panel]
 节假日 = script-name=节假日,update-interval=3600
-#运行时长 = script-name=运行时长
-网络信息 = script-name=网络信息
+#运行时长 = script-name=运行时长,title=运行时长,content=请刷新,update-interval=1
+网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info
 媒体解锁 = script-name=媒体解锁, title="流媒体解锁检测", content="请刷新面板", update-interval={{{UPDATE_INTERVAL}}}
 
 [Script]
