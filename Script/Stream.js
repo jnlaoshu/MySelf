@@ -1,7 +1,12 @@
- // 流媒体解锁检测
- // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Stream.js
- // 𝐅𝐫𝐨𝐦：https://github.com/LucaLin233/Luca_Conf/blob/main/Surge/JS/stream-all.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.12 18:36
+/*流媒体解锁检测
+ * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Stream.js
+
+ * 由@LucaLin233编写
+ * 原脚本地址：https://raw.githubusercontent.com/LucaLin233/Luca_Conf/main/Surge/JS/stream-all.js
+ * 由@Rabbit-Spec修改:https://github.com/Rabbit-Spec/Surge/blob/Master/Module/Panel/Stream-All/Moore/Stream-All.js
+ * 更新日期：2024.06.01
+ * 版本：3.1
+ */
 
 const REQUEST_HEADERS = {
     'User-Agent':
@@ -41,7 +46,7 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
       } else if (status==STATUS_AVAILABLE){
         //console.log(2)
         console.log(region)
-        disney_result="Disney+: 已解锁，区域: "+region.toUpperCase()
+        disney_result="Disney+: 已解锁 ➟ "+region.toUpperCase()
         // console.log(result["Disney"])
       } else if (status==STATUS_NOT_AVAILABLE) {
         //console.log(3)
@@ -100,7 +105,7 @@ panel_result['content'] = content
         if (code === 'Not Available') {
           youtube_check_result += '不支持解锁'
         } else {
-          youtube_check_result += '已解锁，区域: ' + code.toUpperCase()
+          youtube_check_result += '已解锁 ➟ ' + code.toUpperCase()
         }
       })
       .catch((error) => {
@@ -156,7 +161,7 @@ panel_result['content'] = content
         if (code === 'Not Found') {
           return inner_check(80018499)
         }
-        netflix_check_result += '已完整解锁，区域: ' + code.toUpperCase()
+        netflix_check_result += '已完整解锁 ➟ ' + code.toUpperCase()
         return Promise.reject('BreakSignal')
       })
       .then((code) => {
@@ -164,7 +169,7 @@ panel_result['content'] = content
           return Promise.reject('Not Available')
         }
   
-        netflix_check_result += '仅解锁自制剧，区域: ' + code.toUpperCase()
+        netflix_check_result += '仅解锁自制剧 ➟ ' + code.toUpperCase()
         return Promise.reject('BreakSignal')
       })
       .catch((error) => {
