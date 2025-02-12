@@ -1,4 +1,4 @@
- // 节假日信息
+ // 流媒体解锁检测
  // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Stream.js
  // 𝐅𝐫𝐨𝐦：https://github.com/LucaLin233/Luca_Conf/blob/main/Surge/JS/stream-all.js
  // 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.12 18:36
