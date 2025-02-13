@@ -1,5 +1,5 @@
 # 网络信息
-# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
+# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo1.js
 # 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
 # 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 22:05
 
