@@ -1,7 +1,7 @@
-# 网络信息
-# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
-# 𝐅𝐫𝐨𝐦：https://github.com/xream/scripts/blob/main/surge/modules/network-info/ip-info.js
-# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.13 15:05
+//# 网络信息
+//# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
+//# 𝐅𝐫𝐨𝐦：https://github.com/xream/scripts/blob/main/surge/modules/network-info/ip-info.js
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.13 15:05
 
 /*
 [Script]
