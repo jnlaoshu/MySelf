@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://raw.githubusercontent.com/deezertidal/Surge_Module/master/files/ip-api.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 22:05
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.14 16:00
 
 /*
 [Script]
@@ -180,7 +180,7 @@ function getIP() {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
     if (v4?.primaryAddress) info.push(`本机v4IP：${v4?.primaryAddress}`);
-    /* if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);*/
+    if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);
     if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);
     /* if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
   }
