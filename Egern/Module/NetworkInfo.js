@@ -196,8 +196,8 @@ function getIP() {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
     if (v4?.primaryAddress) info.push(`本机v4IP：${v4?.primaryAddress}`);
-    if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);
-    /* if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);*/
+    /* if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);*/
+    if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);
     /* if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
   }
   info = info.join("\n");
