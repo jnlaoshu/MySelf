@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.11 21:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.03.06 13:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -66,7 +66,7 @@ dns:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       value: Foreign  	  
   - regex:
-      match: ^ad\..*|^ads\..*  # 正则表达式匹配以"ad."或"ads."开头的域名（通常是广告相关的域名）
+      match: ^ad(s?)\.  # 正则表达式匹配以"ad."或"ads."开头的域名（通常是广告相关的域名）
       value: quic://dns.adguard-dns.com  # 这些广告相关的域名使用AdGuard的QUIC DNS服务器
   - wildcard:
       match: '*'  # 匹配所有其他未被前述规则匹配的域名
@@ -172,7 +172,7 @@ policy_groups:
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
 - select:
-    name: Netfilx
+    name: Netflix
     policies:
     - 香港优先
     flatten: true
@@ -293,7 +293,7 @@ rules:
     policy: Microsoft
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
-    policy: Netfilx	
+    policy: Netflix	
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
     policy: PayPal    
