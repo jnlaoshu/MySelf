@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.03.06 13:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.03.10 16:00
 
 # > 开启ipv6支持
 ipv6: true 
@@ -328,28 +328,11 @@ rules:
     match: CN
     policy: DIRECT
     no_resolve: true
-    disabled: false
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
     policy: DIRECT
-    disabled: false
 - ip_cidr:
-    match: 192.168.0.0/16
-    policy: DIRECT
-- ip_cidr:
-    match: 10.0.0.0/8
-    policy: DIRECT
-- ip_cidr:
-    match: 127.0.0.0/8
-    policy: DIRECT
-- ip_cidr:
-    match: 172.16.0.0/12
-    policy: DIRECT
-- ip_cidr:
-    match: 192.128.0.0/16
-    policy: DIRECT
-- ip_cidr:
-    match: 224.0.0.0/24
+    match: 192.168.0.0/16,10.0.0.0/8,127.0.0.0/8,172.16.0.0/12,192.128.0.0/16,224.0.0.0/24
     policy: DIRECT
 - default:
     policy: 香港优先
