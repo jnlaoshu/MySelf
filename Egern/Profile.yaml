@@ -1,370 +1,319 @@
-# > 𝐥𝐚𝐨𝐬𝐡𝐮@𝐄𝐠𝐞𝐫𝐧 自用配置
-# > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.03.11 12:00
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
+# 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
+# 更新时间: 2025.03.11 14:10
 
-# > 开启ipv6支持
-ipv6: true 
-
-# > HTTP 代理端口号。默认值是 3080
+# 基础配置
+ipv6: true
 http_port: 3080
-
-# > SOCKS 代理端口号。默认值是 3090
 socks_port: 3090
-
-# > 允许外部连接通过 Wi-Fi 访问设备上的代理
 allow_external_connections: true
-
-# > 仅虚拟网接口模式
 vif_only: true
-
-# > 隐藏 VPN 图标
 hide_vpn_icon: false
-
-# > DNS 劫持
 hijack_dns:
-- '*:53'
+  - '*:53'
 
-# > 指定自定义的 GeoIP 数据库 URL
+# 数据库 URL 配置
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-# > 指定自定义的 ASN 数据库 URL
 asn_db_url: https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
 
-# > 自定义的代理延迟测试 URL
+# 延迟测试 URL 配置
 proxy_latency_test_url: http://cp.cloudflare.com/generate_204
-# > 自定义的直连延迟测试 URL
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
-# > 虚拟网络接口不使用默认的路由，由多个较小的路由切分用于解决某些问题。比如HomeKit的摄像头无法使用的问题
+# 路由配置
 compat_route: false
-
-# > 启用后系统会通过隧道路由网络流量，但为维持预期设备功能所必需的指定系统服务的流量除外
 include_all_networks: false
-
-# > 启用后系统将包含 Apple Push Notification 服务 (APN) 流量，但前提是包含所有网络也已启用
 include_apns: false
-
-# > 启用后系统会包含蜂窝网络服务，如 Wi-Fi 通话、彩信、短信和可视语音邮件，但前提是包含所有网络也已启用。该属性不会影响仅使用蜂窝网络的服务（如 VoLTE），系统会自动排除这些服务
 include_cellular_services: false
-
-# > 启用后系统将包含与本地网络上主机（如 AirPlay、AirDrop 和 CarPlay）的网络连接，但前提是包含所有网络也已启用。默认值是 false
 include_local_networks: false
 
+# DNS 配置
 dns:
   bootstrap:
     - 119.29.29.29
-    - 223.5.5.5	
-# >  定义上游DNS服务器的列表
-  upstreams:  
-    Domestic: 
-    - quic://dns.alidns.com:853		
-    - https://doh.pub/dns-query 
-    Foreign: 
-    - https://dns.google/dns-query
-# > 转发DNS请求的规则
-  forward:  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      value: Foreign  	  
-  - regex:
-      match: ^ad(s?)\.  # 正则表达式匹配以"ad."或"ads."开头的域名（通常是广告相关的域名）
-      value: quic://dns.adguard-dns.com  # 这些广告相关的域名使用AdGuard的QUIC DNS服务器
-  - wildcard:
-      match: '*'  # 匹配所有其他未被前述规则匹配的域名
-      value: Domestic  
+    - 223.5.5.5
+  upstreams:
+    Domestic:
+      - quic://dns.alidns.com:853
+      - https://doh.pub/dns-query
+    Foreign:
+      - https://dns.google/dns-query
+  forward:
+    - proxy_rule_set:
+        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
+        value: Foreign
+    - regex:
+        match: ^ad(s?)\.
+        value: quic://dns.adguard-dns.com
+    - wildcard:
+        match: '*'
+        value: Domestic
+  hosts:
+    dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200:baba::1, 2400:3200::1
+    doh.pub: 1.12.12.12, 120.53.53.53
+    dns.google: 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844
+  public_ip_lookup_url: https://ifconfig.me/ip
 
-# > 本地DNS解析的主机名映射
-  hosts: 
-    dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200:baba::1, 2400:3200::1 # https://dns.alidns.com/dns-query
-    doh.pub: 1.12.12.12, 120.53.53.53 # https://doh.pub/dns-query
-    dns.google: 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844 # https://dns.google/dns-query
-
-# > 查询公共IP地址的URL，用于获取本机的公网IP地址  
-  public_ip_lookup_url: https://ifconfig.me/ip  
-
-# > 策略组配置列表
+# 策略组配置
 policy_groups:
-- auto_test:
-    name: 香港节点
+  - &auto_test_template
+    type: auto_test
     policies:
-    - AllServer
+      - AllServer
     flatten: true
+  - <<: *auto_test_template
+    name: 香港节点
     filter: 🇭🇰|港|香港|HK|Hong
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
-- auto_test:
+  - <<: *auto_test_template
     name: 美国节点
-    policies:
-    - AllServer
-    flatten: true
     filter: 🇺🇸|美|美国|US|States|American
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
-- auto_test:
+  - <<: *auto_test_template
     name: 台湾节点
-    policies:
-    - AllServer
-    flatten: true
     filter: 🇹🇼|台|台湾|TW|Tai
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
-- auto_test:
+  - <<: *auto_test_template
     name: 日本节点
-    policies:
-    - AllServer
-    flatten: true
     filter: 🇯🇵|日|日本|JP|Japan
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
-- auto_test:
+  - <<: *auto_test_template
     name: 狮城节点
-    policies:
-    - AllServer
-    flatten: true
     filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
-- auto_test:
+  - <<: *auto_test_template
     name: 韩国节点
-    policies:
-    - AllServer
-    flatten: true
     filter: 🇰🇷|韩|韩国|KR|KOR|Korea
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
-- select:
-    name: 其他节点
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+  - &select_template
+    type: select
     policies:
-    - AllServer
+      - AllServer
     flatten: true
+  - <<: *select_template
+    name: 其他节点
     filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
     hidden: true
-- select:
+  - <<: *select_template
     name: AIGC
     policies:
-    - 美国优先
-    flatten: true
+      - 美国优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
-- select:
+  - <<: *select_template
     name: Apple
     policies:
-    - DIRECT
-    - 香港优先
-    flatten: true
+      - DIRECT
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
-- select:
+  - <<: *select_template
     name: Disney
     policies:
-    - 香港优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png    
-- select:
+      - 香港优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+  - <<: *select_template
     name: Google
     policies:
-    - 香港优先
-    flatten: true
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
-- select:
+  - <<: *select_template
     name: HBO
     policies:
-    - 香港优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
-- select:
+      - 香港优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
+  - <<: *select_template
     name: Microsoft
     policies:
-    - DIRECT
-    - 香港优先
-    flatten: true
+      - DIRECT
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
-- select:
+  - <<: *select_template
     name: Netflix
     policies:
-    - 香港优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
-- select:
+      - 香港优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
+  - <<: *select_template
     name: PayPal
     policies:
-    - 美国节点
-    flatten: true
+      - 美国节点
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
-- select:
+  - <<: *select_template
     name: Spotify
     policies:
-    - 美国优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
-- select:
+      - 美国优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
+  - <<: *select_template
     name: Telegram
     policies:
-    - 香港优先
-    flatten: true
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
-- select:
+  - <<: *select_template
     name: TikTok
     policies:
-    - 日本优先
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
-- select:
+      - 日本优先
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
+  - <<: *select_template
     name: Twitter
     policies:
-    - 香港优先
-    flatten: true
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
-- select:
+  - <<: *select_template
     name: WeChat
     policies:
-    - DIRECT
-    - 香港优先
-    flatten: true
+      - DIRECT
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
-- select:
+  - <<: *select_template
     name: YouTube
     policies:
-    - 香港优先
-    flatten: true
+      - 香港优先
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
-- external:
+  - type: external
     name: AllServer
     type: select
     urls:
-    - https://sub.store/download/collection/AllServer?target=Egern
-    icon: 🌹 
-- select:
+      - https://sub.store/download/collection/AllServer?target=Egern
+    icon: 🌹
+  - <<: *select_template
     name: 香港优先
     policies:
-    - 香港节点
-    - 美国节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
+      - 香港节点
+      - 美国节点
+      - 狮城节点
+      - 台湾节点
+      - 日本节点
+      - 韩国节点
+      - 其他节点
     icon: 😜
-- select:
+  - <<: *select_template
     name: 美国优先
     policies:
-    - 美国节点
-    - 香港节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
+      - 美国节点
+      - 香港节点
+      - 狮城节点
+      - 台湾节点
+      - 日本节点
+      - 韩国节点
+      - 其他节点
     icon: 🤣
-- select:
+  - <<: *select_template
     name: 日本优先
     policies:
-    - 日本节点    
-    - 美国节点
-    - 台湾节点    
-    - 韩国节点
-    - 狮城节点
-    - 香港节点
-    - 其他节点
+      - 日本节点
+      - 美国节点
+      - 台湾节点
+      - 韩国节点
+      - 狮城节点
+      - 香港节点
+      - 其他节点
     icon: 😊
-# > 代理规则列表
-rules:
-- domain_regex:
-    match: ^ad(s?)\..* 
-    policy: REJECT
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
-    policy: REJECT	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-    policy: 美国优先
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-    policy: Apple	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-    policy: AIGC 
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-    policy: 美国优先
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
-    policy: Disney	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
-    policy: Google
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
-    policy: HBO	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
-    policy: Microsoft
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
-    policy: Netflix	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
-    policy: PayPal    
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
-    policy: Spotify
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
-    policy: Telegram
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
-    policy: TikTok	
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
-    policy: Twitter
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
-    policy: WeChat    
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
-    policy: YouTube
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-    policy: 香港优先
-- domain:
-    match: ifconfig.me
-    policy: DIRECT	
-- domain_suffix:
-    match: '*.cn' 
-    policy: DIRECT
-- geoip:
-    match: CN
-    policy: DIRECT
-    no_resolve: true
-- ip_cidr:
-    match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24
-    policy: DIRECT
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
-    policy: DIRECT
-- default:
-    policy: 香港优先
 
-# > MITM 配置
+# 代理规则配置
+rules:
+  - domain_regex:
+      match: ^ad(s?)\..*
+      policy: REJECT
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
+      policy: REJECT
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
+      policy: 美国优先
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+      policy: Apple
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+      policy: AIGC
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+      policy: 美国优先
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
+      policy: Disney
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
+      policy: Google
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
+      policy: HBO
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
+      policy: Microsoft
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
+      policy: Netflix
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
+      policy: PayPal
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
+      policy: Spotify
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
+      policy: Telegram
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
+      policy: TikTok
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
+      policy: Twitter
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
+      policy: WeChat
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
+      policy: YouTube
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
+      policy: 香港优先
+  - domain:
+      match: ifconfig.me
+      policy: DIRECT
+  - domain_suffix:
+      match: '*.cn'
+      policy: DIRECT
+  - geoip:
+      match: CN
+      policy: DIRECT
+      no_resolve: true
+  - ip_cidr:
+      match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24
+      policy: DIRECT
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
+      policy: DIRECT
+  - default:
+      policy: 香港优先
+
+# MITM 配置
 mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
 
-# > 模块配置列表
+# 模块配置
 modules:
-- url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
-  enabled: true
-- name: Sub-Store
-  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml  
-  enabled: true  
-- name: BoxJs
-  url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
-  enabled: true
-- name: ScriptHub
-  url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
-  enabled: true
-- name: 'Spotify'
-  url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
-  enabled: true
-- name: 'YouTube Enhance'
-  url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
-  enabled: true
-- name: 'BiliBili去广告'
-  url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
-  enabled: true  
-- name: 墨鱼去广告模块
-  url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
-  enabled: true
+  - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
+    enabled: true
+  - name: Sub-Store
+    url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
+    enabled: true
+  - name: BoxJs
+    url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
+    enabled: true
+  - name: ScriptHub
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
+    enabled: true
+  - name: 'Spotify'
+    url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
+    enabled: true
+  - name: 'YouTube Enhance'
+    url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
+    enabled: true
+  - name: 'BiliBili去广告'
+    url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
+    enabled: true  
+  - name: 墨鱼去广告模块
+    url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
+    enabled: true
