@@ -1,8 +1,7 @@
 # 规则名称: Spotify
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
 
-domain_keyword_set:
-  - spotify
+no_resolve: true
 domain_set:
   - audio-ak-spotify-com.akamaized.net
   - audio4-ak-spotify-com.akamaized.net
@@ -32,7 +31,9 @@ domain_suffix_set:
   - spotifyjobs.com
   - spotifynewsroom.jp
   - spotilocal.com
-  - tospotify.com  
+  - tospotify.com
+domain_keyword_set:
+  - spotify
 ip_cidr_set:
   - 104.154.127.126/32
   - 35.186.224.47/32
