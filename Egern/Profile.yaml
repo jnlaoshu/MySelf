@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.03.11 14:10
+# 更新时间: 2025.03.13 09:55
 
 # 基础配置
 ipv6: true
@@ -30,8 +30,9 @@ include_local_networks: false
 # DNS 配置
 dns:
   bootstrap:
-    - 119.29.29.29
     - 223.5.5.5
+    - 119.29.29.29
+    - 180.184.1.1
   upstreams:
     Domestic:
       - quic://dns.alidns.com:853
@@ -324,11 +325,11 @@ modules:
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
     enabled: true
-  - name: BoxJs
-    url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
-    enabled: true
   - name: ScriptHub
     url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
+    enabled: true    
+  - name: BoxJs
+    url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
     enabled: true
   - name: 'Spotify'
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
