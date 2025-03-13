@@ -37,6 +37,10 @@ DOMAIN,proactivebackend-pa.googleapis.com
 # > AI Studio
 DOMAIN,aistudio.google.com
 DOMAIN,alkalimakersuite-pa.clients6.google.com
+# > Search Labs
+DOMAIN-KEYWORD,labs.google
+# > NotebookLM
+DOMAIN-KEYWORD,notebooklm.google
 
 # JetBrains AI
 DOMAIN-SUFFIX,grazie.ai
@@ -49,7 +53,6 @@ DOMAIN,www.bing.com
 
 # Meta
 DOMAIN,imagine.meta.com
-DOMAIN-SUFFIX,meta.ai
 
 # GitHub Copilot
 DOMAIN-SUFFIX,githubcopilot.com
