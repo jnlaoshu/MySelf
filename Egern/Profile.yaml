@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.03.13 09:55
+# 更新时间: 2025.04.20 17:38
 
 # 基础配置
 ipv6: true
@@ -62,49 +62,49 @@ policy_groups:
     policies:
     - AllServer
     flatten: true
-    filter: 🇭🇰|港|香港|HK|Hong
+    filter: 🇭🇰|香港|HK|Hong
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
 - auto_test:
     name: 美国节点
     policies:
     - AllServer
     flatten: true
-    filter: 🇺🇸|美|美国|US|States|American
+    filter: 🇺🇸|美国|US|States|American
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
 - auto_test:
     name: 台湾节点
     policies:
     - AllServer
     flatten: true
-    filter: 🇹🇼|台|台湾|TW|Tai
+    filter: 🇹🇼|台湾|TW|Tai
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
 - auto_test:
     name: 日本节点
     policies:
     - AllServer
     flatten: true
-    filter: 🇯🇵|日|日本|JP|Japan
+    filter: 🇯🇵|日本|JP|Japan
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
 - auto_test:
     name: 狮城节点
     policies:
     - AllServer
     flatten: true
-    filter: 🇸🇬|新|新加坡|狮城|SG|Singapore
+    filter: 🇸🇬|新加坡|狮城|SG|Singapore
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 - auto_test:
     name: 韩国节点
     policies:
     - AllServer
     flatten: true
-    filter: 🇰🇷|韩|韩国|KR|KOR|Korea
+    filter: 🇰🇷|韩国|KR|KOR|Korea
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
 - select:
     name: 其他节点
     policies:
     - AllServer
     flatten: true
-    filter: ^((?!🇭🇰|港|HK|Hong|🇹🇼|台|TW|Tai|🇯🇵|日|JP|Japan|🇸🇬|坡|狮城|SG|Singapore|🇰🇷|韩|KR|KOR|Korea|🇺🇸|美|US|States|American|Music).)*$
+    filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
     hidden: true
 - select:
