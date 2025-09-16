@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Config.yaml
-# 更新时间: 2025.09.16 17:08
+# 更新时间: 2025.09.16 17:18
 
 # 基础配置
 ipv6: true
@@ -17,13 +17,11 @@ hijack_dns:
   # 排除本地DNS服务器，避免影响局域网设备
   - '!192.168.0.0/16:53'
   - '!10.0.0.0/8:53'
-
 # 数据库 URL 配置
 geoip_db_url: 
   - https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: 
   - https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
-
 # 延迟测试 URL 配置（多地址轮询，提升稳定性）
 proxy_latency_test_url: 
   - http://cp.cloudflare.com/generate_204
@@ -32,7 +30,6 @@ proxy_latency_test_url:
 direct_latency_test_url: 
   - http://www.apple.com/library/test/success.html
   - http://www.baidu.com/favicon.ico
-
 dns:
   bootstrap:
     - 223.5.5.5
@@ -67,7 +64,6 @@ dns:
     doh.pub: 1.12.12.12, 120.53.53.53
     dns.google: 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844
   public_ip_lookup_url: https://ifconfig.me/ip
-
 policy_groups:
 - auto_test:
     name: 香港节点
@@ -131,7 +127,6 @@ policy_groups:
     filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
     hidden: true
-
 # 应用策略组补充优先级说明
 - select:
     name: AIGC
@@ -260,7 +255,6 @@ policy_groups:
     - 香港节点
     - 其他节点
     icon: 😊
-
 rules:
   # 广告拦截规则前置（高频匹配）
   - domain_regex:
@@ -269,7 +263,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
       policy: REJECT
-
   # 特殊服务规则（按访问频率排序）
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
@@ -323,7 +316,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 香港优先
-
   # 国内服务直连规则前置
   - domain_suffix:
       match: '*.cn'
@@ -338,11 +330,9 @@ rules:
       match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24, fe80::/10  # 补充ipv6本地网段
       policy: DIRECT
       description: "本地局域网直连"
-
   # 最后匹配默认策略
   - default:
       policy: 香港优先
-
 # MITM 配置（限制域名范围，减少安全风险）
 mitm:
   enabled: true
@@ -354,7 +344,6 @@ mitm:
     - '*.youtube.com'
     - '*.twitter.com'
     - '*.openai.com'
-
 # 模块配置（添加更新间隔）
 modules:
   - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
