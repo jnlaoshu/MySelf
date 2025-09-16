@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.04.20 17:38
+# 更新时间: 2025.09.16 17:42
 
 # 基础配置
 ipv6: true
@@ -11,7 +11,9 @@ vif_only: true
 hide_vpn_icon: false
 hijack_dns:
   - '*:53'
-
+  # 排除本地DNS服务器，避免影响局域网设备
+  - '!192.168.0.0/16:53'
+  - '!10.0.0.0/8:53'
 # 数据库 URL 配置
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
@@ -293,9 +295,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 香港优先
-  - domain:
-      match: ifconfig.me
-      policy: DIRECT
   - domain_suffix:
       match: '*.cn'
       policy: DIRECT
@@ -304,7 +303,7 @@ rules:
       policy: DIRECT
       no_resolve: true
   - ip_cidr:
-      match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24
+      match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24, fe80::/10
       policy: DIRECT
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
@@ -343,3 +342,4 @@ modules:
   - name: 墨鱼去广告模块
     url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
     enabled: true
+    interval: 86400  # 每天更新一次
