@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Config.yaml
-# 更新时间: 2025.09.16 17:18
+# 更新时间: 2025.09.16 17:28
 
 # 基础配置
 ipv6: true
@@ -18,10 +18,8 @@ hijack_dns:
   - '!192.168.0.0/16:53'
   - '!10.0.0.0/8:53'
 # 数据库 URL 配置
-geoip_db_url: 
-  - https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-asn_db_url: 
-  - https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
+geoip_db_url:https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+asn_db_url:https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
 # 延迟测试 URL 配置（多地址轮询，提升稳定性）
 proxy_latency_test_url: 
   - http://cp.cloudflare.com/generate_204
@@ -40,7 +38,7 @@ dns:
     Domestic:
       - quic://dns.alidns.com:853
       - https://doh.pub/dns-query
-      - https://dns.pub/dns-query  # 新增备用国内DNS
+      - https://dns.pub/dns-query  # 备用国内DNS
     Foreign:
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query  # Cloudflare备用
@@ -55,7 +53,7 @@ dns:
     - wildcard:
         match: '*'
         value: Domestic
-  # 新增DNS缓存配置
+  # DNS缓存配置
   cache: true
   cache_size: 1024
   cache_ttl: 300  # 缓存5分钟
@@ -127,7 +125,7 @@ policy_groups:
     filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
     hidden: true
-# 应用策略组补充优先级说明
+# 应用策略组
 - select:
     name: AIGC
     policies:
@@ -247,9 +245,9 @@ policy_groups:
 - select:
     name: 日本优先
     policies:
-    - 日本节点    
+    - 日本节点
     - 美国节点
-    - 台湾节点    
+    - 台湾节点
     - 韩国节点
     - 狮城节点
     - 香港节点
@@ -285,7 +283,7 @@ rules:
       policy: Twitter
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-      policy: AIGC	  
+      policy: AIGC
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
       policy: Microsoft
@@ -344,7 +342,7 @@ mitm:
     - '*.youtube.com'
     - '*.twitter.com'
     - '*.openai.com'
-# 模块配置（添加更新间隔）
+# 模块配置
 modules:
   - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
     enabled: true
