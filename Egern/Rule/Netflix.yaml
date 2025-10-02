@@ -1,21 +1,11 @@
 # NAME: Netflix
-# DOMAIN: 3
-# DOMAIN-KEYWORD: 4
-# DOMAIN-SUFFIX: 30
-# IP-CIDR: 1115
-# IP-CIDR6: 4
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
 
 no_resolve: true
 domain_set:
   - e13252.dscg.akamaiedge.net
   - h-netflix.online-metrix.net
-  - netflix.com.edgesuite.net  
-domain_keyword_set:
-  - apiproxy-device-prod-nlb-
-  - dualstack.apiproxy-
-  - dualstack.ichnaea-web-
-  - netflixdnstest  
+  - netflix.com.edgesuite.net
 domain_suffix_set:
   - cookielaw.org
   - fast.com
@@ -46,7 +36,12 @@ domain_suffix_set:
   - nflxso.net
   - nflxvideo.net
   - onetrust.com
-  - us-west-2.amazonaws.com  
+  - us-west-2.amazonaws.com
+domain_keyword_set:
+  - apiproxy-device-prod-nlb-
+  - dualstack.apiproxy-
+  - dualstack.ichnaea-web-
+  - netflixdnstest
 ip_cidr_set:
   - 103.87.204.0/22
   - 107.23.255.0/26
@@ -1163,7 +1158,7 @@ ip_cidr_set:
   - 99.80.34.48/28
   - 99.80.34.64/26
   - 99.80.88.0/25
-ip_cidr6_set:  
+ip_cidr6_set:
   - 2607:fb10::/32
   - 2620:10c:7000::/44
   - 2a00:86c0::/32
