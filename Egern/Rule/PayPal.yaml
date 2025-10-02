@@ -1,9 +1,6 @@
 # 规则名称: PayPal
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
 
-domain_keyword_set:
-  - paypal
-
 domain_suffix_set:
   - account-paypal.info
   - account-paypal.net
@@ -251,3 +248,5 @@ domain_suffix_set:
   - xoom.net.cn
   - xoom.us
   - xoomcom.com
+domain_keyword_set:
+  - paypal
