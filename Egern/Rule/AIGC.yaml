@@ -1,121 +1,47 @@
 # >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
 
-# > Ai general rules
-  - DOMAIN,api.statsig.com
-  - DOMAIN,browser-intake-datadoghq.com
-  - DOMAIN,static.cloudflareinsights.com
-  - DOMAIN-SUFFIX,algolia.net
-  - DOMAIN-SUFFIX,auth0.com
-  - DOMAIN-SUFFIX,cloudflare.com
-  - DOMAIN-SUFFIX,arkoselabs.com
-  - DOMAIN-SUFFIX,statsigapi.net
-  - DOMAIN-SUFFIX,featuregates.org
-  - DOMAIN-SUFFIX,identrust.com
-  - DOMAIN-SUFFIX,intercom.io
-  - DOMAIN-SUFFIX,intercomcdn.com
-  - DOMAIN-SUFFIX,launchdarkly.com
-  - DOMAIN-SUFFIX,segment.io
-  - DOMAIN-SUFFIX,amazonaws.com
-  - DOMAIN-SUFFIX,wp.com
-  - DOMAIN-SUFFIX,sentry.io
-  - DOMAIN-SUFFIX,stripe.com
-
-# > Apple Intelligence
-  - DOMAIN,apple-relay.apple.com
-  - DOMAIN,apple-relay.cloudflare.com
-  - DOMAIN,apple-relay.fastly-edge.com
-  - DOMAIN,cp4.cloudflare.com
-  - DOMAIN,guzzoni.apple.com
-  - DOMAIN-SUFFIX,smoot.apple.com
-
-# > Anthropic/Claude
-  - DOMAIN,cdn.usefathom.com
-  - DOMAIN-SUFFIX,anthropic.com
-  - DOMAIN-SUFFIX,claude.ai
-  - DOMAIN-SUFFIX,claudeusercontent.com
-
-# > Cursor
-  - DOMAIN-SUFFIX,cursor.sh
-
-# > Dify AI
-  - DOMAIN-SUFFIX,dify.ai
-
-# > Google AI (Gemini/Bard)
-  - DOMAIN,ai.google.dev
-  - DOMAIN,aistudio.google.com
-  - DOMAIN,bard.google.com
-  - DOMAIN,gemini.google.com
-  - DOMAIN,generativelanguage.googleapis.com
-  - DOMAIN,proactivebackend-pa.googleapis.com 
-  - DOMAIN,makersuite.google.com
-  - DOMAIN-SUFFIX,apis.google.com
-  - DOMAIN-SUFFIX,clients6.google.com
-  - DOMAIN-SUFFIX,clients4.google.com
-  - DOMAIN-SUFFIX,deepmind.com
-  - DOMAIN-SUFFIX,deepmind.google
-  - DOMAIN-SUFFIX,generativeai.google
-  - DOMAIN-SUFFIX,colab.google.com
-  - DOMAIN-SUFFIX,colab.research.google.com
-  - DOMAIN-SUFFIX,developerprofiles.google.com
-  - DOMAIN-SUFFIX,googleusercontent.com
-
-# > JetBrains AI
-  - DOMAIN-SUFFIX,grazie.ai
-  
-# > Meta
-  - DOMAIN-SUFFIX,meta.ai
-  - DOMAIN-SUFFIX,meta.com
-
-# > Microsoft Copilot
-  - DOMAIN,api.msn.com
-  - DOMAIN,assets.msn.com
-  - DOMAIN,copilot.microsoft.com
-  - DOMAIN,gateway.bingviz.microsoft.net
-  - DOMAIN,gateway.bingviz.microsoftapp.net
-  - DOMAIN,in.appcenter.ms
-  - DOMAIN,location.microsoft.com
-  - DOMAIN,odc.officeapps.live.com
-  - DOMAIN,r.bing.com
-  - DOMAIN,self.events.data.microsoft.com
-  - DOMAIN,services.bingapis.com
-  - DOMAIN,sydney.bing.com
-  - DOMAIN,www.bing.com
-  - DOMAIN-SUFFIX,api.microsoftapp.net
-  - DOMAIN-SUFFIX,bing-shopping.microsoft-falcon.io
-  - DOMAIN-SUFFIX,edgeservices.bing.com
-  - DOMAIN-SUFFIX,githubcopilot.com
-
-# > Midjourney
-  - DOMAIN-SUFFIX,midjourney.com
-
-# > OpenAI/ChatGPT
-  - DOMAIN,api.statsig.com
-  - DOMAIN,api-iam.intercom.io
-  - DOMAIN,chatgpt.livekit.cloud
-  - DOMAIN,o33249.ingest.sentry.io
-  - DOMAIN,openaiapi-site.azureedge.net
-  - DOMAIN,sfo3.turn.livekit.cloud
-  - DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-  - DOMAIN,openaicomproductionae4b.blob.core.windows.net
-  - DOMAIN,production-openaicom-storage.azureedge.net
-  - DOMAIN-SUFFIX,ai.com
-  - DOMAIN-SUFFIX,chatgpt.com
-  - DOMAIN-SUFFIX,livekit.cloud
-  - DOMAIN-SUFFIX,oaistatic.com
-  - DOMAIN-SUFFIX,oaiusercontent.com
-  - DOMAIN-SUFFIX,openai.com
-  - DOMAIN-SUFFIX,azureedge.net
-  - DOMAIN-SUFFIX,imgix.net
-
-# > Perplexity
-  - DOMAIN,pplx-res.cloudinary.com
-  - DOMAIN-SUFFIX,perplexity.ai
-  - DOMAIN-SUFFIX,pplx.ai
-  - DOMAIN-SUFFIX,perplexity.com
-
-# > Poe
-  - DOMAIN-SUFFIX,poe.com
-  - DOMAIN-SUFFIX,poecdn.net
+domain_set:
+  - ai.google.dev
+  - alkalicore-pa.clients6.google.com
+  - api.github.com
+  - api.jetbrains.ai
+  - file.oaiusercontent.com
+  - gateway.ai.cloudflare.com
+  - jules.google.com
+domain_suffix_set:
+  - ai.com
+  - aistudio.google.com
+  - anthropic.com
+  - bard.google.com
+  - chat.com
+  - chatgpt.com
+  - claude.ai
+  - clipdrop.co
+  - deepmind.com
+  - deepmind.google
+  - dify.ai
+  - geller-pa.googleapis.com
+  - gemini.google
+  - gemini.google.com
+  - generativeai.google
+  - generativelanguage.googleapis.com
+  - grok.com
+  - groq.com
+  - jasper.ai
+  - makersuite.google.com
+  - meta.ai
+  - notebooklm.google
+  - notebooklm.google.com
+  - oaistatic.com
+  - openart.ai
+  - perplexity.ai
+  - poe.com
+  - proactivebackend-pa.googleapis.com
+  - sora.com
+  - x.ai
+domain_keyword_set:
+  - alkalimakersuite-pa.clients6.google.com
+  - openai
 
 # > xAI/Grok
   - DOMAIN-SUFFIX,x.ai
