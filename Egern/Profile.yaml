@@ -10,7 +10,7 @@ allow_external_connections: true
 vif_only: true
 hide_vpn_icon: false
 # DNS 劫持：
-hijack_dns: 尽量缩小劫持范围并排除常见本地/环回地址，避免影响局域网设备
+hijack_dns: # 尽量缩小劫持范围并排除常见本地/环回地址，避免影响局域网设备
   - '*:53'
   - '!127.0.0.1:53'
   - '!127.0.0.53:53'
