@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.09.16 17:42
+# 更新时间: 2025.10.08 18:00
 
 # 基础配置
 ipv6: true
@@ -9,18 +9,25 @@ socks_port: 3090
 allow_external_connections: true
 vif_only: true
 hide_vpn_icon: false
-hijack_dns:
+# DNS 劫持：
+hijack_dns: 尽量缩小劫持范围并排除常见本地/环回地址，避免影响局域网设备
   - '*:53'
-  # 排除本地DNS服务器，避免影响局域网设备
+  - '!127.0.0.1:53'
+  - '!127.0.0.53:53'
+  - '!::1:53'
   - '!192.168.0.0/16:53'
   - '!10.0.0.0/8:53'
 # 数据库 URL 配置
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
-asn_db_url: https://raw.githubusercontent.com/P3TERX/GeoLite.mmdb/download/GeoLite2-ASN.mmdb
+asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
 # 延迟测试 URL 配置
-proxy_latency_test_url: http://cp.cloudflare.com/generate_204
-direct_latency_test_url: http://www.apple.com/library/test/success.html
+proxy_latency_test_url:
+  - http://cp.cloudflare.com/generate_204
+  - https://www.google.com/generate_204
+direct_latency_test_url:
+  - http://www.apple.com/library/test/success.html
+  - http://connectivitycheck.gstatic.com/generate_204
 
 # 路由配置
 compat_route: false
@@ -29,18 +36,24 @@ include_apns: false
 include_cellular_services: false
 include_local_networks: false
 
-# DNS 配置
+# DNS 配置：增强 IPv6 与 DoH/DoQ 的冗余，并保留 bootstrap 的本地递归服务器
 dns:
   bootstrap:
     - 223.5.5.5
     - 119.29.29.29
     - 180.184.1.1
+    - 1.1.1.1
+    - 9.9.9.9
+    - 2001:4860:4860::8888
+    - 2606:4700:4700::1111
   upstreams:
     Domestic:
       - quic://dns.alidns.com:853
       - https://doh.pub/dns-query
     Foreign:
       - https://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query
+      - quic://dns.adguard-dns.com:784
   forward:
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
@@ -100,7 +113,7 @@ policy_groups:
     - AllServer
     flatten: true
     filter: 🇰🇷|韩国|KR|KOR|Korea
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 - select:
     name: 其他节点
     policies:
@@ -308,6 +321,7 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
       policy: DIRECT
+      interval: 86400
   - default:
       policy: 香港优先
 
@@ -321,6 +335,7 @@ mitm:
 modules:
   - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
     enabled: true
+    interval: 3600
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
     enabled: true
@@ -342,4 +357,4 @@ modules:
   - name: 墨鱼去广告模块
     url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
     enabled: true
-    interval: 86400  # 每天更新一次
+    interval: 86400
