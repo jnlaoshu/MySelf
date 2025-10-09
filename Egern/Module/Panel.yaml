@@ -1,11 +1,11 @@
 #!name=面板合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.02.12 18:40
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.09 11:52
 #𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
 
 [Panel]
 节假日信息 = script-name=节假日信息,update-interval=3600
 #运行时长 = script-name=运行时长,title=运行时长,content=请刷新,update-interval=1
-网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info
+网络信息 = title="",content="",style=info,script-name=网络信息 ,update-interval=1
 流媒体解锁 = script-name=流媒体解锁, title="流媒体解锁检测", content="请刷新面板", update-interval={{{UPDATE_INTERVAL}}}
 
 [Script]
