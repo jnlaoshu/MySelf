@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.02.15 18:00
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.10.09 11:30
 
 /*
 [Script]
@@ -196,9 +196,9 @@ function getIP() {
     info = ['网路可能切换', '请手动刷新以重新获取 IP'];
   } else {
     if (v4?.primaryAddress) info.push(`LAN：${v4?.primaryAddress}`);
-    /* if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);*/
+    if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);
     if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);
-    /* if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
+    if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);
   }
   info = info.join("\n");
   return info + "\n";
