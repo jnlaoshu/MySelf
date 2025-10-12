@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@Mihomo 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Mihomo/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.11 15:40
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.12 19:00
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
@@ -83,62 +83,66 @@ fallback: &fallback {type: fallback, url: https://www.google.com/generate_204, i
 load-balance: &load-balance {type: load-balance, strategy: consistent-hashing, url: https://www.google.com/generate_204, interval: 300, include-all: true}
 c: &c {type: http, behavior: classical, format: text, interval: 86400}
 proxy-groups:
-  - {name: 手动切换, type: select, include-all: true, proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT], icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Static.png}
-  - {name: 国外网站, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Global.png}
-  - {name: 国际媒体, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/YouTube.png}
-  - {name: 苹果服务, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Apple_1.png}
-  - {name: 微软服务, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Microsoft.png}
-  - {name: 谷歌服务, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Google_Search.png}
-  - {name: 电报消息, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Telegram.png}
-  - {name: 推特消息, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Twitter.png}
-  - {name: AIGC, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png}
-  - {name: Spotify, <<: *pg, include-all: true, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Spotify.png}
-  - {name: 兜底分流, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Final.png}
   - {name: 香港节点, <<: *url-test, filter: "(?i)🇭🇰|香港|(\b(HK|Hong|HKG)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Hong_Kong.png}
   - {name: 美国节点, <<: *url-test, filter: "(?i)🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States|American|USA|SJC|JFK|LAX|ORD|ATL|DFW|SFO|MIA|SEA|IAD)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/United_States.png}
   - {name: 狮城节点, <<: *url-test, filter: "(?i)🇸🇬|新加坡|狮|(\b(SG|Singapore|SIN|XSP)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Singapore.png}
   - {name: 日本节点, <<: *url-test, filter: "(?i)🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan|NRT|HND|KIX|CTS|FUK)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Japan.png}
   - {name: 台湾节点, <<: *url-test, filter: "(?i)🇹🇼|🇹🇼|台湾|(\b(TW|Tai|TPE|Taiwan|TSA|KHH)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Taiwan.png}
   - {name: 韩国节点, <<: *url-test, filter: "(?i)🇰🇷|韩国|韓|首尔|南朝鲜|(\b(KR|KOR|Korea|South)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Korea.png}
+  - {name: 手动切换, type: select, include-all: true, proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT], icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Static.png}
+  - {name: 国外网站, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Global.png}
+  - {name: 国际媒体, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/YouTube.png}
+  - {name: AIGC, <<: *pg, icon: https://github.com/jnlaoshu/MySelf/raw/main/image/ChatGPT.png}
+  - {name: Apple, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Apple_1.png}
+  - {name: Google, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Google_Search.png}
+  - {name: Microsoft, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Microsoft.png}
+  - {name: Spotify, <<: *pg, include-all: true, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Spotify.png}
+  - {name: Telegram, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Telegram.png}
+  - {name: Twitter, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Twitter.png}
+  - {name: WeChat, type: select, proxies: [DIRECT], icon: https://github.com/jnlaoshu/MySelf/raw/main/image/WeChat.png }
+  - {name: Final, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Final.png}
+
 rule-providers:
   Direct: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Direct.list}
   Lan: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Lan.list}
-  Reject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml}
-  AppleCN: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml}
-  AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml}
-  Microsoft: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml}
+  Reject: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Reject.yaml}
+  AppleCN: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Apple.yaml}
+  AppleProxy: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/AppleProxy.yaml}
+  Microsoft: {<<: *c, url:https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Microsoft.yaml}
   OneDrive: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/OneDrive.list}
   Github: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Github.list}
-  YouTube: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml}
-  Google: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml}
-  Telegram: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml}
-  Twitter: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml}
-  AIGC: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml}
-  Spotify: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml}
-  Netflix: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml}
-  Disney: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml}
-  TikTok: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml}
+  YouTube: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/YouTube.yaml}
+  Google: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Google.yaml}
+  Telegram: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Telegram.yaml}
+  Twitter: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Twitter.yaml}
+  AIGC: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/AIGC.yaml}
+  Spotify: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Spotify.yaml}
+  WeChat: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/WeChat.yaml}
+  Netflix: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Netflix.yaml}
+  Disney: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Disney.yaml}
+  TikTok: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/TikTok.yaml}
   CDN: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/CDN.list}
   Proxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list}
 rules: 
   - RULE-SET,Direct,DIRECT  
   - RULE-SET,Reject,REJECT  
   - RULE-SET,AIGC,AIGC
-  - RULE-SET,Github,微软服务
-  - RULE-SET,OneDrive,微软服务
-  - RULE-SET,Microsoft,微软服务
-  - RULE-SET,YouTube,谷歌服务
-  - RULE-SET,Google,谷歌服务
-  - RULE-SET,Twitter,推特消息
-  - RULE-SET,Telegram,电报消息
+  - RULE-SET,Github,Microsoft
+  - RULE-SET,OneDrive,Microsoft
+  - RULE-SET,Microsoft,Microsoft
+  - RULE-SET,YouTube,Google
+  - RULE-SET,Google,Google
+  - RULE-SET,Twitter,Twitter
+  - RULE-SET,Telegram,Telegram
   - RULE-SET,Netflix,国际媒体
   - RULE-SET,Disney,国际媒体
   - RULE-SET,TikTok,国际媒体
   - RULE-SET,Spotify,Spotify
+  - RULE-SET,WeChat,DIRECT
   - RULE-SET,CDN,国外网站
   - RULE-SET,Proxy,国外网站
   - RULE-SET,AppleCN,DIRECT
   - RULE-SET,AppleProxy,香港节点
   - RULE-SET,Lan,DIRECT
   - GEOIP,CN,DIRECT
-  - MATCH,兜底分流
+  - MATCH,Final
