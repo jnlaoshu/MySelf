@@ -95,7 +95,7 @@ proxy-groups:
   - {name: AIGC, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png}
   - {name: Apple, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png}
   - {name: Disney, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png} 
-  - {name: Github, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Github.png}  
+  - {name: Github, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png}  
   - {name: Google, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png}
   - {name: HBO, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png}
   - {name: Microsoft, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png}
