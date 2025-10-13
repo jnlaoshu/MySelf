@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@Mihomo 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Mihomo/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.13 15:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.13 15:06
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
@@ -100,13 +100,13 @@ proxy-groups:
   - {name: Microsoft, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png}
   - {name: Netflix, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png} 
   - {name: PayPal, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png}  
-  - {name: Spotify, <<: *pg, include-all: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png}
+  - {name: Spotify, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png}
   - {name: Telegram, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png}
   - {name: TikTok, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png}   
   - {name: Twitter, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png}
   - {name: WeChat, type: select, proxies: [DIRECT], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png }
   - {name: YouTube, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png}  
-  - {name: Final, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png}
+  - {name: Final, <<: *pg, include-all: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png}
 
 rule-providers:
   Reject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml}
