@@ -1,11 +1,11 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@Mihomo 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Mihomo/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.12 19:00
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.13 15:00
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
   Subscribe:
-    url: 机场订阅地址
+    url: http://127.0.0.1:38324/download/collection/AllServer
     <<: *p
     #override: # 修改节点前后缀时，需移除前方的 "#" 符号
       #additional-prefix: "节点前缀"
@@ -75,74 +75,85 @@ geox-url:
   geosite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
   mmdb: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
   asn: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb"
+  
 # 锚点参数
-pg: &pg {type: select, proxies: [手动切换, 香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT]}
+pg: &pg {type: select, proxies: [Proxy, 香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT]}
 url-test: &url-test {type: url-test, url: https://www.google.com/generate_204, interval: 300, tolerance: 0, include-all: true}
 select: &select {type: select, include-all: true}
 fallback: &fallback {type: fallback, url: https://www.google.com/generate_204, interval: 300, include-all: true}
 load-balance: &load-balance {type: load-balance, strategy: consistent-hashing, url: https://www.google.com/generate_204, interval: 300, include-all: true}
 c: &c {type: http, behavior: classical, format: text, interval: 86400}
+
 proxy-groups:
-  - {name: 香港节点, <<: *url-test, filter: "(?i)🇭🇰|香港|(\b(HK|Hong|HKG)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Hong_Kong.png}
-  - {name: 美国节点, <<: *url-test, filter: "(?i)🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States|American|USA|SJC|JFK|LAX|ORD|ATL|DFW|SFO|MIA|SEA|IAD)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/United_States.png}
-  - {name: 狮城节点, <<: *url-test, filter: "(?i)🇸🇬|新加坡|狮|(\b(SG|Singapore|SIN|XSP)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Singapore.png}
-  - {name: 日本节点, <<: *url-test, filter: "(?i)🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan|NRT|HND|KIX|CTS|FUK)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Japan.png}
-  - {name: 台湾节点, <<: *url-test, filter: "(?i)🇹🇼|🇹🇼|台湾|(\b(TW|Tai|TPE|Taiwan|TSA|KHH)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Taiwan.png}
-  - {name: 韩国节点, <<: *url-test, filter: "(?i)🇰🇷|韩国|韓|首尔|南朝鲜|(\b(KR|KOR|Korea|South)\b)", icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Korea.png}
-  - {name: 手动切换, type: select, include-all: true, proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT], icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Static.png}
-  - {name: 国外网站, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Global.png}
-  - {name: 国际媒体, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/YouTube.png}
-  - {name: AIGC, <<: *pg, icon: https://github.com/jnlaoshu/MySelf/raw/main/image/ChatGPT.png}
-  - {name: Apple, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Apple_1.png}
-  - {name: Google, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Google_Search.png}
-  - {name: Microsoft, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Microsoft.png}
-  - {name: Spotify, <<: *pg, include-all: true, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Spotify.png}
-  - {name: Telegram, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Telegram.png}
-  - {name: Twitter, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Twitter.png}
-  - {name: WeChat, type: select, proxies: [DIRECT], icon: https://github.com/jnlaoshu/MySelf/raw/main/image/WeChat.png }
-  - {name: Final, <<: *pg, icon: https://github.com/Koolson/Qure/raw/master/IconSet/Color/Final.png}
+  - {name: 香港节点, <<: *url-test, filter: "(?i)🇭🇰|香港|(\b(HK|Hong|HKG)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png}
+  - {name: 美国节点, <<: *url-test, filter: "(?i)🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States|American|USA|SJC|JFK|LAX|ORD|ATL|DFW|SFO|MIA|SEA|IAD)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png}
+  - {name: 狮城节点, <<: *url-test, filter: "(?i)🇸🇬|新加坡|狮|(\b(SG|Singapore|SIN|XSP)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png}
+  - {name: 日本节点, <<: *url-test, filter: "(?i)🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan|NRT|HND|KIX|CTS|FUK)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png}
+  - {name: 台湾节点, <<: *url-test, filter: "(?i)🇹🇼|🇹🇼|台湾|(\b(TW|Tai|TPE|Taiwan|TSA|KHH)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png}
+  - {name: 韩国节点, <<: *url-test, filter: "(?i)🇰🇷|韩国|韓|首尔|南朝鲜|(\b(KR|KOR|Korea|South)\b)", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png}
+  - {name: Proxy, type: select, include-all: true, proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png}
+  - {name: AIGC, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png}
+  - {name: Apple, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png}
+  - {name: Disney, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png}  
+  - {name: Google, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png}
+  - {name: HBO, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png}
+  - {name: Microsoft, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png}
+  - {name: Netflix, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png} 
+  - {name: PayPal, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png}  
+  - {name: Spotify, <<: *pg, include-all: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png}
+  - {name: Telegram, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png}
+  - {name: TikTok, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png}   
+  - {name: Twitter, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png}
+  - {name: WeChat, type: select, proxies: [DIRECT], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png }
+  - {name: YouTube, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png}  
+  - {name: Final, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png}
 
 rule-providers:
-  Direct: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Direct.list}
-  Lan: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Lan.list}
-  Reject: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Reject.yaml}
-  AppleCN: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Apple.yaml}
-  AppleProxy: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/AppleProxy.yaml}
-  Microsoft: {<<: *c, url:https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Microsoft.yaml}
-  OneDrive: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/OneDrive.list}
-  Github: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/Github.list}
-  YouTube: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/YouTube.yaml}
-  Google: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Google.yaml}
-  Telegram: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Telegram.yaml}
-  Twitter: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Twitter.yaml}
-  AIGC: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/AIGC.yaml}
-  Spotify: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Spotify.yaml}
-  WeChat: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/WeChat.yaml}
-  Netflix: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Netflix.yaml}
-  Disney: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/Disney.yaml}
-  TikTok: {<<: *c, url: https://github.com/jnlaoshu/MySelf/raw/main/Egern/Rule/TikTok.yaml}
-  CDN: {<<: *c, url: https://github.com/Repcz/Tool/raw/X/mihomo/Rules/CDN.list}
-  Proxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list}
+  Reject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml}
+  AIGC: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml}  
+  AppleCN: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml}
+  AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml}
+  Disney: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml}
+  Github: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Github.yaml}
+  Google: {<<: *c, url: hhttps://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml}
+  HBO: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml}
+  Microsoft: {<<: *c, url:https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml}
+  Netflix: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml}  
+  OneDrive: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/OneDrive.yaml}
+  PayPal: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml}
+  Spotify: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml}  
+  Telegram: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml}
+  Twitter: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml}
+  TikTok: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml}
+  WeChat: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml}  
+  YouTube: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml}
+  Proxy: {<<: *c, url: ttps://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}  
+  Direct: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
+  Lan: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}  
+  China: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
+  
 rules: 
-  - RULE-SET,Direct,DIRECT  
   - RULE-SET,Reject,REJECT  
   - RULE-SET,AIGC,AIGC
-  - RULE-SET,Github,Microsoft
-  - RULE-SET,OneDrive,Microsoft
-  - RULE-SET,Microsoft,Microsoft
-  - RULE-SET,YouTube,Google
-  - RULE-SET,Google,Google
-  - RULE-SET,Twitter,Twitter
-  - RULE-SET,Telegram,Telegram
-  - RULE-SET,Netflix,国际媒体
-  - RULE-SET,Disney,国际媒体
-  - RULE-SET,TikTok,国际媒体
-  - RULE-SET,Spotify,Spotify
-  - RULE-SET,WeChat,DIRECT
-  - RULE-SET,CDN,国外网站
-  - RULE-SET,Proxy,国外网站
   - RULE-SET,AppleCN,DIRECT
-  - RULE-SET,AppleProxy,香港节点
+  - RULE-SET,AppleProxy,Proxy
+  - RULE-SET,Disney,Disney  
+  - RULE-SET,Github,Microsoft
+  - RULE-SET,Google,Google
+  - RULE-SET,HBO,HBO
+  - RULE-SET,Microsoft,Microsoft
+  - RULE-SET,Netflix,Netflix  
+  - RULE-SET,OneDrive,Microsoft
+  - RULE-SET,PayPal,PayPal   
+  - RULE-SET,Spotify,Spotify
+  - RULE-SET,Telegram,Telegram
+  - RULE-SET,Twitter,Twitter
+  - RULE-SET,TikTok,TikTok
+  - RULE-SET,WeChat,DIRECT
+  - RULE-SET,YouTube,YouTube
+  - RULE-SET,Proxy,Proxy  
+  - RULE-SET,Direct,DIRECT    
   - RULE-SET,Lan,DIRECT
+  - RULE-SET,China,DIRECT  
   - GEOIP,CN,DIRECT
   - MATCH,Final
