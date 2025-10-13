@@ -1,6 +1,6 @@
 # > 𝐥𝐚𝐨𝐬𝐡𝐮@Mihomo 自用配置
 # > 配置下载𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Mihomo/Profile.yaml
-# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.13 15:10
+# > 𝐔𝐩𝐝𝐚𝐭𝐞: 2025.10.13 18:40
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
@@ -116,7 +116,7 @@ rule-providers:
   AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml}
   Disney: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml}
   Github: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Github.yaml}
-  Google: {<<: *c, url: hhttps://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml}
+  Google: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml}
   HBO: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml}
   Microsoft: {<<: *c, url:https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml}
   Netflix: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml}  
@@ -128,7 +128,7 @@ rule-providers:
   TikTok: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml}
   WeChat: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml}  
   YouTube: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml}
-  Proxy: {<<: *c, url: ttps://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}  
+  Proxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}  
   Direct: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
   Lan: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}  
   China: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
