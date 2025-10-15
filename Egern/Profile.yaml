@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.10.08 18:12
+# 更新时间: 2025.10.15 14:55
 
 # 基础配置
 ipv6: true
@@ -136,7 +136,13 @@ policy_groups:
     policies:
     - 香港优先
     flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png    
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+- select:
+    name: GitHub
+    policies:
+    - 香港优先
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png   
 - select:
     name: Google
     policies:
@@ -254,11 +260,11 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
       policy: REJECT
   - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-      policy: 美国优先
-  - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-      policy: Apple
+      policy: Apple      
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
+      policy: 香港优先
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
@@ -268,6 +274,9 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
       policy: Disney
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Github.yaml
+      policy: GitHub      
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
       policy: Google
@@ -304,6 +313,9 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 香港优先
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
+      policy: DIRECT      
   - domain_suffix:
       match: '*.cn'
       policy: DIRECT
@@ -311,9 +323,6 @@ rules:
       match: CN
       policy: DIRECT
       no_resolve: true
-  - ip_cidr:
-      match: 192.168.0.0/16, 10.0.0.0/8, 127.0.0.0/8, 172.16.0.0/12, 192.128.0.0/16, 224.0.0.0/24, fe80::/10
-      policy: DIRECT
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
       policy: DIRECT
@@ -334,12 +343,6 @@ modules:
     interval: 3600
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
-    enabled: true
-  - name: ScriptHub
-    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
-    enabled: true    
-  - name: BoxJs
-    url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
     enabled: true
   - name: 'Spotify'
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
