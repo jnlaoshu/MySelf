@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.10.16 14:34
+# 更新时间: 2025.10.16 14:40
 
 # 基础配置
 ipv6: true
@@ -35,7 +35,8 @@ include_local_networks: false
 # DNS 配置
 dns:
   bootstrap:
-  - system
+  - 233.5.5.5
+  - 119.29.29.29
   upstreams:
     AdGuard:
       - quic://dns.adguard-dns.com   
@@ -50,7 +51,7 @@ dns:
         match: ^ad(s?)\.
         value: AdGuard
     - proxy_rule_set:
-        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
+        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
         value: China
     - wildcard:
         match: '*'
