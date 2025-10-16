@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.10.15 14:55
+# 更新时间: 2025.10.16 14:28
 
 # 基础配置
 ipv6: true
@@ -32,36 +32,31 @@ include_apns: false
 include_cellular_services: false
 include_local_networks: false
 
-# DNS 配置：增强 IPv6 与 DoH/DoQ 的冗余，并保留 bootstrap 的本地递归服务器
+# DNS 配置
 dns:
   bootstrap:
-    - 223.5.5.5
-    - 119.29.29.29
-    - 180.184.1.1
-    - 1.1.1.1
-    - 9.9.9.9
-    - 2001:4860:4860::8888
-    - 2606:4700:4700::1111
+  - system
   upstreams:
-    Domestic:
-      - quic://dns.alidns.com:853
+    AdGuard:
+      - quic://dns.adguard-dns.com   
+    China:
+      - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
-    Foreign:
+    Global:
       - https://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query
-      - quic://dns.adguard-dns.com:784
+      - https://1.1.1.1/dns-query
   forward:
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-        value: Foreign
     - regex:
         match: ^ad(s?)\.
-        value: quic://dns.adguard-dns.com
+        value: AdGuard
+    - geoip:
+        country: CN
+        value: China
     - wildcard:
         match: '*'
-        value: Domestic
+        value: Global        
   hosts:
-    dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200:baba::1, 2400:3200::1
+    dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200::1, 2400:3200:baba::1
     doh.pub: 1.12.12.12, 120.53.53.53
     dns.google: 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844
   public_ip_lookup_url: https://ifconfig.me/ip
@@ -121,135 +116,113 @@ policy_groups:
 - select:
     name: AIGC
     policies:
-    - 美国优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
     name: Apple
     policies:
-    - DIRECT
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
 - select:
     name: Disney
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
 - select:
     name: GitHub
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png   
 - select:
     name: Google
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
 - select:
     name: HBO
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
 - select:
     name: Microsoft
     policies:
-    - DIRECT
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
 - select:
     name: Netflix
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
 - select:
     name: PayPal
     policies:
-    - 美国节点
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
 - select:
     name: Spotify
     policies:
-    - 美国优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
 - select:
     name: Telegram
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
 - select:
     name: TikTok
     policies:
-    - 日本优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
 - select:
     name: Twitter
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
 - select:
     name: WeChat
     policies:
-    - DIRECT
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
 - select:
     name: YouTube
     policies:
-    - 香港优先
+    - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+
+- select:
+    name: Proxy
+    policies:
+    - 香港节点
+    - 美国节点
+    - 狮城节点
+    - 台湾节点
+    - 日本节点
+    - 韩国节点
+    - 其他节点
+    - DIRECT
+    icon: 😜
+
 - external:
     name: AllServer
     type: select
     urls:
     - https://sub.store/download/collection/AllServer?target=Egern
     icon: 🌹 
-- select:
-    name: 香港优先
-    policies:
-    - 香港节点
-    - 美国节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
-    icon: 😜
-- select:
-    name: 美国优先
-    policies:
-    - 美国节点
-    - 香港节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
-    icon: 🤣
-- select:
-    name: 日本优先
-    policies:
-    - 日本节点    
-    - 美国节点
-    - 台湾节点    
-    - 韩国节点
-    - 狮城节点
-    - 香港节点
-    - 其他节点
-    icon: 😊
 
 # 代理规则配置
 rules:
@@ -264,13 +237,13 @@ rules:
       policy: Apple      
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-      policy: 香港优先
+      policy: Proxy
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-      policy: 美国优先
+      policy: Proxy
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
       policy: Disney
@@ -312,7 +285,7 @@ rules:
       policy: YouTube
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      policy: 香港优先
+      policy: Proxy
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT      
@@ -328,7 +301,7 @@ rules:
       policy: DIRECT
       interval: 86400
   - default:
-      policy: 香港优先
+      policy: Proxy
 
 # MITM 配置
 mitm:
