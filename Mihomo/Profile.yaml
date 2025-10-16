@@ -106,7 +106,7 @@ proxy-groups:
   - {name: Telegram, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png}
   - {name: TikTok, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png}   
   - {name: Twitter, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png}
-  - {name: WeChat, <<: *pg, proxies: [DIRECT], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png }
+  - {name: WeChat, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png }
   - {name: YouTube, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png}  
   - {name: Final, <<: *pg, include-all: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png}
 
