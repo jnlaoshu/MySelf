@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.10.16 14:40
+# 更新时间: 2025.10.20 19:30
 
 # 基础配置
 ipv6: true
@@ -204,7 +204,13 @@ policy_groups:
     - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
-
+- select:
+    name: YouTubeMusic
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
+    
 - select:
     name: Proxy
     policies:
