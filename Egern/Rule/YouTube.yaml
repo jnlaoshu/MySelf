@@ -2,6 +2,8 @@
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
 
 no_resolve: true
+domain_set:
+  - music.youtube.com
 domain_keyword_set:
   - youtube
 domain_suffix_set:
