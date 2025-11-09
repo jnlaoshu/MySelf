@@ -7,3 +7,4 @@
 ### 全局配置：
 
 * [Profile.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml)
+* [官方默认配置](https://raw.githubusercontent.com/egerndaddy/quick-start/refs/heads/main/example.yaml)
