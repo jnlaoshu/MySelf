@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.10.20 19:30
+# 更新时间: 2025.11.09 18:00
 
 # 基础配置
 ipv6: true
@@ -113,7 +113,6 @@ policy_groups:
     flatten: true
     filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
-    hidden: true
 - select:
     name: AIGC
     policies:
@@ -234,7 +233,7 @@ policy_groups:
 # 代理规则配置
 rules:
   - domain_regex:
-      match: ^ad(s?)\..*
+      match: ^ad\..*|^ads\..*
       policy: REJECT
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
