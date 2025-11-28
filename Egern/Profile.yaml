@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.11.25 13:45
+# 更新时间: 2025.11.28 08:55
 
 # 自动更新配置
 auto_update:
@@ -12,15 +12,12 @@ http_port: 3080
 socks_port: 3090
 allow_external_connections: true
 vif_only: true
-hide_vpn_icon: false
-# DNS 劫持：尽量缩小劫持范围并排除常见本地/环回地址，避免影响局域网设备
+hide_vpn_icon: true
+
+# DNS 劫持
 hijack_dns: 
   - '*:53'
-  - '!127.0.0.1:53'
-  - '!127.0.0.53:53'
-  - '!::1:53'
-  - '!192.168.0.0/16:53'
-  - '!10.0.0.0/8:53'
+
 # 数据库 URL 配置
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
@@ -120,102 +117,102 @@ policy_groups:
 - select:
     name: AIGC
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
     name: Apple
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
 - select:
     name: Disney
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
 - select:
     name: GitHub
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png   
 - select:
     name: Google
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
 - select:
     name: HBO
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
 - select:
     name: Microsoft
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
 - select:
     name: Netflix
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
 - select:
     name: PayPal
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
 - select:
     name: Spotify
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
 - select:
     name: Telegram
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
 - select:
     name: TikTok
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
 - select:
     name: Twitter
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
 - select:
     name: WeChat
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
 - select:
     name: YouTube
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
 - select:
     name: YouTubeMusic
     policies:
-    - Proxy
+    - 自行选择
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
     
 - select:
-    name: Proxy
+    name: 自行选择
     policies:
     - 香港节点
     - 美国节点
@@ -247,13 +244,13 @@ rules:
       policy: Apple      
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-      policy: Proxy
+      policy: 香港节点
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-      policy: Proxy
+      policy: 美国节点
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
       policy: Disney
@@ -298,7 +295,7 @@ rules:
       policy: YouTubeMusic
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      policy: Proxy
+      policy: 自行选择
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT      
@@ -314,7 +311,7 @@ rules:
       policy: DIRECT
       interval: 86400
   - default:
-      policy: Proxy
+      policy: 自行选择
 
 # MITM 配置
 mitm:
@@ -330,6 +327,9 @@ modules:
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
     enabled: true
+  - name: WeatherKit    
+    url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
+    enabled: true    
   - name: 'Spotify'
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
     enabled: true
@@ -339,7 +339,7 @@ modules:
   - name: 'BiliBili去广告'
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
     enabled: true  
-  - name: 墨鱼去广告模块
+  - name: 墨鱼去广告融合版
     url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
     enabled: true
     interval: 86400
