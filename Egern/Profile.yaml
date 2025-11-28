@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.11.28 08:55
+# 更新时间: 2025.11.28 09:06
 
 # 自动更新配置
 auto_update:
@@ -65,154 +65,63 @@ dns:
 
 # 策略组配置
 policy_groups:
+- external:
+    name: 全部节点
+    type: select
+    urls:
+    - https://sub.store/download/collection/AllServer?target=Egern
+    icon: 🌹 
 - auto_test:
     name: 香港节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇭🇰|香港|HK|Hong
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
 - auto_test:
     name: 美国节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇺🇸|美国|US|States|American
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
 - auto_test:
     name: 台湾节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇹🇼|台湾|TW|Tai
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
 - auto_test:
     name: 日本节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇯🇵|日本|JP|Japan
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
 - auto_test:
     name: 狮城节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇸🇬|新加坡|狮城|SG|Singapore
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 - auto_test:
     name: 韩国节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: 🇰🇷|韩国|KR|KOR|Korea
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 - select:
     name: 其他节点
     policies:
-    - AllServer
+    - 全部节点
     flatten: true
     filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 - select:
-    name: AIGC
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
-- select:
-    name: Apple
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
-- select:
-    name: Disney
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
-- select:
-    name: GitHub
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png   
-- select:
-    name: Google
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
-- select:
-    name: HBO
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
-- select:
-    name: Microsoft
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
-- select:
-    name: Netflix
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
-- select:
-    name: PayPal
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
-- select:
-    name: Spotify
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
-- select:
-    name: Telegram
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
-- select:
-    name: TikTok
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
-- select:
-    name: Twitter
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
-- select:
-    name: WeChat
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
-- select:
-    name: YouTube
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
-- select:
-    name: YouTubeMusic
-    policies:
-    - 自行选择
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
-    
-- select:
-    name: 自行选择
+    name: 自选策略
     policies:
     - 香港节点
     - 美国节点
@@ -224,12 +133,103 @@ policy_groups:
     - DIRECT
     icon: 😜
 
-- external:
-    name: AllServer
-    type: select
-    urls:
-    - https://sub.store/download/collection/AllServer?target=Egern
-    icon: 🌹 
+- select:
+    name: AIGC
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+- select:
+    name: Apple
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
+- select:
+    name: Disney
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+- select:
+    name: GitHub
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png   
+- select:
+    name: Google
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
+- select:
+    name: HBO
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png	
+- select:
+    name: Microsoft
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+- select:
+    name: Netflix
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png	
+- select:
+    name: PayPal
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
+- select:
+    name: Spotify
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png    
+- select:
+    name: Telegram
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
+- select:
+    name: TikTok
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png    
+- select:
+    name: Twitter
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
+- select:
+    name: WeChat
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
+- select:
+    name: YouTube
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+- select:
+    name: YouTubeMusic
+    policies:
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
+    
 
 # 代理规则配置
 rules:
@@ -295,7 +295,7 @@ rules:
       policy: YouTubeMusic
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      policy: 自行选择
+      policy: 自选策略
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT      
@@ -311,7 +311,7 @@ rules:
       policy: DIRECT
       interval: 86400
   - default:
-      policy: 自行选择
+      policy: 自选策略
 
 # MITM 配置
 mitm:
