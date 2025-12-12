@@ -59,7 +59,7 @@ dns:
         value: Global        
   hosts:
     iosapps.itunes.apple.com: iosapps.itunes.apple.com.download.ks-cdn.com
-    *.weixin.com: 119.29.29.29
+    "*.weixin.com": 119.29.29.29
     mtalk.google.com: 108.177.125.188
     testflight.apple.com: 8.8.4.4  
     dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200::1, 2400:3200:baba::1
