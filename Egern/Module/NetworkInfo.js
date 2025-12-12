@@ -1,3 +1,4 @@
+javascript
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
@@ -30,7 +31,7 @@ class httpMethod {
     if (error) {
       reject(error);
     } else {
-      resolve(Object.assign(response, { data }));
+      resolve({ ...response, data });
     }
   }
 
@@ -83,7 +84,7 @@ function randomString(e = 6) {
   var t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678",
     a = t.length,
     n = "";
-  for (i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
+  for (let i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
   return n;
 }
 
@@ -177,9 +178,10 @@ function getCellularInfo() {
     const carrierId = $network['cellular-data'].carrier;
     const radio = $network['cellular-data'].radio;
     if ($network.wifi?.ssid == null && radio) {
+      const generationDisplay = radioGeneration[radio] || radio;
       cellularInfo = carrierNames[carrierId] ?
-        `${carrierNames[carrierId]} | ${radioGeneration[radio]} - ${radio} ` :
-        `蜂窝数据 | ${radioGeneration[radio]} - ${radio}`;
+        `${carrierNames[carrierId]} | ${generationDisplay} - ${radio} ` :
+        `蜂窝数据 | ${generationDisplay} - ${radio}`;
     }
   }
   return cellularInfo;
