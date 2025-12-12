@@ -1,11 +1,11 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮配置信息
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
 # 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.11.28 09:06
+# 更新时间: 2025.12.12 09:00
 
 # 自动更新配置
-auto_update:
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-    interval: 86400
+# auto_update:
+#     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
+#     interval: 86400
 # 基础配置
 ipv6: true
 http_port: 3080
@@ -58,6 +58,10 @@ dns:
         match: '*'
         value: Global        
   hosts:
+    iosapps.itunes.apple.com: iosapps.itunes.apple.com.download.ks-cdn.com
+    *.weixin.com: 119.29.29.29
+    mtalk.google.com: 108.177.125.188
+    testflight.apple.com: 8.8.4.4  
     dns.alidns.com: 223.5.5.5, 223.6.6.6, 2400:3200::1, 2400:3200:baba::1
     doh.pub: 1.12.12.12, 120.53.53.53
     dns.google: 8.8.8.8, 8.8.4.4, 2001:4860:4860::8888, 2001:4860:4860::8844
@@ -342,4 +346,8 @@ modules:
   - name: 墨鱼去广告融合版
     url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
     enabled: true
+    interval: 86400
+  - name: 奶思广告拦截&净化合集
+    url:https://github.com/fmz200/wool_scripts/blob/main/Surge/module/blockAds.module
+    enabled: false
     interval: 86400
