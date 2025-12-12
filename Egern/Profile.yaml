@@ -348,6 +348,6 @@ modules:
     enabled: true
     interval: 86400
   - name: 奶思广告拦截&净化合集
-    url:https://github.com/fmz200/wool_scripts/blob/main/Surge/module/blockAds.module
+    url: https://github.com/fmz200/wool_scripts/blob/main/Surge/module/blockAds.module
     enabled: false
     interval: 86400
