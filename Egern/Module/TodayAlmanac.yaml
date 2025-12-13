@@ -1,12 +1,7 @@
-#!name=今日黄历
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.12.13 12:40
-#𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TodayAlmanac.yaml
-#𝐅𝐫𝐨𝐦：https://github.com/ByteValley/NetTool/blob/main/Egern/Module/Dashboard/TodayAlmanac.yaml
-
 name: 今日黄历
 description: 今日黄历面板
 compat_arguments:
-  TITLES_URL: ''
+  TITLES_URL: '["距离放假还有多少天","{lunar}","{solar}","下一站：{next}"]'
   BLESS_URL: ''
   SHOW_ALMANAC: 'true'
   GAP_LINES: '1'
