@@ -15,7 +15,7 @@
  *     ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
  *   BLESS_URL（对象示例）:
  *     {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
- * 更新：2025.12.13 22:50
+ * 更新：2025.12.13 22:56
  */
 
 (async () => {
@@ -266,11 +266,24 @@
       return this.Animals[(y - 4) % 12];
     },
 
-    // 星座
+    // 星座（修复核心逻辑）
     toAstro: function(m, d) {
-      const s = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯";
-      const arr = [20,19,21,21,21,22,23,23,23,23,22,22];
-      return s.substr(m*2 - (d < arr[m-1] ? 2 : 0), 2) + "座";
+      // 校验入参合法性
+      if (!m || !d || m < 1 || m > 12 || d < 1 || d > 31) {
+        return "未知星座";
+      }
+      // 星座分界日：索引对应1-12月，值为对应月份的分界日（如1月20日是摩羯/水瓶分界）
+      const arr = [20,19,21,20,21,22,23,23,23,24,22,21];
+      // 星座名称字符串：按顺序排列，每个星座占2个字符
+      const s = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手";
+      // 计算星座索引：如果日期小于分界日，取当前月-1，否则取当前月
+      let index = d < arr[m-1] ? (m-1) : m;
+      // 12月特殊处理：如果是12月且日期>=21，索引为11（射手），否则为0（摩羯）
+      if (m === 12) {
+        index = d >= arr[11] ? 11 : 0;
+      }
+      // 截取对应星座名称并拼接"座"
+      return s.substr(index * 2, 2) + "座";
     },
 
     // 阳历转阴历
@@ -348,7 +361,7 @@
 
         const dayCyc = Date.UTC(y, sm, 1) / 86400000 + 25567 + 10;
         const gzD = this.GanZhi(dayCyc + d - 1);
-        const astro = this.toAstro(m, d);
+        const astro = this.toAstro(m, d); // 调用修复后的星座方法
         const solarDate = `${y}-${m}-${d}`;
         const lunarDate = `${year}-${month}-${day}`;
         const festKey = `${m}-${d}`;
@@ -382,11 +395,11 @@
           ncWeek: `星期${cWeek}`,
           isTerm: isTerm,
           Term: Term,
-          astro: astro
+          astro: astro // 确保返回正确的星座
         };
       } catch (e) {
         console.error(`阳历转阴历失败：${e.message}`);
-        return { date: `${Y}-${M}-${D}`, error: e.message };
+        return { date: `${Y}-${M}-${D}`, error: e.message, astro: "未知星座" }; // 兜底返回未知星座
       }
     },
 
@@ -437,7 +450,7 @@
         return this.solar2lunar(cY, cM, cD);
       } catch (e) {
         console.error(`阴历转阳历失败：${e.message}`);
-        return { date: `${y}-${m}-${d}`, error: e.message };
+        return { date: `${y}-${m}-${d}`, error: e.message, astro: "未知星座" };
       }
     },
 
