@@ -415,7 +415,7 @@
     return out.sort((a,b) => new Date(a[1]) - new Date(b[1]));
   };
 
-  // 法定节假日（修复原代码逗号缺失问题）
+  // 法定节假日
   const legalFest = (year) => {
     return [
       ["元旦", fmtYMD(year,1,1)],
