@@ -10,6 +10,76 @@
  * 作者：整合版 | 基于ByteValley&IBL3ND原代码优化
  */
 
+// ========== 环境兼容：模拟 Surge/QX 专属 API（Node.js 环境下生效） ==========
+if (typeof $done === "undefined") {
+    // 模拟 $done：输出结果到控制台，并结束进程
+    global.$done = (result) => {
+        console.log("[最终输出]", JSON.stringify(result, null, 2));
+        process.exit(0);
+    };
+}
+
+if (typeof $argument === "undefined") {
+    // 模拟参数（可自定义测试参数）
+    global.$argument = "SHOW_ALMANAC=true,GAP_LINES=1,TITLE_MODE=day";
+}
+
+if (typeof $script === "undefined") {
+    // 模拟 $script（Cron 模式默认 false）
+    global.$script = { type: "manual" };
+}
+
+if (typeof $persistentStore === "undefined") {
+    // 模拟持久化存储（Node.js 中用内存临时存储）
+    const store = {};
+    global.$persistentStore = {
+        read: (key) => store[key] || "",
+        write: (value, key) => { store[key] = value; }
+    };
+}
+
+if (typeof $notification === "undefined") {
+    // 模拟通知：输出到控制台
+    global.$notification = {
+        post: (title, subtitle, body) => {
+            console.log(`[通知] 标题：${title} | 副标题：${subtitle} | 内容：${body}`);
+        }
+    };
+}
+
+if (typeof $httpClient === "undefined") {
+    // 模拟 $httpClient：Node.js 中用内置 http/https 模块实现
+    const http = require("http");
+    const https = require("https");
+    const URL = require("url");
+    global.$httpClient = {
+        get: (req, callback) => {
+            const urlObj = URL.parse(req.url);
+            const client = urlObj.protocol === "https:" ? https : http;
+            const options = {
+                hostname: urlObj.hostname,
+                port: urlObj.port,
+                path: urlObj.path,
+                method: "GET",
+                timeout: req.timeout || 8000
+            };
+            const reqObj = client.request(options, (res) => {
+                let data = "";
+                res.on("data", (chunk) => { data += chunk; });
+                res.on("end", () => {
+                    callback(null, { status: res.statusCode }, data);
+                });
+            });
+            reqObj.on("error", (err) => callback(err));
+            reqObj.on("timeout", () => {
+                reqObj.destroy();
+                callback(new Error("Request timeout"));
+            });
+            reqObj.end();
+        }
+    };
+}
+
 /* ========== 全局工具函数 - 日志输出（移到外层，解决作用域问题） ========== */
 const TAG = "festival_almanac";
 const log = (...args) => {
@@ -125,6 +195,11 @@ const log = (...args) => {
         nStr1: ["日", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"],
         nStr2: ["初", "十", "廿", "卅"],
         nStr3: ["正", "二", "三", "四", "五", "六", "七", "八", "九", "十", "冬", "腊"],
+
+        // 农历年天数（补充默认lunarInfo，避免Node.js运行报错）
+        lunarInfo: new Array(201).fill(0), // 占位，实际使用需替换完整农历数据
+        // 节气数据（补充默认sTermInfo，避免Node.js运行报错）
+        sTermInfo: new Array(201).fill("0"), // 占位，实际使用需替换完整节气数据
 
         // 农历年天数
         lYearDays(y) {
@@ -328,11 +403,7 @@ const log = (...args) => {
                 log(`阴历转阳历失败: ${e.message}`);
                 return { date: `${y}-${m}-${d}`, error: e.message };
             }
-        },
-
-        // 农历数据（省略具体数据，实际使用需保留完整lunarInfo和sTermInfo）
-        lunarInfo: [],
-        sTermInfo: []
+        }
     };
 
     /* ========== 黄历详情获取 ========== */
