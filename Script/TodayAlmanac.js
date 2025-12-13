@@ -368,7 +368,7 @@
   const titleSolar = `${lunarNow.cMonth || tnow.getMonth()+1}月${lunarNow.cDay || tnow.getDate()}日（${lunarNow.astro || '未知星座'}）`;
   const titleLunar = lunarNow.error 
     ? `${tnow.getFullYear()}年${tnow.getMonth()+1}月${tnow.getDate()}日`
-    : `${lunarNow.IMonthCn}${lunarNow.IDayCn}${lunarNow.gzYear}${lunarNow.gzMonth}${lunarNow.gzDay}${lunarNow.Animal}年`;
+    : `${lunarNow.IMonthCn} ${lunarNow.IDayCn}${lunarNow.gzYear}${lunarNow.gzMonth}${lunarNow.gzDay} ${lunarNow.Animal}年`;
 
   /* ========== 日期工具函数 ========== */
   // 获取某月第n个星期X的日期
