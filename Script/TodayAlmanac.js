@@ -15,7 +15,7 @@
  *     ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
  *   BLESS_URL（对象示例）:
  *     {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
- * 更新：2025.12.13 21:50
+ * 更新：2025.12.13 22:00
   */
 
 class FestivalCountdown {
@@ -129,7 +129,47 @@ getLegalFestivals(year) {
   ];
   return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
 }
+ 
+  getFolkFestivals(year) {
+    const lunarNewYearEveSolar = (year) => {
+      try {
+        const days12 = this.calendar.monthDays(year, 12);
+        const lday = days12 === 29 ? 29 : 30;
+        const result = this.calendar.lunar2solar(year, 12, lday);
+        return result.date || this.fmtYMD(year, 12, 30);
+      } catch (e) {
+        return this.fmtYMD(year, 12, 30);
+      }
+    };
 
+    const festivals = [
+      ["除夕", lunarNewYearEveSolar(year)],
+      ["元宵节", this.calendar.lunar2solar(year, 1, 15).date || this.fmtYMD(year, 1, 15)],
+      ["龙抬头", this.calendar.lunar2solar(year, 2, 2).date || this.fmtYMD(year, 2, 2)],
+      ["七夕节", this.calendar.lunar2solar(year, 7, 7).date || this.fmtYMD(year, 7, 7)],
+      ["中元节", this.calendar.lunar2solar(year, 7, 15).date || this.fmtYMD(year, 7, 15)],
+      ["重阳节", this.calendar.lunar2solar(year, 9, 9).date || this.fmtYMD(year, 9, 9)],
+      ["寒衣节", this.calendar.lunar2solar(year, 10, 1).date || this.fmtYMD(year, 10, 1)],
+      ["下元节", this.calendar.lunar2solar(year, 10, 15).date || this.fmtYMD(year, 10, 15)],
+      ["腊八节", this.calendar.lunar2solar(year, 12, 8).date || this.fmtYMD(year, 12, 8)],
+      ["小年(北)", this.calendar.lunar2solar(year, 12, 23).date || this.fmtYMD(year, 12, 23)],
+      ["小年(南)", this.calendar.lunar2solar(year, 12, 24).date || this.fmtYMD(year, 12, 24)]
+    ];
+    return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+  }
+
+  getInternationalFestivals(year) {
+    const festivals = [
+      ["情人节", this.fmtYMD(year, 2, 14)],
+      ["母亲节", this.nthWeekdayOfMonth(year, 5, 0, 2)],   // 5月第2个周日
+      ["父亲节", this.nthWeekdayOfMonth(year, 6, 0, 3)],   // 6月第3个周日
+      ["万圣节", this.fmtYMD(year, 10, 31)],
+      ["平安夜", this.fmtYMD(year, 12, 24)],
+      ["圣诞节", this.fmtYMD(year, 12, 25)],
+      ["感恩节(美)", this.nthWeekdayOfMonth(year, 11, 4, 4)] // 11月第4个周四
+    ];
+    return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+  }
   /* ========== 核心逻辑 ========== */
   getNextThree(items) {
     try {
