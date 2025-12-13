@@ -1,9 +1,8 @@
- // 今日黄历
- // 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- // 𝐅𝐫𝐨𝐦：https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/today_almanac.js
- // 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.13 10:00
+/**今日黄历
+ * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
+ * 𝐅𝐫𝐨𝐦：https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/today_almanac.js
+ * 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.13 10:00
 
-/**
  * 今日黄历 · 面板脚本（集成 wnCalendar 黄历接口）
  *
  * 功能：
@@ -29,7 +28,7 @@
 ;(async () => {
     /* ───────────────── 基本常量 / 日时 ───────────────── */
 
-    const TAG = "TodayAlmanac";
+    const TAG = "today_almanac";
     const ICON = "calendar";
     const COLOR = "#FF9800";
 
@@ -758,7 +757,7 @@
     const pickTitle = (nextName, daysToNext) => {
         // 节日本日：除非强制 random，否则固定提示语
         if (daysToNext === 0 && titleMode !== "random") {
-            return `今天是 ${nextName}，enjoy`;
+            return `今天是 ${nextName}，休息一下吧～`;
         }
 
         const pool = titlesArr.length ? titlesArr : defaultTitles;
