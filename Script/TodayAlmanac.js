@@ -15,7 +15,7 @@
  *     ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
  *   BLESS_URL（对象示例）:
  *     {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
- * 更新：2025.12.13 22:00
+ * 更新：2025.12.13 22:08
   */
 
 class FestivalCountdown {
@@ -102,34 +102,44 @@ class FestivalCountdown {
   }
 
   /* ========== 节日数据生成 ========== */
-getLegalFestivals(year) {
-  // 获取清明节日期
+  getSolarTerms(year) {
+    const names = this.calendar.solarTerm;
+    const terms = [];
+    
+    for (let i = 1; i <= 24; i++) {
+      const month = Math.ceil(i / 2);
+      const day = this.calendar.getTerm(year, i);
+      if (day > 0) {
+        terms.push([names[i - 1], this.fmtYMD(year, month, day)]);
+      }
+    }
+    return terms.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+  }
+
+  getLegalFestivals(year) {
+    // 获取清明节日期
   const qingmingDate = new Date(this.fmtYMD(year, 4, this.calendar.getTerm(year, 7) || 5));
   // 清明节后第一天（成都春假）
   const nextDay = new Date(qingmingDate);
   nextDay.setDate(qingmingDate.getDate() + 1);
-  const springHoliday = this.fmtYMD(nextDay.getFullYear(), nextDay.getMonth() + 1, nextDay.getDate());
   
-  // 11月第2个周三（成都秋假）
-  const autumnHoliday = this.nthWeekdayOfMonth(year, 11, 3, 2); // 3表示周三，2表示第2个
+    const festivals = [
+      ["元旦", this.fmtYMD(year, 1, 1)],
+      ["寒假", this.fmtYMD(year, 1, 31)],    // 2026年寒假
+      ["春节", this.calendar.lunar2solar(year, 1, 1).date || this.fmtYMD(year, 1, 1)],
+      ["开学", this.fmtYMD(year, 3, 2)],    // 2026年春季开学时间
+      ["清明节", this.fmtYMD(year, 4, this.calendar.getTerm(year, 7) || 5)],
+      ["春假", this.fmtYMD(nextDay.getFullYear(), nextDay.getMonth() + 1, nextDay.getDate())],    // 清明节后第1天（成都春假）
+	  ["劳动节", this.fmtYMD(year, 5, 1)],
+      ["端午节", this.calendar.lunar2solar(year, 5, 5).date || this.fmtYMD(year, 5, 5)],
+      ["暑假", this.fmtYMD(year, 7, 4)],    // 2026年暑假
+      ["中秋节", this.calendar.lunar2solar(year, 8, 15).date || this.fmtYMD(year, 8, 15)],
+      ["国庆节", this.fmtYMD(year, 10, 1)],
+      ["秋假", this.nthWeekdayOfMonth(year, 11, 3, 2)] // 11月第2个周三（成都秋假）
+    ];
+    return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
+  }
 
-  const festivals = [
-    ["元旦", this.fmtYMD(year, 1, 1)],
-    ["寒假", this.fmtYMD(year, 1, 31)],    // 2026年寒假
-    ["春节", this.calendar.lunar2solar(year, 1, 1).date || this.fmtYMD(year, 1, 1)],
-    ["开学", this.fmtYMD(year, 3, 2)],    // 2026年春季学期开学
-    ["清明节", this.fmtYMD(year, 4, this.calendar.getTerm(year, 7) || 5)],
-    ["春假", springHoliday], 
-    ["劳动节", this.fmtYMD(year, 5, 1)],
-    ["端午节", this.calendar.lunar2solar(year, 5, 5).date || this.fmtYMD(year, 5, 5)],
-    ["暑假", this.fmtYMD(year, 7, 4)],    // 2026年暑假
-    ["中秋节", this.calendar.lunar2solar(year, 8, 15).date || this.fmtYMD(year, 8, 15)],
-    ["国庆节", this.fmtYMD(year, 10, 1)], 
-    ["秋假", autumnHoliday]
-  ];
-  return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
-}
- 
   getFolkFestivals(year) {
     const lunarNewYearEveSolar = (year) => {
       try {
@@ -170,6 +180,7 @@ getLegalFestivals(year) {
     ];
     return festivals.sort((a, b) => new Date(a[1]) - new Date(b[1]));
   }
+
   /* ========== 核心逻辑 ========== */
   getNextThree(items) {
     try {
