@@ -534,7 +534,7 @@
   /* ========== 标题生成（支持占位符） ========== */
   const pickTitle = (nextName, daysToNext) => {
     try {
-      if (daysToNext === 0) return `今天是 ${nextName || '节日'}，休息一下吧～`;
+      if (daysToNext === 0) return `今天是 ${nextName || '节日'}，enjoy`;
       
       const pool = Array.isArray(titlesArr) && titlesArr.length ? titlesArr : defaultTitles;
       const r = Math.floor(Math.random() * pool.length);
@@ -596,7 +596,7 @@
     title: pickTitle(nearest[0][0], nearest[1]),
     icon: "calendar",
     "icon-color": "#FF9800",
-    content: `${lineLegal}\n\n${lineTerm}\n\n${lineFolk}\n\n${lineIntl}`
+    content: `${lineLegal}\n${lineTerm}\n${lineFolk}\n${lineIntl}`
   });
 
 })().catch((e) => {
