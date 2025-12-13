@@ -1,0 +1,36 @@
+#!name=今日黄历
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.12.13 10:00
+#𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TodayAlmanac.yaml
+#𝐅𝐫𝐨𝐦：https://github.com/ByteValley/NetTool/blob/main/Egern/Module/Dashboard/TodayAlmanac.yaml
+
+name: 今日黄历
+description: 面板顶部可选展示「今日黄历详情」（干支纪法+宜忌），下方四行节日倒数：法定节假日 | 二十四节气 | 传统民俗 | 国际洋节；支持外链标题/祝词库；法定与民俗正日06:00后单次祝词提醒；脚本无参数调用时自动通过系统通知播报今日黄历详情。
+compat_arguments:
+  TITLES_URL: ''
+  BLESS_URL: ''
+  SHOW_ALMANAC: 'true'
+  GAP_LINES: '0'
+compat_arguments_desc: |-
+  参数：TITLES_URL 标题库外链(JSON数组, 支持 {lunar} {solar} {next})；BLESS_URL 祝词库外链(JSON对象, 键=节日名, 值=祝词)；SHOW_ALMANAC 是否在顶部附加今日黄历详情(true/false)；GAP_LINES 节日行与行之间的空行数(0=无空行,1=一行,2=两行…)
+  外链 JSON 示例：
+  TITLES_URL: ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
+  BLESS_URL: {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
+  传参示例(argument): TITLES_URL=https://example.com/titles.json&BLESS_URL=https%3A%2F%2Fexample.com%2Fbless.json&SHOW_ALMANAC=true&GAP_LINES=1
+author: ByteValley
+dns: {}
+scriptings:
+- generic:
+    name: 今日黄历·面板
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
+    arguments:
+      _compat.$argument: TITLES_URL=&BLESS_URL=&SHOW_ALMANAC=true&GAP_LINES=0
+    timeout: 60
+- schedule:
+    name: 今日黄历·播报
+    cron: 0 9 * * *
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
+    timeout: 20
+panels:
+- name: 今日黄历
+  script_name: 今日黄历·面板
+  update_interval: 1800
