@@ -15,7 +15,7 @@
  *     ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
  *   BLESS_URL（对象示例）:
  *     {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
- * 更新：2025.12.13 23:05
+ * 更新：2025.12.13 23:18
   */
 
 (async () => {
@@ -368,7 +368,7 @@
   const titleSolar = `${lunarNow.cMonth || tnow.getMonth()+1}月${lunarNow.cDay || tnow.getDate()}日（${lunarNow.astro || '未知星座'}）`;
   const titleLunar = lunarNow.error 
     ? `${tnow.getFullYear()}年${tnow.getMonth()+1}月${tnow.getDate()}日`
-    : `${lunarNow.IMonthCn}${lunarNow.IDayCn} • ${lunarNow.gzYear}年${lunarNow.gzMonth}${lunarNow.gzDay} • ${lunarNow.Animal}年`;
+    : `${lunarNow.IMonthCn}${lunarNow.IDayCn}${lunarNow.gzYear}年${lunarNow.gzMonth}${lunarNow.gzDay}${lunarNow.Animal}年`;
 
   /* ========== 日期工具函数 ========== */
   // 获取某月第n个星期X的日期
