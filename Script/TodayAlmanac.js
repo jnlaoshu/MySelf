@@ -1,7 +1,7 @@
 /**今日黄历
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
  * 𝐅𝐫𝐨𝐦：https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/today_almanac.js
- * 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.13 10:00
+ * 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.13 12:30
 
  * 今日黄历 · 面板脚本（集成 wnCalendar 黄历接口）
  *
@@ -28,7 +28,7 @@
 ;(async () => {
     /* ───────────────── 基本常量 / 日时 ───────────────── */
 
-    const TAG = "today_almanac";
+    const TAG = "TodayAlmanac";
     const ICON = "calendar";
     const COLOR = "#FF9800";
 
@@ -663,12 +663,17 @@
     const legalFest = y => {
         return [
             ["元旦", fmtYMD(y, 1, 1)],
+            ["寒假", fmtYMD(y, 1, 31)],			
             ["春节", calendar.lunar2solar(y, 1, 1).date],
+            ["春开学", fmtYMD(y, 3, 2)],				
             ["清明节", fmtYMD(y, 4, calendar.getTerm(y, 7))],
+            ["春假", fmtYMD(y, 4, 7)],nthWeekdayOfMonth(y, 5, 0, 2)],			
             ["劳动节", fmtYMD(y, 5, 1)],
             ["端午节", calendar.lunar2solar(y, 5, 5).date],
+            ["暑假", fmtYMD(y, 7, 4)],				
             ["中秋节", calendar.lunar2solar(y, 8, 15).date],
-            ["国庆节", fmtYMD(y, 10, 1)]
+            ["国庆节", fmtYMD(y, 10, 1)],
+            ["秋假", fmtYMD(y, 11, 11)]			
         ].sort((a, b) => new Date(a[1]) - new Date(b[1]));
     };
 
@@ -866,7 +871,7 @@
     // 兜底异常处理，面板不至于挂掉
     const msg = e && e.stack || String(e);
     if (typeof console !== "undefined" && console.log) {
-        console.log("[today_almanac] fatal error:", msg);
+        console.log("[TodayAlmanac] fatal error:", msg);
     }
     $done({
         title: "今日黄历",
