@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:55
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 21:00
 
 /*
 [Script]
@@ -193,8 +193,8 @@ function getCellularInfo() {
     const radio = $network['cellular-data'].radio;
     if ($network.wifi?.ssid == null && radio) {
       cellularInfo = carrierNames[carrierId] ?
-        `${carrierNames[carrierId]} | ${radioGeneration[radio]} - ${radio} ` :
-        `蜂窝数据 | ${radioGeneration[radio]} - ${radio}`;
+        `${carrierNames[carrierId]} | ${radioGeneration[radio]}` :
+        `蜂窝数据 | ${radioGeneration[radio]}`;
     }
   }
   return cellularInfo;
