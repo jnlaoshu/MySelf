@@ -11,7 +11,11 @@
  *  - TITLES_URL: 标题库外链(JSON数组)，支持占位符 {lunar}农历 {solar}公历中文 {next}下个节日 {date}公历数字 {time}当前时间
  *  - BLESS_URL : 祝词库外链(JSON对象，键为节日名，值为文案)
  *  - SHOW_ALMANAC: 是否在顶部附加今日黄历详情(true/false，默认 true)
- *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 random),默认标题库增加公历和时间显示
+ *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 random)
+ *
+ * 更新：
+ * 1. 默认标题模式改为随机 (random)
+ * 2. 增加 {date} 和 {time} 占位符，默认标题库增加公历和时间显示
   */
 
 (async () => {
@@ -589,15 +593,16 @@
   /* ========== 外链标题/祝词/黄历库 ========== */
   const args = parseArgs();
   const showAlmanac = toBool(args.SHOW_ALMANAC ?? args.show_almanac, true);
-  // 默认模式调整为 random，除非显式指定为 day
+  // 修改：默认模式调整为 random，除非显式指定为 day
   const titleMode = (args.TITLE_MODE ?? args.title_mode ?? "random").toString().toLowerCase() === "day" ? "day" : "random";
 
-  // 默认标题库增加 {date} 和 {time} 占位符
+  // 修改：默认标题库增加 {date} 和 {time} 占位符
   const defaultTitles = [
-    "{date}"  "{time}",
+    "距离放假，还要摸鱼多少天",
     "{lunar}",
-    "{solar}"
-
+    "{solar}",
+    "{date}",
+    "{time}"
   ];
   const defaultBless = {
     "元旦":"新岁启封，诸事顺心。",
