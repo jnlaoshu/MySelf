@@ -11,9 +11,8 @@
  *  - TITLES_URL: 标题库外链(JSON数组)，支持占位符 {lunar} {solar} {next}
  *  - BLESS_URL : 祝词库外链(JSON对象，键为节日名，值为文案)
  *  - SHOW_ALMANAC: 是否在顶部附加今日黄历详情(true/false，默认 true)
- *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 day)
+ *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 random)
  *
- * 更新：集成 wnCalendar 黄历接口 & 标题固定模式
   */
 
 (async () => {
@@ -591,7 +590,8 @@
   /* ========== 外链标题/祝词/黄历库 ========== */
   const args = parseArgs();
   const showAlmanac = toBool(args.SHOW_ALMANAC ?? args.show_almanac, true);
-  const titleMode = (args.TITLE_MODE ?? args.title_mode ?? "day").toString().toLowerCase() === "random" ? "random" : "day";
+    // 默认模式调整为 random，除非显式指定为 day
+  const titleMode = (args.TITLE_MODE ?? args.title_mode ?? "random").toString().toLowerCase() === "day" ? "day" : "random";
 
   const defaultTitles = [
     "距离放假，还要摸鱼多少天",
@@ -623,7 +623,7 @@
     showAlmanac ? fetchAlmanacDetail(tnow, lunarNow) : Promise.resolve(null)
   ]);
 
-  /* ========== 标题生成（支持占位符 + 固定模式） ========== */
+  /* ========== 标题生成（支持占位符 + 随机模式） ========== */
   const pickTitle = (nextName, daysToNext) => {
     try {
       if (daysToNext === 0 && titleMode !== 'random') return `今天是 ${nextName || '节日'}，enjoy`;
