@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.10.09 19:48
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:20
 
 /*
 [Script]
@@ -193,15 +193,25 @@ function getIP() {
   const { v4, v6 } = $network;
   let info = [];
   if (!v4 && !v6) {
-    info = ['网路可能切换', '请手动刷新以重新获取 IP'];
+    info = ['网络可能切换', '请手动刷新以重新获取 IP'];
   } else {
-    if (v4?.primaryAddress) info.push(`本机v4IP：${v4?.primaryAddress}`);
-    if (v6?.primaryAddress) info.push(`本机v6IP：${v6?.primaryAddress}`);
-    if (v4?.primaryRouter && getSSID()) info.push(`路由器IP：${v4?.primaryRouter}`);
-    /* if (v6?.primaryRouter && getSSID()) info.push(`路由器IP：${v6?.primaryRouter}`);*/
+    if (v4?.primaryAddress) info.push(`本机 IPv4：${v4?.primaryAddress}`);
+    if (v6?.primaryAddress) info.push(`本机 IPv6：${v6?.primaryAddress}`);
+    // 确保有 WiFi 连接且路由器地址存在时才显示
+    if (getSSID() && v4?.primaryRouter) {
+      info.push(`路由器 IP：${v4?.primaryRouter}`);
+    }
   }
   info = info.join("\n");
   return info + "\n";
+}
+
+function getCurrentTime() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -217,7 +227,7 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
     }
     const info = JSON.parse(response.data);
     $done({
-      title: getSSID() ?? getCellularInfo(),
+      title: `${getSSID() ?? getCellularInfo()} (${getCurrentTime()})`,
       content:
         getIP() +
         `现用节点：${info.query}\n` +
