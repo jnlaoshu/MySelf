@@ -1,12 +1,12 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 配置下载 URL: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# 更新时间: 2025.12.13 21:00
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 
+# 更新时间: 2025.12.14 17:30
 
-# 自动更新配置
+# 自动更新配置 (如需启用请取消注释)
 # auto_update:
-#     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-#     interval: 86400
-# 基础配置
+#   url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
+#   interval: 86400
+
+# --- 基础配置 ---
 ipv6: true
 http_port: 3080
 socks_port: 3090
@@ -14,36 +14,39 @@ allow_external_connections: true
 vif_only: true
 hide_vpn_icon: true
 
-# DNS 劫持
+# --- DNS 劫持 ---
 hijack_dns: 
   - '*:53'
 
-# 数据库 URL 配置
+# --- 数据库 URL 配置 ---
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
-# 延迟测试 URL 配置
+# --- 延迟测试 URL 配置 ---
 proxy_latency_test_url: https://www.google.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
-# 路由配置
+# --- 路由配置 ---
 compat_route: false
 include_all_networks: false
 include_apns: false
 include_cellular_services: false
 include_local_networks: false
 
-# DNS 配置
+# --- DNS 配置 ---
 dns:
   bootstrap:
-  - 223.5.5.5
-  - 119.29.29.29
+    - 223.5.5.5
+    - 119.29.29.29
+    - 2400:3200::1	
   upstreams:
     AdGuard:
-      - quic://dns.adguard-dns.com   
+      - quic://dns.adguard-dns.com
+      - https://dns.adguard-dns.com/dns-query	  
     China:
       - https://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
+      - https://dns.pub/dns-query	  
     Global:
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
@@ -51,87 +54,94 @@ dns:
     - regex:
         match: ^ad(s?)\.
         value: AdGuard
+    # 注意：使用 rule_set 分流 DNS 会增加内存开销，如遇卡顿可尝试注释下方 block
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
         value: China
     - wildcard:
         match: '*'
         value: Global        
-  hosts:
-
   public_ip_lookup_url: https://ifconfig.me/ip
 
-# 策略组配置
+# --- 策略组配置 ---
 policy_groups:
-- external:
-    name: 全部节点
-    type: select
-    urls:
-    - https://sub.store/download/collection/AllServer?target=Egern
-    icon: 🌹 
-- auto_test:
-    name: 香港节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇭🇰|香港|HK|Hong
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
-- auto_test:
-    name: 美国节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇺🇸|美国|US|States|American
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
-- auto_test:
-    name: 台湾节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇹🇼|台湾|TW|Tai
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
-- auto_test:
-    name: 日本节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇯🇵|日本|JP|Japan
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
-- auto_test:
-    name: 狮城节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇸🇬|新加坡|狮城|SG|Singapore
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
-- auto_test:
-    name: 韩国节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: 🇰🇷|韩国|KR|KOR|Korea
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
-- select:
-    name: 其他节点
-    policies:
-    - 全部节点
-    flatten: true
-    filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
-- select:
-    name: 自选策略
-    policies:
-    - 香港节点
-    - 美国节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
-    - DIRECT
-    icon: 😜
+  # 外部订阅源
+  - external:
+      name: 全部节点
+      type: select
+      urls:
+        - https://sub.store/download/collection/AllServer?target=Egern
+      icon: 🌹 
 
-- select:
+  # 自动测速分组 
+ - auto_test:
+      name: 香港节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇭🇰|香港|HK|Hong
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+ - auto_test:
+      name: 美国节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇺🇸|美国|US|States|American
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+ - auto_test:
+      name: 台湾节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇹🇼|台湾|TW|Tai
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+ - auto_test:
+      name: 日本节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇯🇵|日本|JP|Japan
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+ - auto_test:
+      name: 狮城节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇸🇬|新加坡|狮城|SG|Singapore
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+ - auto_test:
+      name: 韩国节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: 🇰🇷|韩国|KR|KOR|Korea
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+
+  # 筛选剩余节点
+  - select:
+      name: 其他节点
+      policies:
+        - 全部节点
+      flatten: true
+      filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
+      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
+  # 主手动切换策略
+  - select:
+      name: 自选策略
+      policies:
+        - 香港节点
+        - 美国节点
+        - 狮城节点
+        - 台湾节点
+        - 日本节点
+        - 韩国节点
+        - 其他节点
+        - DIRECT
+      icon: 😜
+
+  # 应用策略组
+  - select:
     name: AIGC
     policies:
     - 自选策略
@@ -227,16 +237,37 @@ policy_groups:
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
-    
 
-# 代理规则配置
+# --- 代理规则配置 ---
+# 规则匹配顺序非常重要，建议：去广告 -> 局域网/国内直连 -> 特定APP代理 -> 兜底代理
 rules:
-  - domain_regex:
-      match: ^ad\..*|^ads\..*
-      policy: REJECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
-      policy: REJECT
+# 1. 强制拒绝/拦截 (高优先级)
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
+    policy: REJECT
+- domain_regex:
+    match: ^ad\..*|^ads\..*|^advert\..*
+    policy: REJECT
+
+# 2. 本地网络直连
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
+    policy: DIRECT
+
+# 3. 国内流量直连
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
+    policy: DIRECT
+    interval: 86400	
+- domain_suffix:
+    match: '*.cn'
+    policy: DIRECT
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true
+
+# 4. 专有服务/应用代理
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
       policy: Apple      
@@ -291,33 +322,27 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
       policy: YouTubeMusic
+
+# 5. 剩余代理
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 自选策略
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
-      policy: DIRECT      
-  - domain_suffix:
-      match: '*.cn'
-      policy: DIRECT
-  - geoip:
-      match: CN
-      policy: DIRECT
-      no_resolve: true
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
-      policy: DIRECT
-      interval: 86400
+  
+# 6. 最终默认策略
   - default:
       policy: 自选策略
 
-# MITM 配置
+# --- MITM 配置 ---
 mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
+  # 建议添加 hostnames，虽然 modules 会覆盖，但作为 fallback 更好
+  hostnames:
+    - '*.google.com'
+    - '*.github.com'
 
-# 模块配置
+# --- 模块配置 ---
 modules:
   - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
     enabled: true
