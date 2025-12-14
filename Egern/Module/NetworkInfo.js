@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:20
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:35
 
 /*
 [Script]
@@ -176,10 +176,11 @@ function getCellularInfo() {
   if ($network['cellular-data']) {
     const carrierId = $network['cellular-data'].carrier;
     const radio = $network['cellular-data'].radio;
-    if ($network.wifi?.ssid == null && radio) {
+    // 移除 wifi 检查，确保任何时候都能获取运营商信息
+    if (radio) {
       cellularInfo = carrierNames[carrierId] ?
         `${carrierNames[carrierId]} | ${radioGeneration[radio]} - ${radio} ` :
-        `蜂窝数据 | ${radioGeneration[radio]} - ${radio}`;
+        `${radioGeneration[radio]} - ${radio}`;
     }
   }
   return cellularInfo;
@@ -192,16 +193,33 @@ function getSSID() {
 function getIP() {
   const { v4, v6 } = $network;
   let info = [];
-  if (!v4 && !v6) {
-    info = ['网络可能切换', '请手动刷新以重新获取 IP'];
+
+  // 在“本机 IPv4”上面一行显示运营商信息或WiFi名称
+  const ssid = getSSID();
+  if (ssid) {
+    info.push(`网络名称：${ssid}`);
   } else {
-    if (v4?.primaryAddress) info.push(`本机 IPv4：${v4?.primaryAddress}`);
-    if (v6?.primaryAddress) info.push(`本机 IPv6：${v6?.primaryAddress}`);
-    // 确保有 WiFi 连接且路由器地址存在时才显示
-    if (getSSID() && v4?.primaryRouter) {
-      info.push(`路由器 IP：${v4?.primaryRouter}`);
+    const carrier = getCellularInfo();
+    if (carrier) {
+      info.push(`运营商：${carrier}`);
+    } else {
+      info.push(`网络名称：未连接`);
     }
   }
+
+  if (!v4 && !v6) {
+    info.push('网络可能切换', '请手动刷新以重新获取 IP');
+  } else {
+    if (v4?.primaryAddress) info.push(`本机 IPv4：${v4?.primaryAddress}`);
+    
+    // 确保有 WiFi 连接且路由器地址存在时显示路由器 IP
+    if (ssid && v4?.primaryRouter) {
+      info.push(`路由器 IP：${v4?.primaryRouter}`);
+    }
+
+    if (v6?.primaryAddress) info.push(`本机 IPv6：${v6?.primaryAddress}`);
+  }
+  
   info = info.join("\n");
   return info + "\n";
 }
