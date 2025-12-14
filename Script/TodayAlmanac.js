@@ -1,6 +1,6 @@
 /**
  * 节日倒数（4行：法定 | 节气 | 民俗 | 国际）· 可外链标题/祝词库
- * 第1行：最近3个【法定节假日】：元旦/春节/清明/劳动/端午/中秋/国庆+成都义教段特定日期
+ * 第1行：最近3个【法定节假日】：元旦/春节/清明/劳动/端午/中秋/国庆+成都义教段学校特定日期
  * 第2行：最近3个【二十四节气】
  * 第3行：最近3个【传统民俗（非法定）】：除夕/元宵/龙抬头/七夕/中元/重阳/寒衣/下元/腊八/小年(南/北)…
  * 第4行：最近3个【国际/洋节】：情人节/母亲节/父亲节/万圣节/平安夜/圣诞节/感恩节(美) 等
@@ -415,7 +415,7 @@
     return out.sort((a,b) => new Date(a[1]) - new Date(b[1]));
   };
 
-  // 法定节假日（修复原代码逗号缺失问题）
+  // 法定节假日（含成都义教段学校特定日期）
   const legalFest = (year) => {
     return [
       ["元旦", fmtYMD(year,1,1)],
@@ -505,7 +505,7 @@
   const args = parseArgs();
   const defaultTitles = [
     "距离放假，还要摸鱼多少天",
-    "{lunar}","{solar}","{next}"
+    "{lunar}","{solar}"
   ];
   const defaultBless = {
     "元旦":"新岁启封，诸事顺心。",
@@ -540,8 +540,7 @@
       
       return raw
         .replaceAll("{lunar}", titleLunar)
-        .replaceAll("{solar}", titleSolar)
-        .replaceAll("{next}", nextName ? `下一个：${nextName}` : "");
+        .replaceAll("{solar}", titleSolar);
     } catch (e) {
       console.log(`生成标题失败: ${e.message}`);
       return `距离${nextName || '放假'}还有${daysToNext || '若干'}天`;
@@ -575,8 +574,8 @@
   const render3 = (a0, a1, a2, d0, d1, d2) => {
     const formatDay = (day) => day === 0 ? '' : `${day}天`;
     return d0 === 0
-      ? `今天：${a0[0]} | ${a1[0]}${formatDay(d1)} | ${a2[0]}${formatDay(d2)}`
-      : `${a0[0]}${formatDay(d0)} | ${a1[0]}${formatDay(d1)} | ${a2[0]}${formatDay(d2)}`;
+      ? `今天：${a0[0]} , ${a1[0]}${formatDay(d1)} , ${a2[0]}${formatDay(d2)}`
+      : `${a0[0]}${formatDay(d0)} , ${a1[0]}${formatDay(d1)} , ${a2[0]}${formatDay(d2)}`;
   };
 
   const lineLegal = render3(L3[0], L3[1], L3[2], dL0, dL1, dL2);
