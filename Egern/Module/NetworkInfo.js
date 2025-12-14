@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:48
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 20:55
 
 /*
 [Script]
@@ -13,8 +13,19 @@
 
 /**
  * 网络请求封装为 Promise
+ * Usage: httpMethod.get(option).then(response => { logger.log(data) }).catch(error => { logger.log(error) })
+ * Usage: httpMethod.post(option).then(response => { logger.log(data) }).catch(error => { logger.log(error) })
+ * response: { status, headers, data }
  */
 class httpMethod {
+  /**
+   * 回调函数
+   * @param {*} resolve 
+   * @param {*} reject 
+   * @param {*} error 
+   * @param {*} response 
+   * @param {*} data 
+   */
   static _httpRequestCallback(resolve, reject, error, response, data) {
     if (error) {
       reject(error);
@@ -23,6 +34,11 @@ class httpMethod {
     }
   }
 
+  /**
+   * HTTP GET
+   * @param {Object} option 选项
+   * @returns 
+   */
   static get(option = {}) {
     return new Promise((resolve, reject) => {
       $httpClient.get(option, (error, response, data) => {
@@ -31,6 +47,11 @@ class httpMethod {
     });
   }
 
+  /**
+   * HTTP POST
+   * @param {Object} option 选项
+   * @returns 
+   */
   static post(option = {}) {
     return new Promise((resolve, reject) => {
       $httpClient.post(option, (error, response, data) => {
@@ -42,29 +63,40 @@ class httpMethod {
 
 class loggerUtil {
   constructor() {
-    this.id = this.randomString();
-  }
-
-  randomString(e = 6) {
-    var t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678",
-      a = t.length,
-      n = "";
-    for (let i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
-    return n;
+    this.id = randomString();
   }
 
   log(message) {
-    console.log(`[${this.id}] [ LOG ] ${message}`);
+    message = `[${this.id}] [ LOG ] ${message}`;
+    console.log(message);
   }
 
   error(message) {
-    console.log(`[${this.id}] [ERROR] ${message}`);
+    message = `[${this.id}] [ERROR] ${message}`;
+    console.log(message);
   }
 }
 
 var logger = new loggerUtil();
 
+function randomString(e = 6) {
+  var t = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678",
+    a = t.length,
+    n = "";
+  for (i = 0; i < e; i++) n += t.charAt(Math.floor(Math.random() * a));
+  return n;
+}
+
+function getFlagEmoji(countryCode) {
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map((char) => 127397 + char.charCodeAt());
+  return String.fromCodePoint(...codePoints);
+}
+
 function loadCarrierNames() {
+  //整理逻辑:前三码相同->后两码相同运营商->剩下的
   return {
     //台湾运营商 Taiwan
     '466-11': '中華電信', '466-92': '中華電信',
@@ -95,29 +127,74 @@ function loadCarrierNames() {
     '310-160': 'T-Mobile', '310-200': 'T-Mobile', '310-210': 'T-Mobile', '310-220': 'T-Mobile', '310-230': 'T-Mobile', '310-240': 'T-Mobile', '310-250': 'T-Mobile', '310-260': 'T-Mobile', '310-270': 'T-Mobile', '310-300': 'T-Mobile', '310-310': 'T-Mobile', '310-660': 'T-Mobile', '310-800': 'T-Mobile', '311-660': 'T-Mobile', '311-882': 'T-Mobile', '311-490': 'T-Mobile', '312-530': 'T-Mobile', '311-870': 'T-Mobile', '311-880': 'T-Mobile',
     '310-004': 'Verizon', '310-010': 'Verizon', '310-012': 'Verizon', '310-013': 'Verizon', '311-110': 'Verizon', '311-270': 'Verizon', '311-271': 'Verizon', '311-272': 'Verizon', '311-273': 'Verizon', '311-274': 'Verizon', '311-275': 'Verizon', '311-276': 'Verizon', '311-277': 'Verizon', '311-278': 'Verizon', '311-279': 'Verizon', '311-280': 'Verizon', '311-281': 'Verizon', '311-282': 'Verizon', '311-283': 'Verizon', '311-284': 'Verizon', '311-285': 'Verizon', '311-286': 'Verizon', '311-287': 'Verizon', '311-288': 'Verizon', '311-289': 'Verizon', '311-390': 'Verizon', '311-480': 'Verizon', '311-481': 'Verizon', '311-482': 'Verizon', '311-483': 'Verizon', '311-484': 'Verizon', '311-485': 'Verizon', '311-486': 'Verizon', '311-487': 'Verizon', '311-488': 'Verizon', '311-489': 'Verizon', '310-590': 'Verizon', '310-890': 'Verizon', '310-910': 'Verizon',
     '310-120': 'Sprint',
+    '310-850': 'Aeris Comm. Inc.', '310-510': 'Airtel Wireless LLC', '312-090': 'Allied Wireless Communications Corporation', '310-710': 'Arctic Slope Telephone Association Cooperative Inc.', '311-440': 'Bluegrass Wireless LLC', '311-800': 'Bluegrass Wireless LLC', '311-810': 'Bluegrass Wireless LLC', '310-900': 'Cable & Communications Corp.', '311-590': 'California RSA No. 3 Limited Partnership', '311-500': 'Cambridge Telephone Company Inc.', '310-830': 'Caprock Cellular Ltd.', '312-270': 'Cellular Network Partnership LLC', '312-280': 'Cellular Network Partnership LLC', '310-360': 'Cellular Network Partnership LLC', '311-120': 'Choice Phone LLC', '310-480': 'Choice Phone LLC', '310-420': 'Cincinnati Bell Wireless LLC', '310-180': 'Cingular Wireless', '310-620': 'Coleman County Telco /Trans TX', '310-06': 'Consolidated Telcom', '310-60': 'Consolidated Telcom', '310-700': 'Cross Valliant Cellular Partnership', '312-030': 'Cross Wireless Telephone Co.', '311-140': 'Cross Wireless Telephone Co.', '312-040': 'Custer Telephone Cooperative Inc.', '310-440': 'Dobson Cellular Systems', '310-990': 'E.N.M.R. Telephone Coop.', '312-120': 'East Kentucky Network LLC', '312-130': 'East Kentucky Network LLC', '310-750': 'East Kentucky Network LLC', '310-090': 'Edge Wireless LLC', '310-610': 'Elkhart TelCo. / Epic Touch Co.', '311-311': 'Farmers', '311-460': 'Fisher Wireless Services Inc.', '311-370': 'GCI Communication Corp.', '310-430': 'GCI Communication Corp.', '310-920': 'Get Mobile Inc.', '311-340': 'Illinois Valley Cellular RSA 2 Partnership', '312-170': 'Iowa RSA No. 2 Limited Partnership', '311-410': 'Iowa RSA No. 2 Limited Partnership', '310-770': 'Iowa Wireless Services LLC', '310-650': 'Jasper', '310-870': 'Kaplan Telephone Company Inc.', '312-180': 'Keystone Wireless LLC', '310-690': 'Keystone Wireless LLC', '311-310': 'Lamar County Cellular', '310-016': 'Leap Wireless International Inc.', '310-040': 'Matanuska Tel. Assn. Inc.', '310-780': 'Message Express Co. / Airlink PCS', '311-330': 'Michigan Wireless LLC', '310-400': 'Minnesota South. Wirel. Co. / Hickory', '311-010': 'Missouri RSA No 5 Partnership', '312-010': 'Missouri RSA No 5 Partnership', '311-020': 'Missouri RSA No 5 Partnership', '312-220': 'Missouri RSA No 5 Partnership', '311-920': 'Missouri RSA No 5 Partnership', '310-350': 'Mohave Cellular LP', '310-570': 'MTPCS LLC', '310-290': 'NEP Cellcorp Inc.', '310-34': 'Nevada Wireless LLC', '310-600': 'New-Cell Inc.', '311-300': 'Nexus Communications Inc.', '310-130': 'North Carolina RSA 3 Cellular Tel. Co.', '312-230': 'North Dakota Network Company', '311-610': 'North Dakota Network Company', '310-450': 'Northeast Colorado Cellular Inc.', '311-710': 'Northeast Wireless Networks LLC', '310-011': 'Northstar', '310-670': 'Northstar', '311-420': 'Northwest Missouri Cellular Limited Partnership', '310-760': 'Panhandle Telephone Cooperative Inc.', '310-580': 'PCS ONE', '311-170': 'PetroCom', '311-670': 'Pine Belt Cellular, Inc.', '310-100': 'Plateau Telecommunications Inc.', '310-940': 'Poka Lambro Telco Ltd.', '310-500': 'Public Service Cellular Inc.', '312-160': 'RSA 1 Limited Partnership', '311-430': 'RSA 1 Limited Partnership', '311-350': 'Sagebrush Cellular Inc.', '310-46': 'SIMMETRY', '311-260': 'SLO Cellular Inc / Cellular One of San Luis', '310-320': 'Smith Bagley Inc.', '316-011': 'Southern Communications Services Inc.', '310-740': 'Telemetrix Inc.', '310-14': 'Testing', '310-860': 'Texas RSA 15B2 Limited Partnership', '311-050': 'Thumb Cellular Limited Partnership', '311-830': 'Thumb Cellular Limited Partnership', '310-460': 'TMP Corporation', '310-490': 'Triton PCS', '312-290': 'Uintah Basin Electronics Telecommunications Inc.', '311-860': 'Uintah Basin Electronics Telecommunications Inc.', '310-960': 'Uintah Basin Electronics Telecommunications Inc.', '310-020': 'Union Telephone Co.', '311-220': 'United States Cellular Corp.', '310-730': 'United States Cellular Corp.', '311-650': 'United Wireless Communications Inc.', '310-003': 'Unknown', '310-15': 'Unknown', '310-23': 'Unknown', '310-24': 'Unknown', '310-25': 'Unknown', '310-26': 'Unknown', '310-190': 'Unknown', '310-950': 'Unknown', '310-38': 'USA 3650 AT&T', '310-999': 'Various Networks', '310-520': 'VeriSign', '310-530': 'West Virginia Wireless', '310-340': 'Westlink Communications, LLC', '311-070': 'Wisconsin RSA #7 Limited Partnership', '310-390': 'Yorkville Telephone Cooperative',
+    //英國電信業者 UK
+    '234-08': 'BT OnePhone UK', 
+    '234-02': 'O2-UK', '234-10': 'O2-UK', '234-11': 'O2-UK',
+    '234-15': 'vodafone UK', 
+    '234-20': '3 UK', 
+    '234-30': 'EE', '234-31': 'EE', '234-32': 'EE', '234-33': 'EE', '234-34': 'EE',
+    '234-38': 'Virgin', 
+    '234-50': 'JT', 
+    '234-55': 'Sure', 
+    '234-58': 'Manx Telecom',
+    //法國電信業者 FR
+    '208-01': 'Orange', '208-02': 'Orange',
+    '208-15': 'Free', '208-16': 'Free',
+    '208-20': 'Bouygues', '208-88': 'Bouygues',
+    //菲律賓電信業者 Philippine
+    '515-01': 'Islacom', '515-02': 'Globe', '515-03': 'Smart', '515-04': 'Sun', '515-08': 'Next Mobile', '515-18': 'Cure', '515-24': 'ABS-CBN',
+    //越南電信業者 Vietnam
+    '452-01': 'Mobifone', '452-02': 'VinaPhone', '452-03': 'S-Fone', '452-04': 'Viettel', '452-05': 'VietNamobile', '452-06': 'E-mobile', '452-07': 'Gmobile',
+    //馬來西亞電信業者 Malaysia
+    '502-10': 'CelcomDigi', '502-13': 'CelcomDigi', '502-19': 'CelcomDigi',
+    '502-150': 'Tune Talk',
+    '502-17': 'Maxis',
   };
 }
 
-//获取手机运营商信息
+/**
+ * 获取本地运营商名称（仅名称）
+ */
+function getLocalCarrier() {
+  const carrierNames = loadCarrierNames();
+  const cellularData = $network['cellular-data'];
+  if (cellularData && cellularData.carrier) {
+    const carrierId = cellularData.carrier;
+    if (carrierNames[carrierId]) {
+      return carrierNames[carrierId];
+    }
+  }
+  return '';
+}
+
+//获取手机运营商信息(通过内置的 API 调用设备信息)
 function getCellularInfo() {
   const radioGeneration = {
-    'GPRS': '2.5G', 'CDMA1x': '2.5G', 'EDGE': '2.75G',
-    'WCDMA': '3G', 'HSDPA': '3.5G', 'CDMAEVDORev0': '3.5G', 'CDMAEVDORevA': '3.5G',
-    'CDMAEVDORevB': '3.75G', 'HSUPA': '3.75G', 'eHRPD': '3.9G',
-    'LTE': '4G', 'NRNSA': '5G', 'NR': '5G',
+    'GPRS': '2.5G',
+    'CDMA1x': '2.5G',
+    'EDGE': '2.75G',
+    'WCDMA': '3G',
+    'HSDPA': '3.5G',
+    'CDMAEVDORev0': '3.5G',
+    'CDMAEVDORevA': '3.5G',
+    'CDMAEVDORevB': '3.75G',
+    'HSUPA': '3.75G',
+    'eHRPD': '3.9G',
+    'LTE': '4G',
+    'NRNSA': '5G',
+    'NR': '5G',
   };
 
   let cellularInfo = '';
   const carrierNames = loadCarrierNames();
-  // 使用 ?. 操作符安全访问
   if ($network['cellular-data']) {
     const carrierId = $network['cellular-data'].carrier;
     const radio = $network['cellular-data'].radio;
-    // 如果没有连接 WiFi 且有蜂窝网络信号
-    if (!$network.wifi?.ssid && radio) {
+    if ($network.wifi?.ssid == null && radio) {
       cellularInfo = carrierNames[carrierId] ?
-        `${carrierNames[carrierId]} | ${radioGeneration[radio] || radio}` :
-        `蜂窝数据 | ${radioGeneration[radio] || radio}`;
+        `${carrierNames[carrierId]} | ${radioGeneration[radio]} - ${radio} ` :
+        `蜂窝数据 | ${radioGeneration[radio]} - ${radio}`;
     }
   }
   return cellularInfo;
@@ -128,74 +205,87 @@ function getSSID() {
 }
 
 function getIP() {
-  const v4 = $network.v4;
-  const v6 = $network.v6;
-  
+  const { v4, v6 } = $network;
   let info = [];
-  
   if (!v4 && !v6) {
     info = ['网络可能切换', '请手动刷新以重新获取 IP'];
   } else {
     if (v4?.primaryAddress) info.push(`本机 IPv4：${v4?.primaryAddress}`);
     if (v6?.primaryAddress) info.push(`本机 IPv6：${v6?.primaryAddress}`);
-    
-    // 逻辑优化：只要有 v4 且有路由器地址，就尝试显示
-    // 通常只有 WiFi 下 v4.primaryRouter 才有值
-    if (v4?.primaryRouter) {
+    // 确保有 WiFi 连接且路由器地址存在时才显示
+    if (getSSID() && v4?.primaryRouter) {
       info.push(`路由器 IP：${v4?.primaryRouter}`);
     }
   }
-  return info.join("\n") + "\n";
+  info = info.join("\n");
+  return info + "\n";
 }
 
 function getCurrentTime() {
   const now = new Date();
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
-  return `${hours}:${minutes}`;
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
 }
 
 /**
  * 获取 IP 信息
- * @param {*} retryTimes 重试次数
- * @param {*} retryInterval 重试间隔 ms
+ * @param {*} retryTimes // 重试次数
+ * @param {*} retryInterval // 重试间隔 ms
  */
 function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
   // 发送网络请求
   httpMethod.get('http://ip-api.com/json').then(response => {
     if (Number(response.status) > 300) {
-      throw new Error(`Request error: ${response.status}\n${response.data}`);
+      throw new Error(`Request error with http status code: ${response.status}\n${response.data}`);
     }
     const info = JSON.parse(response.data);
     
-    // 构造 Title：ISP | 网络名称 (时间)
-    const currentNetwork = getSSID() ?? getCellularInfo();
-    const currentISP = info.isp || '未知运营商';
-    const displayTitle = `${currentISP} | ${currentNetwork} (${getCurrentTime()})`;
+    // 构建标题
+    const ssid = getSSID();
+    const localCarrier = getLocalCarrier();
+    let titleContent = '';
+    
+    if (ssid) {
+      // WiFi 模式：运营商 | SSID
+      titleContent = localCarrier ? `${localCarrier} | ${ssid}` : ssid;
+    } else {
+      // 蜂窝模式：保持原有的 getCellularInfo 逻辑 (通常是 运营商 | 4G/5G)
+      titleContent = getCellularInfo();
+    }
 
     $done({
-      title: displayTitle,
+      title: `${titleContent} (${getCurrentTime()})`,
       content:
         getIP() +
         `现用节点：${info.query}\n` +
         `节点运营：${info.isp}\n` +
         `节点位置：${info.country} - ${info.city}`,
-      icon: getSSID() ? 'wifi' : 'simcard',
-      'icon-color': getSSID() ? '#005CAF' : '#F9BF45',
+      icon: ssid ? 'wifi' : 'simcard',
+      'icon-color': ssid ? '#005CAF' : '#F9BF45',
     });
   }).catch(error => {
+    // 网络切换
     if (String(error).startsWith("Network changed")) {
-      // 这里的清理其实对于当前执行流意义不大，但在重试逻辑中有用
+      if (getSSID()) {
+        $network.wifi = undefined;
+        $network.v4 = undefined;
+        $network.v6 = undefined;
+      }
     }
-    
+    // 判断是否还有重试机会
     if (retryTimes > 0) {
-      logger.error(`Retry... Remaining: ${retryTimes}`);
+      logger.error(error);
+      logger.log(`Retry after ${retryInterval}ms`);
+      // retryInterval 时间后再次执行该函数
       setTimeout(() => getNetworkInfo(--retryTimes, retryInterval), retryInterval);
     } else {
+      // 打印日志
       logger.error(error);
       $done({
-        title: '获取失败',
-        content: '无法连接到 API，请检查网络\n' + error,
+        title: '发生错误',
+        content: '无法获取当前网络信息\n请检查网络状态后重试',
         icon: 'wifi.exclamationmark',
         'icon-color': '#CB1B45',
       });
@@ -204,23 +294,28 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
 }
 
 /**
- * 程序入口
+ * 主要逻辑，程序入口
  */
 (() => {
   const retryTimes = 5;
   const retryInterval = 1000;
-  
-  // 脚本超时保护
+  // Surge 脚本超时时间设置为 30s
+  // 提前 500ms 手动结束进程
+  const surgeMaxTimeout = 29500;
+  // 脚本超时时间
+  // retryTimes * 5000 为每次网络请求超时时间（Surge 网络请求超时为 5s）
   const scriptTimeout = retryTimes * 5000 + retryTimes * retryInterval;
   setTimeout(() => {
+    logger.log("Script timeout");
     $done({
       title: "请求超时",
-      content: "连接 API 超时，请检查网络。",
+      content: "连接请求超时\n请检查网络状态后重试",
       icon: 'wifi.exclamationmark',
       'icon-color': '#CB1B45',
     });
-  }, 29000); // Surge 默认 30s，设置 29s 提前返回
+  }, scriptTimeout > surgeMaxTimeout ? surgeMaxTimeout : scriptTimeout);
 
+  // 获取网络信息
   logger.log("Script start");
   getNetworkInfo(retryTimes, retryInterval);
 })();
