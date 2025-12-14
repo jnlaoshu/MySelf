@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 
-# 更新时间: 2025.12.14 17:30
+# 更新时间: 2025.12.14 17:35
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -74,57 +74,57 @@ policy_groups:
       icon: 🌹 
 
   # 自动测速分组 
- - auto_test:
-      name: 香港节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇭🇰|香港|HK|Hong
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
- - auto_test:
-      name: 美国节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇺🇸|美国|US|States|American
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
- - auto_test:
-      name: 台湾节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇹🇼|台湾|TW|Tai
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
- - auto_test:
-      name: 日本节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇯🇵|日本|JP|Japan
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
- - auto_test:
-      name: 狮城节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇸🇬|新加坡|狮城|SG|Singapore
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
- - auto_test:
-      name: 韩国节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: 🇰🇷|韩国|KR|KOR|Korea
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+- auto_test:
+    name: 香港节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇭🇰|香港|HK|Hong
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+- auto_test:
+    name: 美国节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇺🇸|美国|US|States|American
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+- auto_test:
+    name: 台湾节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇹🇼|台湾|TW|Tai
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+- auto_test:
+    name: 日本节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇯🇵|日本|JP|Japan
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+- auto_test:
+    name: 狮城节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇸🇬|新加坡|狮城|SG|Singapore
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+- auto_test:
+    name: 韩国节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: 🇰🇷|韩国|KR|KOR|Korea
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
   # 筛选剩余节点
-  - select:
-      name: 其他节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+- select:
+    name: 其他节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 
   # 主手动切换策略
   - select:
