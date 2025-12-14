@@ -2,7 +2,7 @@
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
  * 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
- * 更新：2025.12.14 21:30
+ * 更新：2025.12.14 21:40
  */
 
 /*
@@ -15,30 +15,25 @@
 
 // 工具类：HTTP 请求
 const http = {
-  get: (url) => new Promise((resolve, reject) => {
+  get: (url) => new Promise((resolve) => {
     $httpClient.get({ url }, (err, resp, data) => {
-      if (err) reject(err);
+      // 即使错误也 resolve，避免 Promise.all 失败，后续逻辑判空处理
+      if (err) resolve(null);
       else resolve(data);
     });
   })
 };
 
-// 工具类：日志
-const logger = {
-  log: (msg) => console.log(`[NetworkInfo] ${msg}`),
-  error: (msg) => console.log(`[NetworkInfo] [ERROR] ${msg}`)
-};
-
-// 核心逻辑：格式化运营商名称 (源自 1.js)
+// 工具类：格式化 ISP 名称
 function fmtISP(isp) {
   const raw = String(isp || "").trim();
   if (!raw) return "未知运营商";
   
-  // 移除常见干扰词
+  // 移除干扰词并标准化
   const norm = raw.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
   const s = norm.toLowerCase();
   
-  // 匹配常见国内运营商
+  // 匹配常见运营商
   if (/(^|[\s-])(cmcc|cmnet|cmi)\b|china\s*mobile|移动/.test(s)) return "中国移动";
   if (/(^|[\s-])(chinanet|china\s*telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
   if (/(^|[\s-])(china\s*unicom|cncgroup|netcom)\b|联通/.test(s)) return "中国联通";
@@ -48,109 +43,94 @@ function fmtISP(isp) {
   return raw;
 }
 
-// 核心逻辑：网络制式转换 (源自 1.js)
+// 工具类：获取网络制式
 function getRadioType(radio) {
   if (!radio) return "";
-  const x = String(radio).toUpperCase().replace(/\s+/g, "");
   const map = {
     "GPRS": "2.5G", "CDMA1X": "2.5G", "EDGE": "2.75G",
-    "WCDMA": "3G", "HSDPA": "3.5G", "HSUPA": "3.75G", "CDMAEVD0REV0": "3.5G", "CDMAEVD0REVA": "3.5G", "CDMAEVD0REVB": "3.75G", "EHRPD": "3.9G",
-    "LTE": "4G", "LTEA": "4G", "LTE+": "4G", "LTEPLUS": "4G",
+    "WCDMA": "3G", "HSDPA": "3.5G", "HSUPA": "3.75G", 
+    "LTE": "4G", "LTEA": "4G", "LTE+": "4G", 
     "NRNSA": "5G", "NR": "5G", "NR5G": "5G"
   };
-  return map[x] || x;
-}
-
-// 核心逻辑：获取网络状态
-function getNetworkState() {
-  const n = $network || {};
-  const ssid = n.wifi?.ssid;
-  const radio = n["cellular-data"]?.radio || n.cellular?.radio;
-  
-  return {
-    ssid,
-    radio,
-    radioType: getRadioType(radio),
-    v4: n.v4?.primaryAddress,
-    v6: n.v6?.primaryAddress,
-    router: n.v4?.primaryRouter
-  };
-}
-
-// 核心逻辑：获取当前时间
-function getCurrentTime() {
-  const now = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  return map[radio.toUpperCase().replace(/\s+/g, "")] || radio;
 }
 
 // 主逻辑
 (async () => {
   try {
-    const net = getNetworkState();
+    const n = $network || {};
+    const ssid = n.wifi?.ssid;
+    const radio = n["cellular-data"]?.radio || n.cellular?.radio;
+    const v4 = n.v4?.primaryAddress; // 内网 IP
+    const v6 = n.v6?.primaryAddress;
     
-    // 并行请求：
-    // 1. ipip.net 获取本地 ISP (用于标题替换 Wi-Fi/蜂窝) - 源自 1.js 逻辑
-    // 2. ip-api.com 获取详细节点信息 (用于面板内容)
-    const pLocal = http.get('https://myip.ipip.net/json').then(data => {
-      try { return JSON.parse(data).data.location; } catch { return []; }
-    }).catch(() => []);
+    // 并行请求：本地信息 (myip.ipip.net) 和 节点信息 (ip-api.com)
+    // myip.ipip.net 返回结构: { "ret": "ok", "data": { "ip": "...", "location": ["中国", "xx省", "xx市", "", "运营商"] } }
+    const pLocal = http.get('https://myip.ipip.net/json').then(d => {
+      try { return JSON.parse(d).data || {}; } catch { return {}; }
+    });
     
-    const pNode = http.get('http://ip-api.com/json?lang=zh-CN').then(data => {
-      try { return JSON.parse(data); } catch { return {}; }
-    }).catch(() => ({}));
+    const pNode = http.get('http://ip-api.com/json?lang=zh-CN').then(d => {
+      try { return JSON.parse(d) || {}; } catch { return {}; }
+    });
 
-    // 等待请求完成
-    const [locArr, nodeInfo] = await Promise.all([pLocal, pNode]);
+    const [localInfo, nodeInfo] = await Promise.all([pLocal, pNode]);
 
-    // 解析本地 ISP (优先取 ipip 返回的运营商字段，通常在索引 4 或 3)
+    // 1. 处理运营商名称 (用于标题)
+    // 优先取 ipip 的 location 数组最后一位，通常是运营商
     let rawISP = "";
-    if (locArr && locArr.length) {
-       rawISP = locArr[4] || locArr[3] || "";
+    if (localInfo.location && localInfo.location.length) {
+       rawISP = localInfo.location[localInfo.location.length - 1]; // 取数组最后一位作为ISP
     }
-    // 如果本地获取失败，回退到节点 ISP
+    // 回退到 ip-api
     if (!rawISP && nodeInfo.isp) rawISP = nodeInfo.isp;
-    
     const displayISP = fmtISP(rawISP);
 
-    // 构建标题：使用 ISP 名称替换原有的 Wi-Fi/蜂窝文本
-    let title = "";
-    if (net.ssid) {
-      // 模式: 运营商 | Wi-Fi名 (原: Wi-Fi | SSID)
-      title = `${displayISP} | ${net.ssid}`;
-    } else if (net.radio) {
-      // 模式: 运营商 | 5G (原: 蜂窝网络 | 5G)
-      title = `${displayISP} | ${net.radioType || net.radio}`;
+    // 2. 构建标题
+    let title = `${displayISP} | `;
+    if (ssid) title += ssid;
+    else if (radio) title += getRadioType(radio);
+    else title += "未连接";
+
+    // 3. 构建内容
+    let content = [];
+    
+    // 内网信息
+    if (v4) content.push(`内网 IPv4：${v4}`);
+    if (v6) content.push(`内网 IPv6：${v6}`);
+    
+    // 本地公网信息 (新增需求：整合1.js逻辑，显示在节点上方)
+    if (localInfo.ip) {
+      const locStr = localInfo.location ? localInfo.location.slice(0, 3).join('') : ''; // 仅取国家省市
+      content.push(`本地 IPv4：${localInfo.ip} ${locStr ? `(${locStr})` : ''}`);
     } else {
-      title = `${displayISP} | 未连接`;
+      content.push(`本地 IPv4：检测失败`);
     }
 
-    // 构建内容
-    let content = [];
-    if (net.v4) content.push(`本机 IPv4：${net.v4}`);
-    if (net.v6) content.push(`本机 IPv6：${net.v6}`);
-    if (net.ssid && net.router) content.push(`路由器 IP：${net.router}`);
-    
+    // 节点信息
     if (nodeInfo.query) {
       content.push(`现用节点：${nodeInfo.query}`);
-      content.push(`节点运营：${nodeInfo.isp || '-'}`);
-      content.push(`节点位置：${nodeInfo.country || '-'} - ${nodeInfo.city || '-'}`);
+      content.push(`节点位置：${nodeInfo.country || ''} ${nodeInfo.city || ''} - ${nodeInfo.isp || ''}`);
     } else {
-      content.push("节点信息获取失败");
+      content.push(`现用节点：检测失败`);
     }
 
+    // 4. 输出
+    const now = new Date();
+    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    
     $done({
-      title: `${title} (${getCurrentTime()})`,
+      title: `${title} (${timeStr})`,
       content: content.join("\n"),
-      icon: net.ssid ? 'wifi' : 'simcard',
-      'icon-color': net.ssid ? '#005CAF' : '#F9BF45'
+      icon: ssid ? 'wifi' : 'simcard',
+      'icon-color': ssid ? '#005CAF' : '#F9BF45'
     });
 
   } catch (err) {
-    logger.error(err);
+    console.log(`[NetworkInfo Error] ${err}`);
     $done({
-      title: '发生错误',
-      content: '无法获取网络信息，请检查网络\n' + String(err),
+      title: '信息获取失败',
+      content: '请检查网络连接或脚本配置',
       icon: 'exclamationmark.triangle',
       'icon-color': '#CB1B45'
     });
