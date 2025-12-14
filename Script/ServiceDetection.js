@@ -16,7 +16,7 @@ const CONSTS = Object.freeze({
 // 模块分类 · 语言包
 const SD_STR = {
   "zh-Hans": {
-    panelTitle: "服务检测",
+    panelTitle: "流媒体/AI服务解锁检测",
     runAt: "检测时间",
     policy: "节点策略",
     unlocked: "已解锁",
@@ -31,7 +31,7 @@ const SD_STR = {
     region: "地区"
   },
   "zh-Hant": {
-    panelTitle: "服務檢測",
+    panelTitle: "流媒體/AI服務解鎖偵測",
     runAt: "檢測時間",
     policy: "節點策略",
     unlocked: "已解鎖",
