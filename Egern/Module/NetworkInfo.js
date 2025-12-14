@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 21:00
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 21:10
 
 /*
 [Script]
@@ -248,8 +248,8 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
     let titleContent = '';
     
     if (ssid) {
-      // WiFi 模式：运营商 | SSID
-      titleContent = localCarrier ? `${localCarrier} | ${ssid}` : ssid;
+      // WiFi 模式：运营商 | Wi-Fi | SSID
+      titleContent = localCarrier ? `${localCarrier} | Wi-Fi | ${ssid}` : `Wi-Fi | ${ssid}`;
     } else {
       // 蜂窝模式：保持原有的 getCellularInfo 逻辑 (通常是 运营商 | 4G/5G)
       titleContent = getCellularInfo();
