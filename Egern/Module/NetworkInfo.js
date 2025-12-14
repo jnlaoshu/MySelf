@@ -1,7 +1,7 @@
 //# 网络信息
 //# 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 //# 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
-//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 21:10
+//# 𝐔𝐩𝐝𝐚𝐭𝐞：2025.12.14 21:20
 
 /*
 [Script]
@@ -95,6 +95,41 @@ function getFlagEmoji(countryCode) {
   return String.fromCodePoint(...codePoints);
 }
 
+// 移植自 1.js (ByteValley) 的运营商格式化逻辑
+function fmtISP(isp, country) {
+  const raw = String(isp || "").trim();
+  if (!raw) return "";
+  // 简单判断是否为中国大陆 IP (IP-API 返回 China)
+  const isMainland = country === "China" || country === "中国"; 
+  if (!isMainland) return raw;
+
+  const norm = raw.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
+  const s = norm.toLowerCase();
+  if (/(^|[\s-])(cmcc|cmnet|cmi)\b/.test(s) || /china\s*mobile/.test(s) || /移动/.test(norm)) return "中国移动";
+  if (/(^|[\s-])(chinanet|china\s*telecom|ctcc|ct)\b/.test(s) || /电信/.test(norm)) return "中国电信";
+  if (/(^|[\s-])(china\s*unicom|cncgroup|netcom)\b/.test(s) || /联通/.test(norm)) return "中国联通";
+  if (/(^|[\s-])(cbn|china\s*broadcast)/.test(s) || /广电/.test(norm)) return "中国广电";
+  if ((/cernet|china\s*education/).test(s) || /教育网/.test(norm)) return "中国教育网";
+  if (/^中国(移动|联通|电信|广电)$/.test(norm)) return norm;
+  return raw;
+}
+
+const radioGeneration = {
+  'GPRS': '2.5G',
+  'CDMA1x': '2.5G',
+  'EDGE': '2.75G',
+  'WCDMA': '3G',
+  'HSDPA': '3.5G',
+  'CDMAEVDORev0': '3.5G',
+  'CDMAEVDORevA': '3.5G',
+  'CDMAEVDORevB': '3.75G',
+  'HSUPA': '3.75G',
+  'eHRPD': '3.9G',
+  'LTE': '4G',
+  'NRNSA': '5G',
+  'NR': '5G',
+};
+
 function loadCarrierNames() {
   //整理逻辑:前三码相同->后两码相同运营商->剩下的
   return {
@@ -170,22 +205,6 @@ function getLocalCarrier() {
 
 //获取手机运营商信息(通过内置的 API 调用设备信息)
 function getCellularInfo() {
-  const radioGeneration = {
-    'GPRS': '2.5G',
-    'CDMA1x': '2.5G',
-    'EDGE': '2.75G',
-    'WCDMA': '3G',
-    'HSDPA': '3.5G',
-    'CDMAEVDORev0': '3.5G',
-    'CDMAEVDORevA': '3.5G',
-    'CDMAEVDORevB': '3.75G',
-    'HSUPA': '3.75G',
-    'eHRPD': '3.9G',
-    'LTE': '4G',
-    'NRNSA': '5G',
-    'NR': '5G',
-  };
-
   let cellularInfo = '';
   const carrierNames = loadCarrierNames();
   if ($network['cellular-data']) {
@@ -242,17 +261,24 @@ function getNetworkInfo(retryTimes = 5, retryInterval = 1000) {
     }
     const info = JSON.parse(response.data);
     
+    // 引入 1.js 的运营商格式化逻辑
+    const ispName = fmtISP(info.isp, info.country);
+
     // 构建标题
     const ssid = getSSID();
     const localCarrier = getLocalCarrier();
     let titleContent = '';
     
     if (ssid) {
-      // WiFi 模式：运营商 | Wi-Fi | SSID
-      titleContent = localCarrier ? `${localCarrier} | Wi-Fi | ${ssid}` : `Wi-Fi | ${ssid}`;
+      // WiFi 模式：用格式化后的 ISP 替换原有的 "Wi-Fi" 文本
+      // 格式：SIM运营商(可选) | 宽带运营商 | SSID
+      titleContent = localCarrier ? `${localCarrier} | ${ispName} | ${ssid}` : `${ispName} | ${ssid}`;
     } else {
-      // 蜂窝模式：保持原有的 getCellularInfo 逻辑 (通常是 运营商 | 4G/5G)
-      titleContent = getCellularInfo();
+      // 蜂窝模式：用格式化后的 ISP 替换原有的 "蜂窝数据" 文本
+      // 通常情况下，Cellular 模式下 info.isp 即为移动运营商，与 SIM 运营商一致
+      const radio = $network['cellular-data']?.radio;
+      const radioStr = radioGeneration[radio] || radio || 'Cellular';
+      titleContent = `${ispName} | ${radioStr}`;
     }
 
     $done({
