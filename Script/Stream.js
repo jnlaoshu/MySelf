@@ -662,11 +662,11 @@ function maybeTify(content) {
     runServiceChecks().catch(() => [])
   ]);
 
+  const currentTime = now();
   const parts = [];
-  // 仅显示时间和节点策略作为头部信息，不显示IP
-  parts.push(`${t("runAt")}: ${now()}`);
+  // 仅显示节点策略，时间已移至标题
   if (policyData) parts.push(`${t("policy")}: ${policyData}`);
-  parts.push(""); // 留白
+  if (policyData) parts.push(""); // 如果有策略名，增加留白
   
   if (sdLines.length) parts.push(...sdLines);
   else parts.push("无服务检测配置或检测失败");
@@ -677,7 +677,7 @@ function maybeTify(content) {
   }
 
   $done({
-    title: t("panelTitle"),
+    title: `${t("panelTitle")} (${currentTime})`,
     content: maybeTify(parts.join("\n")),
     icon: ICON_NAME,
     "icon-color": ICON_COLOR
