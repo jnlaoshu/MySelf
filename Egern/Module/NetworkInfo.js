@@ -2,7 +2,7 @@
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
  * 𝐅𝐫𝐨𝐦：https://github.com/Nebulosa-Cat/Surge/blob/main/Panel/Network-Info/net-info-panel.js
- * 更新：2025.12.14 21:40
+ * 更新：2025/12/14 21:55
  */
 
 /*
@@ -13,38 +13,39 @@
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info,update-interval=1
 */
 
-// 工具类：HTTP 请求
+// 工具类：HTTP 请求 (自动处理 JSON 解析与容错)
 const http = {
   get: (url) => new Promise((resolve) => {
     $httpClient.get({ url }, (err, resp, data) => {
-      // 即使错误也 resolve，避免 Promise.all 失败，后续逻辑判空处理
-      if (err) resolve(null);
-      else resolve(data);
+      try {
+        if (err) return resolve({});
+        const json = JSON.parse(data);
+        // 兼容 ipip.net 的嵌套结构 (json.data) 和普通结构
+        resolve(json.data || json); 
+      } catch {
+        resolve({});
+      }
     });
   })
 };
 
 // 工具类：格式化 ISP 名称
-function fmtISP(isp) {
-  const raw = String(isp || "").trim();
-  if (!raw) return "未知运营商";
+const fmtISP = (isp) => {
+  if (!isp) return "未知运营商";
+  const s = isp.toLowerCase();
+  // 移除干扰词
+  const raw = isp.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
   
-  // 移除干扰词并标准化
-  const norm = raw.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
-  const s = norm.toLowerCase();
-  
-  // 匹配常见运营商
-  if (/(^|[\s-])(cmcc|cmnet|cmi)\b|china\s*mobile|移动/.test(s)) return "中国移动";
-  if (/(^|[\s-])(chinanet|china\s*telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
-  if (/(^|[\s-])(china\s*unicom|cncgroup|netcom)\b|联通/.test(s)) return "中国联通";
-  if (/(^|[\s-])(cbn|china\s*broadcast)|广电/.test(s)) return "中国广电";
-  if (/^中国(移动|联通|电信|广电)$/.test(norm)) return norm;
+  if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
+  if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
+  if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
+  if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
   
   return raw;
-}
+};
 
 // 工具类：获取网络制式
-function getRadioType(radio) {
+const getRadioType = (radio) => {
   if (!radio) return "";
   const map = {
     "GPRS": "2.5G", "CDMA1X": "2.5G", "EDGE": "2.75G",
@@ -53,55 +54,53 @@ function getRadioType(radio) {
     "NRNSA": "5G", "NR": "5G", "NR5G": "5G"
   };
   return map[radio.toUpperCase().replace(/\s+/g, "")] || radio;
-}
+};
 
 // 主逻辑
 (async () => {
   try {
     const n = $network || {};
-    const ssid = n.wifi?.ssid;
-    const radio = n["cellular-data"]?.radio || n.cellular?.radio;
-    const v4 = n.v4?.primaryAddress; // 内网 IP
-    const v6 = n.v6?.primaryAddress;
+    const v4 = n.v4 || {};
+    const v6 = n.v6 || {};
+    const wifi = n.wifi || {};
     
-    // 并行请求：本地信息 (myip.ipip.net) 和 节点信息 (ip-api.com)
-    // myip.ipip.net 返回结构: { "ret": "ok", "data": { "ip": "...", "location": ["中国", "xx省", "xx市", "", "运营商"] } }
-    const pLocal = http.get('https://myip.ipip.net/json').then(d => {
-      try { return JSON.parse(d).data || {}; } catch { return {}; }
-    });
-    
-    const pNode = http.get('http://ip-api.com/json?lang=zh-CN').then(d => {
-      try { return JSON.parse(d) || {}; } catch { return {}; }
-    });
+    // 并行请求 API
+    // 1. myip.ipip.net (本地公网)
+    // 2. ip-api.com (节点出口)
+    const [localInfo, nodeInfo] = await Promise.all([
+      http.get('https://myip.ipip.net/json'),
+      http.get('http://ip-api.com/json?lang=zh-CN')
+    ]);
 
-    const [localInfo, nodeInfo] = await Promise.all([pLocal, pNode]);
-
-    // 1. 处理运营商名称 (用于标题)
-    // 优先取 ipip 的 location 数组最后一位，通常是运营商
+    // 1. 处理 ISP 名称与标题
+    // 优先尝试从 ipip.net 的 location 数组获取真实 ISP (通常在最后一位)
     let rawISP = "";
-    if (localInfo.location && localInfo.location.length) {
-       rawISP = localInfo.location[localInfo.location.length - 1]; // 取数组最后一位作为ISP
+    if (Array.isArray(localInfo.location) && localInfo.location.length) {
+      rawISP = localInfo.location[localInfo.location.length - 1];
     }
-    // 回退到 ip-api
-    if (!rawISP && nodeInfo.isp) rawISP = nodeInfo.isp;
+    if (!rawISP) rawISP = nodeInfo.isp; // 回退到 ip-api
+    
     const displayISP = fmtISP(rawISP);
-
-    // 2. 构建标题
+    const radioType = n["cellular-data"]?.radio || n.cellular?.radio;
+    
+    // 构建标题：运营商 | SSID 或 网络制式
     let title = `${displayISP} | `;
-    if (ssid) title += ssid;
-    else if (radio) title += getRadioType(radio);
+    if (wifi.ssid) title += wifi.ssid;
+    else if (radioType) title += getRadioType(radioType);
     else title += "未连接";
 
-    // 3. 构建内容
-    let content = [];
+    // 2. 构建内容
+    const content = [];
     
-    // 内网信息
-    if (v4) content.push(`内网 IPv4：${v4}`);
-    if (v6) content.push(`内网 IPv6：${v6}`);
+    // 内网信息 (整合 routerAddress)
+    if (v4.primaryAddress) content.push(`内网 IPv4：${v4.primaryAddress}`);
+    if (v4.routerAddress) content.push(`内网路由：${v4.routerAddress}`);
+    if (v6.primaryAddress) content.push(`内网 IPv6：${v6.primaryAddress}`);
     
-    // 本地公网信息 (新增需求：整合1.js逻辑，显示在节点上方)
+    // 本地公网信息
     if (localInfo.ip) {
-      const locStr = localInfo.location ? localInfo.location.slice(0, 3).join('') : ''; // 仅取国家省市
+      // ipip 返回的 location 为数组，取前三位 (国家 省 市)
+      const locStr = Array.isArray(localInfo.location) ? localInfo.location.slice(0, 3).join('') : '';
       content.push(`本地 IPv4：${localInfo.ip} ${locStr ? `(${locStr})` : ''}`);
     } else {
       content.push(`本地 IPv4：检测失败`);
@@ -115,15 +114,15 @@ function getRadioType(radio) {
       content.push(`现用节点：检测失败`);
     }
 
-    // 4. 输出
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    // 3. 输出结果
+    // 使用 toLocaleTimeString 简化时间格式化
+    const timeStr = new Date().toLocaleTimeString('en-GB', { hour12: false });
     
     $done({
       title: `${title} (${timeStr})`,
       content: content.join("\n"),
-      icon: ssid ? 'wifi' : 'simcard',
-      'icon-color': ssid ? '#005CAF' : '#F9BF45'
+      icon: wifi.ssid ? 'wifi' : 'simcard',
+      'icon-color': wifi.ssid ? '#005CAF' : '#F9BF45'
     });
 
   } catch (err) {
