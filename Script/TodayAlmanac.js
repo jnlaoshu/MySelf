@@ -5,25 +5,29 @@
  * 第3行：最近3个【传统民俗（非法定）】：除夕/元宵/龙抬头/七夕/中元/重阳/寒衣/下元/腊八/小年(南/北)…
  * 第4行：最近3个【国际/洋节】：情人节/母亲节/父亲节/万圣节/平安夜/圣诞节/感恩节(美) 等
  * 正日 06:00 后单次祝词通知（仅“节日类”，即法定+民俗；不对节气与国际）
+ * 面板顶部可选显示「今日黄历详情」（干支纪法 + 宜忌）
  *
  * 参数（通过模块 argument 传入）：
  *  - TITLES_URL: 标题库外链(JSON数组)，支持占位符 {lunar} {solar} {next}
  *  - BLESS_URL : 祝词库外链(JSON对象，键为节日名，值为文案)
+ *  - SHOW_ALMANAC: 是否在顶部附加今日黄历详情(true/false，默认 true)
+ *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 day)
  *
- * 外链 JSON 示例：
- *   TITLES_URL（数组示例）:
- *     ["摸鱼使我快乐～","{lunar}","{solar}","下一站：{next}"]
- *   BLESS_URL（对象示例）:
- *     {"春节":"愿新岁顺遂无虞，家人皆安！","中秋节":"人月两团圆，心上皆明朗。","腊八节":"粥香暖岁末。"}
- * 更新：2025.12.13 23:25
+ * 更新：集成 wnCalendar 黄历接口 & 标题固定模式
   */
 
 (async () => {
-  /* ========== 基础工具函数 ========== */
+  /* ========== 基础常量 & 工具 ========== */
+  const TAG = "festival_countdown";
   const tnow = new Date();
   const todayStr = (d => `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`)(tnow);
   const currentYear = tnow.getFullYear();
   const nextYear = currentYear + 1;
+  
+  const hasStore = typeof $persistentStore !== "undefined" && $persistentStore;
+
+  // 辅助函数：补零
+  const pad2 = (n) => String(n).padStart(2, '0');
 
   // 计算两个日期之间的天数差
   const dateDiff = (start, end) => {
@@ -45,7 +49,10 @@
   const parseArgs = () => {
     try {
       if (!$argument) return {};
-      const sp = new URLSearchParams($argument);
+      // 兼容 query string 和 surge 模块格式
+      let argsStr = $argument.trim();
+      if (argsStr.includes(',')) argsStr = argsStr.replace(/,/g, '&'); // 简单的逗号转&
+      const sp = new URLSearchParams(argsStr);
       return Object.fromEntries(sp.entries());
     } catch (e) {
       console.log(`解析参数失败: ${e.message}`);
@@ -53,10 +60,19 @@
     }
   };
 
-  // HTTP GET 请求封装
-  const httpGet = (url) => {
+  // 转换布尔值
+  const toBool = (v, defVal = false) => {
+      if (typeof v === "boolean") return v;
+      if (v === null || v === undefined || v === "") return defVal;
+      const s = String(v).trim().toLowerCase();
+      if (["true", "1", "yes", "y", "on"].includes(s)) return true;
+      return false;
+  };
+
+  // HTTP GET 请求封装 (支持 timeout)
+  const httpGet = (url, timeout = 8000) => {
     return new Promise((resolve) => {
-      $httpClient.get({ url, timeout: 8000 }, (err, resp, data) => {
+      $httpClient.get({ url, timeout }, (err, resp, data) => {
         if (err || !resp || resp.status !== 200) {
           console.log(`请求失败: ${url} | 错误: ${err?.message || '状态码异常'}`);
           return resolve(null);
@@ -363,6 +379,77 @@
     }
   };
 
+  /* ========== wnCalendar 黄历详情获取 ========== */
+  const ALMANAC_BASE = "https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/";
+  const GH_PROXY = "https://mirror.ghproxy.com/";
+
+  const fetchAlmanacDetail = async (nowDate, lunarBase) => {
+    const y = nowDate.getFullYear();
+    const m = nowDate.getMonth() + 1;
+    const d = nowDate.getDate();
+    const mm = pad2(m);
+
+    const path = `${y}/${y}${mm}.json`;
+    const pathEnc = encodeURIComponent(path);
+
+    // 本地回退 header
+    let header = `干支纪法：${lunarBase.gzYear}年 ${lunarBase.gzMonth}月 ${lunarBase.gzDay}日`;
+    const tags = [];
+    if (lunarBase.lunarFestival) tags.push(lunarBase.lunarFestival);
+    if (lunarBase.festival) tags.push(lunarBase.festival);
+    if (lunarBase.Term) tags.push(lunarBase.Term);
+    if (tags.length) header += " " + tags.join(" ");
+
+    let ji = "——";
+    let yi = "——";
+
+    try {
+        // 先查 IP，判断是否在中国，决定是否走 ghproxy
+        let apiUrl = ALMANAC_BASE + pathEnc;
+        const ipData = await httpGet("http://ip-api.com/json/", 3000);
+        if (ipData) {
+            try {
+                const ipJson = JSON.parse(ipData);
+                if (ipJson && ipJson.country === "China") {
+                    apiUrl = GH_PROXY + ALMANAC_BASE + pathEnc;
+                }
+            } catch (e) {
+                console.log("ip-api parse error:", String(e));
+            }
+        }
+
+        const raw = await httpGet(apiUrl, 5000);
+        if (raw) {
+            const json = JSON.parse(raw);
+            const arr = json?.data?.[0]?.almanac;
+
+            if (arr) {
+                const item = arr.find(i =>
+                    Number(i.year) === y &&
+                    Number(i.month) === m &&
+                    Number(i.day) === d
+                );
+                if (item) {
+                    let desc = "";
+                    if (item.desc) desc += item.desc;
+                    if (item.term) desc += (desc ? " " : "") + item.term;
+                    if (item.value) desc += (desc ? " " : "") + item.value;
+
+                    header = `干支纪法：${item.gzYear}年 ${item.gzMonth}月 ${item.gzDate}日` + (desc ? " " + desc : "");
+                    if (item.avoid) ji = item.avoid;
+                    if (item.suit) yi = item.suit;
+                }
+            }
+        }
+    } catch (e) {
+        console.log("fetchAlmanacDetail error:", String(e));
+    }
+
+    const lineYi = `✅ 宜：${yi}`;
+    const lineJi = `❎ 忌：${ji}`;
+    return `${header}\n${lineYi}\n${lineJi}`;
+  };
+
   /* ========== 今日农历/阳历信息 ========== */
   const lunarNow = calendar.solar2lunar(tnow.getFullYear(), tnow.getMonth()+1, tnow.getDate());
   const titleSolar = `${lunarNow.cMonth || tnow.getMonth()+1}月${lunarNow.cDay || tnow.getDate()}日（${lunarNow.astro || '未知星座'}）`;
@@ -501,8 +588,11 @@
   const dF0 = calcDiff(F3[0][1]), dF1 = calcDiff(F3[1][1]), dF2 = calcDiff(F3[2][1]);
   const dI0 = calcDiff(I3[0][1]), dI1 = calcDiff(I3[1][1]), dI2 = calcDiff(I3[2][1]);
 
-  /* ========== 外链标题/祝词库 ========== */
+  /* ========== 外链标题/祝词/黄历库 ========== */
   const args = parseArgs();
+  const showAlmanac = toBool(args.SHOW_ALMANAC ?? args.show_almanac, true);
+  const titleMode = (args.TITLE_MODE ?? args.title_mode ?? "day").toString().toLowerCase() === "random" ? "random" : "day";
+
   const defaultTitles = [
     "距离放假，还要摸鱼多少天",
     "{lunar}","{solar}"
@@ -526,21 +616,40 @@
     "除夕":"爆竹一声除旧岁，欢喜团圆迎新春。"
   };
   
-  const titlesArr = await fetchJson(args.TITLES_URL, defaultTitles);
-  const blessMap  = await fetchJson(args.BLESS_URL , defaultBless);
+  // 并行获取数据
+  const [titlesArr, blessMap, almanacDetail] = await Promise.all([
+    fetchJson(args.TITLES_URL, defaultTitles),
+    fetchJson(args.BLESS_URL , defaultBless),
+    showAlmanac ? fetchAlmanacDetail(tnow, lunarNow) : Promise.resolve(null)
+  ]);
 
-  /* ========== 标题生成（支持占位符） ========== */
+  /* ========== 标题生成（支持占位符 + 固定模式） ========== */
   const pickTitle = (nextName, daysToNext) => {
     try {
-      if (daysToNext === 0) return `今天是 ${nextName || '节日'}，enjoy`;
+      if (daysToNext === 0 && titleMode !== 'random') return `今天是 ${nextName || '节日'}，enjoy`;
       
       const pool = Array.isArray(titlesArr) && titlesArr.length ? titlesArr : defaultTitles;
-      const r = Math.floor(Math.random() * pool.length);
-      const raw = String(pool[r] || "");
+      let idx;
+
+      if (titleMode === "random" || !hasStore) {
+          idx = Math.floor(Math.random() * pool.length);
+      } else {
+          const key = `${TAG}_title_index_${todayStr}`;
+          const saved = $persistentStore.read(key);
+          const num = saved != null ? parseInt(saved, 10) : NaN;
+          if (!isNaN(num) && num >= 0 && num < pool.length) {
+              idx = num;
+          } else {
+              idx = Math.floor(Math.random() * pool.length);
+              $persistentStore.write(String(idx), key);
+          }
+      }
       
+      const raw = String(pool[idx] || "");
       return raw
         .replaceAll("{lunar}", titleLunar)
-        .replaceAll("{solar}", titleSolar);
+        .replaceAll("{solar}", titleSolar)
+        .replaceAll("{next}", nextName || "");
     } catch (e) {
       console.log(`生成标题失败: ${e.message}`);
       return `距离${nextName || '放假'}还有${daysToNext || '若干'}天`;
@@ -555,10 +664,12 @@
       const diff = dateDiff(todayStr, date);
       if (diff === 0 && tnow.getHours() >= 6) {
         const key = `timecardpushed_${date}`;
-        if ($persistentStore?.read(key) !== "1") {
-          $persistentStore?.write("1", key);
+        if (hasStore && $persistentStore.read(key) !== "1") {
+          $persistentStore.write("1", key);
           const words = blessMap[name] || "节日快乐！";
-          $notification?.post(`🎉今天是 ${date} ${name}`, "", words);
+          if (typeof $notification !== "undefined") {
+            $notification.post(`🎉今天是 ${date} ${name}`, "", words);
+          }
         }
       }
     } catch (e) {
@@ -583,6 +694,11 @@
   const lineFolk  = render3(F3[0], F3[1], F3[2], dF0, dF1, dF2);
   const lineIntl  = render3(I3[0], I3[1], I3[2], dI0, dI1, dI2);
 
+  const blockFest = `${lineLegal}\n${lineTerm}\n${lineFolk}\n${lineIntl}`;
+  
+  // 最终内容组合：如果获取到了黄历详情，则置顶显示
+  const content = almanacDetail ? `${almanacDetail}\n\n${blockFest}` : blockFest;
+
   // 找到最近的节日（法定/民俗/国际）
   let nearest = [L3[0], dL0];
   if (dF0 < nearest[1]) nearest = [F3[0], dF0];
@@ -593,7 +709,7 @@
     title: pickTitle(nearest[0][0], nearest[1]),
     icon: "calendar",
     "icon-color": "#FF9800",
-    content: `${lineLegal}\n${lineTerm}\n${lineFolk}\n${lineIntl}`
+    content: content
   });
 
 })().catch((e) => {
