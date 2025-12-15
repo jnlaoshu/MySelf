@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.15 10:45
+ * 更新：2025.12.15 11:18
  */
 
 /*
@@ -13,85 +13,115 @@
 */
 
 // 通用 HTTP GET 请求
-const httpGet = (url) => new Promise((resolve) => {
-  $httpClient.get({ url }, (err, _, data) => {
-    try {
-      const res = !err && data ? JSON.parse(data) : {};
-      resolve(res.data || res); // 兼容 ipip.net 嵌套结构
-    } catch {
-      resolve({});
-    }
-  });
-});
+const http = {
+  get: (url) => new Promise((resolve) => {
+    $httpClient.get({ url }, (err, resp, data) => {
+      try {
+        if (err) return resolve({});
+        const json = JSON.parse(data);
+        // 兼容 ipip.net 的嵌套结构 (json.data) 和普通结构
+        resolve(json.data || json); 
+      } catch {
+        resolve({});
+      }
+    });
+  })
+};
 
 // 格式化 ISP 名称
-const getISP = (name) => {
-  if (!name) return "未知运营商";
-  const s = name.replace(/\s*\(中国\)/g, "").trim();
-  if (/mobile|cmcc|cmnet|移动/i.test(s)) return "中国移动";
-  if (/telecom|ctcc|电信/i.test(s)) return "中国电信";
-  if (/unicom|link|联通/i.test(s)) return "中国联通";
-  if (/cbn|广电/i.test(s)) return "中国广电";
-  return s;
+const fmtISP = (isp) => {
+  if (!isp) return "未知运营商";
+  const s = isp.toLowerCase();
+  // 移除干扰词
+  const raw = isp.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
+  if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
+  if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
+  if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
+  if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
+  
+  return raw;
 };
 
 // 获取网络制式
-const getRadio = (r) => {
+const getRadioType = (radio) => {
+  if (!radio) return "";
   const map = {
     "GPRS": "2.5G", "CDMA1X": "2.5G", "EDGE": "2.75G",
-    "WCDMA": "3G", "HSDPA": "3.5G", "HSUPA": "3.75G",
-    "LTE": "4G", "LTEA": "4G", "LTE+": "4G",
-    "NR": "5G", "NRNSA": "5G", "NR5G": "5G"
+    "WCDMA": "3G", "HSDPA": "3.5G", "HSUPA": "3.75G", 
+    "LTE": "4G", "LTEA": "4G", "LTE+": "4G", 
+    "NRNSA": "5G", "NR": "5G", "NR5G": "5G"
   };
-  return r ? (map[r.toUpperCase().replace(/\s+/g, "")] || r) : "";
+  return map[radio.toUpperCase().replace(/\s+/g, "")] || radio;
 };
 
 // 主逻辑
 (async () => {
   try {
-    const { v4 = {}, v6 = {}, wifi = {}, cellular = {}, "cellular-data": cd = {} } = $network || {};
-    const radio = cellular.radio || cd.radio;
-
+    const n = $network || {};
+    const v4 = n.v4 || {};
+    const v6 = n.v6 || {};
+    const wifi = n.wifi || {};
+    
     // 并行请求 API
     // 1. myip.ipip.net (本地公网)
     // 2. ip-api.com (节点出口)
-    const [local, node] = await Promise.all([
-      httpGet('https://myip.ipip.net/json'),
-      httpGet('http://ip-api.com/json?lang=zh-CN')
+    const [localInfo, nodeInfo] = await Promise.all([
+      http.get('https://myip.ipip.net/json'),
+      http.get('http://ip-api.com/json?lang=zh-CN')
     ]);
 
-    // 1. 标题构建
-    // 优先尝试从 ipip.net 的 location 数组获取真实 ISP (通常在最后一位)，否则降级使用节点 ISP
-    const rawISP = (Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node.isp;
-    const netStatus = wifi.ssid || (radio ? getRadio(radio) : "未连接");
-    const title = `${getISP(rawISP)} | ${netStatus}`;
+    // 1. 处理 ISP 名称与标题
+    // 优先尝试从 ipip.net 的 location 数组获取真实 ISP (通常在最后一位)
+    let rawISP = "";
+    if (Array.isArray(localInfo.location) && localInfo.location.length) {
+      rawISP = localInfo.location[localInfo.location.length - 1];
+    }
+    if (!rawISP) rawISP = nodeInfo.isp; // 回退到 ip-api
+    
+    const displayISP = fmtISP(rawISP);
+    const radioType = n["cellular-data"]?.radio || n.cellular?.radio;
+    
+    // 构建标题：运营商 | SSID 或 网络制式
+    let title = `${displayISP} | `;
+    if (wifi.ssid) title += wifi.ssid;
+    else if (radioType) title += getRadioType(radioType);
+    else title += "未连接";
 
-    // 2. 内容构建
-    const body = [];
+    // 2. 构建内容
+    const content = [];
     
     // 内网信息
-    if (v4.primaryAddress) body.push(`内网IPv4：${v4.primaryAddress}`);
-    if (v4.routerAddress) body.push(`内网路由：${v4.routerAddress}`);
-    if (v6.primaryAddress) body.push(`内网IPv6：${v6.primaryAddress}`);
-
-    // 本地公网
-    const locStr = Array.isArray(local.location) ? `(${local.location.slice(0, 3).join('')})` : "";
-    body.push(`本地IPv4：${local.ip || "检测失败"} ${locStr}`);
+    if (v4.primaryAddress) content.push(`内网IPv4：${v4.primaryAddress}`);
+    if (v4.routerAddress) content.push(`内网路由：${v4.routerAddress}`);
+    if (v6.primaryAddress) content.push(`内网IPv6：${v6.primaryAddress}`);
+    
+    // 本地公网信息
+    if (localInfo.ip) {
+      // ipip 返回的 location 为数组，取前三位 (国家 省 市)
+      const locStr = Array.isArray(localInfo.location) ? localInfo.location.slice(0, 3).join('') : '';
+      content.push(`本地IPv4：${localInfo.ip} ${locStr ? `(${locStr})` : ''}`);
+    } else {
+      content.push(`本地IPv4：检测失败`);
+    }
 
     // 节点信息
-    const nodeStr = node.query ? `${node.country || ""} ${node.city || ""}` : "";
-    body.push(`节点IPv4：${node.query || "检测失败"} ${nodeStr}`);
+    if (nodeInfo.query) {
+      content.push(`节点IPv4：${nodeInfo.query}`);
+      content.push(`节点位置：${nodeInfo.country || ''} ${nodeInfo.city || ''}`);
+    } else {
+      content.push(`节点IPv4：检测失败`);
+    }
 
-    // 3. 输出
+    // 3. 输出结果
     $done({
-      title,
-      content: body.join("\n"),
+      title: `${title}`,
+      content: content.join("\n"),
       icon: wifi.ssid ? 'wifi' : 'simcard',
       'icon-color': wifi.ssid ? '#005CAF' : '#F9BF45'
     });
 
-  } catch (e) {
-    console.log(`[NetInfo Error] ${e}`);
+  } catch (err) {
+    console.log(`[NetworkInfo Error] ${err}`);
     $done({
       title: '信息获取失败',
       content: '请检查网络连接或脚本配置',
