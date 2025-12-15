@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.15 15:06
+ * 更新：2025.12.15 15:18
  */
 
 (async () => {
@@ -231,7 +231,8 @@
       if (!$store.read(key)) $store.write(String(Math.floor(Math.random() * pool.length)), key);
     }
 
-    const tLunar = `${lNow.monthCn}${lNow.dayCn} ${lNow.gzYear}${lNow.gzMonth}${lNow.gzDay} ${lNow.animal}年`;
+    // 规范化农历显示格式 (例如：甲辰(龙)年 正月初一)
+    const tLunar = `${lNow.gzYear}(${lNow.animal})年 ${lNow.monthCn}${lNow.dayCn}`;
     const tSolar = `${now.getMonth()+1}月${now.getDate()}日（${lNow.astro}）`;
     
     return pool[idx]
