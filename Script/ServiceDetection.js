@@ -1,12 +1,12 @@
 /* =========================================================
  * 流媒体/AI服务解锁检测
  * 修改自： https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/network_info.js
- * 2025.12.15 11:53
+ * 2025.12.15 12:13
  * ========================================================= */
 
 const CONSTS = Object.freeze({
   SD_MIN_TIMEOUT: 2000,
-  LOG_RING_MAX: 50, // Reduced from 140
+  LOG_RING_MAX: 50,
   BUDGET_HARD_MS: 10000,
   BUDGET_SOFT_GUARD_MS: 260
 });
@@ -14,7 +14,7 @@ const CONSTS = Object.freeze({
 // --- I18n & Resources ---
 const SD_STR = {
   "zh-Hans": {
-    panelTitle: "流媒体/AI解锁检测",
+    panelTitle: "流媒体/AI服务解锁检测",
     policy: "节点策略",
     unlocked: "已解锁",
     partialUnlocked: "部分解锁",
@@ -94,10 +94,10 @@ function ENV(key, defVal) {
 const CFG = {
   Timeout: ENV("Timeout", 12),
   BUDGET_SEC_RAW: ENV("BUDGET", 0),
-  TW_FLAG_MODE: ENV("TW_FLAG_MODE", 1), // 0=CN, 1=TW, 2=WS
+  TW_FLAG_MODE: ENV("TW_FLAG_MODE", 1), 
   Icon: ENV("Icon", "") || ICON_PRESET_MAP[ENV("IconPreset", "gamecontroller")] || "gamecontroller.fill",
   IconColor: ENV("IconColor", "#FF2D55"),
-  SD_STYLE: ENV("SD_STYLE", "icon"), // icon vs text
+  SD_STYLE: ENV("SD_STYLE", "icon"),
   SD_REGION_MODE: ENV("SD_REGION_MODE", "full"),
   SD_ICON_THEME: ENV("SD_ICON_THEME", "check"),
   SD_ARROW: ENV("SD_ARROW", true),
@@ -262,12 +262,24 @@ function renderFlag(cc) {
   return String.fromCodePoint(...[...cc].map(c => 0x1F1E6 + (c.charCodeAt(0) - 65)));
 }
 
+
+const CC_TO_CN = {
+  "HK": "香港", "TW": "台湾", "US": "美国", "JP": "日本", "SG": "新加坡",
+  "KR": "韩国", "GB": "英国", "UK": "英国", "CA": "加拿大", "DE": "德国",
+  "FR": "法国", "NL": "荷兰", "IN": "印度", "AU": "澳洲", "TH": "泰国",
+  "VN": "越南", "PH": "菲律宾", "MY": "马来西亚", "ID": "印尼", "RU": "俄罗斯",
+  "TR": "土耳其", "IT": "意大利", "CN": "中国", "BR": "巴西", "AR": "阿根廷",
+  "EG": "埃及", "ZA": "南非", "MX": "墨西哥"
+};
+
+
 function renderLine({ name, ok, cc, cost, status, tag, state }) {
   const st = state ? state : (ok ? "full" : "blocked");
   const icon = SD_ICONS[st];
-  const flag = renderFlag(cc);
   
-  const regionText = (CFG.SD_REGION_MODE === "flag" ? flag : `${flag} ${cc}`).trim() || "-";
+  // Custom Chinese Region Logic
+  const regionName = CC_TO_CN[cc] || cc || "-";
+  const regionText = regionName.trim();
   
   // Format extras
   const extras = [
@@ -287,6 +299,7 @@ function renderLine({ name, ok, cc, cost, status, tag, state }) {
   const base = `${icon} ${name}${sep}${regionText}`;
   return extras ? `${base} ｜ ${extras}` : base;
 }
+
 
 // --- Main Execution ---
 async function run() {
@@ -343,16 +356,15 @@ async function run() {
     parts.push("\n—— DEBUG ——", ...DEBUG_LINES.slice(-5));
   }
 
-  // Final Output - Time removed from Title
+  // Final Output
   const content = parts.join("\n");
   
-  // Handling zh-Hant conversion if needed for main content
   const finalContent = CFG.SD_LANG === "zh-Hant" ? 
     content.replace(/网络/g, "網路").replace(/节点/g, "節點").replace(/解锁/g, "解鎖").replace(/检测/g, "檢測").replace(/失败/g, "失敗") : 
     content;
 
   $done({
-    title: t("panelTitle"), // Time removed
+    title: t("panelTitle"),
     content: finalContent,
     icon: CFG.Icon,
     "icon-color": CFG.IconColor
