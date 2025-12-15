@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.15 15:18
+ * 更新：2025.12.15 16:28
  */
 
 (async () => {
@@ -80,23 +80,39 @@
       return this.nStr2[Math.floor(d/10)] + this.nStr1[d%10];
     },
     getAnimal(y) { return this.Animals[(y-4)%12]; },
-    // 阳历转阴历
+    // 阳历转阴历 (修正版)
     solar2lunar(y, m, d) {
       let i, leap = 0, temp = 0;
       let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
       for(i = 1900; i < 2101 && offset > 0; i++) { temp = this.lYearDays(i); offset -= temp; }
       if(offset < 0) { offset += temp; i--; }
       
-      const year = i, isLeap = false;
-      let lMonth = 0;
+      const year = i;
+      let isLeap = false;
       leap = this.leapMonth(i);
+      
       for(i = 1; i < 13 && offset > 0; i++) {
-        if(leap > 0 && i === (leap+1) && !isLeap) { --i; lMonth = i; temp = this.leapDays(year); }
-        else { temp = this.monthDays(year, i); }
-        if(!isLeap && i === (leap+1)) lMonth = i;
+        // 闰月
+        if(leap > 0 && i === (leap+1) && !isLeap) { 
+          --i; 
+          isLeap = true; 
+          temp = this.leapDays(year); 
+        } else { 
+          temp = this.monthDays(year, i); 
+        }
+        
+        // 解除闰月
+        if (isLeap === true && i === (leap + 1)) isLeap = false;
+        
         offset -= temp;
       }
-      if(offset === 0 && leap > 0 && i === leap+1) if(!isLeap) --i;
+      
+      if (offset === 0 && leap > 0 && i === leap + 1) {
+        if (isLeap) { isLeap = false; }
+        else { isLeap = true; --i; }
+      }
+      
+      if(offset < 0) { offset += temp; i--; }
       
       const month = i, day = offset + 1;
       const gzY = this.toGanZhi(year-3); // 简化计算
@@ -221,7 +237,7 @@
     ];
     const pool = (Array.isArray(titles) && titles.length) ? titles : defT;
     
-    // 随机或轮询标题
+    // 随机或轮循标题
     const mode = (args.TITLE_MODE || "random").toLowerCase();
     let idx = 0;
     if (mode === "random" || !$store) idx = Math.floor(Math.random() * pool.length);
