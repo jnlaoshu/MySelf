@@ -1,7 +1,7 @@
 /* =========================================================
  * 流媒体/AI服务解锁检测
  * 修改自： https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/network_info.js
- * 2025.12.15 12:19
+ * 2025.12.15 12:25
  * ========================================================= */
 
 const CONSTS = Object.freeze({
@@ -286,18 +286,18 @@ function renderLine({ name, ok, cc, cost, status, tag, state }) {
     (tag && (!/netflix/i.test(name) || CFG.SD_STYLE === "icon" || CFG.SD_ARROW)) ? tag : "",
     CFG.SD_SHOW_LAT && cost ? `${cost}ms` : "",
     CFG.SD_SHOW_HTTP && status ? `HTTP ${status}` : ""
-  ].filter(Boolean).join(",");
+  ].filter(Boolean).join(" , ");
 
-  const sep = CFG.SD_ARROW ? ":" : ",";
+  const sep = CFG.SD_ARROW ? "：" : " , ";
   
   if (CFG.SD_STYLE === "text") {
     const statusText = ok ? t("unlocked") : t("notReachable");
     const base = `${name}: ${statusText}${sep}${regionText}`;
-    return extras ? `${base},${extras}` : base;
+    return extras ? `${base} , ${extras}` : base;
   }
   
   const base = `${icon} ${name}${sep}${regionText}`;
-  return extras ? `${base},${extras}` : base;
+  return extras ? `${base} , ${extras}` : base;
 }
 
 
