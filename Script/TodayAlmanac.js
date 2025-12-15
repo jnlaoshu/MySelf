@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.15 17:30
+ * 更新：2025.12.15 17:37
  */
 
 (async () => {
@@ -154,20 +154,23 @@
       return fmtYMD(year, m, Math.min(day, 31));
     };
 
+    // 获取清明节日期（阳历4月的第1个节气）
+    const qmDay = cal.getTerm(year, 7);
+
     return {
   // 法定节假日（含成都义教段学校特定时间）
       legal: [
         ["元旦", fmtYMD(year, 1, 1)], 
-		["寒假", fmtYMD(year, 1, 31)], //2026年成都义教段学校放寒假
+		["寒假", fmtYMD(2026, 1, 31)], //2026年成都义教段学校放寒假
 		["春节", lToS(1, 1)],
-        ["开学", fmtYMD(year, 3, 2)], //2026年成都义教段学校春季开学
-		["清明节", fmtYMD(year, 4, cal.getTerm(year, 7))],
-        ["春假", fmtYMD(year, 4, 7)], //清明节后第1天（成都春假）
+        ["开学", fmtYMD(2026, 3, 2)], //2026年成都义教段学校春季开学
+		["清明节", fmtYMD(year, 4, qmDay)],
+        ["春假", fmtYMD(year, 4, qmDay + 1)], //春假安排在清明节后第1天，与清明连休
 		["劳动节", fmtYMD(year, 5, 1)], ["端午节", lToS(5, 5)],
-        ["暑假", fmtYMD(year, 7, 4)], //2026年成都义教段学校放暑假
+        ["暑假", fmtYMD(2026, 7, 4)], //2026年成都义教段学校放暑假
 		["中秋节", lToS(8, 15)], 
 		["国庆节", fmtYMD(year, 10, 1)],
-        ["秋假", weekDay(11, 2, 3)]   // 11月第2个周三（成都秋假）
+        ["秋假", weekDay(11, 2, 3)]   // 11月第2个周三（即11月第2周的周三至周五）
       ],
  // 民俗节日
       folk: [
