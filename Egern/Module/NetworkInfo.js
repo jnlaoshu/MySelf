@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.15 11:18
+ * 更新：2025.12.15 11:25
  */
 
 /*
@@ -99,7 +99,8 @@ const getRadioType = (radio) => {
     if (localInfo.ip) {
       // ipip 返回的 location 为数组，取前三位 (国家 省 市)
       const locStr = Array.isArray(localInfo.location) ? localInfo.location.slice(0, 3).join('') : '';
-      content.push(`本地IPv4：${localInfo.ip} ${locStr ? `(${locStr})` : ''}`);
+      content.push(`本地IPv4：${localInfo.ip}`);
+      content.push(`本地位置：${locStr ? `(${locStr})` : ''}`);	  
     } else {
       content.push(`本地IPv4：检测失败`);
     }
