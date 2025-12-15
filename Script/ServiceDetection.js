@@ -1,7 +1,7 @@
 /* =========================================================
- * 流媒体/AI服务解锁检测
+ * 流媒体&AI服务解锁检测
  * 修改自： https://github.com/ByteValley/NetTool/blob/main/Scripts/Panel/network_info.js
- * 2025.12.15 12:25
+ * 2025.12.15 12:30
  * ========================================================= */
 
 const CONSTS = Object.freeze({
@@ -14,7 +14,7 @@ const CONSTS = Object.freeze({
 // --- I18n & Resources ---
 const SD_STR = {
   "zh-Hans": {
-    panelTitle: "流媒体/AI服务解锁检测",
+    panelTitle: "流媒体&AI服务解锁检测",
     policy: "节点策略",
     unlocked: "已解锁",
     partialUnlocked: "部分解锁",
@@ -27,7 +27,7 @@ const SD_STR = {
     debug: "调试"
   },
   "zh-Hant": {
-    panelTitle: "流媒體/AI解鎖偵測",
+    panelTitle: "流媒體&AI解鎖偵測",
     policy: "節點策略",
     unlocked: "已解鎖",
     partialUnlocked: "部分解鎖",
