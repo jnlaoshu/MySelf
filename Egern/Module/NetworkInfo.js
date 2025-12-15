@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.15 11:32
+ * 更新：2025.12.15 11:39
  */
 
 /*
@@ -90,13 +90,14 @@ const getRadioType = (radio) => {
     // 2. 构建内容
     const content = [];
     
-    // 内网信息
-    if (v4.primaryAddress) content.push(`内网IPv4：${v4.primaryAddress}`);
-    
-    // Egern/Surge 提供的路由器地址字段通常是 primaryRouter，部分环境是 router
-    const routerAddress = v4.primaryRouter || v4.router;
-    if (routerAddress) content.push(`内网路由：${routerAddress}`);
-    
+    // 优先从 wifi 对象获取，其次尝试 v4 对象
+    // 路由器地址通常是 wifi.router 或 v4.primaryRouter
+    const internalIP = wifi.address || v4.primaryAddress;
+    const routerIP = wifi.router || v4.primaryRouter || v4.routerAddress;
+
+    if (internalIP) content.push(`内网IPv4：${internalIP}`);
+    if (routerIP) content.push(`内网路由：${routerIP}`);
+
     if (v6.primaryAddress) content.push(`内网IPv6：${v6.primaryAddress}`);
     
     // 本地公网信息
