@@ -1,4 +1,8 @@
-/**
+/*
+ * 今日黄历
+ * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
+ * 更新：2025.12.15 14:00
+
  * 节日倒数（4行：法定 | 节气 | 民俗 | 国际）· 可外链标题/祝词库
  * 第1行：最近3个【法定节假日】：元旦/春节/清明/劳动/端午/中秋/国庆+成都义教段学校特定日期
  * 第2行：最近3个【二十四节气】
@@ -13,7 +17,7 @@
  *  - SHOW_ALMANAC: 是否在顶部附加今日黄历详情(true/false，默认 true)
  *  - TITLE_MODE: 标题模式(day=当天固定, random=每次随机，默认 random)
  *
-  */
+ */
 
 (async () => {
   /* ========== 基础常量 & 工具 ========== */
@@ -531,8 +535,8 @@
       ["寒衣节",  calendar.lunar2solar(year,10, 1).date || fmtYMD(year,10,1)],
       ["下元节",  calendar.lunar2solar(year,10,15).date || fmtYMD(year,10,15)],
       ["腊八节",  calendar.lunar2solar(year,12, 8).date || fmtYMD(year,12,8)],
-      ["小年(北)",calendar.lunar2solar(year,12,23).date || fmtYMD(year,12,23)],
-      ["小年(南)",calendar.lunar2solar(year,12,24).date || fmtYMD(year,12,24)]
+      ["北方小年",calendar.lunar2solar(year,12,23).date || fmtYMD(year,12,23)],
+      ["南方小年",calendar.lunar2solar(year,12,24).date || fmtYMD(year,12,24)]
     ];
     return base.sort((a,b) => new Date(a[1]) - new Date(b[1]));
   };
@@ -593,8 +597,13 @@
     // 默认模式调整为 random，除非显式指定为 day
   const titleMode = (args.TITLE_MODE ?? args.title_mode ?? "random").toString().toLowerCase() === "day" ? "day" : "random";
 
+  // 构建日期标题：YYYY-MM-DD 星期X
+  const curDateStr = `${tnow.getFullYear()}-${pad2(tnow.getMonth() + 1)}-${pad2(tnow.getDate())}`;
+  const curWeekStr = lunarNow.ncWeek || `星期${['日','一','二','三','四','五','六'][tnow.getDay()]}`;
+  const dynamicTitle = `${curDateStr} ${curWeekStr}`;
+
   const defaultTitles = [
-    "距离放假，还要摸鱼多少天",
+    dynamicTitle,
     "{lunar}","{solar}"
   ];
   const defaultBless = {
@@ -612,7 +621,8 @@
     "寒衣节":"一纸寒衣，一份牵念。",
     "下元节":"三官赐福，平安顺心。",
     "腊八节":"腊八粥香，岁杪添暖。",
-    "小年(北)":"尘旧一扫，迎新纳福。","小年(南)":"净灶迎福，诸事顺遂。",
+    "北方小年":"尘旧一扫，迎新纳福。",
+    "南方小年":"净灶迎福，诸事顺遂。",
     "除夕":"爆竹一声除旧岁，欢喜团圆迎新春。"
   };
   
