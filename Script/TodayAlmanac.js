@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.15 17:52
+ * 更新：2025.12.16 09:52
  */
 
 (async () => {
@@ -224,7 +224,7 @@
   const fThis = getFests(curYear), fNext = getFests(curYear + 1);
   const merge = (k, count) => [...fThis[k], ...fNext[k]].filter(i => dateDiff(i[1]) >= 0).slice(0, count);
   
-  const L3 = merge("legal", 4);
+  const L3 = merge("legal", 3);
   const F3 = merge("folk", 3);
   const I3 = merge("intl", 3);
   const T3 = merge("term", 4);
