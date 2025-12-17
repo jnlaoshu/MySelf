@@ -1,12 +1,12 @@
 /*
  * 网络信息
- * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/NetworkInfo.js
- * 更新：2025.12.16 11:16
+ * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
+ * 更新：2025.12.15 11:39
  */
 
 /*
 [Script]
-网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/NetworkInfo.js
+网络信息 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
 
 [Panel]
 网络信息 = script-name=网络信息,title=网络信息,content=请刷新,style=info,update-interval=1
