@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.17 08:30
+ * 更新：2025.12.17 08:40
  */
 
 /*
@@ -94,11 +94,19 @@ const getRadioType = (radio) => {
     // Egern 在某些版本中 wifi.router可能为空，需要检查 v4.router 或通过内网IP推断
     const internalIP = wifi.address || v4.primaryAddress || v4.address;
     
+    // 定义 IPv4 正则校验
+    const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+
     // 尝试多个字段获取路由IP
     let routerIP = wifi.router || v4.router || v4.primaryRouter || v4.routerAddress;
 
-    // 兜底策略：如果API没返回路由IP，但有内网IP (e.g. 192.168.1.5)，尝试推断网关 (192.168.1.1)
-    if (!routerIP && internalIP && /^(\d{1,3}\.){3}\d{1,3}$/.test(internalIP)) {
+    // 校验：如果获取到的 routerIP 不是 IPv4 格式，将其置空（过滤掉 IPv6 格式的路由）
+    if (routerIP && !ipv4Regex.test(routerIP)) {
+        routerIP = null;
+    }
+
+    // 兜底策略：如果API没返回有效的IPv4路由IP，但有内网IP (e.g. 192.168.1.5)，尝试推断网关 (192.168.1.1)
+    if (!routerIP && internalIP && ipv4Regex.test(internalIP)) {
         routerIP = internalIP.replace(/\.\d+$/, '.1');
     }
     // FIX END
