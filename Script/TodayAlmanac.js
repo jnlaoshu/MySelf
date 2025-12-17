@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.16 09:52
+ * 更新：2025.12.17 08:20
  */
 
 (async () => {
@@ -80,7 +80,7 @@
       return this.nStr2[Math.floor(d/10)] + this.nStr1[d%10];
     },
     getAnimal(y) { return this.Animals[(y-4)%12]; },
-    // 阳历转阴历 (修正版)
+    // 阳历转阴历
     solar2lunar(y, m, d) {
       let i, leap = 0, temp = 0;
       let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
@@ -115,7 +115,7 @@
       if(offset < 0) { offset += temp; i--; }
       
       const month = i, day = offset + 1;
-      const gzY = this.toGanZhi(year-3); // 简化计算
+      const gzY = this.toGanZhi(year-4); //  (偏移量应为-4)
       const termId = this.getTerm(y, m*2-1) === d ? m*2-2 : (this.getTerm(y, m*2) === d ? m*2-1 : null);
       
       return {
@@ -158,7 +158,7 @@
     const qmDay = cal.getTerm(year, 7);
 
     return {
-  // 法定节假日（含成都义教段学校特定时间）
+  // 法定节假日（含成都义教段学校特定日期）
       legal: [
         ["元旦", fmtYMD(year, 1, 1)], 
 		["寒假", fmtYMD(year, 1, 31)], //2026年成都义教段学校放寒假
@@ -166,7 +166,8 @@
         ["开学", fmtYMD(year, 3, 2)], //2026年成都义教段学校春季开学
 		["清明节", fmtYMD(year, 4, qmDay)],
         ["春假", fmtYMD(year, 4, qmDay + 1)], //成都春假安排在清明节后第1天，与清明连休
-		["劳动节", fmtYMD(year, 5, 1)], ["端午节", lToS(5, 5)],
+		["劳动节", fmtYMD(year, 5, 1)], 
+		["端午节", lToS(5, 5)],
         ["暑假", fmtYMD(year, 7, 4)], //2026年成都义教段学校放暑假
 		["中秋节", lToS(8, 15)], 
 		["国庆节", fmtYMD(year, 10, 1)],
