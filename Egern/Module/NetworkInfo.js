@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.17 08:40
+ * 更新：2025.12.17 08:45
  */
 
 /*
@@ -15,7 +15,14 @@
 // 通用 HTTP GET 请求
 const http = {
   get: (url) => new Promise((resolve) => {
-    $httpClient.get({ url }, (err, resp, data) => {
+    // 添加 User-Agent 模拟浏览器，防止被部分 API 拦截
+    const opts = {
+        url: url,
+        headers: {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
+        }
+    };
+    $httpClient.get(opts, (err, resp, data) => {
       try {
         if (err) return resolve({});
         const json = JSON.parse(data);
@@ -64,10 +71,11 @@ const getRadioType = (radio) => {
     
     // 并行请求 API
     // 1. myip.ipip.net (本地公网)
-    // 2. ip-api.com (节点出口)
+    // 2. ipwho.is (节点出口 - 使用 HTTPS)
+    // 注意：将 ip-api.com 替换为 ipwho.is 以支持 HTTPS，防止请求失败
     const [localInfo, nodeInfo] = await Promise.all([
       http.get('https://myip.ipip.net/json'),
-      http.get('http://ip-api.com/json?lang=zh-CN')
+      http.get('https://ipwho.is/?lang=zh') 
     ]);
 
     // 1. 处理 ISP 名称与标题
@@ -76,7 +84,12 @@ const getRadioType = (radio) => {
     if (Array.isArray(localInfo.location) && localInfo.location.length) {
       rawISP = localInfo.location[localInfo.location.length - 1];
     }
-    if (!rawISP) rawISP = nodeInfo.isp; // 回退到 ip-api
+    
+    // 如果 ipip 没获取到，尝试从节点信息获取
+    // 兼容 ipwho.is (connection.isp) 和 ip-api (isp)
+    if (!rawISP) {
+        rawISP = nodeInfo?.connection?.isp || nodeInfo.isp; 
+    }
     
     const displayISP = fmtISP(rawISP);
     const radioType = n["cellular-data"]?.radio || n.cellular?.radio;
@@ -91,7 +104,6 @@ const getRadioType = (radio) => {
     const content = [];
     
     // FIX START: 增强内网IP和路由IP的获取逻辑
-    // Egern 在某些版本中 wifi.router可能为空，需要检查 v4.router 或通过内网IP推断
     const internalIP = wifi.address || v4.primaryAddress || v4.address;
     
     // 定义 IPv4 正则校验
@@ -126,9 +138,12 @@ const getRadioType = (radio) => {
       content.push(`本地IPv4：检测失败`);
     }
 
-    // 节点信息
-    if (nodeInfo.query) {
-      content.push(`节点IPv4：${nodeInfo.query}`);
+    // 节点信息处理
+    // 兼容 ipwho.is 使用 .ip 字段，ip-api 使用 .query 字段
+    const nodeIP = nodeInfo.ip || nodeInfo.query;
+    
+    if (nodeIP) {
+      content.push(`节点IPv4：${nodeIP}`);
       content.push(`节点位置：${nodeInfo.country || ''} ${nodeInfo.city || ''}`);
     } else {
       content.push(`节点IPv4：检测失败`);
