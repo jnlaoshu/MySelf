@@ -1,7 +1,7 @@
 /*
  * 网络信息
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Module/NetworkInfo.js
- * 更新：2025.12.15 11:39
+ * 更新：2025.12.17 08:30
  */
 
 /*
@@ -90,10 +90,18 @@ const getRadioType = (radio) => {
     // 2. 构建内容
     const content = [];
     
-    // 优先从 wifi 对象获取，其次尝试 v4 对象
-    // 路由器地址通常是 wifi.router 或 v4.primaryRouter
-    const internalIP = wifi.address || v4.primaryAddress;
-    const routerIP = wifi.router || v4.primaryRouter || v4.routerAddress;
+    // FIX START: 增强内网IP和路由IP的获取逻辑
+    // Egern 在某些版本中 wifi.router可能为空，需要检查 v4.router 或通过内网IP推断
+    const internalIP = wifi.address || v4.primaryAddress || v4.address;
+    
+    // 尝试多个字段获取路由IP
+    let routerIP = wifi.router || v4.router || v4.primaryRouter || v4.routerAddress;
+
+    // 兜底策略：如果API没返回路由IP，但有内网IP (e.g. 192.168.1.5)，尝试推断网关 (192.168.1.1)
+    if (!routerIP && internalIP && /^(\d{1,3}\.){3}\d{1,3}$/.test(internalIP)) {
+        routerIP = internalIP.replace(/\.\d+$/, '.1');
+    }
+    // FIX END
 
     if (internalIP) content.push(`内网IPv4：${internalIP}`);
     if (routerIP) content.push(`内网路由：${routerIP}`);
