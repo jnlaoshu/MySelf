@@ -1,6 +1,6 @@
 /*
- * 今日黄历&节假日倒数 (成都特色增强版)
- * 包含：网络黄历、高精度农历、成都专属春秋假
+ * 今日黄历&节假日倒数 (成都定制全功能版)
+ * 包含：网络黄历、高精度农历、成都义教段学校特定日期、全国高考
  */
 
 (async () => {
@@ -71,31 +71,29 @@
     }
   };
 
-  /* ========== 2. 节日列表与成都春秋假算法 ========== */
+  /* ========== 2. 节日列表与定制日期算法 ========== */
   const getFests = (year) => {
     const lToS = (m, d) => {
       const r = cal.lunar2solar(year, m, d);
       return fmtYMD(r.y, r.m, r.d);
     };
 
-    // 计算成都春假：清明（4月4或5日）后三天
+    // 成都春秋假算法（成都春假、秋假各3天。原则上春假安排在每年清明假期后，与清明假期形成连休；秋假安排在11月第二周的后三天（周三至周五），与周末形成连休）
     const qmDay = cal.getTerm(year, 7);
     const springBreak = fmtYMD(year, 4, qmDay + 1);
-
-    // 计算成都秋假：11月第二周的周三
     const getAutumnBreak = (y) => {
         let nov1 = new Date(y, 10, 1);
         let firstWed = (3 - nov1.getDay() + 7) % 7;
-        if (nov1.getDay() > 3) firstWed += 7; // 如果1号在周三之后，则顺延一周
-        return fmtYMD(y, 11, firstWed + 8); // 第二周周三
+        if (nov1.getDay() > 3) firstWed += 7;
+        return fmtYMD(y, 11, firstWed + 8);
     };
 
     return {
       legal: [
-        ["元旦", `${year}-01-01`],["寒假", `${year}-01-18`],["春节", lToS(1, 1)],
-        ["成都春假", springBreak], ["劳动节", `${year}-05-01`],["端午", lToS(5, 5)],
-        ["暑假", `${year}-07-05`],["中秋", lToS(8, 15)],["国庆", `${year}-10-01`],
-        ["成都秋假", getAutumnBreak(year)]
+        ["元旦", `${year}-01-01`],["寒假", `2026-01-31`],["春节", lToS(1, 1)],
+        ["开学", `2026-03-02`], ["春假", springBreak], ["劳动节", `${year}-05-01`],
+        ["端午", lToS(5, 5)], ["高考", `${year}-06-07`], ["暑假", `2026-07-04`],
+        ["中秋", lToS(8, 15)], ["国庆", `${year}-10-01`], ["秋假", getAutumnBreak(year)]
       ],
       folk: [["除夕", lToS(12, cal.monthDays(year, 12))], ["元宵", lToS(1, 15)], ["腊八", lToS(12, 8)]],
       term: Array.from({length:24}, (_, i) => [cal.terms[i], fmtYMD(year, Math.floor(i/2)+1, cal.getTerm(year, i+1))])
@@ -106,28 +104,28 @@
     return [].concat(getFests(curYear)[key], getFests(curYear + 1)[key])
       .filter(i => dateDiff(i[1]) >= 0)
       .sort((a, b) => parseInt(a[1].replace(/-/g, '')) - parseInt(b[1].replace(/-/g, '')))
-      .slice(0, 4); // 增加显示数量以便看到春秋假
+      .slice(0, 5); // 增加到5个显示项，确保开学、高考等能露出来
   };
 
-  /* ========== 3. 获取数据并显示 ========== */
+  /* ========== 3. 数据合成与显示 ========== */
   let almanacTxt = "";
   const alData = await httpGet(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${pad(now.getMonth()+1)}.json`);
   if (alData) {
     try {
       const item = JSON.parse(alData).data[0].almanac.find(i => Number(i.day) === now.getDate());
       almanacTxt = item ? `宜：${item.suit}\n忌：${item.avoid}` : "宜：余事勿取";
-    } catch(e) { almanacTxt = "黄历加载解析失败"; }
+    } catch(e) { almanacTxt = "黄历解析失败"; }
   } else {
-    almanacTxt = "黄历网络请求超时";
+    almanacTxt = "黄历请求超时";
   }
 
   const lNow = cal.solar2lunar(curYear, now.getMonth() + 1, now.getDate());
-  const L4 = merge("legal"), T3 = merge("term"), F3 = merge("folk");
-  const render = (arr) => arr.map(i => `${i[0]}${dateDiff(i[1]) === 0 ? "今天" : i.diff || dateDiff(i[1]) + "天"}`).join(" , ");
+  const L5 = merge("legal"), T3 = merge("term"), F3 = merge("folk");
+  const render = (arr) => arr.map(i => `${i[0]}${dateDiff(i[1]) === 0 ? "今天" : dateDiff(i[1]) + "天"}`).join(" , ");
 
   $done({
     title: `${curYear}年${now.getMonth()+1}月${now.getDate()}日 星期${"日一二三四五六"[now.getDay()]} ${lNow.monthCn}${lNow.dayCn}`,
-    content: `${almanacTxt}\n\n🗓 节假日：${render(L4)}\n🍂 节气：${render(T3)}\n🧧 民俗：${render(F3)}`,
+    content: `${almanacTxt}\n\n🗓 节假日：${render(L5)}\n🍂 节气：${render(T3)}\n🧧 民俗：${render(F3)}`,
     icon: "calendar",
     "icon-color": "#FF9800"
   });
