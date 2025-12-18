@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.18 11:38
+ * 更新：2025.12.18 13:33
  */
 
 (async () => {
@@ -168,6 +168,7 @@
         ["春假", fmtYMD(year, 4, qmDay + 1)], //成都春假安排在清明节后第1天，与清明连休
         ["劳动节", fmtYMD(year, 5, 1)], 
         ["端午节", lToS(5, 5)],
+        ["高考", fmtYMD(year, 6, 7)], 
         ["暑假", fmtYMD(year, 7, 4)], //2026年成都义教段学校放暑假
         ["中秋节", lToS(8, 15)], 
         ["国庆节", fmtYMD(year, 10, 1)],
