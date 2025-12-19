@@ -1,17 +1,16 @@
-// Egern运行时长：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/StartTime.js
-// 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/functionstatus.js
-// 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 22:00
-
-/*
-[Script]
-运行时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/StartTime.js
-  对应参数：
-	icon：图标
-	color：图标颜色
-	title：显示名称
-	
-[Panel]
-运行时长 = script-name=运行时长,title=运行时长,content=请刷新,update-interval=1
+/* Egern运行时长：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/StartTime.js
+* 𝐅𝐫𝐨𝐦：https://github.com/smartmimi/conf/blob/master/surge/functionstatus.js
+* 𝐔𝐩𝐝𝐚𝐭𝐞：2025.01.24 22:00
+* 
+* [Script]
+* 运行时长 = type=generic,timeout=10,script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/StartTime.js
+*   对应参数：
+* 	icon：图标
+* 	color：图标颜色
+* 	title：显示名称
+* 	
+* [Panel]
+* 运行时长 = script-name=运行时长,title=运行时长,content=请刷新,update-interval=1
 */
 
 !(async () => {
