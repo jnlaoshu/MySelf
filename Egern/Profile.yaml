@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 
-# 更新时间: 2025.12.14 17:40
+# 更新时间: 2026.01.01 15:10
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -362,11 +362,7 @@ modules:
   - name: 'BiliBili去广告'
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
     enabled: true  
-  - name: 墨鱼去广告融合版
-    url: https://raw.githubusercontent.com/ddgksf2013/Modules/main/Adblock.sgmodule
-    enabled: true
-    interval: 86400
   - name: 奶思广告拦截&净化合集
     url: https://github.com/fmz200/wool_scripts/blob/main/Surge/module/blockAds.module
-    enabled: false
+    enabled: true
     interval: 86400
