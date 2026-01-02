@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 
-# 更新时间: 2026.01.01 15:10
+# 更新时间: 2026.01.02 15:49
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -65,14 +65,6 @@ dns:
 
 # --- 策略组配置 ---
 policy_groups:
-  # 外部订阅源
-  - external:
-      name: 全部节点
-      type: select
-      urls:
-        - https://sub.store/download/collection/AllServer?target=Egern
-      icon: 🌹 
-
   # 自动测速分组 
   - auto_test:
       name: 香港节点
@@ -125,6 +117,14 @@ policy_groups:
       flatten: true
       filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
+  # 外部订阅源
+  - external:
+      name: 全部节点
+      type: select
+      urls:
+        - https://sub.store/download/collection/AllServer?target=Egern
+      icon: 🌹 
 
   # 主手动切换策略
   - select:
