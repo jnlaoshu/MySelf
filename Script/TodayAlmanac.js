@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.18 13:33
+ * 更新：2026.01.15 10:55
  */
 
 (async () => {
@@ -210,7 +210,7 @@
   
   // 1. 获取黄历详情 (并行请求)
   const almanacReq = getConfig('show_almanac', true) ? (async () => {
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${pad2(now.getMonth()+1)}.json`;
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${pad2(now.getMonth()+1)}.json`;
     const data = await fetchJson(url, {});
     const item = data?.data?.[0]?.almanac?.find(i => Number(i.day) === now.getDate());
     
