@@ -215,7 +215,7 @@
   const legalFests = mergeFestList("legal",3);
   const folkFests = mergeFestList("folk",3);
   const intlFests = mergeFestList("intl",3);
-  const termFests = mergeFestList("term",4);
+  const termFests = mergeFestList("term",3);
 
   // 当日节日通知推送
   if (hasNotify && $store && now.getHours() >=6) {
