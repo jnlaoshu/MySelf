@@ -1,8 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.15 优化版 by 豆包编程助手
- * 优化：性能提升+健壮性增强+可读性重构+体验细节优化
+ * 更新：2026.01.15 最终修复版
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -18,12 +17,9 @@
   const hasNotify = typeof $notification !== "undefined";
   const hasHttpClient = typeof $httpClient !== "undefined";
 
-  /* ========== 工具函数（语义化重构+性能优化） ========== */
-  // 数字补两位前置0
+  /* ========== 工具函数（语义化重构+性能优化+兼容修复） ========== */
   const padStart2 = (n) => n.toString().padStart(2, '0');
-  // 格式化年月日为 年-月-日
   const formatYmd = (y, m, d) => `${y}-${padStart2(m)}-${padStart2(d)}`;
-  // 解析入参 (兼容逗号/&分隔)
   const parseArgs = () => {
     if (typeof $argument === "undefined" || !$argument) return {};
     const argStr = $argument.replace(/,/g, '&').trim();
@@ -31,14 +27,12 @@
   };
   const args = parseArgs();
 
-  // 获取布尔型配置项(兼容大小写)
   const getConfig = (key, def = false) => {
     const val = args[key] ?? args[key.toLowerCase()];
     if (val === undefined) return def;
     return ["true", "1", "yes"].includes(String(val).toLowerCase());
   };
 
-  // 安全GET请求 (带超时+错误兜底)
   const httpGet = (url) => new Promise(resolve => {
     if (!hasHttpClient) return resolve(null);
     $httpClient.get({ url, timeout: 5000 }, (err, resp, data) => {
@@ -46,18 +40,18 @@
     });
   });
 
-  // 安全获取JSON数据 (异常兜底返回默认值)
   const fetchJson = async (url, fallback = {}) => {
     if (!url) return fallback;
     try {
       const data = await httpGet(url);
       return data ? JSON.parse(data) : fallback;
-    } catch {
+    } catch (e) {
+      console.log(`[黄历接口异常] JSON解析失败: ${e.message}`);
       return fallback;
     }
   };
 
-  // 计算目标日期与今日的天数差【核心缓存优化：只计算一次】
+  // 核心：日期差计算【缓存优化+只算一次】
   const calcDateDiff = (dateStr) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     const targetTime = new Date(y, m - 1, d).getTime();
@@ -65,7 +59,7 @@
     return Math.floor((targetTime - todayTime) / 86400000);
   };
 
-  /* ========== 农历核心算法 (原逻辑完整保留，仅格式化) ========== */
+  /* ========== 农历核心算法 (完整保留+节气兜底) ========== */
   const LunarCal = {
     lInfo: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x16a95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     sTermInfo: ['9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','9778397bd19801ec9210c965cc920e','97b6b97bd19801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36c9210c9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bcf97c3598082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd07f595b0b6fc920fb0722','9778397bd097c36b0b6fc9210c8dc2','9778397bd19801ec9210c9274c920e','97b6b97bd19801ec95f8c965cc920f','97bd07f5307f595b0b0bc920fb0722','7f0e397bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b70c9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c8dc2','977837f0e37f149b0723b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b06bd','7f07e7f0e37f14998083b0787b0721','7f0e27f0e47f531b0723b0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b02d5','7f07e7f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66aa89801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e26665b66a449801e9808297c35','665f67f0e37f1489801eb072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722'],
@@ -117,7 +111,7 @@
     }
   };
 
-  /* ========== 节日数据生成 (原数据完整保留) ========== */
+  /* ========== 节日数据生成 (完整保留) ========== */
   const generateFestData = (year) => {
     const eve = LunarCal.monthDays(year,12) ===29 ?29:30;
     const lunar2Solar = (m,d)=>{const r=LunarCal.lunar2solar(year,m,d);return formatYmd(r.y,r.m,r.d);};
@@ -132,35 +126,48 @@
     };
   };
 
-  /* ========== 新增：公共业务函数 (核心精简) ========== */
-  // 合并今年+明年节日并过滤，返回指定数量的待过节
+  /* ========== 公共业务函数 (核心修复：黄历解析逻辑) ========== */
   const mergeFestList = (type, limit) => {
     const fThis = generateFestData(curYear)[type];
     const fNext = generateFestData(curYear+1)[type];
     return [...fThis, ...fNext].filter(item => calcDateDiff(item[1]) >= 0).slice(0, limit);
   };
-  // 渲染节日行文本 + 当日节日🎉标识
+
   const renderFestLine = (list) => {
     return list.map(([name, date]) => {
       const diff = calcDateDiff(date);
       return diff === 0 ? `🎉${name}` : `${name} ${diff}天`;
     }).join(" , ");
   };
-  // 获取当日节日
+
   const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
-  // 生成黄历文本（友好兜底）
+
+  // ✅【重点修复】黄历+宜忌获取 核心函数 - 全部BUG修复完成
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
-    const data = await fetchJson(url);
-    const almanacItem = data?.data?.[0]?.almanac?.find(i => Number(i.day) === curDate);
-    const baseDesc = `干支纪法：${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
+    const targetMonth = padStart2(curMonth);
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${targetMonth}.json`;
+    const data = await fetchJson(url, {});
+    
+    // ☑️ 修复1：正确的黄历数据路径 data.almanac 而非 data.data[0].almanac
+    const almanacList = Array.isArray(data.almanac) ? data.almanac : [];
+    // ☑️ 修复2：兼容接口的day字段是两位字符串，精准匹配今日日期
+    const almanacItem = almanacList.find(i => i.day === padStart2(curDate));
+
+    // 本地兜底农历信息
+    const lunarTerm = lunarData.term ? ` ${lunarData.term}` : "";
+    const baseDesc = `干支纪法：${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日${lunarTerm}`.trim();
     if (!almanacItem) return baseDesc;
 
+    // ☑️ 修复3：所有字段兜底，避免undefined
     const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
-    const suit = almanacItem.suit || "诸事皆宜";
-    const avoid = almanacItem.avoid || "无特殊禁忌";
-    return `${almanacItem.gzYear}年 ${almanacItem.gzMonth}月 ${almanacItem.gzDate}日 ${desc}\n✅ 宜：${suit}\n❎ 忌：${avoid}`;
+    const suit = almanacItem.suit?.trim() || "诸事皆宜";
+    const avoid = almanacItem.avoid?.trim() || "无特殊禁忌";
+    const gzYear = almanacItem.gzYear || lunarData.gzYear;
+    const gzMonth = almanacItem.gzMonth || lunarData.gzMonth;
+    const gzDate = almanacItem.gzDate || lunarData.gzDay;
+
+    return `${gzYear}年 ${gzMonth}月 ${gzDate}日 ${desc}\n✅ 宜：${suit}\n❎ 忌：${avoid}`;
   };
 
   /* ========== 主业务逻辑执行 ========== */
@@ -171,13 +178,12 @@
     fetchJson(args.BLESS_URL, {})
   ]);
 
-  // 计算所有节日列表
   const legalFests = mergeFestList("legal",3);
   const folkFests = mergeFestList("folk",3);
   const intlFests = mergeFestList("intl",3);
   const termFests = mergeFestList("term",4);
 
-  // 当日节日通知推送
+  // 节日通知
   if (hasNotify && $store && now.getHours() >=6) {
     const todayLegal = getTodayFest(legalFests);
     const todayFolk = getTodayFest(folkFests);
@@ -223,14 +229,12 @@
       .trim();
   };
 
-  // 渲染最终内容
   const content = [
     almanacTxt,
     [renderFestLine(legalFests), renderFestLine(termFests), renderFestLine(folkFests), renderFestLine(intlFests)]
       .filter(Boolean).join("\n")
   ].filter(Boolean).join("\n\n");
 
-  // 输出结果
   $done({
     title: generateTitle(),
     content: content,
@@ -239,10 +243,10 @@
   });
 
 })().catch(e => {
-  console.log(`黄历脚本错误: ${e.message}`);
+  console.log(`[黄历脚本全局错误]: ${e.message}`);
   $done({
     title: "黄历加载失败",
-    content: `错误信息：${e.message || "未知错误"}`,
+    content: `错误信息：${e.message || "接口请求超时，请稍后重试"}`,
     icon: "exclamationmark.triangle"
   });
 });
