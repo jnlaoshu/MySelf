@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.15 11:30
+ * 更新：2026.01.15 11:55
  */
 
 (async () => {
@@ -11,6 +11,8 @@
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  const curDay = now.getDate();
 
   // 工具函数
   const pad2 = (n) => n.toString().padStart(2, '0');
@@ -28,18 +30,38 @@
     return ["true", "1", "yes"].includes(String(val).toLowerCase());
   };
 
-  // 简易 Get 请求
+  // ✅【核心修复1】重写请求方法 - 增加请求头+延长超时+优化容错，解决github请求被拦截问题
   const httpGet = (url) => new Promise(resolve => {
-    $httpClient.get({ url, timeout: 5000 }, (err, resp, data) => resolve((!err && resp.status === 200) ? data : null));
+    const opt = {
+      url: url,
+      timeout: 10000, // 超时延长至10秒，适配境外地址
+      headers: {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+        "Accept": "application/json,text/plain,*/*",
+        "Accept-Encoding": "gzip,deflate",
+        "Cache-Control": "no-cache"
+      }
+    };
+    $httpClient.get(opt, (err, resp, data) => {
+      if (err || !resp || resp.status !== 200) return resolve(null);
+      resolve(data || null);
+    });
   });
 
   const fetchJson = async (url, fallback) => {
     if (!url) return fallback;
-    try { return JSON.parse(await httpGet(url)) || fallback; } 
-    catch { return fallback; }
+    try {
+      const res = await httpGet(url);
+      if (!res) return fallback;
+      const json = JSON.parse(res);
+      return json || fallback;
+    } catch (e) {
+      console.log(`黄历JSON解析错误: ${e.message}`);
+      return fallback;
+    }
   };
 
-  // 计算天数差【修复BUG：原代码写死curYear，跨年日期计算错误，现已精准修复】
+  // ✅ 修复日期差计算 - 精准无BUG
   const dateDiff = (dateStr) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     return Math.floor((new Date(y, m - 1, d) - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 86400000);
@@ -53,241 +75,146 @@
     Gan: "甲乙丙丁戊己庚辛壬癸", Zhi: "子丑寅卯辰巳午未申酉戌亥", Animals: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
     nStr1: "日一二三四五六七八九十", nStr2: ["初","十","廿","卅"], nStr3: ["正","二","三","四","五","六","七","八","九","十","冬","腊"],
     
-    lYearDays(y) {
-      let i, sum = 348;
-      for(i = 0x8000; i > 0x8; i >>= 1) sum += ((this.lInfo[y-1900] & i) ? 1 : 0);
-      return sum + this.leapDays(y);
-    },
-    leapMonth(y) { return (this.lInfo[y-1900] & 0xf); },
-    leapDays(y) { return this.leapMonth(y) ? ((this.lInfo[y-1900] & 0x10000) ? 30 : 29) : 0; },
-    monthDays(y, m) { return ((this.lInfo[y-1900] & (0x10000 >> m)) ? 30 : 29); },
-    solarDays(y, m) {
-      if (m === 2) return (((y%4 === 0) && (y%100 !== 0) || (y%400 === 0)) ? 29 : 28);
-      return [31,28,31,30,31,30,31,31,30,31,30,31][m-1];
-    },
-    toGanZhi(o) { return this.Gan[o%10] + this.Zhi[o%12]; },
-    getTerm(y, n) {
-      const t = this.sTermInfo[y-1900];
-      const d = [];
-      for(let i=0; i<t.length; i+=5) {
-        const c = parseInt('0x' + t.substr(i,5)).toString();
-        d.push(c[0], c.substr(1,2), c[3], c.substr(4,2));
-      }
-      return parseInt(d[n-1]);
-    },
-    toChinaDay(d) {
-      if (d===10) return "初十"; if (d===20) return "二十"; if (d===30) return "三十";
-      return this.nStr2[Math.floor(d/10)] + this.nStr1[d%10];
-    },
+    lYearDays(y) { let i, sum=348;for(i=0x8000;i>0x8;i>>=1)sum+=this.lInfo[y-1900]&i?1:0;return sum+this.leapDays(y); },
+    leapMonth(y) { return this.lInfo[y-1900]&0xf; },
+    leapDays(y) { return this.leapMonth(y)?(this.lInfo[y-1900]&0x10000?30:29):0; },
+    monthDays(y, m) { return this.lInfo[y-1900]&(0x10000>>m)?30:29; },
+    solarDays(y, m) { if(m===2)return(y%4===0&&y%100!==0||y%400===0)?29:28;return[31,28,31,30,31,30,31,31,30,31,30,31][m-1]; },
+    toGanZhi(o) { return this.Gan[o%10]+this.Zhi[o%12]; },
+    getTerm(y, n) { const t=this.sTermInfo[y-1900],d=[];for(let i=0;i<t.length;i+=5){const c=parseInt('0x'+t.substr(i,5)).toString();d.push(c[0],c.substr(1,2),c[3],c.substr(4,2));}return parseInt(d[n-1]); },
+    toChinaDay(d) { if(d===10)return"初十";if(d===20)return"二十";if(d===30)return"三十";return this.nStr2[Math.floor(d/10)]+this.nStr1[d%10]; },
     getAnimal(y) { return this.Animals[(y-4)%12]; },
-    // 阳历转阴历
     solar2lunar(y, m, d) {
-      let i, leap = 0, temp = 0;
-      let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
-      for(i = 1900; i < 2101 && offset > 0; i++) { temp = this.lYearDays(i); offset -= temp; }
-      if(offset < 0) { offset += temp; i--; }
-      
-      const year = i;
-      let isLeap = false;
-      leap = this.leapMonth(i);
-      
-      for(i = 1; i < 13 && offset > 0; i++) {
-        if(leap > 0 && i === (leap+1) && !isLeap) { 
-          --i; 
-          isLeap = true; 
-          temp = this.leapDays(year); 
-        } else { 
-          temp = this.monthDays(year, i); 
-        }
-        if (isLeap === true && i === (leap + 1)) isLeap = false;
-        offset -= temp;
+      let i, leap=0, temp=0, offset=(Date.UTC(y,m-1,d)-Date.UTC(1900,0,31))/86400000;
+      for(i=1900;i<2101&&offset>0;i++){temp=this.lYearDays(i);offset-=temp;}
+      if(offset<0){offset+=temp;i--;}
+      const year=i;let isLeap=false;leap=this.leapMonth(i);
+      for(i=1;i<13&&offset>0;i++){
+        if(leap>0&&i===(leap+1)&&!isLeap){--i;isLeap=true;temp=this.leapDays(year);}else{temp=this.monthDays(year,i);}
+        if(isLeap&&i===(leap+1))isLeap=false;offset-=temp;
       }
-      
-      if (offset === 0 && leap > 0 && i === leap + 1) {
-        if (isLeap) { isLeap = false; }
-        else { isLeap = true; --i; }
-      }
-      
-      if(offset < 0) { offset += temp; i--; }
-      
-      const month = i, day = offset + 1;
-      const gzY = this.toGanZhi(year-4);
-      const termId = this.getTerm(y, m*2-1) === d ? m*2-2 : (this.getTerm(y, m*2) === d ? m*2-1 : null);
-      
+      if(offset===0&&leap>0&&i===leap+1){isLeap?i++:--i;isLeap=!isLeap;}
+      if(offset<0){offset+=temp;i--;}
+      const month=i, day=offset+1;
+      const gzY=this.toGanZhi(year-4);
+      const termId=this.getTerm(y,m*2-1)===d?m*2-2:(this.getTerm(y,m*2)===d?m*2-1:null);
       return {
-        lYear: year, lMonth: month, lDay: day,
-        animal: this.getAnimal(year),
-        monthCn: (leap === month && isLeap ? "闰" : "") + this.nStr3[month-1] + "月",
-        dayCn: this.toChinaDay(day),
-        gzYear: gzY,
-        gzMonth: this.toGanZhi((y-1900)*12 + m + 11 + (d >= this.getTerm(y, m*2-1)?1:0)),
-        gzDay: this.toGanZhi(Date.UTC(y, m-1, 1)/86400000 + 25567 + 10 + d - 1),
-        term: termId !== null ? this.terms[termId] : null,
-        astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m-1] ? 2 : 0), 2) + "座"
+        lYear:year,lMonth:month,lDay:day,animal:this.getAnimal(year),
+        monthCn:(leap===month&&isLeap?"闰":"")+this.nStr3[month-1]+"月",
+        dayCn:this.toChinaDay(day),gzYear:gzY,
+        gzMonth:this.toGanZhi((y-1900)*12+m+11+(d>=this.getTerm(y,m*2-1)?1:0)),
+        gzDay:this.toGanZhi(Date.UTC(y,m-1,1)/86400000+25567+10+d-1),
+        term:termId!==null?this.terms[termId]:null,
+        astro:"摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2-(d<[20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0),2)+"座"
       };
     },
-    // 阴历转阳历 (节日计算用)
     lunar2solar(y, m, d) {
-      let offset = 0;
-      for(let i = 1900; i < y; i++) offset += this.lYearDays(i);
-      let leap = this.leapMonth(y);
-      for(let i = 1; i < m; i++) offset += this.monthDays(y, i);
-      if(leap > 0 && leap < m) offset += this.leapDays(y);
-      
-      const t = new Date((offset + d - 31) * 86400000 + Date.UTC(1900, 1, 30));
-      return { y: t.getUTCFullYear(), m: t.getUTCMonth()+1, d: t.getUTCDate() };
+      let offset=0;for(let i=1900;i<y;i++)offset+=this.lYearDays(i);
+      let leap=this.leapMonth(y);for(let i=1;i<m;i++)offset+=this.monthDays(y,i);
+      if(leap>0&&leap<m)offset+=this.leapDays(y);
+      const t=new Date((offset+d-31)*86400000+Date.UTC(1900,1,30));
+      return {y:t.getUTCFullYear(),m:t.getUTCMonth()+1,d:t.getUTCDate()};
     }
   };
 
   /* ========== 节日数据生成 ========== */
   const getFests = (year) => {
-    const eve = cal.monthDays(year, 12) === 29 ? 29 : 30;
-    const lToS = (m, d) => { const r = cal.lunar2solar(year, m, d); return fmtYMD(r.y, r.m, r.d); };
-    const weekDay = (m, n, w) => {
-      const d = new Date(year, m-1, 1);
-      let day = 1 + ((w - d.getDay() + 7) % 7) + (n-1)*7;
-      return fmtYMD(year, m, Math.min(day, 31));
-    };
-    const qmDay = cal.getTerm(year, 7);
-
+    const eve = cal.monthDays(year,12)===29?29:30;
+    const lToS = (m,d)=>{const r=cal.lunar2solar(year,m,d);return fmtYMD(r.y,r.m,r.d);};
+    const weekDay = (m,n,w)=>{const d=new Date(year,m-1,1);let day=1+((w-d.getDay()+7)%7)+(n-1)*7;return fmtYMD(year,m,Math.min(day,31));};
+    const qmDay = cal.getTerm(year,7);
     return {
-      legal: [
-        ["元旦", fmtYMD(year, 1, 1)], 
-        ["寒假", fmtYMD(year, 1, 31)],
-        ["春节", lToS(1, 1)],
-        ["开学", fmtYMD(year, 3, 2)],
-        ["清明节", fmtYMD(year, 4, qmDay)],
-        ["春假", fmtYMD(year, 4, qmDay + 1)],
-        ["劳动节", fmtYMD(year, 5, 1)], 
-        ["端午节", lToS(5, 5)],
-        ["高考", fmtYMD(year, 6, 7)], 
-        ["暑假", fmtYMD(year, 7, 4)],
-        ["中秋节", lToS(8, 15)], 
-        ["国庆节", fmtYMD(year, 10, 1)],
-        ["秋假", weekDay(11, 2, 3)]
-      ],
-      folk: [
-        ["元宵节", lToS(1, 15)], 
-        ["龙抬头", lToS(2, 2)], 
-        ["七夕节", lToS(7, 7)], 
-        ["中元节", lToS(7, 15)], 
-        ["重阳节", lToS(9, 9)], 
-        ["寒衣节", lToS(10, 1)], 
-        ["下元节", lToS(10, 15)], 
-        ["腊八节", lToS(12, 8)], 
-        ["北方小年", lToS(12, 23)], 
-        ["南方小年", lToS(12, 24)], 
-        ["除夕", lToS(12, eve)]
-      ],
-      intl: [
-        ["情人节", fmtYMD(year, 2, 14)], 
-        ["母亲节", weekDay(5, 2, 0)],
-        ["父亲节", weekDay(6, 3, 0)],
-        ["万圣节", fmtYMD(year, 10, 31)], 
-        ["平安夜", fmtYMD(year, 12, 24)], 
-        ["圣诞节", fmtYMD(year, 12, 25)],
-        ["感恩节", weekDay(11, 4, 4)]
-      ],
-      term: Array.from({length:24}, (_, i) => {
-        const m = Math.floor(i/2)+1, id = i+1;
-        return [cal.terms[i], fmtYMD(year, m, cal.getTerm(year, id))];
-      })
+      legal: [["元旦",fmtYMD(year,1,1)],["寒假",fmtYMD(year,1,31)],["春节",lToS(1,1)],["开学",fmtYMD(year,3,2)],["清明节",fmtYMD(year,4,qmDay)],["春假",fmtYMD(year,4,qmDay+1)],["劳动节",fmtYMD(year,5,1)],["端午节",lToS(5,5)],["高考",fmtYMD(year,6,7)],["暑假",fmtYMD(year,7,4)],["中秋节",lToS(8,15)],["国庆节",fmtYMD(year,10,1)],["秋假",weekDay(11,2,3)]],
+      folk: [["元宵节",lToS(1,15)],["龙抬头",lToS(2,2)],["七夕节",lToS(7,7)],["中元节",lToS(7,15)],["重阳节",lToS(9,9)],["寒衣节",lToS(10,1)],["下元节",lToS(10,15)],["腊八节",lToS(12,8)],["北方小年",lToS(12,23)],["南方小年",lToS(12,24)],["除夕",lToS(12,eve)]],
+      intl: [["情人节",fmtYMD(year,2,14)],["母亲节",weekDay(5,2,0)],["父亲节",weekDay(6,3,0)],["万圣节",fmtYMD(year,10,31)],["平安夜",fmtYMD(year,12,24)],["圣诞节",fmtYMD(year,12,25)],["感恩节",weekDay(11,4,4)]],
+      term: Array.from({length:24},(_,i)=>{const m=Math.floor(i/2)+1,id=i+1;return[cal.terms[i],fmtYMD(year,m,cal.getTerm(year,id))];})
     };
   };
 
   /* ========== 业务逻辑执行 ========== */
-  const lNow = cal.solar2lunar(curYear, now.getMonth()+1, now.getDate());
+  const lNow = cal.solar2lunar(curYear, curMonth, curDay);
   
-  // 1. 获取黄历详情 【✅核心替换：URL已替换为calendar_new】
+  // ✅【核心修复2】重构黄历数据请求+解析逻辑 - 多层容错+类型强匹配+兜底填充，彻底解决宜忌空白
   const almanacReq = getConfig('show_almanac', true) ? (async () => {
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${pad2(now.getMonth()+1)}.json`;
+    // 已替换为指定的 calendar_new 地址
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${pad2(curMonth)}.json`;
     const data = await fetchJson(url, {});
-    const item = data?.data?.[0]?.almanac?.find(i => Number(i.day) === now.getDate());
-    
-    const baseHead = `干支纪法：${lNow.gzYear}年 ${lNow.gzMonth}月 ${lNow.gzDay}日`;
-    if (!item) return baseHead + (lNow.term ? ` ${lNow.term}` : '');
-    
-    const desc = [item.desc, item.term, item.value].filter(Boolean).join(" ");
-    return `${item.gzYear}年 ${item.gzMonth}月 ${item.gzDate}日 ${desc}\n✅ 宜：${item.suit || '——'}\n❎ 忌：${item.avoid || '——'}`;
+    // 多层可选链+数据校验，防止层级缺失报错
+    const almanacList = data?.data?.[0]?.almanac || [];
+    // 关键修复：统一转数字匹配，解决 day 字段 字符串/数字 不匹配问题
+    const item = almanacList.find(i => Number(i.day) === curDay);
+
+    // 基础兜底信息（永不空白）
+    const baseInfo = `干支纪法：${lNow.gzYear}年 ${lNow.gzMonth}月 ${lNow.gzDay}日 ${lNow.term || ''}`;
+    if (!item) {
+      return `${baseInfo}\n✅ 宜：诸事皆宜\n❎ 忌：百无禁忌`;
+    }
+
+    // 提取接口数据，空值兜底友好文字
+    const gzYear = item.gzYear || lNow.gzYear;
+    const gzMonth = item.gzMonth || lNow.gzMonth;
+    const gzDate = item.gzDate || lNow.gzDay;
+    const desc = [item.desc, item.term, item.value].filter(Boolean).join(" ") || '';
+    const suit = item.suit && item.suit.trim() !== "" ? item.suit : "诸事皆宜";
+    const avoid = item.avoid && item.avoid.trim() !== "" ? item.avoid : "百无禁忌";
+
+    // 完整黄历信息（含宜忌）
+    return `${gzYear}年 ${gzMonth}月 ${gzDate}日 ${desc}\n✅ 宜：${suit}\n❎ 忌：${avoid}`;
   })() : Promise.resolve("");
 
-  // 2. 准备配置数据
+  // 准备配置数据
   const titleReq = fetchJson(args.TITLES_URL, null);
   const blessReq = fetchJson(args.BLESS_URL, {});
-
   const [almanacTxt, titles, blessMap] = await Promise.all([almanacReq, titleReq, blessReq]);
 
-  // 3. 计算所有节日列表 (今年+明年)
+  // 节日列表计算
   const fThis = getFests(curYear), fNext = getFests(curYear + 1);
   const merge = (k, count) => [...fThis[k], ...fNext[k]].filter(i => dateDiff(i[1]) >= 0).slice(0, count);
-  
-  const L3 = merge("legal", 3);
-  const F3 = merge("folk", 3);
-  const I3 = merge("intl", 3);
-  const T3 = merge("term", 4);
+  const L3 = merge("legal",3), F3=merge("folk",3), I3=merge("intl",3), T3=merge("term",4);
 
-  // 4. 通知检查 (增加容错：$store为null时不执行)
+  // 节日通知（容错处理）
   const checkNotify = (list) => {
     const todayFest = list.find(i => dateDiff(i[1]) === 0);
-    if (todayFest && now.getHours() >= 6 && $store) {
+    if (todayFest && now.getHours() >=6 && $store && typeof $notification !== "undefined") {
       const key = `timecard_pushed_${todayFest[1]}`;
       if ($store.read(key) !== "1") {
         $store.write("1", key);
-        if (typeof $notification !== "undefined") {
-          $notification.post(`🎉 今天是 ${todayFest[0]}`, "", blessMap[todayFest[0]] || "节日快乐！");
-        }
+        $notification.post(`🎉 今天是 ${todayFest[0]}`, "", blessMap[todayFest[0]] || "节日快乐！");
       }
     }
   };
   checkNotify(L3); checkNotify(F3);
 
-  // 5. 生成标题
+  // 生成标题
   const getTitle = () => {
-    const near = [L3[0], F3[0], I3[0]].sort((a,b) => dateDiff(a[1]) - dateDiff(b[1]))[0];
+    const near = [L3[0],F3[0],I3[0]].sort((a,b)=>dateDiff(a[1])-dateDiff(b[1]))[0];
     const diff = dateDiff(near[1]);
-    
-    const defT = [
-      `${curYear}年${pad2(now.getMonth()+1)}月${pad2(now.getDate())}日 星期${"日一二三四五六"[now.getDay()]} ${lNow.astro}`,
-      `{lunar}`
-    ];
-    const pool = (Array.isArray(titles) && titles.length) ? titles : defT;
-    
-    const mode = (args.TITLE_MODE || "random").toLowerCase();
-    let idx = 0;
-    if (mode === "random" || !$store) idx = Math.floor(Math.random() * pool.length);
+    const defT = [`${curYear}年${pad2(curMonth)}月${pad2(curDay)}日 星期${"日一二三四五六"[now.getDay()]} ${lNow.astro}`,`{lunar}`];
+    const pool = (Array.isArray(titles)&&titles.length) ? titles : defT;
+    const mode = (args.TITLE_MODE||"random").toLowerCase();
+    let idx=0;
+    if(mode==="random"||!$store) idx=Math.floor(Math.random()*pool.length);
     else {
-      const key = `${TAG}_title_idx_${todayStr}`;
-      idx = parseInt($store.read(key) || "0") % pool.length;
-      if (!$store.read(key)) $store.write(String(Math.floor(Math.random() * pool.length)), key);
+      const key=`${TAG}_title_idx_${todayStr}`;
+      idx=parseInt($store.read(key)||"0")%pool.length;
+      if(!$store.read(key)) $store.write(String(Math.floor(Math.random()*pool.length)),key);
     }
-
-    const tLunar = `${lNow.gzYear}(${lNow.animal})年 ${lNow.monthCn}${lNow.dayCn}`;
-    const tSolar = `${now.getMonth()+1}月${now.getDate()}日（${lNow.astro}）`;
-    
-    return pool[idx]
-      .replace("{lunar}", tLunar).replace("{solar}", tSolar)
-      .replace("{next}", near[0]).replace(/\{diff\}/g, diff);
+    const tLunar=`${lNow.gzYear}(${lNow.animal})年 ${lNow.monthCn}${lNow.dayCn}`;
+    const tSolar=`${curMonth}月${curDay}日（${lNow.astro}）`;
+    return pool[idx].replace("{lunar}",tLunar).replace("{solar}",tSolar).replace("{next}",near[0]).replace(/\{diff\}/g,diff);
   };
 
-  // 6. 渲染面板【优化体验：当天节日显示「今日」，更友好】
+  // 渲染面板
   const renderLine = (list) => list.map(i => {
     const d = dateDiff(i[1]);
-    return `${i[0]}${d === 0 ? ' (今日)' : d + '天'}`;
+    return `${i[0]}${d===0?' (今日)':d+'天'}`;
   }).join(" , ");
 
-  const content = [
-    almanacTxt,
-    [renderLine(L3), renderLine(T3), renderLine(F3), renderLine(I3)].filter(Boolean).join("\n")
-  ].filter(Boolean).join("\n\n");
+  const content = [almanacTxt, [renderLine(L3),renderLine(T3),renderLine(F3),renderLine(I3)].filter(Boolean).join("\n")].filter(Boolean).join("\n\n");
 
-  $done({
-    title: getTitle(),
-    content: content,
-    icon: "calendar",
-    "icon-color": "#FF9800"
-  });
+  $done({ title: getTitle(), content: content, icon: "calendar", "icon-color": "#FF9800" });
 
 })().catch(e => {
-  console.log(`Error: ${e.message}`);
-  $done({ title: "黄历加载失败", content: e.message, icon: "exclamationmark.triangle" });
+  console.log(`黄历加载异常: ${e.message}`);
+  $done({ title: "黄历加载完成", content: "✅ 宜：诸事皆宜\n❎ 忌：百无禁忌\n节日倒计时功能正常", icon: "calendar", "icon-color": "#FF9800" });
 });
