@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V33.0 百度接口专版)
- * ✅ 核心升级：替换为 [百度万年历官方接口]，数据源极其稳定，永不断更
- * ✅ 适配：完美解析百度 API 数据结构，精准显示 "宜/忌"
- * ✅ 保留：高精度农历算法 + 高考置顶 + 智能排序 + 经典布局
+ * 今日黄历&节假日倒数 (V34.0 百度接口深层抓取版)
+ * ✅ 修复：解决百度 API 宜忌不显示问题 (采用递归暴力扫描)
+ * ✅ 兼容：同时匹配 "2026-1-16" (百度格式) 和 "2026-01-16" (标准格式)
+ * ✅ 核心：保留 V32 的高精度农历 + 高考置顶 + 智能排序
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -10,16 +10,9 @@
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
-  
-  // 匹配指纹 (百度通常返回不补零的格式: 2026-1-16)
-  const MATCH = {
-    s: `${Y}-${M}-${D}`,      // 2026-1-16 (百度格式)
-    s2: `${Y}-${P(M)}-${P(D)}`, // 2026-01-16 (标准格式)
-    d: D
-  };
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求 (百度万年历 API)
+  // 2. 网络请求 (百度万年历 API + 递归扫描)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     // 百度官方接口 query=2026年1月
@@ -28,17 +21,23 @@
     return new Promise(r => {
       $httpClient.get({ url, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
     }).then(res => {
-      // 解析百度数据结构: data[0].almanac
-      if (!res.data || !res.data[0] || !res.data[0].almanac) return {};
-      const list = res.data[0].almanac;
+      let candidates = [];
+      // 🔥 核心修复：递归扫描整个 JSON，寻找包含 suit/avoid 的对象
+      const scan = n => {
+        if (!n || typeof n !== 'object') return;
+        if (n.suit || n.avoid) candidates.push(n); // 百度特有字段
+        if (Array.isArray(n)) n.forEach(scan);
+        else Object.values(n).forEach(scan);
+      };
+      scan(res);
+
+      // 🔥 核心修复：日期格式双重匹配
+      const s1 = `${Y}-${M}-${D}`;      // 2026-1-16 (百度常见格式)
+      const s2 = `${Y}-${P(M)}-${P(D)}`; // 2026-01-16 (标准格式)
       
-      // 查找当天数据
-      return list.find(i => {
-        // 百度 date 字段通常是 "2026-1-16"
-        if (i.date === MATCH.s || i.date === MATCH.s2) return true;
-        // 容错匹配 Day
-        if (i.day && parseInt(i.day) === MATCH.d) return true;
-        return false;
+      return candidates.find(i => {
+        if (!i.date) return false;
+        return i.date === s1 || i.date === s2;
       }) || {};
     }).catch(() => ({}));
   };
@@ -53,7 +52,7 @@
     leap(y) { return this.info[y-1900] & 0xf },
     mDays(y, m) { return (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29 },
     term(y, n) { return new Date((31556925974.7*(y-1900)+[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1]*60000)+Date.UTC(1900,0,6,2,5)).getUTCDate() },
-    convert(y, m, d) {
+    toObj(y, m, d) {
       let offset = (Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000, i, temp=0;
       for(i=1900; i<2101 && offset>0; i++) { temp=this.lDays(i); offset-=temp; }
       if(offset<0) { offset+=temp; i--; }
@@ -104,16 +103,15 @@
 
   // 5. 渲染
   try {
-    const obj = Lunar.convert(Y, M, D);
+    const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
-    // 百度返回 Key: suit(宜), avoid(忌). chong/baiji 百度可能没有，做容错
-    const yi = api.suit || api.yi || api.Yi || "";
-    const ji = api.avoid || api.ji || api.Ji || "";
-    // 如果百度没有冲煞，就留空 (百度接口有时候确实不返回这个)
-    const chong = api.chong || api.chongsha || ""; 
-    const bai = api.baiji || "";
-    const alm = [chong, bai, yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
-    const [f1, f2] = [getFests(Y), getFests(Y+1)];
+    
+    // 映射百度字段到标准字段
+    const yi = api.suit || api.yi || "";
+    const ji = api.avoid || api.ji || "";
+    const alm = [yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
+    
+    const f1 = getFests(Y), f2 = getFests(Y+1);
     
     $done({
       title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
@@ -123,5 +121,5 @@
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请检查网络或日志" }); }
+  } catch (e) { $done({ title: "黄历异常", content: "请检查日志" }); }
 })();
