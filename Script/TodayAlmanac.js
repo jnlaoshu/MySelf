@@ -1,48 +1,52 @@
 /*
- * 今日黄历&节假日倒数 (V38.0 百度单日直连版)
- * ✅ 核心修复：改为直接查询 "YYYY年M月D日" 单日数据，避开整月数据解析的大坑
- * ✅ 数据清洗：自动将百度的 "出行.嫁娶" 格式优化为 "出行 嫁娶"
- * ✅ 双重保障：百度接口 (主) + GitHub (备)，确保 100% 有数据显示
+ * 今日黄历&节假日倒数 (V39.0 百度接口最终修正版)
+ * ✅ 核心修复：回归 "按月查询" 策略，这是百度最稳定的数据源
+ * ✅ 匹配修复：构建 "YYYY-M-D" (不补零) 专用指纹，精准锁定当天数据
+ * ✅ 双重兜底：百度接口失效时，毫秒级切换 GitHub 源
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
   const now = new Date(new Date().getTime() + (new Date().getTimezoneOffset() * 60000) + (28800000));
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
-  const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求：优先百度单日查询 -> 降级 GitHub
+  // 🔥 关键：百度专用日期指纹 (不补零，例如 2026-1-16)
+  const BAIDU_KEY = `${Y}-${M}-${D}`;
+  // 标准日期指纹 (GitHub用，例如 2026-01-16)
+  const STD_KEY = `${Y}-${P(M)}-${P(D)}`;
+
+  // 2. 网络请求：百度(主) -> GitHub(备)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
 
-    // 🅰️ 方案 A: 百度万年历 (单日精确查询)
+    // 🅰️ 方案 A: 百度万年历 (按月查询，结构最稳)
     const getBaidu = async () => {
-      // 直接查 "2026年1月16日"，数据量小，精准度高
-      const q = encodeURIComponent(`${Y}年${M}月${D}日`);
+      // 查询 "2026年1月"，获取整月数据
+      const q = encodeURIComponent(`${Y}年${M}月`);
       const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${q}&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
       
       return new Promise(r => {
         $httpClient.get({ 
-          url, 
-          timeout: 3000, 
+          url, timeout: 3000, 
           headers: { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/115.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36",
             "Referer": "https://www.baidu.com/"
           } 
         }, (e, _, d) => {
           if (e || !d) return r(null);
           try {
             const json = JSON.parse(d);
-            // 百度单日查询结构: data[0] 就是当天数据 (注意：有时依然在 almanac 数组里，取第一个)
-            if (json.data && json.data.length > 0) {
-              const item = json.data[0].almanac ? json.data[0].almanac[0] : json.data[0];
-              if (item && (item.suit || item.avoid)) {
+            // 百度结构: data[0].almanac 是一个数组
+            if (json.data && json.data[0] && Array.isArray(json.data[0].almanac)) {
+              // 🔥 核心匹配：在数组中找到 date 等于 "2026-1-16" 的那一项
+              const item = json.data[0].almanac.find(i => i.date === BAIDU_KEY);
+              if (item && item.suit) {
                 return r({ 
-                  // 百度数据带点，替换为空格更美观
-                  yi: (item.suit || "").replace(/\./g, " "), 
-                  ji: (item.avoid || "").replace(/\./g, " "), 
-                  src: "百度" 
+                  // 清洗数据: "出行.嫁娶" -> "出行 嫁娶"
+                  yi: item.suit.replace(/\./g, " "), 
+                  ji: item.avoid.replace(/\./g, " "), 
+                  src: "Baidu" 
                 });
               }
             }
@@ -59,30 +63,27 @@
         $httpClient.get({ url, timeout: 5000 }, (e, _, d) => {
           if(e || !d) return r({});
           try {
-            const json = JSON.parse(d);
-            // 简单粗暴的递归查找
-            let found = null;
-            const target = `${Y}-${P(M)}-${P(D)}`; // 2026-01-16
-            const scan = (obj) => {
-              if (found || !obj || typeof obj !== 'object') return;
-              if ((obj.date === target || (obj.day && parseInt(obj.day) === D)) && (obj.yi || obj.suit)) {
-                found = obj;
-                return;
-              }
-              Object.values(obj).forEach(scan);
+            // 简单递归查找
+            let list = [];
+            const scan = n => {
+              if (Object(n) !== n) return;
+              if (n.yi || n.suit) list.push(n);
+              for (let k in n) scan(n[k]);
             };
-            scan(json);
-            if (found) return r({ yi: found.yi || found.suit, ji: found.ji || found.avoid, src: "GitHub" });
+            scan(JSON.parse(d));
+            // 匹配标准格式 2026-01-16
+            const item = list.find(i => (i.date && String(i.date).includes(STD_KEY)) || (i.day && parseInt(i.day) === D));
+            if (item) return r({ yi: item.yi || item.suit, ji: item.ji || item.avoid, src: "GitHub" });
             r({});
           } catch { r({}); }
         });
       });
     };
 
-    // 执行策略
+    // 执行逻辑
     const baidu = await getBaidu();
     if (baidu) return baidu;
-    console.log("⚠️ 百度接口失效，切换至 GitHub 源");
+    console.log("⚠️ 百度接口未返回有效数据，切换至 GitHub");
     return await getGithub();
   };
 
@@ -96,10 +97,11 @@
     leapDays(y) { return this.leapMonth(y) ? (this.info[y-1900] & 0x10000 ? 30 : 29) : 0; },
     monthDays(y, m) { return (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29; },
     solarDays(y, m) { return m==2 ? ((y%4==0&&y%100!=0||y%400==0)?29:28) : [31,28,31,30,31,30,31,31,30,31,30,31][m-1]; },
-    getTerm(y, n) { return new Date((31556925974.7 * (y - 1900) + [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1] * 60000) + Date.UTC(1900, 0, 6, 2, 5)).getUTCDate(); },
+    getTerm(y, n) { 
+      return new Date((31556925974.7 * (y - 1900) + [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1] * 60000) + Date.UTC(1900, 0, 6, 2, 5)).getUTCDate();
+    },
     convert(y, m, d) {
-      let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
-      let i, leap=0, temp=0;
+      let i, leap=0, temp=0, offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
       for(i=1900; i<2101 && offset>0; i++) { temp=this.lYearDays(i); offset-=temp; }
       if(offset<0) { offset+=temp; i--; }
       const lYear=i; leap=this.leapMonth(i); let isLeap=false;
@@ -110,12 +112,12 @@
       }
       if(offset==0 && leap>0 && i==leap+1) { if(isLeap) isLeap=false; else { isLeap=true; --i; } }
       if(offset<0) { offset+=temp; i--; }
-      const lDay=offset+1;
+      const lDay = offset+1;
       const term = this.getTerm(y, m*2-1)==d ? ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"][m*2-2] : (this.getTerm(y, m*2)==d ? ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"][m*2-1] : "");
       return { 
-        gz: this.gan[(lYear-4)%10]+this.zhi[(lYear-4)%12], ani: this.ani[(lYear-4)%12], 
+        gz: this.gan[(lYear-4)%10]+this.zhi[(lYear-4)%12], ani: this.ani[(lYear-4)%12],
         cn: `${isLeap?"闰":""}${this.monStr[i-1]}月${lDay==10?"初十":lDay==20?"二十":lDay==30?"三十":["初","十","廿","卅"][Math.floor(lDay/10)]+this.nStr[lDay%10]}`,
-        term, astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2-(d<[20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0),2)+"座" 
+        term: term, astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0), 2) + "座"
       };
     },
     l2s(y,m,d) { try { let off=0; for(let i=1900;i<y;i++) off+=this.lYearDays(i); let lp=this.leapMonth(y); for(let i=1;i<m;i++) off+=this.monthDays(y,i); if(lp>0 && lp<m) off+=this.leapDays(y); return new Date(Date.UTC(1900,0,31)+(off+d-1)*86400000); } catch(e){return null;} }
@@ -123,6 +125,7 @@
 
   // 4. 节日配置
   const getFests = (y) => {
+    const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.getTerm(y,n));
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
@@ -162,5 +165,5 @@
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请检查网络" }); }
+  } catch (e) { $done({ title: "脚本异常", content: e.message }); }
 })();
