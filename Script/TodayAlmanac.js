@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 终极适配版 - 完美兼容calendar_new新接口 + 仅读真实宜忌无兜底
+ * 更新：2026.01.16 终极完美版 - 适配calendar_new所有格式+精准获取真实宜忌+无兜底+调试日志
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -18,8 +18,8 @@
   /* ========== 工具函数 ========== */
   const padStart2 = (n) => n.toString().padStart(2, '0');
   const formatYmd = (y, m, d) => `${y}-${padStart2(m)}-${padStart2(d)}`;
-  const todayStr = formatYmd(curYear, curMonth, curDate);
-  const todayNumStr = `${curYear}${padStart2(curMonth)}${padStart2(curDate)}`;
+  const todayStr = formatYmd(curYear, curMonth, curDate); // 格式：2026-01-16
+  const todayNumStr = `${curYear}${padStart2(curMonth)}${padStart2(curDate)}`; // 格式：20260116
   const parseArgs = () => {
     if (typeof $argument === "undefined" || !$argument) return {};
     const argStr = $argument.replace(/,/g, '&').trim();
@@ -35,7 +35,7 @@
 
   const httpGet = (url) => new Promise(resolve => {
     if (!hasHttpClient) return resolve(null);
-    $httpClient.get({ url, timeout: 8000 }, (err, resp, data) => {
+    $httpClient.get({ url, timeout: 10000 }, (err, resp, data) => {
       resolve((!err && resp?.status === 200) ? data : null);
     });
   });
@@ -45,7 +45,8 @@
     try {
       const data = await httpGet(url);
       return data ? JSON.parse(data) : fallback;
-    } catch {
+    } catch (e) {
+      console.log("📌 黄历接口解析失败：", e.message);
       return fallback;
     }
   };
@@ -138,27 +139,54 @@
   };
   const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
   
-  // ✅✅✅ 核心修复：完美适配calendar_new新接口 + 仅读取当日真实宜忌 无任何兜底 ✅✅✅
+  // ✅✅✅ 终极核心修复 - 适配calendar_new所有格式 + 精准获取真实宜忌 + 无兜底 + 调试日志 ✅✅✅
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // 1. 修正✅ 新接口正确路径：无年份子文件夹，直接 calendar_new/年月.json
+    // ✔️ 确认正确接口路径：无年份文件夹，直接根目录
     const monthFileName = `${curYear}${padStart2(curMonth)}.json`;
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${monthFileName}`;
-    // 2. 修正✅ 新接口返回直接是数组，无需读取data.data
+    // ✔️ 请求接口，返回直接是数组
     const almanacList = await fetchJson(url, []);
     
-    // 精准匹配当日数据（仅匹配纯数字格式 20260116）
-    const almanacItem = almanacList.find(item => {
-      return item && item.date && String(item.date).trim() === todayNumStr;
-    });
+    // ✔️ 调试日志：查看接口请求结果，方便排查（不影响显示）
+    console.log("📌 黄历接口请求地址：", url);
+    console.log("📌 接口返回数据条数：", almanacList.length);
+    console.log("📌 今日匹配格式1(横杠)：", todayStr);
+    console.log("📌 今日匹配格式2(纯数字)：", todayNumStr);
 
-    // 纯基础干支信息，无任何多余内容
-    const baseDesc = `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
-    // 仅当获取到【真实有效的宜+忌】数据时，才拼接显示，否则只返回干支
-    if (almanacItem && almanacItem.yi && almanacItem.ji && almanacItem.yi.trim() && almanacItem.ji.trim()) {
-      return `${baseDesc}\n✅ 宜：${almanacItem.yi}\n❎ 忌：${almanacItem.ji}`;
+    // ✔️ 核心修复：兼容2种日期格式 + 自动去空格 + 精准匹配当日数据
+    let almanacItem = null;
+    if (almanacList.length > 0) {
+      almanacItem = almanacList.find(item => {
+        if (!item || !item.date) return false;
+        const itemDate = String(item.date).trim(); // 自动去除首尾空格
+        // 同时匹配 2026-01-16 和 20260116 两种格式，百分百命中
+        return itemDate === todayStr || itemDate === todayNumStr;
+      });
     }
-    // 无真实数据 → 只返回干支，无宜无忌，完全符合你的要求
+
+    // ✔️ 调试日志：查看是否匹配到当日数据
+    if (almanacItem) {
+      console.log("✅ 匹配到当日黄历数据：", almanacItem);
+    } else {
+      console.log("❌ 未匹配到当日黄历数据，接口无该日期信息");
+    }
+
+    // ✔️ 纯基础干支信息，无任何多余内容（严格遵守你的要求）
+    const baseDesc = `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
+    
+    // ✔️ 宽松空值校验：仅过滤纯空格/空字符，保留真实的短文本宜忌，无任何兜底值
+    const hasValidYi = almanacItem && almanacItem.yi && String(almanacItem.yi).trim().length > 0;
+    const hasValidJi = almanacItem && almanacItem.ji && String(almanacItem.ji).trim().length > 0;
+
+    // ✔️ 只有获取到【网站真实的宜+忌】才显示，否则只返回干支
+    if (hasValidYi && hasValidJi) {
+      const yiText = String(almanacItem.yi).trim();
+      const jiText = String(almanacItem.ji).trim();
+      return `${baseDesc}\n✅ 宜：${yiText}\n❎ 忌：${jiText}`;
+    }
+    
+    // ✔️ 无真实数据 → 只返回纯干支，无宜、无忌、无任何兜底文案（完美符合你的要求）
     return baseDesc;
   };
 
@@ -233,7 +261,7 @@
   });
 
 })().catch(e => {
-  console.log(`黄历脚本错误: ${e.message}`);
+  console.log("📌 黄历脚本全局错误：", e.message);
   $done({
     title: "黄历加载失败",
     content: `错误信息：${e.message || "未知错误"}`,
