@@ -1,24 +1,10 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.15 优化版 + 修复黄历宜忌日期错位BUG
+ * 更新：2026.01.16 最终修复版 | 解决【加载失败语法错误】+【宜忌日期错位逻辑错误】
  */
 (async () => {
-  /* ========== 常量配置 & 环境初始化 ========== */
-  const TAG = "festival_countdown";
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth() + 1;
-  const curDate = now.getDate();
-  // fix: 核心修正1 - 统一日期格式为【补零的YYYY-MM-DD】，和接口返回的date字段格式完全一致
-  const todayStr = `${curYear}-${padStart2(curMonth)}-${padStart2(curDate)}`;
-  const weekCn = "日一二三四五六";
-  // 环境变量安全兼容
-  const $store = typeof $persistentStore !== "undefined" ? $persistentStore : null;
-  const hasNotify = typeof $notification !== "undefined";
-  const hasHttpClient = typeof $httpClient !== "undefined";
-
-  /* ========== 工具函数（语义化重构+性能优化） ========== */
+  /* ========== 【核心修复】工具函数置顶！必须 先定义，后调用 ========== */
   // 数字补两位前置0
   const padStart2 = (n) => n.toString().padStart(2, '0');
   // 格式化年月日为 年-月-日
@@ -29,23 +15,19 @@
     const argStr = $argument.replace(/,/g, '&').trim();
     return Object.fromEntries(new URLSearchParams(argStr));
   };
-  const args = parseArgs();
-
   // 获取布尔型配置项(兼容大小写)
   const getConfig = (key, def = false) => {
     const val = args[key] ?? args[key.toLowerCase()];
     if (val === undefined) return def;
     return ["true", "1", "yes"].includes(String(val).toLowerCase());
   };
-
   // 安全GET请求 (带超时+错误兜底)
   const httpGet = (url) => new Promise(resolve => {
-    if (!hasHttpClient) return resolve(null);
+    if (!typeof $httpClient === "undefined") return resolve(null);
     $httpClient.get({ url, timeout: 5000 }, (err, resp, data) => {
       resolve((!err && resp?.status === 200) ? data : null);
     });
   });
-
   // 安全获取JSON数据 (异常兜底返回默认值)
   const fetchJson = async (url, fallback = {}) => {
     if (!url) return fallback;
@@ -56,7 +38,6 @@
       return fallback;
     }
   };
-
   // 计算目标日期与今日的天数差【核心缓存优化：只计算一次】
   const calcDateDiff = (dateStr) => {
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -64,6 +45,21 @@
     const todayTime = new Date(curYear, curMonth - 1, curDate).getTime();
     return Math.floor((targetTime - todayTime) / 86400000);
   };
+
+  /* ========== 常量配置 & 环境初始化 ========== */
+  const TAG = "festival_countdown";
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  const curDate = now.getDate();
+  // ✔️ 修复1：日期格式标准化补零，匹配接口字段
+  const todayStr = `${curYear}-${padStart2(curMonth)}-${padStart2(curDate)}`;
+  const weekCn = "日一二三四五六";
+  // 环境变量安全兼容
+  const $store = typeof $persistentStore !== "undefined" ? $persistentStore : null;
+  const hasNotify = typeof $notification !== "undefined";
+  const hasHttpClient = typeof $httpClient !== "undefined";
+  const args = parseArgs();
 
   /* ========== 农历核心算法 (原逻辑完整保留，仅格式化) ========== */
   const LunarCal = {
@@ -132,33 +128,27 @@
     };
   };
 
-  /* ========== 新增：公共业务函数 (核心精简) ========== */
-  // 合并今年+明年节日并过滤，返回指定数量的待过节
+  /* ========== 公共业务函数 ========== */
   const mergeFestList = (type, limit) => {
     const fThis = generateFestData(curYear)[type];
     const fNext = generateFestData(curYear+1)[type];
     return [...fThis, ...fNext].filter(item => calcDateDiff(item[1]) >= 0).slice(0, limit);
   };
-  // 渲染节日行文本 + 当日节日🎉标识
   const renderFestLine = (list) => {
     return list.map(([name, date]) => {
       const diff = calcDateDiff(date);
       return diff === 0 ? `🎉${name}` : `${name} ${diff}天`;
     }).join(" , ");
   };
-  // 获取当日节日
   const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
-  // 生成黄历文本（友好兜底）
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
     
-    // fix: 核心修正2 - 简化接口数据解析，目标接口的data字段就是【当月每日黄历的标准数组】，无多余嵌套
+    // ✔️ 修复2：简化解析，适配接口标准结构
     const almanacList = Array.isArray(data?.data) ? data.data : [];
-
-    // fix: 核心修正3 - 彻底删除松散的day匹配，只做【精准日期全等匹配】，杜绝匹配错误
-    // 接口返回的每一项都有 date 字段，值为 标准补零格式 YYYY-MM-DD，直接和 todayStr 匹配即可
+    // ✔️ 修复3：精准日期匹配，删除松散的day匹配，杜绝错位
     const almanacItem = almanacList.find(item => item.date === todayStr);
 
     const baseDesc = `干支纪法：${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
@@ -178,13 +168,11 @@
     fetchJson(args.BLESS_URL, {})
   ]);
 
-  // 计算所有节日列表
   const legalFests = mergeFestList("legal",3);
   const folkFests = mergeFestList("folk",3);
   const intlFests = mergeFestList("intl",3);
   const termFests = mergeFestList("term",3);
 
-  // 当日节日通知推送
   if (hasNotify && $store && now.getHours() >=6) {
     const todayLegal = getTodayFest(legalFests);
     const todayFolk = getTodayFest(folkFests);
@@ -199,7 +187,6 @@
     }
   }
 
-  // 生成标题
   const generateTitle = () => {
     const nearFests = [legalFests[0], folkFests[0], intlFests[0]].filter(Boolean);
     const nearFest = nearFests.sort((a,b)=>calcDateDiff(a[1])-calcDateDiff(b[1]))[0] || ["今日", todayStr];
@@ -230,14 +217,12 @@
       .trim();
   };
 
-  // 渲染最终内容
   const content = [
     almanacTxt,
     [renderFestLine(legalFests), renderFestLine(termFests), renderFestLine(folkFests), renderFestLine(intlFests)]
       .filter(Boolean).join("\n")
   ].filter(Boolean).join("\n\n");
 
-  // 输出结果
   $done({
     title: generateTitle(),
     content: content,
