@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2025.12.17 08:20
+ * 更新：2026.01.16
  */
 
 (async () => {
@@ -11,6 +11,8 @@
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
   const curYear = now.getFullYear();
+  const curMonth = now.getMonth() + 1;
+  const curDay = now.getDate();
 
   // 工具函数
   const pad2 = (n) => n.toString().padStart(2, '0');
@@ -66,6 +68,80 @@
       return [31,28,31,30,31,30,31,31,30,31,30,31][m-1];
     },
     toGanZhi(o) { return this.Gan[o%10] + this.Zhi[o%12]; },
+    
+    // 修正：天的天干地支计算
+    getGanZhiDay(y, m, d) {
+      // 使用标准的日干支计算公式
+      const baseYear = 1900; // 基准年
+      const baseGanZhi = 37; // 1900年1月1日的干支序数（1月31日是36，1月1日是37）
+      
+      // 计算1900年1月1日到指定日期的天数
+      const startDate = new Date(baseYear, 0, 1);
+      const targetDate = new Date(y, m-1, d);
+      const diffTime = targetDate.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 3600 * 24));
+      
+      // 计算干支序数
+      const ganZhiIndex = (baseGanZhi + diffDays) % 60;
+      return this.toGanZhi(ganZhiIndex);
+    },
+    
+    // 修正：月的天干地支计算
+    getGanZhiMonth(y, m, d) {
+      // 月干支以节气为界
+      const termDay = this.getTerm(y, m*2-1);
+      let monthNum = m;
+      let yearNum = y;
+      
+      // 处理月份跨年
+      if (monthNum === 1) {
+        monthNum = 13;
+        yearNum = y - 1;
+      } else if (monthNum === 2) {
+        monthNum = 14;
+        yearNum = y - 1;
+      }
+      
+      // 如果日期小于节气日，月数减1
+      if (d < termDay) {
+        monthNum -= 1;
+        if (monthNum === 0) {
+          monthNum = 12;
+        }
+      }
+      
+      // 年干基数
+      const yearGan = ((yearNum - 3) % 10) - 1;
+      if (yearGan < 0) yearGan += 10;
+      
+      // 计算月支基数
+      let monthBase = 0;
+      switch(yearGan) {
+        case 0: case 5: monthBase = 2; break; // 甲、己年
+        case 1: case 6: monthBase = 0; break; // 乙、庚年
+        case 2: case 7: monthBase = 8; break; // 丙、辛年
+        case 3: case 8: monthBase = 6; break; // 丁、壬年
+        case 4: case 9: monthBase = 4; break; // 戊、癸年
+      }
+      
+      const monthGanZhiIndex = (monthBase + monthNum - 1) % 60;
+      return this.toGanZhi(monthGanZhiIndex);
+    },
+    
+    // 修正：年的天干地支计算
+    getGanZhiYear(y, m, d) {
+      // 年的划分以立春为界
+      const termDay = this.getTerm(y, 3); // 立春日期
+      let yearNum = y;
+      
+      // 如果日期在立春之前，则算前一年
+      if (m < 2 || (m === 2 && d < termDay)) {
+        yearNum = y - 1;
+      }
+      
+      return this.toGanZhi(yearNum - 1864);
+    },
+    
     getTerm(y, n) {
       const t = this.sTermInfo[y-1900];
       const d = [];
@@ -80,7 +156,8 @@
       return this.nStr2[Math.floor(d/10)] + this.nStr1[d%10];
     },
     getAnimal(y) { return this.Animals[(y-4)%12]; },
-    // 阳历转阴历
+    
+    // 修正：阳历转阴历
     solar2lunar(y, m, d) {
       let i, leap = 0, temp = 0;
       let offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
@@ -92,7 +169,6 @@
       leap = this.leapMonth(i);
       
       for(i = 1; i < 13 && offset > 0; i++) {
-        // 闰月
         if(leap > 0 && i === (leap+1) && !isLeap) { 
           --i; 
           isLeap = true; 
@@ -101,7 +177,6 @@
           temp = this.monthDays(year, i); 
         }
         
-        // 解除闰月
         if (isLeap === true && i === (leap + 1)) isLeap = false;
         
         offset -= temp;
@@ -115,7 +190,12 @@
       if(offset < 0) { offset += temp; i--; }
       
       const month = i, day = offset + 1;
-      const gzY = this.toGanZhi(year-4); //  (偏移量应为-4)
+      
+      // 使用修正后的干支计算方法
+      const gzYear = this.getGanZhiYear(y, m, d);
+      const gzMonth = this.getGanZhiMonth(y, m, d);
+      const gzDay = this.getGanZhiDay(y, m, d);
+      
       const termId = this.getTerm(y, m*2-1) === d ? m*2-2 : (this.getTerm(y, m*2) === d ? m*2-1 : null);
       
       return {
@@ -123,14 +203,15 @@
         animal: this.getAnimal(year),
         monthCn: (leap === month && isLeap ? "闰" : "") + this.nStr3[month-1] + "月",
         dayCn: this.toChinaDay(day),
-        gzYear: gzY,
-        gzMonth: this.toGanZhi((y-1900)*12 + m + 11 + (d >= this.getTerm(y, m*2-1)?1:0)),
-        gzDay: this.toGanZhi(Date.UTC(y, m-1, 1)/86400000 + 25567 + 10 + d - 1),
+        gzYear: gzYear,
+        gzMonth: gzMonth,
+        gzDay: gzDay,
         term: termId !== null ? this.terms[termId] : null,
         astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m-1] ? 2 : 0), 2) + "座"
       };
     },
-    // 阴历转阳历 (节日计算用)
+    
+    // 阴历转阳历
     lunar2solar(y, m, d) {
       let offset = 0;
       for(let i = 1900; i < y; i++) offset += this.lYearDays(i);
@@ -145,50 +226,45 @@
 
   /* ========== 节日数据生成 ========== */
   const getFests = (year) => {
-    // 农历除夕
     const eve = cal.monthDays(year, 12) === 29 ? 29 : 30;
     const lToS = (m, d) => { const r = cal.lunar2solar(year, m, d); return fmtYMD(r.y, r.m, r.d); };
-    const weekDay = (m, n, w) => { // m月第n个周w
+    const weekDay = (m, n, w) => {
       const d = new Date(year, m-1, 1);
       let day = 1 + ((w - d.getDay() + 7) % 7) + (n-1)*7;
       return fmtYMD(year, m, Math.min(day, 31));
     };
 
-    // 获取清明节日期（阳历4月的第1个节气）
     const qmDay = cal.getTerm(year, 7);
 
     return {
-  // 法定节假日（含成都义教段学校特定日期）
       legal: [
         ["元旦", fmtYMD(year, 1, 1)], 
-		["寒假", fmtYMD(year, 1, 31)], //2026年成都义教段学校放寒假
-		["春节", lToS(1, 1)],
-        ["开学", fmtYMD(year, 3, 2)], //2026年成都义教段学校春季开学
-		["清明节", fmtYMD(year, 4, qmDay)],
-        ["春假", fmtYMD(year, 4, qmDay + 1)], //成都春假安排在清明节后第1天，与清明连休
-		["劳动节", fmtYMD(year, 5, 1)], 
-		["端午节", lToS(5, 5)],
-        ["暑假", fmtYMD(year, 7, 4)], //2026年成都义教段学校放暑假
-		["中秋节", lToS(8, 15)], 
-		["国庆节", fmtYMD(year, 10, 1)],
-        ["秋假", weekDay(11, 2, 3)]   // 成都秋假11月第2个周三（即11月第2周的周三至周五）
+        ["寒假", fmtYMD(year, 1, 31)],
+        ["春节", lToS(1, 1)],
+        ["开学", fmtYMD(year, 3, 2)],
+        ["清明节", fmtYMD(year, 4, qmDay)],
+        ["春假", fmtYMD(year, 4, qmDay + 1)],
+        ["劳动节", fmtYMD(year, 5, 1)], 
+        ["端午节", lToS(5, 5)],
+        ["暑假", fmtYMD(year, 7, 4)],
+        ["中秋节", lToS(8, 15)], 
+        ["国庆节", fmtYMD(year, 10, 1)],
+        ["秋假", weekDay(11, 2, 3)]
       ],
- // 民俗节日
       folk: [
         ["除夕", lToS(12, eve)], ["元宵节", lToS(1, 15)], ["龙抬头", lToS(2, 2)],
         ["七夕节", lToS(7, 7)], ["中元节", lToS(7, 15)], ["重阳节", lToS(9, 9)],
         ["寒衣节", lToS(10, 1)], ["下元节", lToS(10, 15)], ["腊八节", lToS(12, 8)],
         ["北方小年", lToS(12, 23)], ["南方小年", lToS(12, 24)]
       ],
-  // 国际/洋节
       intl: [
         ["情人节", fmtYMD(year, 2, 14)], 
-		["母亲节", weekDay(5, 2, 0)],   // 5月第2个周日
-		["父亲节", weekDay(6, 3, 0)],   // 6月第3个周日
+        ["母亲节", weekDay(5, 2, 0)],
+        ["父亲节", weekDay(6, 3, 0)],
         ["万圣节", fmtYMD(year, 10, 31)], 
-		["平安夜", fmtYMD(year, 12, 24)], 
-		["圣诞节", fmtYMD(year, 12, 25)],
-        ["感恩节", weekDay(11, 4, 4)]   // 11月第4个周四
+        ["平安夜", fmtYMD(year, 12, 24)], 
+        ["圣诞节", fmtYMD(year, 12, 25)],
+        ["感恩节", weekDay(11, 4, 4)]
       ],
       term: Array.from({length:24}, (_, i) => {
         const m = Math.floor(i/2)+1, id = i+1;
@@ -198,30 +274,25 @@
   };
 
   /* ========== 业务逻辑执行 ========== */
-  const lNow = cal.solar2lunar(curYear, now.getMonth()+1, now.getDate());
+  const lNow = cal.solar2lunar(curYear, curMonth, curDay);
   
-  // 1. 获取黄历详情 (并行请求)
   const almanacReq = getConfig('show_almanac', true) ? (async () => {
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${pad2(now.getMonth()+1)}.json`;
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${pad2(curMonth)}.json`;
     const data = await fetchJson(url, {});
-    const item = data?.data?.[0]?.almanac?.find(i => Number(i.day) === now.getDate());
+    const item = data?.data?.[0]?.almanac?.find(i => Number(i.day) === curDay);
     
-    // 基础头部
     const baseHead = `干支纪法：${lNow.gzYear}年 ${lNow.gzMonth}月 ${lNow.gzDay}日`;
-    // 如果API失败，使用基础计算；成功则增强显示
     if (!item) return baseHead + (lNow.term ? ` ${lNow.term}` : '');
     
     const desc = [item.desc, item.term, item.value].filter(Boolean).join(" ");
     return `${item.gzYear}年 ${item.gzMonth}月 ${item.gzDate}日 ${desc}\n✅ 宜：${item.suit || '——'}\n❎ 忌：${item.avoid || '——'}`;
   })() : Promise.resolve("");
 
-  // 2. 准备配置数据
   const titleReq = fetchJson(args.TITLES_URL, null);
   const blessReq = fetchJson(args.BLESS_URL, {});
 
-  const [almanacTxt, titles, blessMap] = await Promise.all([almanacReq, titleReq, blessReq]);
+  const [almanacTxt, titles, blessMap] = await Promise.all([almanacReq, titleReq, blessMap]);
 
-  // 3. 计算所有节日列表 (今年+明年)
   const fThis = getFests(curYear), fNext = getFests(curYear + 1);
   const merge = (k, count) => [...fThis[k], ...fNext[k]].filter(i => dateDiff(i[1]) >= 0).slice(0, count);
   
@@ -230,7 +301,6 @@
   const I3 = merge("intl", 3);
   const T3 = merge("term", 4);
 
-  // 4. 通知检查 (6点后，且未通知过)
   const checkNotify = (list) => {
     const todayFest = list.find(i => dateDiff(i[1]) === 0);
     if (todayFest && now.getHours() >= 6) {
@@ -245,19 +315,16 @@
   };
   checkNotify(L3); checkNotify(F3);
 
-  // 5. 生成标题
   const getTitle = () => {
-    // 寻找最近的重要节日
     const near = [L3[0], F3[0], I3[0]].sort((a,b) => dateDiff(a[1]) - dateDiff(b[1]))[0];
-    const diff = dateDiff(near[1]);
+    const diff = near ? dateDiff(near[1]) : 0;
     
     const defT = [
-      `${curYear}年${pad2(now.getMonth()+1)}月${pad2(now.getDate())}日 星期${"日一二三四五六"[now.getDay()]} ${lNow.astro}`,
+      `${curYear}年${pad2(curMonth)}月${pad2(curDay)}日 星期${"日一二三四五六"[now.getDay()]} ${lNow.astro}`,
       `{lunar}`
     ];
     const pool = (Array.isArray(titles) && titles.length) ? titles : defT;
     
-    // 随机或轮循标题
     const mode = (args.TITLE_MODE || "random").toLowerCase();
     let idx = 0;
     if (mode === "random" || !$store) idx = Math.floor(Math.random() * pool.length);
@@ -267,16 +334,14 @@
       if (!$store.read(key)) $store.write(String(Math.floor(Math.random() * pool.length)), key);
     }
 
-    // 规范化农历显示格式 (例如：甲辰(龙)年 正月初一)
     const tLunar = `${lNow.gzYear}(${lNow.animal})年 ${lNow.monthCn}${lNow.dayCn}`;
-    const tSolar = `${now.getMonth()+1}月${now.getDate()}日（${lNow.astro}）`;
+    const tSolar = `${curMonth}月${curDay}日（${lNow.astro}）`;
     
     return pool[idx]
       .replace("{lunar}", tLunar).replace("{solar}", tSolar)
-      .replace("{next}", near[0]).replace(/\{diff\}/g, diff);
+      .replace("{next}", near ? near[0] : "").replace(/\{diff\}/g, diff);
   };
 
-  // 6. 渲染面板
   const renderLine = (list) => list.map(i => {
     const d = dateDiff(i[1]);
     return `${i[0]}${d === 0 ? '' : d + '天'}`;
