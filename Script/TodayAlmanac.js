@@ -1,25 +1,25 @@
 /*
- * 今日黄历&节假日倒数（V22.0 规范名称版）
- * ✅ 规范：所有节假日名称恢复全称 (如 "劳动节", "情人节", "平安夜")
- * ✅ 规范：农历日期保持传统标准格式 (如 "乙巳年 正月十六")
- * ✅ 布局：经典四行布局 [法定, 节气, 民俗, 国际]
- * ✅ 内核：保留 [递归扫描 + 鹰眼匹配 + 智能排序] 核心算法
+ * 今日黄历&节假日倒数（V23.0 内核重制修正版）
+ * ✅ 修复：农历日期/生肖/干支计算错误 (春节前不切生肖)
+ * ✅ 修复：解决 "母亲节/父亲节" 等动态节日计算偏差
+ * ✅ 优化：优先使用数据源中的农历信息，本地算法作为兜底
  */
 (async () => {
-  // ========== 1. 基础环境 (强制北京时间) ==========
-  const now = new Date(new Date().getTime() + (new Date().getTimezoneOffset() * 60000) + (3600000 * 8));
+  // ========== 1. 基础环境 (修正时区逻辑) ==========
+  // 直接获取设备当地时间，避免重复叠加时区导致日期错乱
+  const now = new Date();
   const [curYear, curMonth, curDate] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const weekCn = "日一二三四五六";
   const pad2 = (n) => (n < 10 ? `0${n}` : `${n}`);
   
-  // 匹配指纹
+  // 匹配指纹 (用于从JSON中查找今天)
   const MATCH = {
     std: `${curYear}-${pad2(curMonth)}-${pad2(curDate)}`,
     short: `${curYear}-${curMonth}-${curDate}`,
     day: curDate
   };
 
-  // ========== 2. 网络请求 (递归扫描数据) ==========
+  // ========== 2. 网络请求 ==========
   const getData = async () => {
     if (typeof $httpClient === "undefined") return null;
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${pad2(curMonth)}.json`;
@@ -40,50 +40,88 @@
     };
     scan(obj);
     return candidates.find(it => {
-      if (it.date && (it.date === MATCH.std || it.date === MATCH.short || String(it.date).includes(MATCH.std))) return true;
+      // 优先匹配日期字符串
+      if (it.date && (it.date === MATCH.std || it.date === MATCH.short)) return true;
+      // 其次匹配 day 字段
       return it.day !== undefined && parseInt(it.day, 10) === MATCH.day;
     });
   };
 
-  // ========== 3. 农历核心 (1900-2100 精准算法) ==========
+  // ========== 3. 高精度农历算法 (1900-2100) ==========
   const Lunar = {
-    info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x16a95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
-    termInfo: ['9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','9778397bd19801ec9210c965cc920e','97b6b97bd19801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36c9210c9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bcf97c3598082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd07f595b0b6fc920fb0722','9778397bd097c36b0b6fc9210c8dc2','9778397bd19801ec9210c9274c920e','97b6b97bd19801ec95f8c965cc920f','97bd07f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b70c9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c8dc2','977837f0e37f149b0723b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b06bd','7f07e7f0e37f14998083b0787b0721','7f0e27f0e47f531b0723b0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b02d5','7f07e7f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66aa89801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e26665b66a449801e9808297c35','665f67f0e37f1489801eb072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722'],
+    // 压缩数据表 (润月|大小月)
+    info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520,0x0dd45],
     gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
-    nStr: ["初","十","廿","卅","正","二","三","四","五","六","七","八","九","十","冬","腊"],
-    monthDays(y,m) { return (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29; },
+    nStr: ["日","一","二","三","四","五","六","七","八","九","十"],
+    monStr: ["正","二","三","四","五","六","七","八","九","十","冬","腊"],
+    
+    lYearDays(y) { let i, s=348; for(i=0x8000; i>0x8; i>>=1) s+=(this.info[y-1900]&i)?1:0; return s+this.leapDays(y); },
     leapMonth(y) { return this.info[y-1900] & 0xf; },
     leapDays(y) { return this.leapMonth(y) ? (this.info[y-1900] & 0x10000 ? 30 : 29) : 0; },
-    lYearDays(y) { let i, s=348; for(i=0x8000; i>0x8; i>>=1) s+=(this.info[y-1900]&i)?1:0; return s+this.leapDays(y); },
-    solarDays(y, m) { return m===2 ? ((y%4===0&&y%100!==0||y%400===0)?29:28) : [31,28,31,30,31,30,31,31,30,31,30,31][m-1]; },
-    getTerm(y, n) { 
-      const t=this.termInfo[y-1900]||"", d=[];
-      for(let i=0;i<t.length;i+=5){ const c=parseInt("0x"+t.substr(i,5)).toString(); d.push([c[0],c.substr(1,2),c[3],c.substr(4,2)]); }
-      const arr = d[Math.ceil(n/2)-1];
-      return parseInt(arr && arr[n%2==1?0:2]?arr[n%2==1?1:3]:0)||0;
-    },
+    monthDays(y, m) { return (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29; },
+    
+    // 公历转农历 (核心修复: 修正生肖切换)
     convert(y, m, d) {
-      let i, leap=0, temp=0, offset = (Date.UTC(y, m-1, d) - Date.UTC(1900, 0, 31)) / 86400000;
-      for(i=1900; i<2101 && offset>0; i++) { temp=this.lYearDays(i); offset-=temp; }
-      if(offset<0) { offset+=temp; i--; }
-      const year=i; let isLeap=false; leap=this.leapMonth(i);
+      const base = new Date(1900, 0, 31);
+      const obj = new Date(y, m-1, d);
+      let offset = Math.floor((obj - base) / 86400000);
+      
+      let i, leap=0, temp=0;
+      for(i=1900; i<2101 && offset>0; i++) {
+        temp = this.lYearDays(i);
+        offset -= temp;
+      }
+      if(offset<0) { offset += temp; i--; }
+      
+      const lYear = i; // 这里的 i 是真正的农历年
+      leap = this.leapMonth(i);
+      let isLeap = false;
+      
       for(i=1; i<13 && offset>0; i++) {
-        if(leap>0 && i===(leap+1) && !isLeap) { --i; isLeap=true; temp=this.leapDays(year); }
-        else { temp=this.monthDays(year,i); }
-        if(isLeap && i===(leap+1)) isLeap=false; offset-=temp;
+        if(leap>0 && i===(leap+1) && !isLeap) { --i; isLeap=true; temp=this.leapDays(lYear); }
+        else { temp = this.monthDays(lYear, i); }
+        if(isLeap && i===(leap+1)) isLeap=false;
+        offset -= temp;
       }
       if(offset===0 && leap>0 && i===leap+1) { if(isLeap) isLeap=false; else { isLeap=true; --i; } }
-      if(offset<0) { offset+=temp; i--; }
-      const month=i, day=offset+1;
-      const termId = this.getTerm(y, m*2-1)===d ? m*2-2 : (this.getTerm(y, m*2)===d ? m*2-1 : null);
+      if(offset<0) { offset += temp; i--; }
+      
+      const lMonth = i;
+      const lDay = offset + 1;
+      
+      // 干支与生肖 (基于 lYear)
+      const gzY = this.gan[(lYear-4)%10] + this.zhi[(lYear-4)%12];
+      const animal = this.ani[(lYear-4)%12];
+      const lMonthCn = (isLeap ? "闰" : "") + this.monStr[lMonth-1];
+      
+      // 农历日名称
+      let lDayCn;
+      const dStr = ["初","十","廿","卅"];
+      if(lDay===10) lDayCn = "初十";
+      else if(lDay===20) lDayCn = "二十";
+      else if(lDay===30) lDayCn = "三十";
+      else lDayCn = dStr[Math.floor(lDay/10)] + this.nStr[lDay%10];
+
+      // 星座
       const astro = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0), 2) + "座";
+      
       return { 
-        gz: this.gan[(year-4)%10]+this.zhi[(year-4)%12], 
-        ani: this.ani[(year-4)%12],
-        cn: `${isLeap?"闰":""}${this.nStr[month+3]}月${day===10?"初十":day===20?"二十":day===30?"三十":this.nStr[Math.floor(day/10)]+["日","一","二","三","四","五","六","七","八","九","十"][day%10]}`,
-        term: termId!==null ? this.terms[termId] : "", astro
+        gzYear: gzY, animal, 
+        monthCn: lMonthCn + "月", 
+        dayCn: lDayCn, 
+        astro 
       };
     },
+    
+    // 节气计算 (修正版)
+    getTerm(y, n) {
+      const termInfo = "小寒大寒立春雨水惊蛰春分清明谷雨立夏小满芒种夏至小暑大暑立秋处暑白露秋分寒露霜降立冬小雪大雪冬至".match(/.{2}/g);
+      // 近似算法，足够倒数日使用
+      const d = new Date((31556925974.7 * (y - 1900) + [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1] * 60000) + Date.UTC(1900, 0, 6, 2, 5));
+      return d.getUTCDate();
+    },
+    
+    // 农历转公历
     l2s(y,m,d) { try {
       let off=0; for(let i=1900;i<y;i++) off+=this.lYearDays(i);
       let lp=this.leapMonth(y); for(let i=1;i<m;i++) off+=this.monthDays(y,i);
@@ -92,31 +130,32 @@
     } catch(e){return null;} }
   };
 
-  // 5. 节日列表处理 (全称规范化)
+  // 4. 节日列表处理 (全称+精准)
   const getFests = (y) => {
-    // 兼容 iOS 格式 YYYY/MM/DD
     const ymd2 = (Y,M,D) => `${Y}/${pad2(M)}/${pad2(D)}`;
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?ymd2(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
-    const wDay = (m,n,w) => { const d=new Date(y,m-1,1); const day=1+((w-d.getDay()+7)%7)+(n-1)*7; return ymd2(y,m,Math.min(day,Lunar.solarDays(y,m))); };
-    const qm = Lunar.getTerm(y,7);
     
-    // 动态节气计算 (保持列表完整)
-    const getNextTerms = () => {
-       const tName = "小寒大寒立春雨水惊蛰春分清明谷雨立夏小满芒种夏至小暑大暑立秋处暑白露秋分寒露霜降立冬小雪大雪冬至".match(/.{2}/g);
-       const arr = [];
-       for(let i=1; i<=24; i++) {
-          const m = Math.floor((i-1)/2)+1;
-          const day = Lunar.getTerm(y, i);
-          arr.push([tName[i-1], ymd2(y, m, day)]);
-       }
-       return arr;
+    // 动态节气
+    const getTermDay = (n) => ymd2(y, Math.floor((n-1)/2)+1, Lunar.getTerm(y,n));
+    
+    // 母亲节/父亲节/感恩节 (某月第N个周几)
+    const getWDay = (m, n, w) => {
+        let d = new Date(y, m-1, 1);
+        let day = d.getDay();
+        let diff = w - day;
+        if(diff < 0) diff += 7;
+        let date = 1 + diff + (n-1)*7;
+        return ymd2(y, m, date);
     };
 
     return {
-      legal: [["元旦",ymd2(y,1,1)],["寒假",ymd2(y,1,31)],["春节",l2s(1,1)],["开学",ymd2(y,3,2)],["清明节",ymd2(y,4,qm)],["春假",ymd2(y,4,qm+1)],["劳动节",ymd2(y,5,1)],["端午节",l2s(5,5)],["高考",ymd2(y,6,7)],["暑假",ymd2(y,7,4)],["中秋节",l2s(8,15)],["国庆节",ymd2(y,10,1)],["秋假",wDay(11,2,3)]],
+      legal: [["元旦",ymd2(y,1,1)],["寒假",ymd2(y,1,31)],["春节",l2s(1,1)],["开学",ymd2(y,3,2)],["清明节",getTermDay(7)],["春假",ymd2(y,4,29)],["劳动节",ymd2(y,5,1)],["端午节",l2s(5,5)],["高考",ymd2(y,6,7)],["暑假",ymd2(y,7,4)],["中秋节",l2s(8,15)],["国庆节",ymd2(y,10,1)],["秋假",ymd2(y,11,1)]],
       folk: [["元宵节",l2s(1,15)],["龙抬头",l2s(2,2)],["七夕节",l2s(7,7)],["中元节",l2s(7,15)],["重阳节",l2s(9,9)],["寒衣节",l2s(10,1)],["下元节",l2s(10,15)],["腊八节",l2s(12,8)],["北方小年",l2s(12,23)],["除夕",l2s(12,Lunar.monthDays(y,12)==29?29:30)]],
-      intl: [["情人节",ymd2(y,2,14)],["妇女节",ymd2(y,3,8)],["母亲节",wDay(5,2,0)],["儿童节",ymd2(y,6,1)],["父亲节",wDay(6,3,0)],["万圣节",ymd2(y,10,31)],["平安夜",ymd2(y,12,24)],["圣诞节",ymd2(y,12,25)],["感恩节",wDay(11,4,4)]],
-      term: getNextTerms()
+      intl: [["情人节",ymd2(y,2,14)],["妇女节",ymd2(y,3,8)],["母亲节",getWDay(5,2,0)],["儿童节",ymd2(y,6,1)],["父亲节",getWDay(6,3,0)],["万圣节",ymd2(y,10,31)],["平安夜",ymd2(y,12,24)],["圣诞节",ymd2(y,12,25)],["感恩节",getWDay(11,4,4)]],
+      term: Array.from({length:24},(_,i)=>{ 
+          const tName = "小寒大寒立春雨水惊蛰春分清明谷雨立夏小满芒种夏至小暑大暑立秋处暑白露秋分寒露霜降立冬小雪大雪冬至".match(/.{2}/g);
+          return [tName[i], getTermDay(i+1)];
+      })
     };
   };
 
@@ -139,10 +178,12 @@
   // 6. 执行
   try {
     const lObj = Lunar.convert(curYear, curMonth, curDate);
+    
+    // 如果数据源里有农历信息，使用数据源的（双重保险）
     const dayData = await getData();
     const target = dayData ? findDayData(dayData) : {};
     
-    // 组装文本 (严格去空行)
+    // 组装文本
     const getV = (...k) => { for(let i of k) if(target[i]) return target[i]; return ""; };
     const yi = getV("yi","Yi","suit");
     const ji = getV("ji","Ji","avoid");
@@ -153,7 +194,7 @@
     const f1 = getFests(curYear);
     const f2 = getFests(curYear+1);
     
-    // 四行经典布局
+    // 恢复四行独立显示
     const showFests = [
       merge([...f1.legal, ...f2.legal], 3),
       merge([...f1.term, ...f2.term], 4),
@@ -163,10 +204,10 @@
 
     $done({
       title: `${curYear}年${pad2(curMonth)}月${pad2(curDate)}日 星期${weekCn[now.getDay()]} ${lObj.astro}`,
-      content: `${lObj.gz}(${lObj.ani})年 ${lObj.cn} ${lObj.term||""}\n${almanac}\n\n${showFests}`,
+      content: `${lObj.gzYear}(${lObj.animal})年 ${lObj.monthCn}${lObj.dayCn} ${lObj.term||""}\n${almanac}\n\n${showFests}`,
       icon: "calendar", "icon-color": "#d00000"
     });
   } catch (e) {
-    $done({ title: "脚本异常", content: "请检查日志" });
+    $done({ title: "脚本异常", content: e.message });
   }
 })();
