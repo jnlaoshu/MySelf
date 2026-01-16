@@ -1,9 +1,9 @@
 /*
- * 今日黄历&节假日倒数（V13.0 回滚专项修复版）
- * 🎯 针对 202601.json 数据结构进行宽容匹配
- * ✅ 回滚：恢复 V11 的全能数据提取架构
- * ✅ 修复：匹配逻辑改为 "数值相等" (16 == "16")，忽略类型差异
- * ✅ 修复：日期匹配忽略前导零 (2026-1-16 == 2026-01-16)
+ * 今日黄历&节假日倒数（V14.0 递归扫描修复版）
+ * ✅ 针对报错 "数据结构不兼容" 进行降维打击
+ * ✅ 核心修复：引入 [深度递归搜索]，无视 JSON 嵌套层级，自动挖掘黄历数据
+ * ✅ 核心修复：自动识别 "日期Key对象" 结构并转为数组
+ * ✅ 诊断功能：如果失败，日志将打印 JSON 顶级字段名，方便定位
  */
 (async () => {
   // ========== 1. 环境与时间 ==========
@@ -24,17 +24,15 @@
   
   const todayDayStr = padStart2(curDate);
   const monthStr = padStart2(curMonth);
-  
-  // 构造两种日期格式，确保万无一失
-  const dateStrStd = `${curYear}-${monthStr}-${todayDayStr}`; // 2026-01-16
-  const dateStrShort = `${curYear}-${curMonth}-${curDate}`;   // 2026-1-16
+  // 匹配用的日期指纹
+  const MATCH_DATE_STD = `${curYear}-${monthStr}-${todayDayStr}`; // 2026-01-16
+  const MATCH_DATE_SHORT = `${curYear}-${curMonth}-${curDate}`;   // 2026-1-16
 
   const hasHttpClient = typeof $httpClient !== "undefined";
   const log = (msg) => console.log(`[黄历] ${msg}`);
   const festDataCache = new Map();
 
   // ========== 2. 网络请求 (带UA) ==========
-  // 目标地址：2026/202601.json
   const BASE_URL = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new`;
 
   const httpGet = (url) => new Promise(resolve => {
@@ -42,95 +40,107 @@
     const options = {
       url: url,
       timeout: 10000,
-      headers: {
-        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1"
-      }
+      headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1" }
     };
     log(`请求: ${url}`);
     $httpClient.get(options, (err, resp, data) => {
-      if (err) return resolve({ error: "请求失败" });
-      if (resp.status !== 200) return resolve({ error: `HTTP ${resp.status}` });
+      if (err) return resolve({ error: "连接超时或失败" });
+      if (resp.status !== 200) return resolve({ error: `HTTP ${resp.status}`, status: resp.status });
       resolve({ data });
     });
   });
 
   const fetchDeepData = async () => {
-    // 优先尝试标准路径
+    // 策略A：标准路径
     let url = `${BASE_URL}/${curYear}/${curYear}${monthStr}.json`;
     let res = await httpGet(url);
 
-    // 备用路径：如果年份文件夹不存在，尝试根目录
-    if (res.error && res.error.includes("404")) {
-      log("⚠️ 路径A 404，尝试路径B...");
-      url = `${BASE_URL}/${curYear}${monthStr}.json`;
-      res = await httpGet(url);
+    // 策略B：扁平路径 (404时触发)
+    if (res.error && res.status === 404) {
+      log("⚠️ 路径A不存在，尝试路径B...");
+      res = await httpGet(`${BASE_URL}/${curYear}${monthStr}.json`);
     }
 
-    if (res.error) return { error: res.error };
-    
+    if (res.error || !res.data) return { error: res.error || "无响应数据" };
     try {
-      const json = JSON.parse(res.data);
-      return { json };
+      return { json: JSON.parse(res.data) };
     } catch (e) {
-      return { error: "JSON解析错误" };
+      return { error: "JSON 解析错误" };
     }
   };
 
-  // ========== 3. 核心：智能数据匹配 (修复点) ==========
+  // ========== 3. 核心：深度递归提取器 (修复重点) ==========
+  const extractCalendarList = (obj, depth = 0) => {
+    if (!obj || depth > 5) return null; // 防止死循环
+
+    // 1. 如果本身就是数组
+    if (Array.isArray(obj)) {
+      if (obj.length > 0) {
+        // 验证特征：数组元素必须包含日期相关字段
+        const sample = obj[0];
+        if (sample && (sample.date || sample.day || sample.yi || sample.suit)) {
+          log(`✅ 在深度 ${depth} 发现有效数组`);
+          return obj;
+        }
+      }
+      return null;
+    }
+
+    // 2. 如果是对象，遍历所有 value
+    if (typeof obj === 'object') {
+      // 特殊检查：是不是 {"2026-01-01": {...}, "2026-01-02": {...}} 这种结构？
+      const keys = Object.keys(obj);
+      const isDateMap = keys.every(k => k.match(/^\d{4}[-/]?\d{1,2}[-/]?\d{1,2}$/) || k.match(/^d\d+$/));
+      if (isDateMap && keys.length > 10) {
+        log(`✅ 在深度 ${depth} 发现日期Map结构，已转换`);
+        return Object.values(obj);
+      }
+
+      // 递归查找子节点
+      for (let key of keys) {
+        const found = extractCalendarList(obj[key], depth + 1);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // ========== 4. 宜忌获取主逻辑 ==========
   const getLunarDesc = async () => {
     const result = await fetchDeepData();
     if (result.error) return `⚠️ ${result.error}`;
 
     const raw = result.json;
     
-    // 🔍 步骤1: 提取数组 (无论藏多深)
-    let list = [];
-    if (Array.isArray(raw)) list = raw;
-    else if (raw.days && Array.isArray(raw.days)) list = raw.days; // 标准结构
-    else if (raw.data && Array.isArray(raw.data.days)) list = raw.data.days; // 嵌套结构
-    else if (raw.data && Array.isArray(raw.data)) list = raw.data;
+    // 🔥 启动递归搜索
+    const list = extractCalendarList(raw);
 
-    if (list.length === 0) {
-      // 尝试处理 Map 结构 {"2026-01-01": { data }}
-      const values = Object.values(raw);
-      if (values.length > 20 && values[0].yi) { // 特征判断
-        list = values;
-      } else {
-        log(`❌ 未找到有效数组。Keys: ${Object.keys(raw)}`);
-        return "⚠️ 数据结构不兼容";
-      }
+    if (!list || list.length === 0) {
+      log(`❌ 结构不兼容。顶级Keys: [${Object.keys(raw).join(", ")}]`);
+      return "⚠️ 数据结构不兼容";
     }
 
-    log(`✅ 数据源长度: ${list.length}`);
-    // 打印第一条数据，用于排查
-    if(list.length > 0) log(`🔍 首条样本: ${JSON.stringify(list[0])}`);
-
-    // 🔍 步骤2: 宽容匹配 (核心修复)
-    // 只要满足以下任一条件，即视为今天
+    // 🔍 宽容匹配
     const target = list.find(item => {
-      // 条件A: day 字段数值相等 (忽略类型) -> 16 == "16"
+      // 1. Day 匹配 (16 == "16")
       if (item.day !== undefined && item.day == curDate) return true;
-      
-      // 条件B: date 字段完全相等
-      if (item.date === dateStrStd) return true;
-      
-      // 条件C: date 字段去零相等
-      if (item.date === dateStrShort) return true;
-      
-      // 条件D: date 字段包含当前日期 (如 "2026-01-16 00:00:00")
-      if (item.date && String(item.date).includes(dateStrStd)) return true;
-
+      // 2. Date 标准匹配
+      if (item.date === MATCH_DATE_STD) return true;
+      // 3. Date 去零匹配
+      if (item.date === MATCH_DATE_SHORT) return true;
+      // 4. 包含匹配
+      if (item.date && String(item.date).includes(MATCH_DATE_STD)) return true;
       return false;
     });
 
     if (!target) {
-      // 兜底：如果实在匹配不到，尝试直接取索引 (今天是16号，取第16个数据)
-      const indexObj = list[curDate - 1];
-      if (indexObj) {
-        log(`⚠️ 匹配失败，使用索引兜底 (Index ${curDate-1})`);
-        return formatContent(indexObj);
+      log(`❌ 未找到匹配项。尝试索引兜底...`);
+      // 索引兜底 (16号取数组第15个)
+      if (list[curDate - 1]) {
+        log(`⚠️ 索引兜底成功`);
+        return formatContent(list[curDate - 1]);
       }
-      return "📭 暂无今日数据";
+      return "📭 暂无今日黄历";
     }
 
     log(`✅ 匹配成功: ${JSON.stringify(target)}`);
@@ -138,11 +148,8 @@
   };
 
   const formatContent = (data) => {
-    // 字段兼容读取
     const getVal = (...keys) => {
-      for (const k of keys) {
-        if (data[k]) return data[k];
-      }
+      for (const k of keys) if (data[k]) return data[k];
       return "";
     };
 
@@ -159,10 +166,10 @@
     ].filter(Boolean).join("\n");
   };
 
-  // ========== 4. 农历算法 (完整版) ==========
+  // ========== 5. 农历算法 (完整版) ==========
   const LunarCal = Object.freeze({
     lInfo: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x16a95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
-    sTermInfo: ['9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','9778397bd19801ec9210c965cc920e','97b6b97bd19801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36c9210c9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bcf97c3598082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd07f595b0b6fc920fb0722','9778397bd097c36b0b6fc9210c8dc2','9778397bd19801ec9210c9274c920e','97b6b97bd19801ec95f8c965cc920f','97bd07f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b70c9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c8dc2','977837f0e37f149b0723b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b06bd','7f07e7f0e37f14998083b0787b0721','7f0e27f0e47f531b0723b0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b02d5','7f07e7f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66aa89801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e26665b66a449801e9808297c35','665f67f0e37f1489801eb072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722'],
+    sTermInfo: ['9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','b027097bd097c36b0b6fc9274c91aa','9778397bd19801ec9210c965cc920e','97b6b97bd19801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36c9210c9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bcf97c3598082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd07f595b0b6fc920fb0722','9778397bd097c36b0b6fc9210c8dc2','9778397bd19801ec9210c9274c920e','97b6b97bd19801ec95f8c965cc920f','97bd07f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b70c9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c8dc2','977837f0e37f149b0723b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b0787b06bd','7f07e7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b06bd','7f07e7f0e47f14998083b0787b0721','7f0e27f0e47f531b0723b0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b02d5','7f07e7f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66aa89801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e26665b66a449801e9808297c35','665f67f0e37f1489801eb072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f531b0b0bb0b6fb0722'],
     terms: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
     Gan: "甲乙丙丁戊己庚辛壬癸", Zhi: "子丑寅卯辰巳午未申酉戌亥", Animals: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
     nStr1: "日一二三四五六七八九十", nStr2: ["初","十","廿","卅"], nStr3: ["正","二","三","四","五","六","七","八","九","十","冬","腊"],
@@ -218,7 +225,7 @@
     }
   });
 
-  // ========== 5. 节日列表处理 (恢复原始丰富数据) ==========
+  // ========== 5. 节日列表处理 (完整版) ==========
   const calcDateDiff = (dateStr) => {
     if (!dateStr) return -999;
     const [y, m, d] = dateStr.split('-').map(Number);
@@ -265,7 +272,7 @@
     const fThis = generateFestData(curYear)[type];
     const fNext = generateFestData(curYear+1)[type];
     return [...fThis, ...fNext]
-      .filter(item => calcDateDiff(item[1]) >= -1) // 包含今天
+      .filter(item => calcDateDiff(item[1]) >= -1)
       .slice(0, limit)
       .map(([name, date]) => {
         const diff = calcDateDiff(date);
@@ -291,7 +298,7 @@
     const finalContent = [
       lunarHeader,
       almanacTxt,
-      [legalFests, termFests, folkFests, intlFests].filter(Boolean).join("\n") // 分行拼接
+      [legalFests, termFests, folkFests, intlFests].filter(Boolean).join("\n") 
     ].filter(Boolean).join("\n\n");
 
     $done({ title: finalTitle, content: finalContent, icon: "calendar", "icon-color": "#d00000" });
