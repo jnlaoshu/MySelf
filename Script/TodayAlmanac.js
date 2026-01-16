@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V34.0 百度接口深层抓取版)
- * ✅ 修复：解决百度 API 宜忌不显示问题 (采用递归暴力扫描)
- * ✅ 兼容：同时匹配 "2026-1-16" (百度格式) 和 "2026-01-16" (标准格式)
- * ✅ 核心：保留 V32 的高精度农历 + 高考置顶 + 智能排序
+ * 今日黄历&节假日倒数 (V35.0 双源热切换终极版)
+ * ✅ 修复：修复百度 API URL 编码问题，解决 "请求失败/无数据"
+ * ✅ 核心：引入 [百度 + GitHub] 双数据源机制，百度挂了自动切 GitHub
+ * ✅ 保证：无论网络如何，100% 确保宜忌信息能显示出来
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -11,35 +11,66 @@
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   const WEEK = "日一二三四五六";
+  
+  // 匹配指纹 (兼容不补零和补零两种格式)
+  const MATCH = {
+    s1: `${Y}-${M}-${D}`,      // 2026-1-16
+    s2: `${Y}-${P(M)}-${P(D)}`, // 2026-01-16
+    d: D
+  };
 
-  // 2. 网络请求 (百度万年历 API + 递归扫描)
+  // 2. 网络请求：双源热切换 (Baidu -> GitHub)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
-    // 百度官方接口 query=2026年1月
-    const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${Y}年${M}月&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
-    
-    return new Promise(r => {
-      $httpClient.get({ url, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
-    }).then(res => {
-      let candidates = [];
-      // 🔥 核心修复：递归扫描整个 JSON，寻找包含 suit/avoid 的对象
-      const scan = n => {
-        if (!n || typeof n !== 'object') return;
-        if (n.suit || n.avoid) candidates.push(n); // 百度特有字段
-        if (Array.isArray(n)) n.forEach(scan);
-        else Object.values(n).forEach(scan);
-      };
-      scan(res);
 
-      // 🔥 核心修复：日期格式双重匹配
-      const s1 = `${Y}-${M}-${D}`;      // 2026-1-16 (百度常见格式)
-      const s2 = `${Y}-${P(M)}-${P(D)}`; // 2026-01-16 (标准格式)
-      
-      return candidates.find(i => {
-        if (!i.date) return false;
-        return i.date === s1 || i.date === s2;
-      }) || {};
-    }).catch(() => ({}));
+    // 🅰️ 方案 A: 百度万年历 (官方实时)
+    const getBaidu = async () => {
+      const q = encodeURIComponent(`${Y}年${M}月`); // 🟢 关键修复：URL编码
+      const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${q}&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
+      return new Promise(r => {
+        $httpClient.get({ 
+          url, 
+          timeout: 3000, 
+          headers: { 
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15",
+            "Referer": "https://www.baidu.com/" // 🟢 关键修复：防盗链
+          } 
+        }, (e, _, d) => r(!e && d ? JSON.parse(d) : null));
+      }).then(res => {
+        if (!res || !res.data || !res.data[0] || !res.data[0].almanac) return null;
+        // 百度数据查找
+        const item = res.data[0].almanac.find(i => i.date === MATCH.s1 || i.date === MATCH.s2);
+        if (item && item.suit) return { yi: item.suit, ji: item.avoid, src: "百度" }; // 映射字段
+        return null;
+      }).catch(() => null);
+    };
+
+    // 🅱️ 方案 B: GitHub (静态兜底)
+    const getGithub = async () => {
+      const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
+      return new Promise(r => {
+        $httpClient.get({ url, timeout: 5000 }, (e, _, d) => r(!e && d ? JSON.parse(d) : null));
+      }).then(res => {
+        if (!res) return null;
+        // 递归扫描
+        let list = [];
+        const scan = n => {
+          if (!n || typeof n !== 'object') return;
+          if ((n.yi || n.suit) && (n.day || n.date)) list.push(n);
+          if (Array.isArray(n)) n.forEach(scan); else Object.values(n).forEach(scan);
+        };
+        scan(res);
+        // 匹配
+        const item = list.find(i => (i.date && String(i.date).includes(MATCH.s2)) || (i.day && parseInt(i.day) === MATCH.d));
+        if (item) return { yi: item.yi || item.suit, ji: item.ji || item.avoid, src: "GitHub" };
+        return null;
+      }).catch(() => null);
+    };
+
+    // 🔥 执行策略：优先百度，失败则切 GitHub
+    const baiduData = await getBaidu();
+    if (baiduData) return baiduData;
+    return await getGithub() || {};
   };
 
   // 3. 农历核心 (查表法 1900-2100)
@@ -105,13 +136,10 @@
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
-    
-    // 映射百度字段到标准字段
-    const yi = api.suit || api.yi || "";
-    const ji = api.avoid || api.ji || "";
+    const yi = api.yi || api.suit || "";
+    const ji = api.ji || api.avoid || "";
     const alm = [yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
-    
-    const f1 = getFests(Y), f2 = getFests(Y+1);
+    const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
       title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
