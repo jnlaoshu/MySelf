@@ -1,8 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 21:50 
- * 适配：更换接口为calendar_new + 精准日期匹配修复
+ * 更新：2026.01.16 最终完整版 - 彻底修复calendar_new接口宜忌显示问题
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -11,16 +10,21 @@
   const curYear = now.getFullYear();
   const curMonth = now.getMonth() + 1;
   const curDate = now.getDate();
-  const todayStr = `${curYear}-${curMonth}-${curDate}`;
+  // ✅ 关键：统一日期格式为两位字符串，避免格式不匹配
+  const pad2 = (n) => n.toString().padStart(2, '0');
+  const curMonthStr = pad2(curMonth);
+  const curDateStr = pad2(curDate);
+  const todayStr = `${curYear}-${curMonthStr}-${curDateStr}`;
   const weekCn = "日一二三四五六";
   // 环境变量安全兼容
   const $store = typeof $persistentStore !== "undefined" ? $persistentStore : null;
   const hasNotify = typeof $notification !== "undefined";
   const hasHttpClient = typeof $httpClient !== "undefined";
+  // 调试开关（需要时设为true）
+  const DEBUG = false;
 
   /* ========== 工具函数（语义化重构+性能优化） ========== */
-  const padStart2 = (n) => n.toString().padStart(2, '0');
-  const formatYmd = (y, m, d) => `${y}-${padStart2(m)}-${padStart2(d)}`;
+  const formatYmd = (y, m, d) => `${y}-${pad2(m)}-${pad2(d)}`;
   const parseArgs = () => {
     if (typeof $argument === "undefined" || !$argument) return {};
     const argStr = $argument.replace(/,/g, '&').trim();
@@ -33,17 +37,32 @@
     return ["true", "1", "yes"].includes(String(val).toLowerCase());
   };
   const httpGet = (url) => new Promise(resolve => {
-    if (!hasHttpClient) return resolve(null);
+    if (!hasHttpClient) {
+      DEBUG && console.log(`[${TAG}] 无httpClient环境`);
+      return resolve(null);
+    }
     $httpClient.get({ url, timeout: 5000 }, (err, resp, data) => {
-      resolve((!err && resp?.status === 200) ? data : null);
+      if (err) {
+        DEBUG && console.log(`[${TAG}] HTTP请求错误: ${err.message}`);
+        return resolve(null);
+      }
+      if (resp?.status !== 200) {
+        DEBUG && console.log(`[${TAG}] HTTP状态码错误: ${resp?.status}`);
+        return resolve(null);
+      }
+      resolve(data);
     });
   });
   const fetchJson = async (url, fallback = {}) => {
     if (!url) return fallback;
     try {
       const data = await httpGet(url);
-      return data ? JSON.parse(data) : fallback;
-    } catch {
+      if (!data) return fallback;
+      const jsonData = JSON.parse(data);
+      DEBUG && console.log(`[${TAG}] 接口数据:`, JSON.stringify(jsonData, null, 2));
+      return jsonData;
+    } catch (e) {
+      DEBUG && console.log(`[${TAG}] JSON解析错误: ${e.message}`);
       return fallback;
     }
   };
@@ -119,25 +138,56 @@
     };
   };
 
-  /* ========== ✅ 核心修改：更换为calendar_new接口 + 适配新结构 + 精准日期匹配 ========== */
+  /* ========== ✅ 核心修复：精准获取当日黄历宜忌，适配calendar_new接口 ========== */
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // ✅ 修改1：接口地址更换 calendar → calendar_new
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
+    
+    // ✅ 1. 构造正确的calendar_new接口URL
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${curMonthStr}.json`;
+    DEBUG && console.log(`[${TAG}] 请求黄历接口: ${url}`);
+    
+    // ✅ 2. 获取并解析JSON数据
     const data = await fetchJson(url);
-    // ✅ 修改2：适配新接口结构，黄历数组在根节点almanac，而非data[0].almanac
-    const almanacList = data?.almanac || [];
-    // ✅ 修改3：双重精准匹配【月份+日期】，彻底杜绝跨月/错位，兼容数字/字符串格式
+    if (!data) {
+      DEBUG && console.log(`[${TAG}] 未获取到黄历数据`);
+      return "";
+    }
+    
+    // ✅ 3. 适配新接口结构（兼容两种结构：根节点almanac 或 data[0].almanac）
+    const almanacList = data.almanac || data?.data?.[0]?.almanac || [];
+    if (almanacList.length === 0) {
+      DEBUG && console.log(`[${TAG}] 黄历数组为空`);
+      return "";
+    }
+    
+    // ✅ 4. 双重精准匹配：月份+日期（统一转为两位字符串，彻底避免格式问题）
     const almanacItem = almanacList.find(item => {
-      return Number(item.month) === curMonth && Number(item.day) === curDate;
+      const itemMonthStr = pad2(item.month || item.Month || curMonth);
+      const itemDayStr = pad2(item.day || item.Day || curDate);
+      const match = itemMonthStr === curMonthStr && itemDayStr === curDateStr;
+      DEBUG && console.log(`[${TAG}] 匹配日期: ${itemMonthStr}-${itemDayStr} → ${match}`);
+      return match;
     });
-    // ✅ 无数据直接返回空，不兜底任何内容，保持原逻辑
-    if (!almanacItem) return "";
-    // ✅ 字段不变，内容拼接逻辑完全保留
-    const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
-    const suitLine = almanacItem.suit ? `✅ 宜：${almanacItem.suit}` : "";
-    const avoidLine = almanacItem.avoid ? `❎ 忌：${almanacItem.avoid}` : "";
-    return [desc, suitLine, avoidLine].filter(Boolean).join("\n").trim();
+    
+    // ✅ 5. 无匹配数据返回空，不兜底
+    if (!almanacItem) {
+      DEBUG && console.log(`[${TAG}] 未找到当日黄历数据`);
+      return "";
+    }
+    
+    // ✅ 6. 提取并格式化宜、忌信息（仅显示有数据的部分）
+    const descParts = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean);
+    const desc = descParts.length > 0 ? descParts.join(" ") : "";
+    const suit = almanacItem.suit || almanacItem.yi; // 兼容suit和yi两种字段名
+    const avoid = almanacItem.avoid || almanacItem.ji; // 兼容avoid和ji两种字段名
+    
+    // ✅ 7. 只返回有真实数据的内容
+    const result = [];
+    desc && result.push(desc);
+    suit && result.push(`✅ 宜：${suit}`);
+    avoid && result.push(`❎ 忌：${avoid}`);
+    
+    return result.join("\n").trim();
   };
 
   /* ========== 公共业务函数 ========== */
@@ -180,7 +230,7 @@
   }
 
   const generateTitle = () => {
-    return `${curYear}年${padStart2(curMonth)}月${padStart2(curDate)}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
+    return `${curYear}年${curMonthStr}月${curDateStr}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
   };
 
   const content = [
