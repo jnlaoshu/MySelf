@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 21:50 
+ * 更新：2026.01.16 最终完整版 - 精准匹配当日宜忌+无兜底+格式正确
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -10,7 +10,10 @@
   const curYear = now.getFullYear();
   const curMonth = now.getMonth() + 1;
   const curDate = now.getDate();
-  const todayStr = `${curYear}-${curMonth}-${curDate}`;
+  // ✅ 新增：统一日期格式为两位字符串（关键修复）
+  const curMonthStr = padStart2(curMonth);
+  const curDateStr = padStart2(curDate);
+  const todayStr = `${curYear}-${curMonthStr}-${curDateStr}`;
   const weekCn = "日一二三四五六";
   // 环境变量安全兼容
   const $store = typeof $persistentStore !== "undefined" ? $persistentStore : null;
@@ -119,20 +122,25 @@
     };
   };
 
-  /* ========== ✅ 核心修复：精准获取当日黄历宜忌，彻底取消所有兜底默认值 ========== */
+  /* ========== ✅ 核心修复：精准匹配当月当日宜忌信息，彻底解决错位问题 ========== */
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${curMonthStr}.json`;
     const data = await fetchJson(url);
     const almanacList = data?.data?.[0]?.almanac || [];
-    const almanacItem = almanacList.find(i => Number(i.day) === curDate);
-    // ✅ 无数据直接返回空，不兜底任何内容
+    // ✅ 关键修复：双重校验 月份+日期，确保是当月当日数据
+    const almanacItem = almanacList.find(item => {
+      // 统一转为两位字符串，兼容接口day字段的不同格式
+      const itemDay = padStart2(item.day);
+      const itemMonth = padStart2(item.month || curMonth);
+      return itemMonth === curMonthStr && itemDay === curDateStr;
+    });
+    // ✅ 无匹配数据则返回空，不兜底
     if (!almanacItem) return "";
-    // ✅ 只拼接有真实数据的内容，过滤空值
+    // ✅ 只拼接有真实数据的内容
     const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
     const suitLine = almanacItem.suit ? `✅ 宜：${almanacItem.suit}` : "";
     const avoidLine = almanacItem.avoid ? `❎ 忌：${almanacItem.avoid}` : "";
-    // ✅ 最终只返回有值的信息，无值则对应行消失
     return [desc, suitLine, avoidLine].filter(Boolean).join("\n").trim();
   };
 
@@ -152,9 +160,9 @@
 
   /* ========== 主业务逻辑执行 ========== */
   const lunarNow = LunarCal.solar2lunar(curYear, curMonth, curDate);
-  // ✅ 精准格式修正：癸卯(兔)年 腊月廿七 大寒 【删除年前面的空格】
+  // ✅ 精准格式：癸卯(兔)年 腊月廿七 大寒
   const lunarHeader = `${lunarNow.gzYear}(${lunarNow.animal})年 ${lunarNow.monthCn}${lunarNow.dayCn} ${lunarNow.term || ''}`.trim();
-  // ✅ 异步获取精准的当日宜忌信息，无兜底
+  // ✅ 异步获取当月当日的精准宜忌信息
   const almanacTxt = await getLunarDesc(lunarNow);
   const blessMap = await fetchJson(args.BLESS_URL, {});
 
@@ -177,12 +185,12 @@
     }
   }
 
-  // ✅ 永久固定标题：年月日 + 星期 + 星座 (无轮播、无随机)【完全不变】
+  // ✅ 永久固定标题：年月日 + 星期 + 星座 (无轮播、无随机)
   const generateTitle = () => {
-    return `${curYear}年${padStart2(curMonth)}月${padStart2(curDate)}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
+    return `${curYear}年${curMonthStr}月${curDateStr}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
   };
 
-  // ✅ 完美排版：农历首行 + 真实宜忌信息 + 节日倒数，自动过滤空值
+  // ✅ 完美排版：农历首行 + 精准宜忌 + 节日倒数
   const content = [
     lunarHeader,
     almanacTxt,
