@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 终极修复版 - 解决【宜忌完全不显示】+【日期匹配错误】双问题
+ * 更新：2026.01.16 精准纯净版 - 仅读取网站当日真实宜忌，无任何兜底默认值
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -11,21 +11,15 @@
   const curMonth = now.getMonth() + 1;
   const curDate = now.getDate();
   const weekCn = "日一二三四五六";
-  // 环境变量安全兼容
   const $store = typeof $persistentStore !== "undefined" ? $persistentStore : null;
   const hasNotify = typeof $notification !== "undefined";
   const hasHttpClient = typeof $httpClient !== "undefined";
 
-  /* ========== 工具函数（语义化重构+性能优化） ========== */
-  // 数字补两位前置0
+  /* ========== 工具函数 ========== */
   const padStart2 = (n) => n.toString().padStart(2, '0');
-  // 格式化年月日为 年-月-日 标准补零格式【核心依赖】
   const formatYmd = (y, m, d) => `${y}-${padStart2(m)}-${padStart2(d)}`;
-  // ✅ 修复1：统一今日日期格式为标准补零格式，和接口数据完全一致
   const todayStr = formatYmd(curYear, curMonth, curDate);
-  // ✅ 新增：今日纯数字日期格式，用于接口数据精准匹配 20260116
   const todayNumStr = `${curYear}${padStart2(curMonth)}${padStart2(curDate)}`;
-  // 解析入参 (兼容逗号/&分隔)
   const parseArgs = () => {
     if (typeof $argument === "undefined" || !$argument) return {};
     const argStr = $argument.replace(/,/g, '&').trim();
@@ -33,14 +27,12 @@
   };
   const args = parseArgs();
 
-  // 获取布尔型配置项(兼容大小写)
   const getConfig = (key, def = false) => {
     const val = args[key] ?? args[key.toLowerCase()];
     if (val === undefined) return def;
     return ["true", "1", "yes"].includes(String(val).toLowerCase());
   };
 
-  // 安全GET请求 (带超时+错误兜底)
   const httpGet = (url) => new Promise(resolve => {
     if (!hasHttpClient) return resolve(null);
     $httpClient.get({ url, timeout: 6000 }, (err, resp, data) => {
@@ -48,7 +40,6 @@
     });
   });
 
-  // 安全获取JSON数据 (异常兜底返回默认值)
   const fetchJson = async (url, fallback = {}) => {
     if (!url) return fallback;
     try {
@@ -59,7 +50,6 @@
     }
   };
 
-  // 计算目标日期与今日的天数差【核心缓存优化：只计算一次】
   const calcDateDiff = (dateStr) => {
     const [y, m, d] = dateStr.split('-').map(Number);
     const targetTime = new Date(y, m - 1, d).getTime();
@@ -67,7 +57,7 @@
     return Math.floor((targetTime - todayTime) / 86400000);
   };
 
-  /* ========== 农历核心算法 (原逻辑完整保留，仅格式化) ========== */
+  /* ========== 农历核心算法 (原逻辑完整保留) ========== */
   const LunarCal = {
     lInfo: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x16a95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     sTermInfo: ['9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd0b06bdb0722c965ce1cfcc920f','b027097bd097c36b0b6fc9274c91aa','9778397bd19801ec9210c965cc920e','97b6b97bd19801ec95f8c965cc920f','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36c9210c9274c91aa','97b6b97bd19801ec95f8c965cc920e','97bd09801d98082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8e1cfcc920f','97bd097bd097c36b0b6fc9210c8dc2','9778397bd197c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c3598082c95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b97bd19801ec9210c965cc920e','97bcf97c359801ec95f8c965cc920f','97bd097bd07f595b0b6fc920fb0722','9778397bd097c36b0b6fc9210c8dc2','9778397bd19801ec9210c9274c920e','97b6b97bd19801ec95f8c965cc920f','97bd07f5307f595b0b0bc920fb0722','7f0e397bd097c36b0b6fc9210c8dc2','9778397bd097c36b0b70c9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','9778397bd097c36b0b6fc9274c91aa','97b6b7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c91aa','97b6b7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','9778397bd097c36b0b6fc9210c8dc2','977837f0e37f149b0723b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f5307f595b0b0bc920fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc9210c8dc2','977837f0e37f14998082b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd097c35b0b6fc920fb0722','977837f0e37f14998082b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b06bd','7f07e7f0e47f149b0723b0787b0721','7f0e27f0e47f531b0b0bb0b6fb0722','7f0e397bd07f595b0b0bc920fb0722','977837f0e37f14998082b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e37f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b06bd','7f07e7f0e37f14998083b0787b0721','7f0e27f0e47f531b0723b0b6fb0722','7f0e37f0e366aa89801eb072297c35','7ec967f0e37f14998082b0723b02d5','7f07e7f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66aa89801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b0721','7f07e7f0e47f531b0723b0b6fb0722','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b0723b02d5','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e36665b66a449801e9808297c35','665f67f0e37f14898082b072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e26665b66a449801e9808297c35','665f67f0e37f1489801eb072297c35','7ec967f0e37f14998082b0787b06bd','7f07e7f0e47f531b0723b0b6fb0721','7f0e27f1487f595b0b0bb0b6fb0722'],
@@ -119,7 +109,7 @@
     }
   };
 
-  /* ========== 节日数据生成 (原数据完整保留) ========== */
+  /* ========== 节日数据生成 ========== */
   const generateFestData = (year) => {
     const eve = LunarCal.monthDays(year,12) ===29 ?29:30;
     const lunar2Solar = (m,d)=>{const r=LunarCal.lunar2solar(year,m,d);return formatYmd(r.y,r.m,r.d);};
@@ -148,38 +138,29 @@
   };
   const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
   
-  // ✅ ✅ ✅ 核心修复：重构 getLunarDesc 函数，解决所有不显示问题
+  // ✅ 核心纯净版 - 只读取网站当日真实宜忌，无任何兜底、无任何默认值、无任何伪造数据
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // 请求当月黄历数据
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
-    
-    // ✅ 修复2：修正接口数据结构 - 接口的 data 是【直接的数组】，无 almanac 子节点
+    // 仅获取接口原生数组，无数据则为空
     const almanacList = Array.isArray(data?.data) ? data.data : [];
-    if (almanacList.length === 0) {
-      return `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}\n✅ 宜：诸事皆宜\n❎ 忌：无特殊禁忌`.trim();
-    }
-
-    // ✅ 修复3：精准匹配当日数据，兼容接口的纯数字日期格式 20260116
+    // 100%精准匹配当日数据，仅匹配 20260116 / 2026-01-16 两种格式
     const almanacItem = almanacList.find(item => {
       if (!item.date) return false;
       const itemDate = String(item.date).trim();
       return itemDate === todayNumStr || itemDate === todayStr;
     });
 
-    // 基础干支信息兜底
-    const baseHeader = `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
-    // ✅ 修复4：修正字段名 yi/ji 替代 suit/avoid + 双字段兼容 + 兜底默认值
-    if (almanacItem) {
+    // 基础干支信息，无任何多余内容
+    const baseDesc = `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
+    // 只有匹配到网站真实数据，才追加宜忌，否则只返回基础干支
+    if (almanacItem && almanacItem.yi && almanacItem.ji) {
       const desc = [almanacItem.desc, almanacItem.value].filter(Boolean).join(" ");
-      const suit = almanacItem.yi || almanacItem.suit || "诸事皆宜";
-      const avoid = almanacItem.ji || almanacItem.avoid || "无特殊禁忌";
-      return `${baseHeader} ${desc}\n✅ 宜：${suit}\n❎ 忌：${avoid}`;
-    } else {
-      // 匹配不到当日数据时，强制显示默认宜忌
-      return `${baseHeader}\n✅ 宜：诸事皆宜\n❎ 忌：无特殊禁忌`;
+      return `${baseDesc} ${desc}\n✅ 宜：${almanacItem.yi}\n❎ 忌：${almanacItem.ji}`;
     }
+    // 无数据 → 只返回纯干支，无宜无忌
+    return baseDesc;
   };
 
   /* ========== 主业务逻辑执行 ========== */
