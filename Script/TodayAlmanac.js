@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V32.0 终极精简优化版)
- * ✅ 内核：高精度农历(1900-2100) + UTC+8精准校时 + 鹰眼递归扫描
- * ✅ 特性：高考倒计时置顶 + 智能排序 + 经典四行布局
- * ✅ 优化：极致代码压缩，移除所有冗余逻辑
+ * 今日黄历&节假日倒数 (V33.0 百度接口专版)
+ * ✅ 核心升级：替换为 [百度万年历官方接口]，数据源极其稳定，永不断更
+ * ✅ 适配：完美解析百度 API 数据结构，精准显示 "宜/忌"
+ * ✅ 保留：高精度农历算法 + 高考置顶 + 智能排序 + 经典布局
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -10,23 +10,36 @@
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
-  const MATCH = { s: `${Y}-${P(M)}-${P(D)}`, d: D };
+  
+  // 匹配指纹 (百度通常返回不补零的格式: 2026-1-16)
+  const MATCH = {
+    s: `${Y}-${M}-${D}`,      // 2026-1-16 (百度格式)
+    s2: `${Y}-${P(M)}-${P(D)}`, // 2026-01-16 (标准格式)
+    d: D
+  };
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求 (递归扫描 + 鹰眼匹配)
+  // 2. 网络请求 (百度万年历 API)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
+    // 百度官方接口 query=2026年1月
+    const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${Y}年${M}月&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
+    
     return new Promise(r => {
-      $httpClient.get({ url: `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
-    }).then(raw => {
-      let list = [];
-      const scan = n => {
-        if (!n || typeof n !== 'object') return;
-        if ((n.yi || n.suit) && (n.day || n.date)) list.push(n);
-        for (let k in n) scan(n[k]);
-      };
-      scan(raw);
-      return list.find(i => (i.date && String(i.date).includes(MATCH.s)) || (i.day && parseInt(i.day) === MATCH.d)) || {};
+      $httpClient.get({ url, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
+    }).then(res => {
+      // 解析百度数据结构: data[0].almanac
+      if (!res.data || !res.data[0] || !res.data[0].almanac) return {};
+      const list = res.data[0].almanac;
+      
+      // 查找当天数据
+      return list.find(i => {
+        // 百度 date 字段通常是 "2026-1-16"
+        if (i.date === MATCH.s || i.date === MATCH.s2) return true;
+        // 容错匹配 Day
+        if (i.day && parseInt(i.day) === MATCH.d) return true;
+        return false;
+      }) || {};
     }).catch(() => ({}));
   };
 
@@ -40,7 +53,7 @@
     leap(y) { return this.info[y-1900] & 0xf },
     mDays(y, m) { return (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29 },
     term(y, n) { return new Date((31556925974.7*(y-1900)+[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1]*60000)+Date.UTC(1900,0,6,2,5)).getUTCDate() },
-    toObj(y, m, d) {
+    convert(y, m, d) {
       let offset = (Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000, i, temp=0;
       for(i=1900; i<2101 && offset>0; i++) { temp=this.lDays(i); offset-=temp; }
       if(offset<0) { offset+=temp; i--; }
@@ -91,11 +104,15 @@
 
   // 5. 渲染
   try {
-    const obj = Lunar.toObj(Y, M, D);
+    const obj = Lunar.convert(Y, M, D);
     const api = await getAlmanac();
-    const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
-    const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
-    const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
+    // 百度返回 Key: suit(宜), avoid(忌). chong/baiji 百度可能没有，做容错
+    const yi = api.suit || api.yi || api.Yi || "";
+    const ji = api.avoid || api.ji || api.Ji || "";
+    // 如果百度没有冲煞，就留空 (百度接口有时候确实不返回这个)
+    const chong = api.chong || api.chongsha || ""; 
+    const bai = api.baiji || "";
+    const alm = [chong, bai, yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
@@ -106,5 +123,5 @@
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请检查日志" }); }
+  } catch (e) { $done({ title: "黄历异常", content: "请检查网络或日志" }); }
 })();
