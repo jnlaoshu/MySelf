@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 最终版 - 更换接口为calendar_new + 仅读取真实宜忌无兜底
+ * 更新：2026.01.16 终极适配版 - 完美兼容calendar_new新接口 + 仅读真实宜忌无兜底
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -35,12 +35,12 @@
 
   const httpGet = (url) => new Promise(resolve => {
     if (!hasHttpClient) return resolve(null);
-    $httpClient.get({ url, timeout: 6000 }, (err, resp, data) => {
+    $httpClient.get({ url, timeout: 8000 }, (err, resp, data) => {
       resolve((!err && resp?.status === 200) ? data : null);
     });
   });
 
-  const fetchJson = async (url, fallback = {}) => {
+  const fetchJson = async (url, fallback = []) => {
     if (!url) return fallback;
     try {
       const data = await httpGet(url);
@@ -138,29 +138,27 @@
   };
   const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
   
-  // ✅ 核心纯净版 - 只读取网站当日真实宜忌，无任何兜底、无任何默认值、无任何伪造数据
+  // ✅✅✅ 核心修复：完美适配calendar_new新接口 + 仅读取当日真实宜忌 无任何兜底 ✅✅✅
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // ✅ ✅ ✅ 已修改为新接口地址 calendar_new ✅ ✅ ✅
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
-    const data = await fetchJson(url);
-    // 仅获取接口原生数组，无数据则为空
-    const almanacList = Array.isArray(data?.data) ? data.data : [];
-    // 100%精准匹配当日数据，仅匹配 20260116 / 2026-01-16 两种格式
+    // 1. 修正✅ 新接口正确路径：无年份子文件夹，直接 calendar_new/年月.json
+    const monthFileName = `${curYear}${padStart2(curMonth)}.json`;
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${monthFileName}`;
+    // 2. 修正✅ 新接口返回直接是数组，无需读取data.data
+    const almanacList = await fetchJson(url, []);
+    
+    // 精准匹配当日数据（仅匹配纯数字格式 20260116）
     const almanacItem = almanacList.find(item => {
-      if (!item.date) return false;
-      const itemDate = String(item.date).trim();
-      return itemDate === todayNumStr || itemDate === todayStr;
+      return item && item.date && String(item.date).trim() === todayNumStr;
     });
 
-    // 基础干支信息，无任何多余内容
+    // 纯基础干支信息，无任何多余内容
     const baseDesc = `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
-    // 只有匹配到网站真实数据，才追加宜忌，否则只返回基础干支
-    if (almanacItem && almanacItem.yi && almanacItem.ji) {
-      const desc = [almanacItem.desc, almanacItem.value].filter(Boolean).join(" ");
-      return `${baseDesc} ${desc}\n✅ 宜：${almanacItem.yi}\n❎ 忌：${almanacItem.ji}`;
+    // 仅当获取到【真实有效的宜+忌】数据时，才拼接显示，否则只返回干支
+    if (almanacItem && almanacItem.yi && almanacItem.ji && almanacItem.yi.trim() && almanacItem.ji.trim()) {
+      return `${baseDesc}\n✅ 宜：${almanacItem.yi}\n❎ 忌：${almanacItem.ji}`;
     }
-    // 无数据 → 只返回纯干支，无宜无忌
+    // 无真实数据 → 只返回干支，无宜无忌，完全符合你的要求
     return baseDesc;
   };
 
