@@ -1,7 +1,8 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.17 00:00 【最终精准适配：确认带年份子文件夹+真实数字字段匹配，100%成功获取】
+ * 更新：2026.01.16 21:50 
+ * 适配：新黄历接口 calendar_new 目录结构+JSON数据结构精准匹配
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -118,25 +119,22 @@
     };
   };
 
-  /* ========== ✅ 终极精准匹配 - 完全贴合真实目录+真实字段，无任何误差 ========== */
+  /* ========== ✅ 核心精准适配：新接口地址+新JSON数据结构，彻底取消所有兜底默认值 ========== */
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // ✔️ 正确路径：带年份子文件夹 + 正确文件名格式 ${年份}${两位月份}.json
+    // ✅ 修改点1：接口地址更换为 calendar_new
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
-    const almanacList = data?.almanac || [];
-    // ✔️ 核心精准匹配：数字匹配数字 solarYear+ solarMonth+ solarDay 三重校验，100%命中当日数据
-    const almanacItem = almanacList.find(item => 
-      item.solarYear === curYear && 
-      item.solarMonth === curMonth && 
-      item.solarDay === curDate
-    );
-    // ✔️ 无数据返回空，不兜底，保证内容真实
+    // ✅ 修改点2：解析逻辑适配新结构，黄历数组从 data[0].almanac → days
+    const almanacList = data?.days || [];
+    const almanacItem = almanacList.find(i => Number(i.day) === curDate);
+    // ✅ 无数据直接返回空，不兜底任何内容
     if (!almanacItem) return "";
-    // ✔️ 拼接有效信息，过滤空值
+    // ✅ 只拼接有真实数据的内容，过滤空值
     const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
     const suitLine = almanacItem.suit ? `✅ 宜：${almanacItem.suit}` : "";
     const avoidLine = almanacItem.avoid ? `❎ 忌：${almanacItem.avoid}` : "";
+    // ✅ 最终只返回有值的信息，无值则对应行消失
     return [desc, suitLine, avoidLine].filter(Boolean).join("\n").trim();
   };
 
