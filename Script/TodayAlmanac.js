@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 精准纯净版 - 仅读取网站当日真实宜忌，无任何兜底默认值
+ * 更新：2026.01.16 最终版 - 更换接口为calendar_new + 仅读取真实宜忌无兜底
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -141,7 +141,8 @@
   // ✅ 核心纯净版 - 只读取网站当日真实宜忌，无任何兜底、无任何默认值、无任何伪造数据
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
+    // ✅ ✅ ✅ 已修改为新接口地址 calendar_new ✅ ✅ ✅
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
     // 仅获取接口原生数组，无数据则为空
     const almanacList = Array.isArray(data?.data) ? data.data : [];
