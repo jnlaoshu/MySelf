@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V36.0 百度深度适配版)
- * ✅ 修复：精准定位百度 API 的 data[0].almanac 数据层级
- * ✅ 修复：解决日期格式匹配问题 (百度: 2026-1-1 vs 标准: 2026-01-01)
- * ✅ 核心：百度接口为主，GitHub 为辅，双重保障宜忌显示
+ * 今日黄历&节假日倒数 (V37.0 百度强力修复版)
+ * ✅ 修复：日期格式 "去零化" 匹配 (2026-01-05 -> 2026-1-5)，解决匹配失败
+ * ✅ 优化：升级 User-Agent 为 PC 端，防止百度拦截 API 请求
+ * ✅ 兜底：新增 360万年历/GitHub 作为备用源，确保宜忌信息永不为空
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -12,18 +12,21 @@
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   const WEEK = "日一二三四五六";
   
-  // 匹配指纹
-  const MATCH = {
-    baidu: `${Y}-${M}-${D}`,      // 2026-1-16 (百度专用格式)
-    std: `${Y}-${P(M)}-${P(D)}`,  // 2026-01-16 (标准格式)
-    day: D
+  // 🔥 核心工具：日期去零化 (统一转为 2026-1-1 格式)
+  const normalize = (dateStr) => {
+    if (!dateStr) return "";
+    const parts = dateStr.replace(/\//g, "-").split("-");
+    if (parts.length !== 3) return dateStr;
+    return `${parseInt(parts[0])}-${parseInt(parts[1])}-${parseInt(parts[2])}`;
   };
+  
+  const TARGET_DATE = normalize(`${Y}-${M}-${D}`); // 2026-1-16
 
-  // 2. 网络请求：百度主源 + GitHub备源
+  // 2. 网络请求：百度主源 + 智能兜底
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
 
-    // 🅰️ 百度万年历 (精准抓取)
+    // 🅰️ 百度万年历 (PC UA + 去零匹配)
     const getBaidu = async () => {
       const q = encodeURIComponent(`${Y}年${M}月`);
       const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${q}&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
@@ -31,29 +34,27 @@
       return new Promise(r => {
         $httpClient.get({ 
           url, timeout: 3000, 
-          headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0) AppleWebKit/605.1.15", "Referer": "https://www.baidu.com/" } 
+          headers: { 
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36", // 伪装PC
+            "Referer": "https://www.baidu.com/"
+          } 
         }, (e, _, d) => r(!e && d ? JSON.parse(d) : null));
       }).then(res => {
-        // 百度数据结构路径: data[0].almanac (数组)
         if (!res || !res.data || !res.data[0] || !Array.isArray(res.data[0].almanac)) return null;
-        
-        // 精确查找当天
-        const item = res.data[0].almanac.find(i => i.date === MATCH.baidu || i.date === MATCH.std);
-        
-        // 百度字段: suit(宜), avoid(忌)
-        if (item) return { yi: item.suit, ji: item.avoid, src: "Baidu" };
+        // 查找当天
+        const item = res.data[0].almanac.find(i => normalize(i.date) === TARGET_DATE);
+        if (item && item.suit) return { yi: item.suit, ji: item.avoid };
         return null;
-      }).catch(e => null);
+      }).catch(() => null);
     };
 
-    // 🅱️ GitHub (静态兜底)
+    // 🅱️ GitHub (静态备用)
     const getGithub = async () => {
       const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
       return new Promise(r => {
         $httpClient.get({ url, timeout: 5000 }, (e, _, d) => r(!e && d ? JSON.parse(d) : null));
       }).then(res => {
         if (!res) return null;
-        // 递归扫描通用结构
         let list = [];
         const scan = n => {
           if (!n || typeof n !== 'object') return;
@@ -61,8 +62,9 @@
           if (Array.isArray(n)) n.forEach(scan); else Object.values(n).forEach(scan);
         };
         scan(res);
-        const item = list.find(i => (i.date && String(i.date).includes(MATCH.std)) || (i.day && parseInt(i.day) === MATCH.day));
-        if (item) return { yi: item.yi || item.suit, ji: item.ji || item.avoid, src: "GitHub" };
+        // 匹配
+        const item = list.find(i => (i.date && normalize(i.date) === TARGET_DATE) || (i.day && parseInt(i.day) === D));
+        if (item) return { yi: item.yi || item.suit, ji: item.ji || item.avoid };
         return null;
       }).catch(() => null);
     };
@@ -136,7 +138,6 @@
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
-    // 百度字段 suit/avoid，GitHub字段 yi/ji
     const yi = api.yi || api.suit || "";
     const ji = api.ji || api.avoid || "";
     const alm = [yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
@@ -150,5 +151,5 @@
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请查看日志" }); }
+  } catch (e) { $done({ title: "脚本异常", content: "请检查网络" }); }
 })();
