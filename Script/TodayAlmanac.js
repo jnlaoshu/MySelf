@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.15 优化版
+ * 更新：2026.01.16 修复版【更换黄历接口为calendar_new，精准读取宜忌】
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -150,56 +150,36 @@
   // 生成黄历文本（友好兜底）
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
+    // ★修复1：接口地址替换为 calendar_new 【核心必改】
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
     
-    // Fix: Parse almanac list robustly (handle Object or Array structure)
+    // ★修复2：适配新接口的对象格式data，转为数组【核心必改，原逻辑失效关键】
     let almanacList = [];
     const rawData = data?.data;
-    if (rawData) {
-       if (Array.isArray(rawData.almanac)) {
-          almanacList = rawData.almanac;
-       } else if (Array.isArray(rawData) && rawData[0]?.almanac) {
-          almanacList = rawData[0].almanac;
-       } else if (Array.isArray(rawData)) {
-          almanacList = rawData;
-       }
+    if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+      // 新接口data是对象，key=日期数字，value=黄历对象，转为数组
+      almanacList = Object.values(rawData);
+    } else if (Array.isArray(rawData)) {
+      // 兼容旧接口格式，做兜底处理
+      almanacList = rawData;
     }
 
-    // Fix: Exact matching for current date (Strict, no index fallback)
+    // ★修复3：简化日期匹配逻辑，新接口只有day字段，精准匹配当日日期【核心优化】
     const almanacItem = almanacList.find(i => {
-        // 1. Try matching date string field
-        if (i.date) {
-            const s = String(i.date).trim();
-            const parts = s.split(/[-/.\s]+/);
-            if (parts.length >= 3) {
-               const y = parseInt(parts[0], 10);
-               const m = parseInt(parts[1], 10);
-               const d = parseInt(parts[2], 10);
-               if (y === curYear && m === curMonth && d === curDate) return true;
-            }
-            // Check YYYYMMDD
-            if (s.length === 8 && /^\d+$/.test(s)) {
-               const num = parseInt(s, 10);
-               const target = curYear * 10000 + curMonth * 100 + curDate;
-               if (num === target) return true;
-            }
-        }
-        // 2. Try matching day field
-        if (i.day) {
-            const d = parseInt(String(i.day), 10);
-            if (d === curDate) return true;
-        }
-        return false;
+      const d = parseInt(String(i.day), 10);
+      return d === curDate;
     });
 
     const baseDesc = `干支纪法：${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${lunarData.term || ""}`.trim();
     if (!almanacItem) return baseDesc;
 
-    const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
-    const suit = almanacItem.suit || "诸事皆宜";
-    const avoid = almanacItem.avoid || "无特殊禁忌";
-    // Fix: Use local lunarData for GanZhi, ignoring potentially undefined API values
+    // ★修复4：适配新接口字段，移除旧接口的冗余字段desc/value，改用新接口的nongli+jieqi
+    const desc = [almanacItem.nongli, almanacItem.jieqi].filter(Boolean).join(" ");
+    // ★修复5：加强宜忌兜底逻辑，双重非空判断，确保永远有值
+    const suit = almanacItem.suit && almanacItem.suit.trim() ? almanacItem.suit : "诸事皆宜";
+    const avoid = almanacItem.avoid && almanacItem.avoid.trim() ? almanacItem.avoid : "无特殊禁忌";
+    // 保留原格式的干支信息，确保显示效果一致
     return `${lunarData.gzYear}年 ${lunarData.gzMonth}月 ${lunarData.gzDay}日 ${desc}\n✅ 宜：${suit}\n❎ 忌：${avoid}`;
   };
 
