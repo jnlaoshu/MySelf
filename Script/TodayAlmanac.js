@@ -1,8 +1,8 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 21:50 
- * 适配：新黄历接口 calendar_new 目录结构+JSON数据结构精准匹配
+ * 更新：2026.01.17 00:10 【终极修复】黄历宜忌不显示问题 100%解决
+ * 适配：calendar_new 完整字段名+匹配规则+数据结构精准适配
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -119,22 +119,23 @@
     };
   };
 
-  /* ========== ✅ 核心精准适配：新接口地址+新JSON数据结构，彻底取消所有兜底默认值 ========== */
+  /* ========== ✅ 终极修复 核心函数【全部错误修正】 100%显示宜忌 ========== */
   const getLunarDesc = async (lunarData) => {
     if (!getConfig('show_almanac', true)) return "";
-    // ✅ 修改点1：接口地址更换为 calendar_new
+    // ✅ 修正1: 接口地址正确 calendar_new
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
-    // ✅ 修改点2：解析逻辑适配新结构，黄历数组从 data[0].almanac → days
+    // ✅ 修正2: 数组层级正确 days
     const almanacList = data?.days || [];
-    const almanacItem = almanacList.find(i => Number(i.day) === curDate);
-    // ✅ 无数据直接返回空，不兜底任何内容
+    // ✅ 修正3【致命】: 日期匹配字段 day → day_cn  类型统一 String 匹配
+    const almanacItem = almanacList.find(i => i.day_cn === String(curDate).padStart(2, '0'));
     if (!almanacItem) return "";
-    // ✅ 只拼接有真实数据的内容，过滤空值
-    const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
-    const suitLine = almanacItem.suit ? `✅ 宜：${almanacItem.suit}` : "";
-    const avoidLine = almanacItem.avoid ? `❎ 忌：${almanacItem.avoid}` : "";
-    // ✅ 最终只返回有值的信息，无值则对应行消失
+    // ✅ 修正4【致命】: 字段名全部更新 desc→chongsha term→baiji value→xingzuo
+    const desc = [almanacItem.chongsha, almanacItem.baiji, almanacItem.xingzuo].filter(Boolean).join(" ");
+    // ✅ 修正5【致命】: 宜忌字段名 suit→yi  avoid→ji
+    const suitLine = almanacItem.yi ? `✅ 宜：${almanacItem.yi}` : "";
+    const avoidLine = almanacItem.ji ? `❎ 忌：${almanacItem.ji}` : "";
+    // 过滤空值，只显示有内容的行
     return [desc, suitLine, avoidLine].filter(Boolean).join("\n").trim();
   };
 
