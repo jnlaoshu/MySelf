@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/TodayAlmanac.js
- * 更新：2026.01.16 最终完整版 - 修复宜忌显示+癸卯(兔) 年 格式+固定标题+完整黄历功能
+ * 更新：2026.01.16 最终优化版 - 首行格式调整+字号增大+宜忌修复+固定标题
  */
 (async () => {
   /* ========== 常量配置 & 环境初始化 ========== */
@@ -118,17 +118,13 @@
     };
   };
 
-  /* ========== ✅ 核心修复：完整恢复【宜忌信息获取函数】，解决无法加载宜忌问题 ========== */
+  /* ========== 黄历宜忌信息获取函数 ========== */
   const getLunarDesc = async (lunarData) => {
-    // 强制开启黄历宜忌显示，兼容配置项
     if (!getConfig('show_almanac', true)) return "";
-    // 黄历接口地址，稳定有效
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar/${curYear}/${curYear}${padStart2(curMonth)}.json`;
     const data = await fetchJson(url);
-    // 精准解析当日黄历数据，修复解析容错
     const almanacList = data?.data?.[0]?.almanac || [];
     const almanacItem = almanacList.find(i => Number(i.day) === curDate) || {};
-    // 拼接完整的宜忌+干支+值神信息，兜底默认值避免空白
     const desc = [almanacItem.desc, almanacItem.term, almanacItem.value].filter(Boolean).join(" ");
     const suit = almanacItem.suit || "诸事皆宜";
     const avoid = almanacItem.avoid || "无特殊禁忌";
@@ -151,9 +147,9 @@
 
   /* ========== 主业务逻辑执行 ========== */
   const lunarNow = LunarCal.solar2lunar(curYear, curMonth, curDate);
-  // ✅ 固定格式：癸卯(兔) 年 腊月廿七 大寒 【完全不变】
-  const lunarHeader = `${lunarNow.gzYear}(${lunarNow.animal}) 年 ${lunarNow.monthCn}${lunarNow.dayCn} ${lunarNow.term || ''}`.trim();
-  // ✅ 异步获取宜忌信息，修复核心问题
+  // ✅ 核心修改1：格式调整为 癸卯(兔)年 腊月廿七 大寒（去掉年前空格）
+  // ✅ 核心修改2：用 <font size="+1"> 标签增大一号字号
+  const lunarHeader = `<font size="+1">${lunarNow.gzYear}(${lunarNow.animal})年 ${lunarNow.monthCn}${lunarNow.dayCn} ${lunarNow.term || ''}</font>`.trim();
   const almanacTxt = await getLunarDesc(lunarNow);
   const blessMap = await fetchJson(args.BLESS_URL, {});
 
@@ -176,12 +172,12 @@
     }
   }
 
-  // ✅ 永久固定标题：年月日 + 星期 + 星座 (无轮播、无随机)【完全不变】
+  // 永久固定标题：年月日 + 星期 + 星座 (无轮播、无随机)
   const generateTitle = () => {
     return `${curYear}年${padStart2(curMonth)}月${padStart2(curDate)}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
   };
 
-  // ✅ 完美排版：农历首行 + 宜忌信息 + 节日倒数，自动过滤空值，无多余空行
+  // 内容拼接：首行(增大字号) + 宜忌 + 节日倒数
   const content = [
     lunarHeader,
     almanacTxt,
