@@ -1,3 +1,4 @@
+
 /*
  * 今日黄历&节假日倒数（完整版 终极根治 无兜底 纯raw源站）
  * ✅ 专项修复：宜忌信息不显示、节假日倒数空白问题
@@ -17,10 +18,15 @@
   const hasHttpClient = typeof $httpClient !== "undefined";
   // 调试开关：开启后控制台输出关键日志，排查问题时设为true
   const DEBUG_MODE = true;
-  const log = (msg) => DEBUG_MODE && console.log(`【黄历调试】${msg}`);
+  const log = (msg, data) => {
+    if (DEBUG_MODE) {
+      console.log(`【黄历调试】${msg}`);
+      if (data !== undefined) console.log(JSON.stringify(data, null, 2));
+    }
+  };
 
   // ========== 工具函数 强化容错 ==========
-  const padStart2 = (n) => (n < 10 ? `0${n}` : `${n}`); // 替换padStart，兼容低版本环境
+  const padStart2 = (n) => (n < 10 ? `0${n}` : `${n}`);
   const todayDayStr = padStart2(curDate);
   const monthStr = padStart2(curMonth);
   const festDataCache = new Map();
@@ -46,14 +52,14 @@
     log(`请求接口：${url}`);
     $httpClient.get({ url, timeout: 15000 }, (err, resp, data) => {
       if (err) {
-        log(`接口请求失败：${err.message}`);
+        log(`接口请求失败：${err.message || err}`);
         return resolve(null);
       }
       if (!resp || resp.status !== 200) {
         log(`接口返回异常，状态码：${resp?.status || '未知'}`);
         return resolve(null);
       }
-      log("接口请求成功，获取数据长度：" + data.length);
+      log(`接口请求成功，数据长度：${data?.length || 0}`);
       resolve(data);
     });
   });
@@ -67,11 +73,13 @@
         return { days: [] };
       }
       const json = JSON.parse(rawData);
+      log("解析JSON成功", json);
       // 强制校验days字段是否为数组
       if (!Array.isArray(json.days)) {
         log("接口数据格式错误，days不是数组");
         return { days: [] };
       }
+      log(`days数组长度：${json.days.length}`);
       return json;
     } catch (e) {
       log(`JSON解析失败：${e.message}`);
@@ -81,15 +89,18 @@
 
   // ✅ 修复3：重构天数差计算，兼容跨年份日期，杜绝负数过滤过度
   const calcDateDiff = (dateStr) => {
-    if (!dateStr || dateStr.split('-').length !== 3) return -1;
+    if (!dateStr || dateStr.split('-').length !== 3) return -999;
     const [y, m, d] = dateStr.split('-').map(Number);
-    if (isNaN(y) || isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) return -1;
+    if (isNaN(y) || isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) return -999;
     
     const targetDate = new Date(y, m - 1, d);
     const todayDate = new Date(curYear, curMonth - 1, curDate);
-    // 计算毫秒差，避免时间戳溢出
+    // 重置时间为0点，避免时间部分影响计算
+    targetDate.setHours(0, 0, 0, 0);
+    todayDate.setHours(0, 0, 0, 0);
+    
     const diffMs = targetDate.getTime() - todayDate.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
     log(`日期${dateStr} 与今天相差：${diffDays}天`);
     return diffDays;
   };
@@ -146,129 +157,4 @@
     // 修复：农历转公历失败时返回空字符串，避免无效日期
     const lunar2Solar = (m,d)=>{
       try {
-        const r = LunarCal.lunar2solar(year,m,d);
-        return formatYmd(r.y,r.m,r.d);
-      } catch (e) {
-        log(`农历${year}年${m}月${d}日转公历失败：${e.message}`);
-        return "";
-      }
-    };
-    const weekSpecDay = (m,n,w)=>{
-      try {
-        const d=new Date(year,m-1,1);
-        const day=1+((w-d.getDay()+7)%7)+(n-1)*7;
-        return formatYmd(year,m,Math.min(day, LunarCal.solarDays(year, m)));
-      } catch (e) {
-        log(`计算${year}年第${n}个星期${w}失败：${e.message}`);
-        return "";
-      }
-    };
-    const qmDay = LunarCal.getTerm(year,7);
-    const festData = {
-      legal: [["元旦",formatYmd(year,1,1)],["寒假",formatYmd(year,1,31)],["春节",lunar2Solar(1,1)],["开学",formatYmd(year,3,2)],["清明节",formatYmd(year,4,qmDay)],["春假",formatYmd(year,4,qmDay+1)],["劳动节",formatYmd(year,5,1)],["端午节",lunar2Solar(5,5)],["高考",formatYmd(year,6,7)],["暑假",formatYmd(year,7,4)],["中秋节",lunar2Solar(8,15)],["国庆节",formatYmd(year,10,1)],["秋假",weekSpecDay(11,2,3)]].filter(item => item[1]),
-      folk: [["元宵节",lunar2Solar(1,15)],["龙抬头",lunar2Solar(2,2)],["七夕节",lunar2Solar(7,7)],["中元节",lunar2Solar(7,15)],["重阳节",lunar2Solar(9,9)],["寒衣节",lunar2Solar(10,1)],["下元节",lunar2Solar(10,15)],["腊八节",lunar2Solar(12,8)],["北方小年",lunar2Solar(12,23)],["南方小年",lunar2Solar(12,24)],["除夕",lunar2Solar(12,eve)]].filter(item => item[1]),
-      intl: [["情人节",formatYmd(year,2,14)],["母亲节",weekSpecDay(5,2,0)],["父亲节",weekSpecDay(6,3,0)],["万圣节",formatYmd(year,10,31)],["平安夜",formatYmd(year,12,24)],["圣诞节",formatYmd(year,12,25)],["感恩节",weekSpecDay(11,4,4)]].filter(item => item[1]),
-      term: Array.from({length:24},(_,i)=>{
-        const m=Math.floor(i/2)+1,id=i+1;
-        const day = LunarCal.getTerm(year,id);
-        const date = day ? formatYmd(year,m,day) : "";
-        return [LunarCal.terms[i], date];
-      }).filter(item => item[1])
-    };
-    festDataCache.set(year, festData);
-    return festData;
-  };
-
-  // ✅ 修复4：强化宜忌数据匹配逻辑，兼容接口字段大小写/格式差异
-  const getLunarDesc = async () => {
-    if (!getConfig('show_almanac', true)) return "";
-    const apiUrl = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${curYear}/${curYear}${monthStr}.json`;
-    const jsonData = await fetchJson(apiUrl);
-    const dayList = jsonData.days || [];
-    log(`获取到${dayList.length}条黄历数据`);
-
-    // 多条件匹配：兼容day为数字/字符串，补零/不补零格式
-    const todayData = dayList.find(item => {
-      const itemDay = String(item.day).padStart(2, '0');
-      return itemDay === todayDayStr || Number(item.day) === curDate;
-    });
-
-    if (!todayData) {
-      log("未找到今日黄历数据");
-      return "";
-    }
-    log("今日黄历数据：", todayData);
-
-    const contentList = [
-      todayData.chongsha || todayData.ChongSha || "",
-      todayData.baiji || todayData.BaiJi || "",
-      todayData.xingxiu || todayData.XingXiu || "",
-      todayData.yi ? `✅ 宜：${todayData.yi}` : "",
-      todayData.ji ? `❎ 忌：${todayData.ji}` : ""
-    ].filter(item => item && item.trim());
-    
-    return contentList.join("\n");
-  };
-
-  // ========== 公共业务逻辑 修复节假日过滤逻辑 ==========
-  const mergeFestList = (type, limit) => {
-    const fThis = generateFestData(curYear)[type];
-    const fNext = generateFestData(curYear+1)[type];
-    // 修复：天数差 >= -1 兼容当天节日，避免过滤有效数据
-    return [...fThis, ...fNext].filter(item => calcDateDiff(item[1]) >= -1).slice(0, limit);
-  };
-  
-  const renderFestLine = (list) => list.map(([name, date]) => {
-    const diff = calcDateDiff(date);
-    return diff === 0 ? `🎉${name}` : diff > 0 ? `${name} ${diff}天` : "";
-  }).filter(item => item).join(" , ");
-  
-  const getTodayFest = (list) => list.find(([_, date]) => calcDateDiff(date) === 0);
-
-  // ========== 主逻辑执行 ==========
-  try {
-    const lunarNow = LunarCal.solar2lunar(curYear, curMonth, curDate);
-    const lunarHeader = `${lunarNow.gzYear}(${lunarNow.animal})年 ${lunarNow.monthCn}${lunarNow.dayCn} ${lunarNow.term || ''}`.trim();
-    const almanacTxt = await getLunarDesc();
-    const blessMap = await fetchJson(args.BLESS_URL) || {};
-
-    const legalFests = mergeFestList("legal",3);
-    const folkFests = mergeFestList("folk",3);
-    const intlFests = mergeFestList("intl",3);
-    const termFests = mergeFestList("term",4);
-
-    if (hasNotify && $store && now.getHours() >=6 && now.getHours() <=23) {
-      const todayLegal = getTodayFest(legalFests);
-      const todayFolk = getTodayFest(folkFests);
-      const todayFest = todayLegal || todayFolk;
-      if (todayFest) {
-        const [name, date] = todayFest;
-        const cacheKey = `timecard_pushed_${date}`;
-        if ($store.read(cacheKey) !== "1") {
-          $store.write("1", cacheKey);
-          $notification.post(`🎉 今天是 ${name}`, "", blessMap[name] || "节日快乐，万事顺遂～");
-        }
-      }
-    }
-
-    const finalTitle = `${curYear}年${monthStr}月${todayDayStr}日 星期${weekCn[now.getDay()]} ${lunarNow.astro}`;
-    const finalContent = [
-      lunarHeader,
-      almanacTxt,
-      [renderFestLine(legalFests), renderFestLine(termFests), renderFestLine(folkFests), renderFestLine(intlFests)]
-        .filter(Boolean).join("\n")
-    ].filter(Boolean).join("\n\n");
-
-    $done({ title: finalTitle, content: finalContent, icon: "calendar", "icon-color": "#FF9800" });
-  } catch (mainErr) {
-    log(`主逻辑执行异常：${mainErr.message}`);
-    const y = curYear, m = monthStr, d = todayDayStr;
-    $done({ title: `${y}年${m}月${d}日`, content: "", icon: "calendar", "icon-color": "#FF9800" });
-  }
-})().catch(error => {
-  console.error(`【黄历脚本日志】运行异常:`, error);
-  const now = new Date();
-  const padStart2 = (n) => (n < 10 ? `0${n}` : `${n}`);
-  const y = now.getFullYear(), m = padStart2(now.getMonth()+1), d = padStart2(now.getDate());
-  $done({ title: `${y}年${m}月${d}日`, content: "", icon: "calendar", "icon-color": "#FF9800" });
-});
+        const r = LunarCal.
