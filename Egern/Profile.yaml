@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.01.17
+# 更新时间: 2026.01.17 21:10
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -51,28 +51,22 @@ dns:
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
   forward:
-    # 1. 广告拦截
+    # 1. 广告拦截 (使用正则)
     - regex:
         match: ^ad(s?)\.
         value: AdGuard
-    # 2. 国内域名快速匹配 (优化项：减少内存开销）
-    - domain_suffix:
-        match: cn
+    # 2. 国内域名快速匹配 (使用 wildcard 匹配后缀)
+    - wildcard:
+        match: '*.cn'
         value: China
-    - domain_keyword:
-        match: alibaba
+    - wildcard:
+        match: '*.edu.cn'
         value: China
-    - domain_keyword:
-        match: tencent
-        value: China
-    - domain_keyword:
-        match: baidu
-        value: China
-    # 3. 规则集兜底 (仅当上述未命中时才查询此大列表)
+    # 3. 规则集兜底 (处理 alibaba/tencent 等复杂国内域名)
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
         value: China
-    # 4. 其余默认走 Global
+    # 4. 全球默认
     - wildcard:
         match: '*'
         value: Global
@@ -269,7 +263,7 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
 
-  # 3. 国内流量直连 (顺序优化：GeoIP 和 Suffix 优先于 RuleSet)
+  # 3. 国内流量直连 (本地判断优先)
   - domain_suffix:
       match: cn
       policy: DIRECT
