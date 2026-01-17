@@ -1,5 +1,5 @@
 #!name=面板合集
-#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2025.12.18 18:33
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2026.01.17 12:03
 #𝐔𝐑𝐋: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
 
 [Panel]
@@ -9,7 +9,7 @@
 流媒体&AI服务解锁检测 = script-name=流媒体&AI服务解锁检测, title="流媒体&AI服务解锁检测", content="请刷新面板", update-interval={{{UPDATE_INTERVAL}}}
 
 [Script]
-今日黄历&节假日倒数 = type=generic, timeout=10, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/TodayAlmanac.js
+今日黄历&节假日倒数 = type=generic, timeout=10, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/Almanac.js
 #运行时长 = type=generic, timeout=10, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/StartTime.js,argument=icon=speedometer,interval=60
 网络信息 = type=generic, timeout=10, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/NetworkInfo.js
 流媒体&AI服务解锁检测 = type=generic, timeout=15, script-path=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/ServiceDetection.js
