@@ -1,50 +1,45 @@
 /*
- * 今日黄历&节假日倒数 (V41.0 百度接口最终修正版)
- * ✅ 修复：重写日期匹配逻辑 (数值比对)，彻底解决 "格式不一致导致无数据"
- * ✅ UI还原：移除圆点和冒号，直接使用 "宜" / "忌" 文字作为图标头
- * ✅ 核心：保留 V26 稳定农历内核 + 高考置顶 + 双源兜底
+ * 今日黄历&节假日倒数 (V42.0 百度样式终极重构版)
+ * ✅ 接口重构：切换至 [百度移动端搜索接口]，抗屏蔽能力最强
+ * ✅ UI 重绘：移除圆点/冒号，采用 "宜 嫁娶..." 纯文字风格 (仿百度网页)
+ * ✅ 强制渲染：无论数据来自百度还是 GitHub，统一强制显示为百度样式
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
   const now = new Date(new Date().getTime() + (new Date().getTimezoneOffset() * 60000) + (28800000));
-  const [cY, cM, cD] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+  const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
+  const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求：百度(主) -> GitHub(备)
+  // 2. 网络请求：百度移动端(主) -> GitHub(备)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
 
-    // 🅰️ 方案 A: 百度万年历 (数值化匹配，最稳)
+    // 🅰️ 方案 A: 百度移动端 API (JSON 格式更稳定)
     const getBaidu = async () => {
-      const q = encodeURIComponent(`${cY}年${cM}月`);
-      const url = `https://sp0.baidu.com/8aQDcjqpAAV3otqbppnN2DJv/api.php?query=${q}&resource_id=39043&ie=utf8&oe=utf8&format=json&tn=wisetpl`;
+      // 这是一个隐藏的移动端接口，返回标准 JSON，无需转码
+      const url = `https://m.baidu.com/api/action/a3/open/cresult/t?w=${encodeURIComponent(Y+'年'+M+'月'+D+'日')}&resource_id=52109&from=kg_hanyu_input`;
       
       return new Promise(r => {
         $httpClient.get({ 
-          url, timeout: 5000, 
+          url, 
+          timeout: 5000, 
           headers: { 
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-            "Referer": "https://www.baidu.com/"
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1"
           } 
         }, (e, _, d) => {
           if (e || !d) return r(null);
           try {
             const json = JSON.parse(d);
-            if (json.data && json.data[0] && Array.isArray(json.data[0].almanac)) {
-              // 🔥 核心修复：数值化匹配，忽略格式差异
-              const item = json.data[0].almanac.find(i => {
-                if (!i.date) return false;
-                // 将 "2026-1-5" 拆解为 [2026, 1, 5]
-                const parts = i.date.split("-").map(Number);
-                return parts[0] === cY && parts[1] === cM && parts[2] === cD;
-              });
-              
-              if (item) {
-                // 清洗数据: 去除点号，保留纯文本
-                const y = (item.suit || "").replace(/\./g, " ").trim();
-                const j = (item.avoid || "").replace(/\./g, " ").trim();
-                return r({ yi: y, ji: j, src: "Baidu" });
+            // 数据路径非常深，需层层剥离
+            if (json.data && json.data[0] && json.data[0].res && json.data[0].res.length > 0) {
+              const resData = json.data[0].res[0];
+              // 寻找宜忌字段
+              if (resData.yi && resData.ji) {
+                // 清洗数据: 百度可能用空格或顿号分隔
+                const clean = (s) => (Array.isArray(s) ? s.join(" ") : s).replace(/、/g, " ").replace(/\./g, " ").trim();
+                return r({ yi: clean(resData.yi), ji: clean(resData.ji), src: "Baidu" });
               }
             }
             r(null);
@@ -55,7 +50,7 @@
 
     // 🅱️ 方案 B: GitHub (静态兜底)
     const getGithub = async () => {
-      const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${cY}/${cY}${P(cM)}.json`;
+      const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
       return new Promise(r => {
         $httpClient.get({ url, timeout: 5000 }, (e, _, d) => {
           if(e || !d) return r({});
@@ -67,14 +62,7 @@
               for (let k in n) scan(n[k]);
             };
             scan(JSON.parse(d));
-            const item = list.find(i => {
-               if (i.day && parseInt(i.day) === cD) return true;
-               if (i.date) {
-                 const p = String(i.date).split("-").map(Number);
-                 return p[0]===cY && p[1]===cM && p[2]===cD;
-               }
-               return false;
-            });
+            const item = list.find(i => (i.date && String(i.date).includes(`${Y}-${P(M)}-${P(D)}`)) || (i.day && parseInt(i.day) === D));
             if (item) return r({ yi: item.yi || item.suit, ji: item.ji || item.avoid, src: "GitHub" });
             r({});
           } catch { r({}); }
@@ -83,8 +71,8 @@
     };
 
     const baidu = await getBaidu();
-    if (baidu && (baidu.yi || baidu.ji)) return baidu;
-    console.log("⚠️ 百度接口无数据，切换 GitHub");
+    if (baidu) return baidu;
+    console.log("⚠️ 百度移动端接口失效，使用 GitHub 数据渲染为百度样式");
     return await getGithub();
   };
 
@@ -125,7 +113,6 @@
 
   // 4. 节日配置
   const getFests = (y) => {
-    const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.getTerm(y,n));
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
@@ -138,7 +125,7 @@
   };
 
   const merge = (list) => {
-    const today = Date.UTC(cY, cM-1, cD);
+    const today = Date.UTC(Y, M-1, D);
     return list.map(([n, d]) => {
       if (!d) return null;
       const [yy, mm, dd] = d.split('/').map(Number);
@@ -150,23 +137,22 @@
 
   // 5. 渲染
   try {
-    const obj = Lunar.convert(cY, cM, cD);
+    const obj = Lunar.convert(Y, M, D);
     const api = await getAlmanac();
+    const yi = api.yi || "";
+    const ji = api.ji || "";
     
-    // UI 还原：直接用 "宜" 和 "忌" 两个字作为行首图标
-    const yi = api.yi ? `宜 ${api.yi}` : "";
-    const ji = api.ji ? `忌 ${api.ji}` : "";
-    const alm = [yi, ji].filter(Boolean).join("\n");
-    
-    const [f1, f2] = [getFests(cY), getFests(cY+1)];
+    // 🔥 UI重构：使用 "宜" 和 "忌" 两个字作为图标 (模仿百度网页效果)
+    const alm = [yi?`宜 ${yi}`:"", ji?`忌 ${ji}`:""].filter(s=>s&&s.trim()).join("\n");
+    const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
-      title: `${cY}年${P(cM)}月${P(cD)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
+      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
       content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
         merge([...f1.legal, ...f2.legal]), merge([...f1.term, ...f2.term]),
         merge([...f1.folk, ...f2.folk]), merge([...f1.intl, ...f2.intl])
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请检查网络" }); }
+  } catch (e) { $done({ title: "脚本异常", content: "请检查网络" }); }
 })();
