@@ -1,5 +1,5 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 
-# 更新时间: 2026.01.02 15:49
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
+# 优化时间: 2026.01.17
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -51,13 +51,28 @@ dns:
       - https://dns.google/dns-query
       - https://1.1.1.1/dns-query
   forward:
+    # 1. 广告拦截
     - regex:
         match: ^ad(s?)\.
         value: AdGuard
-    # 注意：使用 rule_set 分流 DNS 会增加内存开销，如遇卡顿可尝试注释下方 block
+    # 2. 国内域名快速匹配 (优化项：减少内存开销）
+    - domain_suffix:
+        match: cn
+        value: China
+    - domain_keyword:
+        match: alibaba
+        value: China
+    - domain_keyword:
+        match: tencent
+        value: China
+    - domain_keyword:
+        match: baidu
+        value: China
+    # 3. 规则集兜底 (仅当上述未命中时才查询此大列表)
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
         value: China
+    # 4. 其余默认走 Global
     - wildcard:
         match: '*'
         value: Global
@@ -239,9 +254,9 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
 
 # --- 代理规则配置 ---
-# 规则匹配顺序非常重要，建议：去广告 -> 局域网/国内直连 -> 特定APP代理 -> 兜底代理
+# 规则匹配顺序优化：本地匹配优先 -> 专有规则 -> 在线规则集 -> 兜底
 rules:
-  # 1. 强制拒绝/拦截 (高优先级)
+  # 1. 强制拒绝/拦截
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml
       policy: REJECT
@@ -254,18 +269,18 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
 
-  # 3. 国内流量直连
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
-      policy: DIRECT
-      interval: 86400	
+  # 3. 国内流量直连 (顺序优化：GeoIP 和 Suffix 优先于 RuleSet)
   - domain_suffix:
-      match: '*.cn'
+      match: cn
       policy: DIRECT
   - geoip:
       match: CN
       policy: DIRECT
       no_resolve: true
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_All.list
+      policy: DIRECT
+      interval: 86400	
 
   # 4. 专有服务/应用代理
   - rule_set:
@@ -337,7 +352,6 @@ mitm:
   enabled: true
   ca_p12: egern.p12
   ca_passphrase: egern
-  # 建议添加 hostnames，虽然 modules 会覆盖，但作为 fallback 更好
   hostnames:
     - '*.google.com'
     - '*.github.com'
@@ -363,6 +377,6 @@ modules:
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
     enabled: true  
   - name: 奶思广告拦截&净化合集
-    url: https://github.com/fmz200/wool_scripts/blob/main/Surge/module/blockAds.module
+    url: https://raw.githubusercontent.com/fmz200/wool_scripts/main/Surge/module/blockAds.module
     enabled: true
     interval: 86400
