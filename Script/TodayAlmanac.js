@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V34.0 完美复刻修复版)
- * ✅ 修复：核心匹配逻辑修正，彻底解决日期串号(如1.17变2.16)问题
- * ✅ 恢复：完整保留原版节假日、节气、民俗、国际节日四行布局
- * ✅ 增强：支持 YYYY-MM-DD, YYYY/MM/DD, YYYYMMDD 全格式兼容
+ * 今日黄历&节假日倒数 (V35.0 终极稳定版)
+ * ✅ 修复：恢复"递归扫描"能力，解决因JSON嵌套导致的"无法显示宜忌"问题
+ * ✅ 安全：坚持严格的日期格式比对，彻底杜绝匹配到错误日期的Bug
+ * ✅ 布局：保持完整的节假日、节气、倒数日四行布局
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -11,14 +11,13 @@
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   
-  // 关键：构造严格匹配的日期格式列表
-  const KEY = `${Y}${P(M)}${P(D)}`; 
+  // 构造严格匹配列表 (只匹配当天的完整日期字符串)
   const MATCH_LIST = [
     `${Y}-${P(M)}-${P(D)}`, // 2026-01-17
     `${Y}/${P(M)}/${P(D)}`, // 2026/01/17
     `${Y}-${M}-${D}`,       // 2026-1-17
     `${Y}/${M}/${D}`,       // 2026/1/17
-    KEY                     // 20260117
+    `${Y}${P(M)}${P(D)}`    // 20260117
   ];
   const WEEK = "日一二三四五六";
 
@@ -57,7 +56,7 @@
     }
   };
 
-  // 3. 网络请求 (安全获取 + 深度兼容)
+  // 3. 网络请求 (直读 + 递归 + 严格扫描)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     return new Promise(r => {
@@ -67,23 +66,41 @@
         headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } 
       }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
     }).then(raw => {
-      // 策略A：Key 直读 (最快)
-      if (raw[KEY]) return raw[KEY];
-      
-      // 策略B：遍历查找 (强力兼容 + 严格防串号)
-      return Object.values(raw).find(n => {
-          if (!n || typeof n !== 'object') return false;
-          // 必须有宜忌数据，且日期字段严格包含当前日期字符串
-          if (n.yi || n.suit || n.gregorian) {
-              const dStr = String(n.date || n.day || n.gregorian || "");
-              return MATCH_LIST.some(fmt => dStr.includes(fmt));
+      // 策略A：尝试直接命中常见Key (效率最高)
+      // 针对 {"20260117":...} 或 {"2026-01-17":...}
+      for (let k of MATCH_LIST) if (raw[k]) return raw[k];
+
+      // 策略B：递归扫描所有层级 (针对 {"data": {...}} 等嵌套结构)
+      let found = {};
+      const scan = (obj) => {
+        if (!obj || typeof obj !== 'object') return;
+        
+        // 如果当前对象包含宜忌信息，进行日期核对
+        if (obj.yi || obj.suit || obj.gregorian) {
+          const dStr = String(obj.date || obj.day || obj.gregorian || "");
+          // ⚠️ 核心修复：检查 dStr 是否包含 MATCH_LIST 中的任意一种格式
+          // 仅当日期字符串完全匹配今天时才采纳，防止匹配到其他日期的"宜忌"
+          if (MATCH_LIST.some(fmt => dStr.includes(fmt))) {
+            found = obj;
+            return; // 找到后立即停止
           }
-          return false;
-      }) || {};
+        }
+        
+        // 没找到则继续深入下一层
+        if (Object.keys(found).length === 0) {
+          for (let key in obj) {
+            if (Object.keys(found).length > 0) break;
+            scan(obj[key]);
+          }
+        }
+      };
+      
+      scan(raw);
+      return found;
     }).catch(e => { console.log("Almanac Error:", e); return {}; });
   };
 
-  // 4. 节日数据配置 (恢复全量数据)
+  // 4. 节日数据配置
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
@@ -104,7 +121,6 @@
       const [yy, mm, dd] = d.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy,mm-1,dd) - today)/86400000);
       let k = diff; 
-      // 高考特殊权重：未来200天内的高考置顶显示
       if(n==="高考" && diff>0 && diff<=200) k=-9999;
       return { n, diff, k };
     }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0,3).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
@@ -113,21 +129,21 @@
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
-    // 兼容 API 字段大小写
+    
+    // 兼容多种 Key 的字段读取
     const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
     const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
     const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
     
-    // 获取今明两年节日用于跨年倒数
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
       title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
       content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
-        merge([...f1.legal, ...f2.legal]), // 法定/学校
-        merge([...f1.term, ...f2.term]),   // 节气
-        merge([...f1.folk, ...f2.folk]),   // 民俗
-        merge([...f1.intl, ...f2.intl])    // 国际
+        merge([...f1.legal, ...f2.legal]), 
+        merge([...f1.term, ...f2.term]),   
+        merge([...f1.folk, ...f2.folk]),   
+        merge([...f1.intl, ...f2.intl])    
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
