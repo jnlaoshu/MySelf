@@ -1,18 +1,18 @@
 /*
- * 今日黄历&节假日倒数 (V32.0 经典修复版)
+ * 今日黄历&节假日倒数 (V32.0 原始精简版)
  * -------------------------------------------
- * 🎯 数据源：GitHub (zqzess/openApiData)
- * 🔧 修复核心：
- * 1. 针对 GitHub 源的 Object 结构进行 Key 值直取 (修复宜忌不显示)
- * 2. 强制锁定 UTC+8 北京时间 (修复日期显示错误)
- * 🎨 特性：高考置顶 + 智能排序 + 经典布局
+ * 🎯 核心：基于 GitHub (zqzess/openApiData) 数据源
+ * 🛠 机制：
+ * 1. 强制 UTC+8 北京时间，防止时区错乱
+ * 2. 使用 "YYYYMMDD" (如 20260116) 作为 Key 直取数据
+ * 3. 极致精简代码结构
  * -------------------------------------------
  */
 (async () => {
   // 1. 基础环境 (强制锁定北京时间 UTC+8)
   const getBjDate = () => {
     const d = new Date();
-    // UTC时间 + 8小时 = 北京时间
+    // UTC时间戳 + 8小时毫秒数
     const bj = new Date(d.getTime() + (d.getTimezoneOffset() * 60000) + (8 * 3600000));
     return {
       y: bj.getFullYear(),
@@ -34,7 +34,7 @@
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     
-    // URL: https://raw.../2026/202601.json
+    // URL: .../2026/202601.json
     const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
     
     return new Promise(r => {
@@ -117,15 +117,12 @@
   };
 
   const merge = (list) => {
-    // 强制使用北京时间进行倒计时计算
     const today = Date.UTC(Y, M-1, D);
     return list.map(([n, d]) => {
       if (!d) return null;
       const [yy, mm, dd] = d.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy,mm-1,dd) - today)/86400000);
-      let k = diff; 
-      // 高考置顶: 200天内
-      if(n==="高考" && diff>0 && diff<=200) k=-9999;
+      let k = diff; if(n==="高考" && diff>0 && diff<=200) k=-9999;
       return { n, diff, k };
     }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0,3).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
   };
@@ -133,22 +130,21 @@
   // 5. 渲染
   try {
     const obj = Lunar.toObj(Y, M, D);
-    const api = await getAlmanac();
-    
-    // UI: 宜 xxx / 忌 xxx (纯文字风格)
-    const yi = api.yi ? `宜 ${api.yi}` : "";
-    const ji = api.ji ? `忌 ${api.ji}` : "";
+    const almanac = await getAlmanac();
+    const yi = almanac.yi ? `宜 ${almanac.yi}` : "";
+    const ji = almanac.ji ? `忌 ${almanac.ji}` : "";
     const alm = [yi, ji].filter(Boolean).join("\n");
     
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
-    
-    $done({
-      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[N.w]} ${obj.astro}`,
-      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
+    const showFests = [
         merge([...f1.legal, ...f2.legal]), merge([...f1.term, ...f2.term]),
         merge([...f1.folk, ...f2.folk]), merge([...f1.intl, ...f2.intl])
-      ].filter(Boolean).join("\n")}`,
+    ].filter(Boolean).join("\n");
+
+    $done({
+      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[N.w]} ${obj.astro}`,
+      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${showFests}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "脚本异常", content: "请查看日志" }); }
+  } catch (e) { $done({ title: "黄历异常", content: "请检查日志" }); }
 })();
