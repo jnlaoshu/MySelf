@@ -1,70 +1,33 @@
 /*
- * 今日黄历&节假日倒数 (V32.0 原始精简版)
- * -------------------------------------------
- * 🎯 核心：基于 GitHub (zqzess/openApiData) 数据源
- * 🛠 机制：
- * 1. 强制 UTC+8 北京时间，防止时区错乱
- * 2. 使用 "YYYYMMDD" (如 20260116) 作为 Key 直取数据
- * 3. 极致精简代码结构
- * -------------------------------------------
+ * 今日黄历&节假日倒数 (V32.0 终极精简优化版)
+ * ✅ 内核：高精度农历(1900-2100) + UTC+8精准校时 + 鹰眼递归扫描
+ * ✅ 特性：高考倒计时置顶 + 智能排序 + 经典四行布局
+ * ✅ 优化：极致代码压缩，移除所有冗余逻辑
  */
 (async () => {
-  // 1. 基础环境 (强制锁定北京时间 UTC+8)
-  const getBjDate = () => {
-    const d = new Date();
-    // UTC时间戳 + 8小时毫秒数
-    const bj = new Date(d.getTime() + (d.getTimezoneOffset() * 60000) + (8 * 3600000));
-    return {
-      y: bj.getFullYear(),
-      m: bj.getMonth() + 1,
-      d: bj.getDate(),
-      w: bj.getDay()
-    };
-  };
-
-  const N = getBjDate();
-  const [Y, M, D] = [N.y, N.m, N.d];
+  // 1. 基础环境 (UTC+8)
+  const now = new Date(new Date().getTime() + (new Date().getTimezoneOffset() * 60000) + (28800000));
+  const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
+  const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
+  const MATCH = { s: `${Y}-${P(M)}-${P(D)}`, d: D };
   const WEEK = "日一二三四五六";
 
-  // 🔑 生成 GitHub 数据源专用的 Key (格式: 20260116)
-  const DATE_KEY = `${Y}${P(M)}${P(D)}`;
-
-  // 2. 网络请求 (GitHub 专向解析)
+  // 2. 网络请求 (递归扫描 + 鹰眼匹配)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
-    
-    // URL: .../2026/202601.json
-    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
-    
     return new Promise(r => {
-      $httpClient.get({ 
-        url, 
-        timeout: 8000, 
-        headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } 
-      }, (e, _, d) => {
-        if (e || !d) {
-          console.log(`❌ 请求失败`);
-          return r({});
-        }
-        try {
-          const json = JSON.parse(d);
-          // 🔥 核心逻辑：直接通过日期 Key 获取对象
-          const today = json[DATE_KEY];
-          
-          if (today) {
-            return r({
-              yi: (today.yi || today.suit || "").replace(/\./g, " ").trim(),
-              ji: (today.ji || today.avoid || "").replace(/\./g, " ").trim()
-            });
-          }
-          return r({});
-        } catch (err) {
-          console.log(`❌ 解析错误: ${err}`);
-          return r({});
-        }
-      });
-    });
+      $httpClient.get({ url: `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
+    }).then(raw => {
+      let list = [];
+      const scan = n => {
+        if (!n || typeof n !== 'object') return;
+        if ((n.yi || n.suit) && (n.day || n.date)) list.push(n);
+        for (let k in n) scan(n[k]);
+      };
+      scan(raw);
+      return list.find(i => (i.date && String(i.date).includes(MATCH.s)) || (i.day && parseInt(i.day) === MATCH.d)) || {};
+    }).catch(() => ({}));
   };
 
   // 3. 农历核心 (查表法 1900-2100)
@@ -104,7 +67,6 @@
 
   // 4. 节日配置
   const getFests = (y) => {
-    const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
@@ -130,20 +92,18 @@
   // 5. 渲染
   try {
     const obj = Lunar.toObj(Y, M, D);
-    const almanac = await getAlmanac();
-    const yi = almanac.yi ? `宜 ${almanac.yi}` : "";
-    const ji = almanac.ji ? `忌 ${almanac.ji}` : "";
-    const alm = [yi, ji].filter(Boolean).join("\n");
-    
+    const api = await getAlmanac();
+    const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
+    const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
+    const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
-    const showFests = [
+    
+    $done({
+      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
+      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
         merge([...f1.legal, ...f2.legal]), merge([...f1.term, ...f2.term]),
         merge([...f1.folk, ...f2.folk]), merge([...f1.intl, ...f2.intl])
-    ].filter(Boolean).join("\n");
-
-    $done({
-      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[N.w]} ${obj.astro}`,
-      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${showFests}`,
+      ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
   } catch (e) { $done({ title: "黄历异常", content: "请检查日志" }); }
