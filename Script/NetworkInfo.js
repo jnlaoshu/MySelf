@@ -1,7 +1,7 @@
 /*
  * 网络信息
- * 𝐔𝐑𝐋： https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Script/NetworkInfo.js
- * 更新：2025.12.17 08:45
+ * 
+ * 更新：2026.01.17 21:38
  */
 
 /*
@@ -15,7 +15,6 @@
 // 通用 HTTP GET 请求
 const http = {
   get: (url) => new Promise((resolve) => {
-    // 添加 User-Agent 模拟浏览器，防止被部分 API 拦截
     const opts = {
         url: url,
         headers: {
@@ -26,7 +25,6 @@ const http = {
       try {
         if (err) return resolve({});
         const json = JSON.parse(data);
-        // 兼容 ipip.net 的嵌套结构 (json.data) 和普通结构
         resolve(json.data || json); 
       } catch {
         resolve({});
@@ -39,13 +37,11 @@ const http = {
 const fmtISP = (isp) => {
   if (!isp) return "未知运营商";
   const s = isp.toLowerCase();
-  // 移除干扰词
   const raw = isp.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
   if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
   if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
   if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
   if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
-  
   return raw;
 };
 
@@ -70,23 +66,16 @@ const getRadioType = (radio) => {
     const wifi = n.wifi || {};
     
     // 并行请求 API
-    // 1. myip.ipip.net (本地公网)
-    // 2. ipwho.is (节点出口 - 使用 HTTPS)
-    // 注意：将 ip-api.com 替换为 ipwho.is 以支持 HTTPS，防止请求失败
     const [localInfo, nodeInfo] = await Promise.all([
       http.get('https://myip.ipip.net/json'),
       http.get('https://ipwho.is/?lang=zh') 
     ]);
 
     // 1. 处理 ISP 名称与标题
-    // 优先尝试从 ipip.net 的 location 数组获取真实 ISP (通常在最后一位)
     let rawISP = "";
     if (Array.isArray(localInfo.location) && localInfo.location.length) {
       rawISP = localInfo.location[localInfo.location.length - 1];
     }
-    
-    // 如果 ipip 没获取到，尝试从节点信息获取
-    // 兼容 ipwho.is (connection.isp) 和 ip-api (isp)
     if (!rawISP) {
         rawISP = nodeInfo?.connection?.isp || nodeInfo.isp; 
     }
@@ -94,7 +83,6 @@ const getRadioType = (radio) => {
     const displayISP = fmtISP(rawISP);
     const radioType = n["cellular-data"]?.radio || n.cellular?.radio;
     
-    // 构建标题：运营商 | SSID 或 网络制式
     let title = `${displayISP} | `;
     if (wifi.ssid) title += wifi.ssid;
     else if (radioType) title += getRadioType(radioType);
@@ -103,34 +91,41 @@ const getRadioType = (radio) => {
     // 2. 构建内容
     const content = [];
     
-    // FIX START: 增强内网IP和路由IP的获取逻辑
-    const internalIP = wifi.address || v4.primaryAddress || v4.address;
+    // FIX START: 修复内网IP和路由IP的获取逻辑 (By Gemini) ----------------
+    
+    // 获取内网 IP：优先使用 v4.primaryAddress (主接口IP)，其次尝试 wifi.address
+    const internalIP = v4.primaryAddress || v4.address || wifi.address;
     
     // 定义 IPv4 正则校验
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
 
-    // 尝试多个字段获取路由IP
-    let routerIP = wifi.router || v4.router || v4.primaryRouter || v4.routerAddress;
+    // 获取路由/网关 IP：
+    // 1. v4.primaryRouter: 系统识别的主网关（通常最准确）
+    // 2. wifi.router: 特定 Wi-Fi 接口的路由
+    // 3. v4.router: 旧版兼容
+    let routerIP = v4.primaryRouter || wifi.router || v4.router;
 
-    // 校验：如果获取到的 routerIP 不是 IPv4 格式，将其置空（过滤掉 IPv6 格式的路由）
-    if (routerIP && !ipv4Regex.test(routerIP)) {
+    // 校验：必须是 IPv4 格式，且不显示 0.0.0.0
+    if (routerIP && (!ipv4Regex.test(routerIP) || routerIP === '0.0.0.0')) {
         routerIP = null;
     }
-
-    // 兜底策略：如果API没返回有效的IPv4路由IP，但有内网IP (e.g. 192.168.1.5)，尝试推断网关 (192.168.1.1)
-    if (!routerIP && internalIP && ipv4Regex.test(internalIP)) {
-        routerIP = internalIP.replace(/\.\d+$/, '.1');
-    }
-    // FIX END
+    
+    // 注意：已删除原有的 .replace(/\.\d+$/, '.1') 猜测逻辑
+    // 以防止路由网关不是 .1 时显示错误信息
+    
+    // FIX END --------------------------------------------------------
 
     if (internalIP) content.push(`内网IPv4：${internalIP}`);
-    if (routerIP) content.push(`内网路由：${routerIP}`);
+    // 只有当存在有效的路由IP，且当前连接了Wi-Fi时，才显示“内网路由”
+    // 避免在蜂窝网络下显示运营商的内网网关（如 10.x.x.x），造成困惑
+    if (routerIP && wifi.ssid) {
+        content.push(`内网路由：${routerIP}`);
+    }
 
     if (v6.primaryAddress) content.push(`内网IPv6：${v6.primaryAddress}`);
     
     // 本地公网信息
     if (localInfo.ip) {
-      // ipip 返回的 location 为数组，取前三位 (国家 省 市)
       const locStr = Array.isArray(localInfo.location) ? localInfo.location.slice(0, 3).join('') : '';
       content.push(`本地IPv4：${localInfo.ip}`);
       content.push(`本地位置：${locStr ? `${locStr}` : ''}`);	  
@@ -139,7 +134,6 @@ const getRadioType = (radio) => {
     }
 
     // 节点信息处理
-    // 兼容 ipwho.is 使用 .ip 字段，ip-api 使用 .query 字段
     const nodeIP = nodeInfo.ip || nodeInfo.query;
     
     if (nodeIP) {
