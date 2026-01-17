@@ -1,7 +1,7 @@
-/*今日黄历&节假日倒数 (V32.0 终极精简优化版)
- * ✅ 内核：高精度农历(1900-2100) + UTC+8精准校时 + 鹰眼递归扫描
- * ✅ 特性：高考倒计时置顶 + 智能排序 + 经典四行布局
- * ✅ 优化：极致代码压缩，移除所有冗余逻辑
+/*
+ * 今日黄历&节假日倒数 (V32.1 修复版)
+ * ✅ 修复：修正黄历数据源匹配逻辑，增加直读 Key 模式
+ * ✅ 兼容：支持 YYYYMMDD 键值及多种日期格式
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -9,23 +9,44 @@
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
-  const MATCH = { s: `${Y}-${P(M)}-${P(D)}`, d: D };
+  const MATCH = { 
+    s1: `${Y}-${P(M)}-${P(D)}`, // 2026-01-05
+    s2: `${Y}-${M}-${D}`,       // 2026-1-5 (兼容无补零)
+    k: `${Y}${P(M)}${P(D)}`     // 20260105 (直接Key)
+  };
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求 (递归扫描 + 鹰眼匹配)
+  // 2. 网络请求 (直读 + 容错扫描)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     return new Promise(r => {
-      $httpClient.get({ url: `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
+      $httpClient.get({ 
+        url: `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, 
+        timeout: 5000, 
+        headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } 
+      }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
     }).then(raw => {
-      let list = [];
+      // 策略A：直接命中 Key (最快且最准，针对 {"20260116": {...}} 结构)
+      if (raw[MATCH.k]) return raw[MATCH.k];
+      
+      // 策略B：递归扫描 (针对 {"data": [...]} 或其他嵌套结构)
+      let res = {};
       const scan = n => {
         if (!n || typeof n !== 'object') return;
-        if ((n.yi || n.suit) && (n.day || n.date)) list.push(n);
-        for (let k in n) scan(n[k]);
+        // 只要有宜或忌，就检查日期是否匹配
+        if (n.yi || n.suit) {
+            const dStr = String(n.date || n.day || "");
+            // 增加对 "2026-1-5" 这种非补零格式的兼容
+            if (dStr.includes(MATCH.s1) || dStr.includes(MATCH.s2) || parseInt(dStr) === D) {
+                res = n;
+            }
+        }
+        if (Object.keys(res).length === 0) { // 找到后停止深层递归
+            for (let k in n) scan(n[k]);
+        }
       };
       scan(raw);
-      return list.find(i => (i.date && String(i.date).includes(MATCH.s)) || (i.day && parseInt(i.day) === MATCH.d)) || {};
+      return res;
     }).catch(() => ({}));
   };
 
@@ -92,6 +113,7 @@
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
+    // 兼容 API 字段大小写 (Yi/suit, Ji/avoid)
     const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
     const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
     const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
@@ -105,5 +127,5 @@
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
-  } catch (e) { $done({ title: "黄历异常", content: "请检查日志" }); }
+  } catch (e) { $done({ title: "黄历异常", content: "请检查日志: " + e.message }); }
 })();
