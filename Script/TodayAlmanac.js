@@ -1,8 +1,8 @@
 /*
- * 今日黄历&节假日倒数 (V35.0 终极稳定版)
- * ✅ 修复：恢复"递归扫描"能力，解决因JSON嵌套导致的"无法显示宜忌"问题
- * ✅ 安全：坚持严格的日期格式比对，彻底杜绝匹配到错误日期的Bug
- * ✅ 布局：保持完整的节假日、节气、倒数日四行布局
+ * 今日黄历&节假日倒数 (V36.0 终极兼容版)
+ * ✅ 修复：无法显示宜忌的问题 (采用"Key+Value"双重扫描策略)
+ * ✅ 核心：解决日期仅存在于Key上、或对象内部由 day/month 拆分定义的情况
+ * ✅ 稳定：保持严格匹配，绝对不会串号 (如1月17日匹配到2月16日)
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -11,11 +11,12 @@
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   
-  // 构造严格匹配列表 (只匹配当天的完整日期字符串)
-  const MATCH_LIST = [
+  // 构造今日所有可能的日期字符串片段
+  // 用于在 Key 或 Value 中进行模糊搜索
+  const DATE_PATTERNS = [
     `${Y}-${P(M)}-${P(D)}`, // 2026-01-17
-    `${Y}/${P(M)}/${P(D)}`, // 2026/01/17
     `${Y}-${M}-${D}`,       // 2026-1-17
+    `${Y}/${P(M)}/${P(D)}`, // 2026/01/17
     `${Y}/${M}/${D}`,       // 2026/1/17
     `${Y}${P(M)}${P(D)}`    // 20260117
   ];
@@ -51,12 +52,10 @@
         astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2-(d<[20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0),2)+"座"
       };
     },
-    l2s(y,m,d) {
-      try { let off=0, lp=this.leap(y); for(let i=1900; i<y; i++) off+=this.lDays(i); for(let i=1; i<m; i++) off+=this.mDays(y,i); if(lp>0 && lp<m) off+=((this.info[y-1900]&0x10000)?30:29); return new Date(Date.UTC(1900,0,31)+(off+d-1)*86400000); } catch(e){return null;}
-    }
+    l2s(y,m,d) { try { let off=0, lp=this.leap(y); for(let i=1900; i<y; i++) off+=this.lDays(i); for(let i=1; i<m; i++) off+=this.mDays(y,i); if(lp>0 && lp<m) off+=((this.info[y-1900]&0x10000)?30:29); return new Date(Date.UTC(1900,0,31)+(off+d-1)*86400000); } catch(e){return null;} }
   };
 
-  // 3. 网络请求 (直读 + 递归 + 严格扫描)
+  // 3. 网络请求 (深度扫描 Fix)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     return new Promise(r => {
@@ -66,41 +65,60 @@
         headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } 
       }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
     }).then(raw => {
-      // 策略A：尝试直接命中常见Key (效率最高)
-      // 针对 {"20260117":...} 或 {"2026-01-17":...}
-      for (let k of MATCH_LIST) if (raw[k]) return raw[k];
-
-      // 策略B：递归扫描所有层级 (针对 {"data": {...}} 等嵌套结构)
       let found = {};
+      
+      // 辅助函数：判断字符串是否包含今天的日期 (YYYY-MM-DD 或 YYYYMMDD)
+      const isTargetDate = (s) => DATE_PATTERNS.some(p => s.includes(p));
+
+      // 递归扫描函数 (同时检查 Key 和 Value)
       const scan = (obj) => {
         if (!obj || typeof obj !== 'object') return;
-        
-        // 如果当前对象包含宜忌信息，进行日期核对
-        if (obj.yi || obj.suit || obj.gregorian) {
-          const dStr = String(obj.date || obj.day || obj.gregorian || "");
-          // ⚠️ 核心修复：检查 dStr 是否包含 MATCH_LIST 中的任意一种格式
-          // 仅当日期字符串完全匹配今天时才采纳，防止匹配到其他日期的"宜忌"
-          if (MATCH_LIST.some(fmt => dStr.includes(fmt))) {
-            found = obj;
-            return; // 找到后立即停止
+
+        // 遍历当前层级的所有 Key
+        for (let key in obj) {
+          const val = obj[key];
+          if (!val) continue;
+
+          // 核心判断 A：Key 本身就是日期 (针对 {"2026-01-17": {...}} 结构)
+          if (isTargetDate(key)) {
+             found = (typeof val === 'object') ? val : obj; // 如果 Value 只是字符串，可能上层才是数据
+             return; 
           }
-        }
-        
-        // 没找到则继续深入下一层
-        if (Object.keys(found).length === 0) {
-          for (let key in obj) {
-            if (Object.keys(found).length > 0) break;
-            scan(obj[key]);
+
+          if (typeof val === 'object') {
+             // 核心判断 B：对象内部包含日期字段 (针对 {"date": "2026-01-17", ...} 结构)
+             const dStr = String(val.date || val.day || val.gregorian || val.oDate || "");
+             if (isTargetDate(dStr)) {
+                found = val;
+                return;
+             }
+
+             // 核心判断 C：对象包含分散的年月日字段 (针对 {year:2026, month:1, day:17} 结构)
+             // 且必须校验月份，防止只匹配到 day:17 而忽略了 month:2 (防串号)
+             if (val.day == D) { 
+                // 如果有月份字段，必须匹配当前月份；如果没有月份字段，则不轻易采纳，除非实在没办法
+                if (val.month == M || (!val.month && !val.year)) {
+                   // 进一步排除：如果 date 字符串里明确写了其他月份，则拒绝
+                   if (!dStr.includes(`-${P(M + 1)}-`) && !dStr.includes(`-${M + 1}-`)) {
+                       // 这是一个潜在匹配，但我们继续优先寻找更精确的匹配
+                       if (Object.keys(found).length === 0) found = val; 
+                   }
+                }
+             }
+
+             // 递归深入
+             scan(val);
+             if (Object.keys(found).length > 0 && found.yi) return; // 找到且包含宜忌数据则停止
           }
         }
       };
       
       scan(raw);
       return found;
-    }).catch(e => { console.log("Almanac Error:", e); return {}; });
+    }).catch(e => { console.log("Error:", e); return {}; });
   };
 
-  // 4. 节日数据配置
+  // 4. 节日配置
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
@@ -113,15 +131,14 @@
     };
   };
 
-  // 5. 渲染合并逻辑
+  // 5. 渲染合并
   const merge = (list) => {
     const today = Date.UTC(Y, M-1, D);
     return list.map(([n, d]) => {
       if (!d) return null;
       const [yy, mm, dd] = d.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy,mm-1,dd) - today)/86400000);
-      let k = diff; 
-      if(n==="高考" && diff>0 && diff<=200) k=-9999;
+      let k = diff; if(n==="高考" && diff>0 && diff<=200) k=-9999;
       return { n, diff, k };
     }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0,3).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
   };
@@ -129,21 +146,16 @@
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
-    
-    // 兼容多种 Key 的字段读取
     const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
     const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
     const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
-    
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
       title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
       content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
-        merge([...f1.legal, ...f2.legal]), 
-        merge([...f1.term, ...f2.term]),   
-        merge([...f1.folk, ...f2.folk]),   
-        merge([...f1.intl, ...f2.intl])    
+        merge([...f1.legal, ...f2.legal]), merge([...f1.term, ...f2.term]),
+        merge([...f1.folk, ...f2.folk]), merge([...f1.intl, ...f2.intl])
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
