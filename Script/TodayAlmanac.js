@@ -1,8 +1,7 @@
 /*
- * 今日黄历&节假日倒数 (V32.0 终极精简优化版)
- * ✅ 内核：高精度农历(1900-2100) + UTC+8精准校时 + 鹰眼递归扫描
- * ✅ 特性：高考倒计时置顶 + 智能排序 + 经典四行布局
- * ✅ 优化：极致代码压缩，移除所有冗余逻辑
+ * 今日黄历&节假日倒数 (V32.1 修复版)
+ * ✅ 修复：适配 GitHub 源数据结构变更 (Key-Value 模式)
+ * ✅ 优化：移除耗时的递归扫描，改为 O(1) 直接命中
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -10,24 +9,38 @@
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
-  const MATCH = { s: `${Y}-${P(M)}-${P(D)}`, d: D };
+  const MATCH = { s: `${Y}-${P(M)}-${P(D)}`, d: D }; // 2026-01-16
   const WEEK = "日一二三四五六";
 
-  // 2. 网络请求 (递归扫描 + 鹰眼匹配)
+  // 2. 网络请求 (修正版：直接 Key 匹配)
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
+    const url = `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`;
+    
     return new Promise(r => {
-      $httpClient.get({ url: `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => r(!e && d ? JSON.parse(d) : {}));
+      $httpClient.get({ url, timeout: 5000, headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)" } }, (e, _, d) => {
+        if (e || !d) return r({});
+        try { r(JSON.parse(d)); } catch { r({}); }
+      });
     }).then(raw => {
-      let list = [];
-      const scan = n => {
-        if (!n || typeof n !== 'object') return;
-        if ((n.yi || n.suit) && (n.day || n.date)) list.push(n);
-        for (let k in n) scan(n[k]);
-      };
-      scan(raw);
-      return list.find(i => (i.date && String(i.date).includes(MATCH.s)) || (i.day && parseInt(i.day) === MATCH.d)) || {};
-    }).catch(() => ({}));
+      // 策略：构造两种常见的 Key 格式进行直接查找，不再依赖内部的 date 字段
+      const keyNoPadding = `${Y}-${M}-${D}`;       // 格式: 2026-1-16 (数据源常用)
+      const keyPadding = `${Y}-${P(M)}-${P(D)}`;   // 格式: 2026-01-16 (标准格式)
+      
+      // 优先匹配去零格式，再匹配标准格式
+      if (raw[keyNoPadding]) return raw[keyNoPadding];
+      if (raw[keyPadding]) return raw[keyPadding];
+      
+      // 兜底：如果数据源突然改回了数组结构 (极为罕见)，做简单的 fallback
+      if (Array.isArray(raw)) {
+         return raw.find(i => i.date === keyPadding || i.date === keyNoPadding || parseInt(i.day) === D) || {};
+      }
+      
+      return {};
+    }).catch(e => {
+      console.log(`黄历数据获取失败: ${e}`);
+      return {};
+    });
   };
 
   // 3. 农历核心 (查表法 1900-2100)
