@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/Almanac.js
- * 更新：2026.01.17 12:00 
+ * 更新：2026.01.18 08:26
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -66,48 +66,37 @@
     }).then(raw => {
       let found = {};
       
-      // 辅助函数：判断字符串是否包含今天的日期 (YYYY-MM-DD 或 YYYYMMDD)
       const isTargetDate = (s) => DATE_PATTERNS.some(p => s.includes(p));
 
-      // 递归扫描函数 (同时检查 Key 和 Value)
       const scan = (obj) => {
         if (!obj || typeof obj !== 'object') return;
 
-        // 遍历当前层级的所有 Key
         for (let key in obj) {
           const val = obj[key];
           if (!val) continue;
 
-          // 核心判断 A：Key 本身就是日期 (针对 {"2026-01-17": {...}} 结构)
           if (isTargetDate(key)) {
-             found = (typeof val === 'object') ? val : obj; // 如果 Value 只是字符串，可能上层才是数据
+             found = (typeof val === 'object') ? val : obj;
              return; 
           }
 
           if (typeof val === 'object') {
-             // 核心判断 B：对象内部包含日期字段 (针对 {"date": "2026-01-17", ...} 结构)
              const dStr = String(val.date || val.day || val.gregorian || val.oDate || "");
              if (isTargetDate(dStr)) {
                 found = val;
                 return;
              }
 
-             // 核心判断 C：对象包含分散的年月日字段 (针对 {year:2026, month:1, day:17} 结构)
-             // 且必须校验月份，防止只匹配到 day:17 而忽略了 month:2 (防串号)
              if (val.day == D) { 
-                // 如果有月份字段，必须匹配当前月份；如果没有月份字段，则不轻易采纳，除非实在没办法
                 if (val.month == M || (!val.month && !val.year)) {
-                   // 进一步排除：如果 date 字符串里明确写了其他月份，则拒绝
                    if (!dStr.includes(`-${P(M + 1)}-`) && !dStr.includes(`-${M + 1}-`)) {
-                       // 这是一个潜在匹配，但我们继续优先寻找更精确的匹配
                        if (Object.keys(found).length === 0) found = val; 
                    }
                 }
              }
 
-             // 递归深入
              scan(val);
-             if (Object.keys(found).length > 0 && found.yi) return; // 找到且包含宜忌数据则停止
+             if (Object.keys(found).length > 0 && found.yi) return;
           }
         }
       };
@@ -128,18 +117,18 @@
         ["元旦",YMD(y,1,1)], 
         ["寒假",YMD(y,1,31)], //2026年成都义教段学校放寒假
         ["春节",l2s(1,1)],
-        ["开学",YMD(y,3,2)], //2026年成都义教段学校春季开学
+        ["开学",YMD(y,3,2)],    //2026年成都义教段学校春季开学
         ["清明节",term(7)],
-        ["春假",YMD(y,4,29)], //成都春假安排在清明节后第1天，与清明连休
+        ["春假",YMD(y,4,29)],   //成都春假安排在清明节后第1天，与清明连休
         ["劳动节",YMD(y,5,1)], 
         ["端午节",l2s(5,5)],
         ["高考",YMD(y,6,7)], 
-        ["暑假",YMD(y,7,4)], //2026年成都义教段学校放暑假
+        ["暑假",YMD(y,7,4)],    //2026年成都义教段学校放暑假
         ["中秋节",l2s(8,15)], 
         ["国庆节",YMD(y,10,1)],
         ["秋假",wDay(11,2,3)]   // 成都秋假11月第2个周三（即11月第2周的周三至周五）
       ],
-      // 民俗节日（按农历时间从年初到年末排序）
+      // 民俗节日
       folk: [["元宵节",l2s(1,15)],["龙抬头",l2s(2,2)],["七夕节",l2s(7,7)],["中元节",l2s(7,15)],["重阳节",l2s(9,9)],["寒衣节",l2s(10,1)],["下元节",l2s(10,15)],["腊八节",l2s(12,8)],["北方小年",l2s(12,23)],["除夕",l2s(12,Lunar.mDays(y,12)==29?29:30)]],
       // 国际/洋节
       intl: [["情人节",YMD(y,2,14)],["妇女节",YMD(y,3,8)],["母亲节",wDay(5,2,0)],["儿童节",YMD(y,6,1)],["父亲节",wDay(6,3,0)],["万圣节",YMD(y,10,31)],["平安夜",YMD(y,12,24)],["圣诞节",YMD(y,12,25)],["感恩节",wDay(11,4,4)]],
@@ -148,7 +137,8 @@
   };
 
   // 5. 渲染合并
-  const merge = (list) => {
+  // 增加 limit 参数，默认3个
+  const merge = (list, limit = 3) => {
     const today = Date.UTC(Y, M-1, D);
     return list.map(([n, d]) => {
       if (!d) return null;
@@ -156,22 +146,27 @@
       const diff = Math.round((Date.UTC(yy,mm-1,dd) - today)/86400000);
       let k = diff; if(n==="高考" && diff>0 && diff<=200) k=-9999;
       return { n, diff, k };
-    }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0,3).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
+    }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0, limit).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
   };
 
   try {
     const obj = Lunar.toObj(Y, M, D);
     const api = await getAlmanac();
     const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
-    const yi = get("yi","Yi","suit"), ji = get("ji","Ji","avoid");
+    
+    // 将 . 替换为空格
+    const yi = get("yi","Yi","suit").replace(/\./g, " "), ji = get("ji","Ji","avoid").replace(/\./g, " ");
     const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(s=>s&&s.trim()).join("\n");
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
       title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
+      // merge(..., 4) 指定节气显示 4 个，其余默认 3 个
       content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
-        merge([...f1.legal, ...f2.legal]), merge([...f1.term, ...f2.term]),
-        merge([...f1.folk, ...f2.folk]), merge([...f1.intl, ...f2.intl])
+        merge([...f1.legal, ...f2.legal]), 
+        merge([...f1.term, ...f2.term], 4), 
+        merge([...f1.folk, ...f2.folk]), 
+        merge([...f1.intl, ...f2.intl])
       ].filter(Boolean).join("\n")}`,
       icon: "calendar", "icon-color": "#d00000"
     });
