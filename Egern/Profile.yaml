@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.01.17 21:10
+# 更新时间: 2026.01.20 17:07
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -357,6 +357,9 @@ modules:
     interval: 3600
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
+    enabled: true
+  - name: ScriptHub
+    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/main/modules/script-hub.surge.sgmodule
     enabled: true
   - name: WeatherKit    
     url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
