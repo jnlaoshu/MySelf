@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/Almanac.js
- * 更新：2026.01.18 08:26
+ * 更新：2026.01.21 10:35
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -146,7 +146,8 @@
       const diff = Math.round((Date.UTC(yy,mm-1,dd) - today)/86400000);
       let k = diff; if(n==="高考" && diff>0 && diff<=200) k=-9999;
       return { n, diff, k };
-    }).filter(i => i && i.diff >= -1).sort((a,b)=>a.k-b.k).slice(0, limit).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
+    // 修正处：原代码是 >= -1，改为 >= 0 即只显示今天或未来，不显示昨天
+    }).filter(i => i && i.diff >= 0).sort((a,b)=>a.k-b.k).slice(0, limit).map(i=>i.diff===0?`🎉${i.n}`:`${i.n} ${i.diff}天`).join(" , ");
   };
 
   try {
