@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.06 18:00
+# 更新时间: 2026.02.06 18:08
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -40,7 +40,7 @@ dns:
   - 223.5.5.5
   - 119.29.29.29
   - 2400:3200::1
-  
+
   # 2. 上游 DNS 服务器组
   upstreams:
     # 系统默认 DNS (用于局域网/路由器解析)
@@ -470,7 +470,7 @@ modules:
 - name: BiliBili去广告
   url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
   enabled: true
- - url: https://raw.githubusercontent.com/jadkg/egern/refs/heads/main/百度地图.module
+- url: https://raw.githubusercontent.com/jadkg/egern/refs/heads/main/百度地图.module
   enabled: true
 - url: https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/KuGou.sgmodule
   enabled: true
