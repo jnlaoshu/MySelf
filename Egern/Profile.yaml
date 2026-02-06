@@ -83,7 +83,7 @@ dns:
   - wildcard:
       match: '*.ntp.org'
       value: System
-	  
+
   # --- Apple 美区账号核心加速 (CDN 直连) ---	  
   - wildcard:
       match: '*.apple.com'
@@ -97,7 +97,7 @@ dns:
   - wildcard:
       match: '*.icloud-content.com'
       value: China
-	  
+
   # --- 微软与游戏下载加速 ---
   # Steam 下载服务器强制走国内 DNS，避免调度到远距离 CDN	  
   - wildcard:
@@ -113,7 +113,7 @@ dns:
   - wildcard:
       match: '*.windowsupdate.com'
       value: China
-	  
+
   # --- 国内域名兜底 ---
   - wildcard:
       match: '*.cn'
@@ -127,12 +127,12 @@ dns:
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       value: Google
-	  
+
   # 指定字节系 (抖音等)	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
       value: ByteDance
-	  
+
   # 阿里/腾讯/Apple/TestFlight	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba.list
@@ -146,23 +146,23 @@ dns:
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
       value: Global
-	  
+
   # 国内域名大全
   # 涵盖 bilibili, baidu, 163 等非 .cn 结尾的国内域名，强制走国内 DNS	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
       value: China
-	  
+
   # 代理规则兜底	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       value: Global
-	  
+
   # 最终兜底 (国外 DNS)	  
   - wildcard:
       match: '*'
       value: Global
-	  
+
   public_ip_lookup_url: https://ifconfig.me/ip
 
 policy_groups:
@@ -329,7 +329,7 @@ policy_groups:
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
-	
+
 # --- 去广告专用策略组 ---
 - select:
     name: 猎杀广告
