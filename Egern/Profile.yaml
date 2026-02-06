@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.06 18:08
+# 更新时间: 2026.02.06 18:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -337,7 +337,7 @@ policy_groups:
     - REJECT
     - REJECT-DROP
     flatten: false
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Adblock.png
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
 # ---------------------	
 
 rules:
