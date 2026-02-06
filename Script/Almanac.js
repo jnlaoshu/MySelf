@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/Almanac.js
- * 更新：2026.02.21 10:48
+ * 更新：2026.02.06 14:36
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -154,11 +154,21 @@
     const get = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
     
     const yi = get("yi","Yi","suit").replace(/\./g, " "), ji = get("ji","Ji","avoid").replace(/\./g, " ");
-    const alm = [get("chongsha","ChongSha"), get("baiji","BaiJi"), yi?`✅ 宜：${yi}`:"", ji?`❎ 忌：${ji}`:""].filter(Boolean).join("\n");
+    
+    // 定义每20字符换行的辅助函数
+    const wrap = s => s.replace(/(.{20})/g, "$1\n").replace(/\n$/, "");
+
+    const alm = [
+      get("chongsha","ChongSha"), 
+      get("baiji","BaiJi"), 
+      yi ? `✅ 宜：${wrap(yi)}` : "", 
+      ji ? `❎ 忌：${wrap(ji)}` : ""
+    ].filter(Boolean).join("\n");
+
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
     
     $done({
-      title: `${Y}年${P(M)}月${P(D)}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
+      title: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
       content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
         merge([...f1.legal, ...f2.legal]), 
         merge([...f1.term, ...f2.term]),
