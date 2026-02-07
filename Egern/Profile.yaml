@@ -1,6 +1,6 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 (美区ID优化版)
-# 优化重点: 账号/商店/TF走美区代理且防DNS泄露，CDN/系统服务直连
-# 更新时间: 2026.02.07 17:23
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 (美区ID 深度优化版)
+# 优化重点: 账号/商店/TF走美区代理且防DNS泄露，CDN/系统服务直连，流媒体多地区容灾，PayPal防风控
+# 更新时间: 2026.02.07 18:10
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -34,7 +34,7 @@ include_apns: false
 include_cellular_services: false
 include_local_networks: false
 
-# --- DNS 配置 ---
+# --- DNS 配置 (防泄露与CDN优化) ---
 dns:
   # 1. 引导 DNS
   bootstrap:
@@ -79,7 +79,7 @@ dns:
       match: '*.ntp.org'
       value: System
 
-  # --- Apple 优化策略 (关键) ---
+  # --- Apple 优化策略 ---
   # 仅强制“纯内容/CDN”域名走国内DNS，确保下载速度
   # 注意：不要在此处强制 *.apple.com 走 China，否则会导致美区商店代理异常
   - wildcard:
@@ -120,49 +120,69 @@ dns:
 
   public_ip_lookup_url: https://ifconfig.me/ip
 
+# --- 策略组配置 ---
 policy_groups:
+# 1. 地区自动测速组
 - auto_test:
-    name: 香港节点
+    name: 香港自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇭🇰|香港|HK|Hong
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+
 - auto_test:
-    name: 美国节点
+    name: 美国自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇺🇸|美国|US|States|American
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+
 - auto_test:
-    name: 台湾节点
+    name: 台湾自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇹🇼|台湾|TW|Tai
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+
 - auto_test:
-    name: 日本节点
+    name: 日本自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇯🇵|日本|JP|Japan
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+
 - auto_test:
-    name: 狮城节点
+    name: 狮城自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇸🇬|新加坡|狮城|SG|Singapore
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+
 - auto_test:
-    name: 韩国节点
+    name: 韩国自动
     policies:
     - 全部节点
     flatten: true
     filter: 🇰🇷|韩国|KR|KOR|Korea
+    url: http://www.gstatic.com/generate_204
+    interval: 300
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+
 - select:
     name: 其他节点
     policies:
@@ -170,116 +190,156 @@ policy_groups:
     flatten: true
     filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|新加坡|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
+# 2. 节点源与全局自动
 - external:
     name: 全部节点
     type: select
     urls:
     - https://sub.store/download/collection/AllServer?target=Egern 
     icon: 🌹
+
+- auto_test:
+    name: 自动优选
+    policies:
+    - 全部节点
+    flatten: true
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Auto.png
+
+# 3. 总控制策略
 - select:
     name: 自选策略
     policies:
-    - 香港节点
-    - 美国节点
-    - 狮城节点
-    - 台湾节点
-    - 日本节点
-    - 韩国节点
-    - 其他节点
+    - 自动优选
+    - 香港自动
+    - 美国自动
+    - 狮城自动
+    - 日本自动
+    - 台湾自动
+    - 韩国自动
     - DIRECT
+    - 全部节点
+    - 其他节点
     icon: 😜
 
-# --- 重点调整的策略组 ---
-# Apple 策略组：建议手动指定为“美国节点”以确保美区ID最稳
+# 4. 场景化服务策略
+- select:
+    name: AIGC
+    policies:
+    - 美国自动
+    - 日本自动
+    - 狮城自动
+    - 自选策略
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+
 - select:
     name: Apple
     policies:
-    - 美国节点
+    - 美国自动
     - 自选策略
     - DIRECT
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
 
-# 其他服务策略组
-- select:
-    name: AIGC
-    policies:
-    - 美国节点
-    - 自选策略
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
     name: Disney
     policies:
-    - 狮城节点
+    - 狮城自动
+    - 香港自动
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+
 - select:
     name: GitHub
     policies:
+    - 自动优选
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
+
 - select:
     name: Google
     policies:
+    - 自动优选
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
+
 - select:
     name: HBO
     policies:
-    - 美国节点
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
+
 - select:
     name: Microsoft
     policies:
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+
 - select:
     name: Netflix
     policies:
-    - 狮城节点
+    - 狮城自动
+    - 香港自动
+    - 台湾自动
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
+
 - select:
     name: PayPal
     policies:
-    - 美国节点
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
+
 - select:
     name: Spotify
     policies:
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
+
 - select:
     name: Telegram
     policies:
+    - 自动优选
+    - 狮城自动
+    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
+
 - select:
     name: TikTok
     policies:
-    - 日本节点
-    - 美国节点
+    - 日本自动
+    - 美国自动
+    - 台湾自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
+
 - select:
     name: Twitter
     policies:
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
+
 - select:
     name: WeChat
     policies:
@@ -287,12 +347,18 @@ policy_groups:
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
+
 - select:
     name: YouTube
     policies:
+    - 自动优选
+    - 香港自动
+    - 美国自动
+    - 日本自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+
 - select:
     name: YouTubeMusic
     policies:
@@ -308,7 +374,6 @@ policy_groups:
     - REJECT-DROP
     flatten: false
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
-# ---------------------	
 
 rules:
 # 1. 广告拦截
@@ -366,7 +431,7 @@ rules:
     policy: AIGC
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-    policy: 美国节点
+    policy: 美国自动 
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
     policy: Disney
