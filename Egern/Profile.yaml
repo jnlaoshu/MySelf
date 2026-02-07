@@ -1,6 +1,6 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 (美区ID 深度优化版)
 # 优化重点: 账号/商店/TF走美区代理且防DNS泄露，CDN/系统服务直连，流媒体多地区容灾，PayPal防风控
-# 更新时间: 2026.02.07 18:10
+# 更新时间: 2026.02.07 20:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -24,7 +24,9 @@ geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Count
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
 # --- 延迟测试 ---
-proxy_latency_test_url: https://www.google.com/generate_204
+# 代理测速：确保能翻墙且轻量
+proxy_latency_test_url: http://www.gstatic.com/generate_204
+# 直连测速：必须使用国内能访问的地址
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
 # --- 路由配置 ---
@@ -34,7 +36,7 @@ include_apns: false
 include_cellular_services: false
 include_local_networks: false
 
-# --- DNS 配置 (防泄露与CDN优化) ---
+# --- DNS 配置 ---
 dns:
   # 1. 引导 DNS
   bootstrap:
@@ -46,26 +48,27 @@ dns:
   upstreams:
     System:
     - system
+    Alibaba:
+    - https://dns.alidns.com/dns-query
+    ByteDance:
+    - 180.184.1.1
+    - 180.184.2.2
     Tencent:
     - https://doh.pub/dns-query
-    Alibaba:
-    - https://dns.alidns.com/dns-query	
     Google:
     - https://8.8.8.8/dns-query
     - https://dns.google/dns-query
-    ByteDance:
-    - 180.184.2.2
-    - 180.184.1.1
-    Global:
-    - https://1.1.1.1/dns-query
-    - https://dns.cloudflare.com/dns-query
     China:
     - https://doh.pub/dns-query	
     - https://dns.alidns.com/dns-query
+    Global:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - https://dns.cloudflare.com/dns-query
 
   # 3. DNS 分流转发
   forward:
-  # 局域网
+  # --- 局域网与特殊 ---
   - wildcard:
       match: '*.lan'
       value: System
@@ -80,15 +83,12 @@ dns:
       value: System
 
   # --- Apple 优化策略 ---
-  # 仅强制“纯内容/CDN”域名走国内DNS，确保下载速度
-  # 注意：不要在此处强制 *.apple.com 走 China，否则会导致美区商店代理异常
   - wildcard:
       match: '*.mzstatic.com'
       value: Tencent
   - wildcard:
       match: '*.icloud-content.com'
       value: Tencent
-  # 某些特定的 Apple 硬件服务域名通常需直连
   - wildcard:
       match: 'push.apple.com'
       value: Tencent
@@ -109,6 +109,66 @@ dns:
   - wildcard:
       match: '*.windowsupdate.com'
       value: China
+
+  # --- Google 深度分流 ---
+  - wildcard:
+      match: '*.google.com'
+      value: Google
+  - wildcard:
+      match: '*.googleapis.com'
+      value: Google
+  - wildcard:
+      match: '*.gstatic.com'
+      value: Google
+  - wildcard:
+      match: '*.youtube.com'
+      value: Google
+  - wildcard:
+      match: '*.ytimg.com'
+      value: Google
+  - wildcard:
+      match: '*.ggpht.com'
+      value: Google
+
+  # --- 国内大厂精确分流 ---
+  # 阿里系
+  - wildcard:
+      match: '*.alibaba.com'
+      value: Alibaba
+  - wildcard:
+      match: '*.taobao.com'
+      value: Alibaba
+  - wildcard:
+      match: '*.tmall.com'
+      value: Alibaba
+  - wildcard:
+      match: '*.alicdn.com'
+      value: Alibaba
+  - wildcard:
+      match: '*.alipay.com'
+      value: Alibaba
+
+  # 腾讯系
+  - wildcard:
+      match: '*.qq.com'
+      value: Tencent
+  - wildcard:
+      match: '*.tencent.com'
+      value: Tencent
+  - wildcard:
+      match: '*.weixin.com'
+      value: Tencent
+
+  # 字节系
+  - wildcard:
+      match: '*.douyin.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.snssdk.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.tiktokcdn.com'
+      value: Global
 
   # --- 兜底 ---
   - wildcard:
@@ -230,8 +290,6 @@ policy_groups:
     name: AIGC
     policies:
     - 美国自动
-    - 日本自动
-    - 狮城自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
@@ -241,16 +299,12 @@ policy_groups:
     policies:
     - 美国自动
     - 自选策略
-    - DIRECT
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
 
 - select:
     name: Disney
     policies:
-    - 狮城自动
-    - 香港自动
-    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
@@ -258,7 +312,6 @@ policy_groups:
 - select:
     name: GitHub
     policies:
-    - 自动优选
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
@@ -266,7 +319,6 @@ policy_groups:
 - select:
     name: Google
     policies:
-    - 自动优选
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
@@ -290,9 +342,6 @@ policy_groups:
     name: Netflix
     policies:
     - 狮城自动
-    - 香港自动
-    - 台湾自动
-    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
@@ -316,9 +365,6 @@ policy_groups:
 - select:
     name: Telegram
     policies:
-    - 自动优选
-    - 狮城自动
-    - 美国自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
@@ -326,9 +372,6 @@ policy_groups:
 - select:
     name: TikTok
     policies:
-    - 日本自动
-    - 美国自动
-    - 台湾自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
@@ -352,9 +395,6 @@ policy_groups:
     name: YouTube
     policies:
     - 自动优选
-    - 香港自动
-    - 美国自动
-    - 日本自动
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
@@ -390,9 +430,7 @@ rules:
     match: ^ad\..*|^ads\..*|^advert\..*
     policy: 猎杀广告
 
-# 2. Apple 分流 (精细化控制)
-# 第一优先级：TestFlight 和 商店API (确保 DNS 远端解析)
-# AppleProxy 包含了 App Store, iTunes Store, Apple Music, iCloud Private Relay 等关键验证服务
+# 2. Apple 分流
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AppleProxy/AppleProxy.list
     policy: Apple
@@ -400,12 +438,9 @@ rules:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
     policy: Apple
 
-# 第二优先级：Apple 其他服务 (系统更新、地图、CDN) -> 直连
-# 因为 AppleProxy 已经把敏感的挑出去了，剩下的走 DIRECT 既快又稳，且使用本地 DNS
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
     policy: DIRECT
-# 额外确保 Apple 剩余域名兜底直连
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
     policy: DIRECT
