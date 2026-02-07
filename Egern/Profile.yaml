@@ -1,6 +1,5 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 (美区ID 深度优化版)
-# 优化重点: 账号/商店/TF走美区代理且防DNS泄露，CDN/系统服务直连，流媒体多地区容灾，PayPal防风控
-# 更新时间: 2026.02.07 20:30
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
+# 更新时间: 2026.02.07 23:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -24,9 +23,9 @@ geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Count
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
 # --- 延迟测试 ---
-# 代理测速：确保能翻墙且轻量
+# 代理测速：
 proxy_latency_test_url: http://www.gstatic.com/generate_204
-# 直连测速：必须使用国内能访问的地址
+# 直连测速：
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
 # --- 路由配置 ---
@@ -158,14 +157,34 @@ dns:
   - wildcard:
       match: '*.weixin.com'
       value: Tencent
+  - wildcard:
+      match: '*.WeChat.com'
+      value: Tencent
 
-  # 字节系
+  # 字节系 (强制走国内DNS)
   - wildcard:
       match: '*.douyin.com'
       value: ByteDance
   - wildcard:
       match: '*.snssdk.com'
       value: ByteDance
+  - wildcard:
+      match: '*.amemv.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.ixigua.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.pstatp.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.toutiaoimg.com'
+      value: ByteDance
+  - wildcard:
+      match: '*.byteimg.com'
+      value: ByteDance
+  
+  # TikTok 国际版保持默认
   - wildcard:
       match: '*.tiktokcdn.com'
       value: Global
