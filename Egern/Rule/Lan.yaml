@@ -1,14 +1,29 @@
 # 规则名称: Lan
-# 规则统计: 8
 
 domain_suffix_set:
   - local
+  - localhost
+  - ip6-localhost
+  - ip6-loopback
+  - lan
+  - home.arpa
+  - test
+  - example
+  - invalid
+
 ip_cidr_set:
-  - 10.0.0.0/8
-  - 100.64.0.0/10
-  - 127.0.0.0/8
-  - 172.16.0.0/12
-  - 192.168.0.0/16
-  - 224.0.0.0/4
+  - 10.0.0.0/8        # 私有网络 (Class A)
+  - 100.64.0.0/10     # 运营商级 NAT (CGNAT)
+  - 127.0.0.0/8       # 本地回环 (Loopback)
+  - 169.254.0.0/16    # 链路本地 (Link-Local) *新增*
+  - 172.16.0.0/12     # 私有网络 (Class B)
+  - 192.168.0.0/16    # 私有网络 (Class C)
+  - 224.0.0.0/4       # 组播 (Multicast)
+  - 255.255.255.255/32 # 广播地址 (Broadcast) *可选*
+
 ip_cidr6_set:
-  - fe80::/10
+  - ::1/128           # IPv6 本地回环 *新增*
+  - fc00::/7          # IPv6 私有地址 (ULA) *新增*
+  - fe80::/10         # IPv6 链路本地地址
+  - ff00::/8          # IPv6 组播地址 *新增*
+
