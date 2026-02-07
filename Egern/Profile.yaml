@@ -1,5 +1,6 @@
-# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.06 18:30
+# 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置 (美区ID优化版)
+# 优化重点: 账号/商店/TF走美区代理且防DNS泄露，CDN/系统服务直连
+# 更新时间: 2026.02.07 17:23
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -22,7 +23,7 @@ hijack_dns:
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
-# --- 延迟测试 URL 配置 ---
+# --- 延迟测试 ---
 proxy_latency_test_url: https://www.google.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
@@ -41,22 +42,17 @@ dns:
   - 119.29.29.29
   - 2400:3200::1
 
-  # 2. 上游 DNS 服务器组
+  # 2. 上游 DNS
   upstreams:
-    # 系统默认 DNS (用于局域网/路由器解析)
     System:
     - system
-    # 腾讯专用 (解析微信/王者荣耀等)
     Tencent:
     - https://doh.pub/dns-query
-    # 阿里专用 (解析淘宝/支付宝等)
     Alibaba:
     - https://dns.alidns.com/dns-query	
-    # 谷歌 DNS (解析 Youtube 等)
     Google:
     - https://8.8.8.8/dns-query
     - https://dns.google/dns-query
-    # 字节专用 (解析抖音/TikTok国内CDN)
     ByteDance:
     - 180.184.2.2
     - 180.184.1.1
@@ -67,9 +63,9 @@ dns:
     - https://doh.pub/dns-query	
     - https://dns.alidns.com/dns-query
 
-  # 3. DNS 分流转发逻辑
+  # 3. DNS 分流转发
   forward:
-  # --- 局域网与路由器管理  ---
+  # 局域网
   - wildcard:
       match: '*.lan'
       value: System
@@ -79,34 +75,34 @@ dns:
   - wildcard:
       match: '*.home'
       value: System
-  # --- 修正 NTP 时间同步 ---
   - wildcard:
       match: '*.ntp.org'
       value: System
 
-  # --- Apple 美区账号核心加速 (CDN 直连) ---	  
-  - wildcard:
-      match: '*.apple.com'
-      value: China
-  - wildcard:
-      match: '*.icloud.com'
-      value: China
+  # --- Apple 优化策略 (关键) ---
+  # 仅强制“纯内容/CDN”域名走国内DNS，确保下载速度
+  # 注意：不要在此处强制 *.apple.com 走 China，否则会导致美区商店代理异常
   - wildcard:
       match: '*.mzstatic.com'
-      value: China
+      value: Tencent
   - wildcard:
       match: '*.icloud-content.com'
-      value: China
+      value: Tencent
+  # 某些特定的 Apple 硬件服务域名通常需直连
+  - wildcard:
+      match: 'push.apple.com'
+      value: Tencent
+  - wildcard:
+      match: 'time.apple.com'
+      value: System
 
-  # --- 微软与游戏下载加速 ---
-  # Steam 下载服务器强制走国内 DNS，避免调度到远距离 CDN	  
+  # --- 微软与游戏 ---
   - wildcard:
       match: '*.steampowered.com'
       value: Tencent
   - wildcard:
       match: '*.steamstatic.com'
       value: Tencent
-  # 微软核心服务走国内 DNS (提升 Office/OneDrive 速度)	  
   - wildcard:
       match: '*.microsoft.com'
       value: China
@@ -114,51 +110,10 @@ dns:
       match: '*.windowsupdate.com'
       value: China
 
-  # --- 国内域名兜底 ---
+  # --- 兜底 ---
   - wildcard:
       match: '*.cn'
       value: China
-
-  # --- 规则集精细化分流 ---
-  # 指定 Google 系域名	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
-      value: Google
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
-      value: Google
-
-  # 指定字节系 (抖音等)	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
-      value: ByteDance
-
-  # 阿里/腾讯/Apple/TestFlight	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba_All.list
-      value: Alibaba
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent_All.list
-      value: Tencent
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
-      value: China
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-      value: Global
-
-  # 国内域名大全
-  # 涵盖 bilibili, baidu, 163 等非 .cn 结尾的国内域名，强制走国内 DNS	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
-      value: China
-
-  # 代理规则兜底	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      value: Global
-
-  # 最终兜底 (国外 DNS)	  
   - wildcard:
       match: '*'
       value: Global
@@ -233,21 +188,30 @@ policy_groups:
     - 其他节点
     - DIRECT
     icon: 😜
+
+# --- 重点调整的策略组 ---
+# Apple 策略组：建议手动指定为“美国节点”以确保美区ID最稳
+- select:
+    name: Apple
+    policies:
+    - 美国节点
+    - 自选策略
+    - DIRECT
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
+
+# 其他服务策略组
 - select:
     name: AIGC
     policies:
+    - 美国节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 - select:
-    name: Apple
-    policies:
-    - 自选策略
-    flatten: true
-    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
-- select:
     name: Disney
     policies:
+    - 狮城节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
@@ -266,6 +230,7 @@ policy_groups:
 - select:
     name: HBO
     policies:
+    - 美国节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
@@ -278,12 +243,14 @@ policy_groups:
 - select:
     name: Netflix
     policies:
+    - 狮城节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
 - select:
     name: PayPal
     policies:
+    - 美国节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
@@ -302,6 +269,8 @@ policy_groups:
 - select:
     name: TikTok
     policies:
+    - 日本节点
+    - 美国节点
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
@@ -314,6 +283,7 @@ policy_groups:
 - select:
     name: WeChat
     policies:
+    - DIRECT
     - 自选策略
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
@@ -343,25 +313,34 @@ policy_groups:
 rules:
 # 1. 广告拦截
 - rule_set:
-    match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Ads_AWAvenue.yaml
+    match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AdGuardChinese.yaml
     policy: 猎杀广告
 - rule_set:
-    match: https://adrules.top/adrules.list
+    match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Ads_SukkaW.yaml
     policy: 猎杀广告
 - rule_set:
-    match: https://raw.githubusercontent.com/Uber-Eins/NetConfig/refs/heads/main/Rules/Advertising.list
+    match: https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/adrules.list
     policy: 猎杀广告
 - domain_regex:
     match: ^ad\..*|^ads\..*|^advert\..*
     policy: 猎杀广告
 
-# 2. Apple/系统服务分流
+# 2. Apple 分流 (精细化控制)
+# 第一优先级：TestFlight 和 商店API (确保 DNS 远端解析)
+# AppleProxy 包含了 App Store, iTunes Store, Apple Music, iCloud Private Relay 等关键验证服务
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AppleProxy/AppleProxy.list
-    policy: 美国节点
+    policy: Apple
 - rule_set:
     match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-    policy: 美国节点
+    policy: Apple
+
+# 第二优先级：Apple 其他服务 (系统更新、地图、CDN) -> 直连
+# 因为 AppleProxy 已经把敏感的挑出去了，剩下的走 DIRECT 既快又稳，且使用本地 DNS
+- rule_set:
+    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+    policy: DIRECT
+# 额外确保 Apple 剩余域名兜底直连
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
     policy: DIRECT
@@ -382,9 +361,6 @@ rules:
     policy: DIRECT
 
 # 4. 第三方服务分流
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-    policy: 香港节点
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
     policy: AIGC
