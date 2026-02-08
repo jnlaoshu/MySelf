@@ -71,7 +71,7 @@ dns:
     - wildcard:
         match: '*.dl.delivery.mp.microsoft.com'
         value: China
-    
+
     # --- 游戏下载 (国内 CDN) ---
     - wildcard:
         match: '*.steampowered.com'
@@ -81,26 +81,26 @@ dns:
         value: China
 
   # --- 大厂指定 (精确分流) ---
-  - proxy_rule_set:
+    - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba_All.list
       value: Alibaba
-  - proxy_rule_set:
+    - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent_All.list
       value: Tencent
-  - proxy_rule_set:
+    - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
       value: ByteDance
 
   # --- 其他分流 --- 
-  - proxy_rule_set:
+    - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
       value: China
 
   # --- 最终兜底 ---
-  - wildcard:
+    - wildcard:
       match: '*.cn'
       value: China
-  - wildcard:
+    - wildcard:
       match: '*'
       value: China
    
