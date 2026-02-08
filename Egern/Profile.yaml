@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.08 07:50
+# 更新时间: 2026.02.08 09:20
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -43,8 +43,6 @@ dns:
 
   # 2. 上游DNS
   upstreams:
-    System:
-    - system
     Alibaba:
     - https://dns.alidns.com/dns-query
     ByteDance:
@@ -65,21 +63,6 @@ dns:
 
   # 3. DNS分流转发
   forward:
-  # --- 局域网与路由器管理  ---
-  - wildcard:
-      match: '*.lan'
-      value: System
-  - wildcard:
-      match: '*.local'
-      value: System
-  - wildcard:
-      match: '*.home'
-      value: System
-  # --- 修正 NTP 时间同步 ---
-  - wildcard:
-      match: '*.ntp.org'
-      value: System
-
   # --- Apple 直连 (CDN 走国内) ---	  
   - wildcard:
       match: '*.apple.com'
@@ -93,9 +76,6 @@ dns:
   - wildcard:
       match: '*.icloud-content.com'
       value: China
-  - wildcard:
-      match: 'time.apple.com'
-      value: System
 
   # --- 微软与游戏下载 强制走国内 DNS 加速 ---
   - wildcard:
@@ -111,7 +91,7 @@ dns:
       match: '*.windowsupdate.com'
       value: China
 
-  # --- 国内大厂分流 ---
+  # --- 大厂分流 ---
   # 阿里系	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba_All.list
@@ -131,11 +111,6 @@ dns:
       match: '*.tiktokcdn.com'
       value: Global
 
-  # 其他国内域名大全	  
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
-      value: China
-
   # Google
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
@@ -144,15 +119,10 @@ dns:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       value: Google
 
-  # Apple
+  # 其他
   - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
       value: China
-  - proxy_rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-      value: Global
-
-  # 代理规则兜底	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       value: Global
@@ -359,13 +329,7 @@ rules:
     match: ^ad\..*|^ads\..*|^advert\..*
     policy: 猎杀广告
 
-# 2. Apple/系统服务分流
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AppleProxy/AppleProxy.list
-    policy: 美国节点
-- rule_set:
-    match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-    policy: 美国节点
+# 2. Apple
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
     policy: DIRECT
