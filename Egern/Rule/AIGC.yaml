@@ -1,150 +1,55 @@
-# >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新：2026.02.09 07:10
+# 规则名称: AI
+# 规则统计: 49
 
 domain_set:
-  # === OpenAI & ChatGPT ===
-  - ai.com
-  - chatgpt.com
-  - openai.com
-  - chatgpt.livekit.cloud
-  - client-api.arkoselabs.com
-  - events.statsigapi.net
-  - featuregates.org
-  - identrust.com
-  - o33249.ingest.sentry.io
-  - openaiapi-site.azureedge.net
-  - openaicom.imgix.net
-  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-  - production-openaicom-storage.azureedge.net
-  - browser-intake-datadoghq.com
-
-  # === Anthropic (Claude) ===
-  - anthropic.com
-  - claude.ai
-  - cdn.usefathom.com
-
-  # === Google (Gemini/Bard) ===
-  - gemini.google.com
-  - bard.google.com
-  - generativelanguage.googleapis.com
-  - proactivebackend-pa.googleapis.com
-  - gtn-pa.googleapis.com
-  - aistudio.google.com
-  - alcmeon.com
-
-  # === Microsoft (Copilot/Bing) ===
-  - copilot.microsoft.com
-  - sydney.bing.com
-  - edgeservices.bing.com
-  - www.bing.com
-
-  # === Grok (xAI) & Twitter Core ===
-  - grok.com
-  - www.grok.com
-  - x.com
-  - twitter.com
-  - t.co
-  - api.x.com
-  - api.twitter.com
-
-  # === Midjourney ===
-  - midjourney.com
-  - discord.com
-  - discordapp.com
-  - discordapp.net
-
-  # === Perplexity ===
-  - perplexity.ai
-  - pplx.ai
-
-  # === Poe ===
-  - poe.com
-
+  - ai.google.dev
+  - aida.googleapis.com
+  - aisandbox-pa.googleapis.com
+  - alkalicore-pa.clients6.google.com
+  - antigravity-unleash.goog
+  - antigravity.google
+  - api.github.com
+  - api.jetbrains.ai
+  - daily-cloudcode-pa.googleapis.com
+  - file.oaiusercontent.com
+  - gateway.ai.cloudflare.com
+  - jules.google.com
+  - openrouter.ai
+  - robinfrontend-pa.googleapis.com
 domain_suffix_set:
-  # === OpenAI & ChatGPT ===
-  - openai.com
-  - chatgpt.com
-  - openai-corp.com
-  - openai.org
-  - oaistatic.com
-  - oaiusercontent.com
-  - algolia.net
-  - auth0.com
-  - identrust.com
-  - intercom.io
-  - intercomcdn.com
-  - launchdarkly.com
-  - segment.io
-  - statsig.com
-  - stripe.com
-
-  # === Anthropic (Claude) ===
+  - ai.com
+  - aistudio.google.com
   - anthropic.com
-  - claude.ai
-  - claudeusercontent.com
-
-  # === Google (Gemini) ===
-  - gemini.google.com
   - bard.google.com
+  - chat.com
+  - chatgpt.com
+  - claude.ai
+  - claude.com
+  - clipdrop.co
+  - cloudcode-pa.googleapis.com
   - deepmind.com
   - deepmind.google
-
-  # === Microsoft (Copilot) ===
-  - copilot.microsoft.com
-  - bing-sydney.bing.com
-  - edgeservices.bing.com
-
-  # === Grok (xAI) & Twitter ===
-  - grok.com
-  - x.ai
-  - x.com
-  - twitter.com
-  - twimg.com
-  - t.co
-
-  # === Meta (Llama) ===
-  - meta.ai
-  - llama.meta.com
-
-  # === GitHub Copilot ===
-  - githubcopilot.com
-  - cocopilot.org
-  - copilot-proxy.githubusercontent.com
-
-  # === Stability AI (Stable Diffusion) ===
-  - stability.ai
-  - stable-diffusion.ai
-  - stablediffusionweb.com
-
-  # === Other AI Services ===
-  - c.ai
-  - character.ai
-  - civitai.com
-  - coze.com
   - dify.ai
-  - huggingface.co
+  - g.ai
+  - geller-pa.googleapis.com
+  - gemini.google
+  - gemini.google.com
+  - generativeai.google
+  - generativelanguage.googleapis.com
+  - grok.com
+  - groq.com
   - jasper.ai
-  - leonardo.ai
-  - mistral.ai
-  - notion.site
-  - notion.so
-  - phind.com
-  - pixverse.ai
-  - replicate.com
-  - runwayml.com
-  - suno.ai
-  - suno.com
-  - udio.com
-  - you.com
-  - zeabur.app
-
+  - makersuite.google.com
+  - meta.ai
+  - notebooklm.google
+  - notebooklm.google.com
+  - oaistatic.com
+  - openart.ai
+  - perplexity.ai
+  - poe.com
+  - proactivebackend-pa.googleapis.com
+  - sora.com
+  - x.ai
 domain_keyword_set:
-  - anthropic
-  - chatgpt
-  - claude
-  - copilot
-  - gemini
-  - generativelanguage
-  - midjourney
+  - alkalimakersuite-pa.clients6.google.com
   - openai
-  - perplexity
