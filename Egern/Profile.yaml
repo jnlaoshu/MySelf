@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.08 14:38
+# 更新时间: 2026.02.08 17:40
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -51,7 +51,7 @@ dns:
       - 180.184.1.1
     Tencent:
       - https://doh.pub/dns-query
-    China:
+    Domestic:
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
 
@@ -61,24 +61,24 @@ dns:
     # --- Apple & Microsoft (国内CDN) ---
     - wildcard:
         match: '*.apple.com'
-        value: China
+        value: Domestic
     - wildcard:
         match: '*.icloud.com'
-        value: China
+        value: Domestic
     - wildcard:
         match: '*.windowsupdate.com'
-        value: China
+        value: Domestic
     - wildcard:
         match: '*.dl.delivery.mp.microsoft.com'
-        value: China
+        value: Domestic
     
     # --- 游戏下载 (国内 CDN) ---
     - wildcard:
         match: '*.steampowered.com'
-        value: China
+        value: Domestic
     - wildcard:
         match: '*.steamstatic.com'
-        value: China
+        value: Domestic
 
     # --- 大厂指定 (精确分流) ---
     - proxy_rule_set:
@@ -94,15 +94,15 @@ dns:
     # --- 其他分流 ---
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
-        value: China
+        value: Domestic
 
     # --- 最终兜底 ---
     - wildcard:
         match: '*.cn'
-        value: China
+        value: Domestic
     - wildcard:
         match: '*'
-        value: China
+        value: Domestic
 
   public_ip_lookup_url: https://ifconfig.me/ip
 
