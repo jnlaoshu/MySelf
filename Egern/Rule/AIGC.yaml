@@ -1,5 +1,5 @@
 # >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新：2026.02.09 07:06
+# 更新：2026.02.09 07:10
 
 domain_set:
   # === OpenAI & ChatGPT ===
@@ -38,9 +38,14 @@ domain_set:
   - edgeservices.bing.com
   - www.bing.com
 
-  # === Grok (xAI) ===
+  # === Grok (xAI) & Twitter Core ===
   - grok.com
   - www.grok.com
+  - x.com
+  - twitter.com
+  - t.co
+  - api.x.com
+  - api.twitter.com
 
   # === Midjourney ===
   - midjourney.com
@@ -89,9 +94,13 @@ domain_suffix_set:
   - bing-sydney.bing.com
   - edgeservices.bing.com
 
-  # === Grok (xAI) ===
+  # === Grok (xAI) & Twitter ===
   - grok.com
   - x.ai
+  - x.com
+  - twitter.com
+  - twimg.com
+  - t.co
 
   # === Meta (Llama) ===
   - meta.ai
@@ -107,7 +116,7 @@ domain_suffix_set:
   - stable-diffusion.ai
   - stablediffusionweb.com
 
-  # === Other AI Services (General) ===
+  # === Other AI Services ===
   - c.ai
   - character.ai
   - civitai.com
