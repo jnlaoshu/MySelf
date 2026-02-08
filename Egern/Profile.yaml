@@ -84,11 +84,9 @@ dns:
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba_All.list
       value: Alibaba
-	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent_All.list
       value: Tencent
-	  
   - proxy_rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
       value: ByteDance
@@ -105,7 +103,7 @@ dns:
   - wildcard:
       match: '*'
       value: China
-        
+   
   public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
