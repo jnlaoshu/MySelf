@@ -1,93 +1,141 @@
 # >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+# 更新：2026.02.09 07:06
 
-# --- 验证与基础服务 (解决登录/验证码循环问题) ---
-DOMAIN-SUFFIX, arkoselabs.com
-DOMAIN-SUFFIX, hcaptcha.com
-DOMAIN-SUFFIX, identrust.com
-DOMAIN-SUFFIX, auth0.com
+domain_set:
+  # === OpenAI & ChatGPT ===
+  - ai.com
+  - chatgpt.com
+  - openai.com
+  - chatgpt.livekit.cloud
+  - client-api.arkoselabs.com
+  - events.statsigapi.net
+  - featuregates.org
+  - identrust.com
+  - o33249.ingest.sentry.io
+  - openaiapi-site.azureedge.net
+  - openaicom.imgix.net
+  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+  - production-openaicom-storage.azureedge.net
+  - browser-intake-datadoghq.com
 
-# --- Apple Intelligence (增强补丁) ---
-DOMAIN, apple-relay.apple.com
-DOMAIN, apple-relay.cloudflare.com
-DOMAIN, apple-relay.fastly-edge.com
-DOMAIN, cp4.cloudflare.com
-DOMAIN, guzzoni.apple.com
-DOMAIN, gspe1-ssl.ls.apple.com
-DOMAIN-SUFFIX, smoot.apple.com
-DOMAIN-SUFFIX, apple-cloudkit.com
-DOMAIN, siri-events.apple.com
+  # === Anthropic (Claude) ===
+  - anthropic.com
+  - claude.ai
+  - cdn.usefathom.com
 
-# --- OpenAI / ChatGPT / Sora ---
-DOMAIN, api.statsig.com
-DOMAIN, api-iam.intercom.io
-DOMAIN, o33249.ingest.sentry.io
-DOMAIN, openaiapi-site.azureedge.net
-DOMAIN-KEYWORD, openaiapi
-DOMAIN-KEYWORD, openaicom
-DOMAIN-SUFFIX, chat.com
-DOMAIN-SUFFIX, chatgpt.com
-DOMAIN-SUFFIX, livekit.cloud
-DOMAIN-SUFFIX, oaistatic.com
-DOMAIN-SUFFIX, oaiusercontent.com
-DOMAIN-SUFFIX, openai.com
-DOMAIN-SUFFIX, sora.com
+  # === Google (Gemini/Bard) ===
+  - gemini.google.com
+  - bard.google.com
+  - generativelanguage.googleapis.com
+  - proactivebackend-pa.googleapis.com
+  - gtn-pa.googleapis.com
+  - aistudio.google.com
+  - alcmeon.com
 
-# --- Anthropic / Claude ---
-DOMAIN-SUFFIX, anthropic.com
-DOMAIN-SUFFIX, claude.ai
-DOMAIN-SUFFIX, claudeusercontent.com
-IP-CIDR, 160.79.104.0/23, no-resolve
-IP-CIDR6, 2607:6bc0::/48, no-resolve
+  # === Microsoft (Copilot/Bing) ===
+  - copilot.microsoft.com
+  - sydney.bing.com
+  - edgeservices.bing.com
+  - www.bing.com
 
-# --- Google Gemini / AI Studio ---
-DOMAIN, ai.google.dev
-DOMAIN, bard.google.com
-DOMAIN, gemini.google.com
-DOMAIN, aistudio.google.com
-DOMAIN, alkalicore-pa.clients6.google.com
-DOMAIN, alkalimakersuite-pa.clients6.google.com
-DOMAIN-SUFFIX, generativeai.google
-DOMAIN-SUFFIX, makersuite.google.com
-DOMAIN-SUFFIX, deepmind.com
-DOMAIN-SUFFIX, deepmind.google
-DOMAIN-SUFFIX, proactivebackend-pa.googleapis.com
-DOMAIN-SUFFIX, geller-pa.googleapis.com
-DOMAIN-SUFFIX, generativelanguage.googleapis.com
-DOMAIN-KEYWORD, notebooklm.google
-DOMAIN-KEYWORD, labs.google
+  # === Grok (xAI) ===
+  - grok.com
+  - www.grok.com
 
-# --- Microsoft Copilot ---
-DOMAIN, copilot.microsoft.com
-DOMAIN, sydney.bing.com
-DOMAIN, www.bing.com
-DOMAIN-SUFFIX, githubcopilot.com
+  # === Midjourney ===
+  - midjourney.com
+  - discord.com
+  - discordapp.com
+  - discordapp.net
 
-# --- 编程与生产力 AI (Cursor, Trae, JetBrains) ---
-DOMAIN-SUFFIX, cursor.com
-DOMAIN-SUFFIX, cursor.sh
-DOMAIN-SUFFIX, cursorapi.com
-DOMAIN-SUFFIX, cursor-cdn.com
-DOMAIN-SUFFIX, trae.ai
-DOMAIN, trae-api-sg.mchost.guru
-DOMAIN-SUFFIX, jetbrains.ai
-DOMAIN-SUFFIX, grazie.ai
+  # === Perplexity ===
+  - perplexity.ai
+  - pplx.ai
 
-# --- 热门国产 AI (海外/通用域名) ---
-DOMAIN-SUFFIX, deepseek.com
-DOMAIN-SUFFIX, moonshot.cn
-DOMAIN-SUFFIX, coze.com
-DOMAIN-SUFFIX, poe.com
+  # === Poe ===
+  - poe.com
 
-# --- 其他主流 AI (Meta, Perplexity, xAI, Mistral) ---
-DOMAIN-SUFFIX, meta.ai
-DOMAIN, imagine.meta.com
-DOMAIN-SUFFIX, perplexity.ai
-DOMAIN-SUFFIX, pplx.ai
-DOMAIN-SUFFIX, grok.com
-DOMAIN-SUFFIX, x.ai
-DOMAIN-SUFFIX, groq.com
-DOMAIN-SUFFIX, mistral.ai
-DOMAIN-SUFFIX, claude.ai
+domain_suffix_set:
+  # === OpenAI & ChatGPT ===
+  - openai.com
+  - chatgpt.com
+  - openai-corp.com
+  - openai.org
+  - oaistatic.com
+  - oaiusercontent.com
+  - algolia.net
+  - auth0.com
+  - identrust.com
+  - intercom.io
+  - intercomcdn.com
+  - launchdarkly.com
+  - segment.io
+  - statsig.com
+  - stripe.com
 
-# --- Cloudflare AI Gateway ---
-DOMAIN, gateway.ai.cloudflare.com
+  # === Anthropic (Claude) ===
+  - anthropic.com
+  - claude.ai
+  - claudeusercontent.com
+
+  # === Google (Gemini) ===
+  - gemini.google.com
+  - bard.google.com
+  - deepmind.com
+  - deepmind.google
+
+  # === Microsoft (Copilot) ===
+  - copilot.microsoft.com
+  - bing-sydney.bing.com
+  - edgeservices.bing.com
+
+  # === Grok (xAI) ===
+  - grok.com
+  - x.ai
+
+  # === Meta (Llama) ===
+  - meta.ai
+  - llama.meta.com
+
+  # === GitHub Copilot ===
+  - githubcopilot.com
+  - cocopilot.org
+  - copilot-proxy.githubusercontent.com
+
+  # === Stability AI (Stable Diffusion) ===
+  - stability.ai
+  - stable-diffusion.ai
+  - stablediffusionweb.com
+
+  # === Other AI Services (General) ===
+  - c.ai
+  - character.ai
+  - civitai.com
+  - coze.com
+  - dify.ai
+  - huggingface.co
+  - jasper.ai
+  - leonardo.ai
+  - mistral.ai
+  - notion.site
+  - notion.so
+  - phind.com
+  - pixverse.ai
+  - replicate.com
+  - runwayml.com
+  - suno.ai
+  - suno.com
+  - udio.com
+  - you.com
+  - zeabur.app
+
+domain_keyword_set:
+  - anthropic
+  - chatgpt
+  - claude
+  - copilot
+  - gemini
+  - generativelanguage
+  - midjourney
+  - openai
+  - perplexity
