@@ -1,96 +1,123 @@
-# Apple Intelligence
-DOMAIN-SUFFIX,smoot.apple.com
-DOMAIN,apple-relay.apple.com
-DOMAIN,apple-relay.cloudflare.com
-DOMAIN,apple-relay.fastly-edge.com
-DOMAIN-SUFFIX,gateway.icloud.com
-DOMAIN,cp4.cloudflare.com
-DOMAIN,guzzoni.apple.com
-DOMAIN,gspe1-ssl.ls.apple.com
-DOMAIN-SUFFIX,apps.mzstatic.com
+# >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+# 更新：2026.02.09 07:28
 
-# Anthropic
-# > Claude
-DOMAIN-SUFFIX,claude.ai
-DOMAIN-SUFFIX,claude.com
-DOMAIN-SUFFIX,anthropic.com
+domain_set:
+  - ai.com
+  - aistudio.google.com
+  - alcmeon.com
+  - anthropic.com
+  - api.twitter.com
+  - api.x.ai
+  - api.x.com
+  - assets.grok.com
+  - bard.google.com
+  - browser-intake-datadoghq.com
+  - cdn.usefathom.com
+  - challenges.cloudflare.com
+  - chatgpt.com
+  - chatgpt.livekit.cloud
+  - client-api.arkoselabs.com
+  - copilot.microsoft.com
+  - discord.com
+  - discordapp.com
+  - discordapp.net
+  - edgeservices.bing.com
+  - events.statsigapi.net
+  - featuregates.org
+  - gemini.google.com
+  - generativelanguage.googleapis.com
+  - grok.com
+  - gtn-pa.googleapis.com
+  - identrust.com
+  - midjourney.com
+  - o33249.ingest.sentry.io
+  - openai.com
+  - openaiapi-site.azureedge.net
+  - openaicom.imgix.net
+  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
+  - perplexity.ai
+  - poe.com
+  - pplx.ai
+  - proactivebackend-pa.googleapis.com
+  - production-openaicom-storage.azureedge.net
+  - sydney.bing.com
+  - t.co
+  - twitter.com
+  - www.bing.com
+  - www.grok.com
+  - x.com
 
-# OpenAI
-# > ChatGPT
-DOMAIN-SUFFIX,chat.com
-DOMAIN-SUFFIX,chatgpt.com
-DOMAIN-SUFFIX,livekit.cloud
-DOMAIN-SUFFIX,oaistatic.com
-DOMAIN-SUFFIX,oaiusercontent.com
-DOMAIN-SUFFIX,openai.com
-DOMAIN-SUFFIX,sora.com
-DOMAIN,api.statsig.com
-DOMAIN,api-iam.intercom.io
-DOMAIN,o33249.ingest.sentry.io
-DOMAIN,openaiapi-site.azureedge.net
-DOMAIN-KEYWORD,openaiapi
-DOMAIN-KEYWORD,openaicom
-# OpenRouter
-DOMAIN-SUFFIX,openrouter.ai
+domain_suffix_set:
+  - algolia.net
+  - anthropic.com
+  - auth0.com
+  - bard.google.com
+  - bing-sydney.bing.com
+  - c.ai
+  - character.ai
+  - chatgpt.com
+  - civitai.com
+  - claude.ai
+  - claudeusercontent.com
+  - cocopilot.org
+  - copilot-proxy.githubusercontent.com
+  - copilot.microsoft.com
+  - coze.com
+  - deepmind.com
+  - deepmind.google
+  - dify.ai
+  - edgeservices.bing.com
+  - gemini.google.com
+  - githubcopilot.com
+  - grok.com
+  - huggingface.co
+  - identrust.com
+  - intercom.io
+  - intercomcdn.com
+  - jasper.ai
+  - launchdarkly.com
+  - leonardo.ai
+  - llama.meta.com
+  - meta.ai
+  - mistral.ai
+  - notion.site
+  - notion.so
+  - oaistatic.com
+  - oaiusercontent.com
+  - openai-corp.com
+  - openai.com
+  - openai.org
+  - phind.com
+  - pixverse.ai
+  - replicate.com
+  - runwayml.com
+  - segment.io
+  - sentry.io
+  - stability.ai
+  - stable-diffusion.ai
+  - stablediffusionweb.com
+  - statsig.com
+  - stripe.com
+  - suno.ai
+  - suno.com
+  - t.co
+  - twimg.com
+  - twitter.com
+  - udio.com
+  - x.ai
+  - x.com
+  - you.com
+  - zeabur.app
 
-# Cloudflare
-# > AI Gateway
-DOMAIN,gateway.ai.cloudflare.com
-
-# Cursor
-DOMAIN-SUFFIX,cursor-cdn.com
-DOMAIN-SUFFIX,cursor.com
-DOMAIN-SUFFIX,cursor.sh
-DOMAIN-SUFFIX,cursorapi.com
-
-# Google
-# > AI Studio
-DOMAIN-SUFFIX,generativeai.google
-DOMAIN-SUFFIX,makersuite.google.com
-DOMAIN,aistudio.google.com
-DOMAIN,alkalicore-pa.clients6.google.com
-DOMAIN,alkalimakersuite-pa.clients6.google.com
-# > Antigravity
-DOMAIN,antigravity.google
-DOMAIN,antigravity-unleash.goog
-# > DeepMind
-DOMAIN-SUFFIX,deepmind.com
-DOMAIN-SUFFIX,deepmind.google
-# > Gemini
-DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com
-DOMAIN-SUFFIX,geller-pa.googleapis.com
-DOMAIN-SUFFIX,generativelanguage.googleapis.com
-DOMAIN,ai.google.dev
-DOMAIN,bard.google.com
-DOMAIN,gemini.google.com
-# > NotebookLM
-DOMAIN-KEYWORD,notebooklm.google
-# > Search Labs
-DOMAIN-KEYWORD,labs.google
-
-# Groq
-DOMAIN-SUFFIX,groq.com
-
-# JetBrains AI
-DOMAIN-SUFFIX,grazie.ai
-
-# Meta
-DOMAIN-SUFFIX,meta.ai
-DOMAIN,imagine.meta.com
-
-# Microsoft
-# > Copilot
-DOMAIN,copilot.microsoft.com
-DOMAIN,sydney.bing.com
-DOMAIN,www.bing.com
-# > GitHub Copilot
-DOMAIN-SUFFIX,githubcopilot.com
-
-# Perplexity
-DOMAIN-SUFFIX,perplexity.ai
-DOMAIN-SUFFIX,pplx.ai
-DOMAIN,pplx-res.cloudinary.com
-
-# xAI
-DOMAIN-SUFFIX,grok.com
-DOMAIN-SUFFIX,x.ai
+domain_keyword_set:
+  - anthropic
+  - chatgpt
+  - claude
+  - copilot
+  - gemini
+  - generativelanguage
+  - grok
+  - midjourney
+  - openai
+  - perplexity
+  - xai
