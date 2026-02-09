@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.09 12:20
+# 更新时间: 2026.02.09 14:33
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -156,26 +156,31 @@ policy_groups:
       name: AppStoreDownload
       policies: [DIRECT]
       flatten: true
+      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppStoreDownload.png
   - select:
       name: AppStoreAPI
       policies: [美国节点, 自选策略]
       flatten: true
+      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppStoreAPI.png
   - select:
       name: TestFlight
       policies: [美国节点, 自选策略]
       flatten: true
+      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TestFlight.png
   - select:
       name: iCloud
       policies: [DIRECT]
       flatten: true
+      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/iCloud.png
   - select:
       name: AppleProxy
       policies: [美国节点, 自选策略]
       flatten: true
+      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppleProxy.png
   # 服务分流策略
   - select:
