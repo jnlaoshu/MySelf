@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.09 14:33
+# 更新时间: 2026.02.10 00:05
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -52,6 +52,23 @@ dns:
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
   forward:
+    # --- 防污染特别指定 ---
+    - wildcard:
+        match: '*.openai.com'
+        value: System
+    - wildcard:
+        match: '*.x.ai' # Grok
+        value: System
+    - wildcard:
+        match: '*.grok.com'
+        value: System
+    - wildcard:
+        match: '*.google.com'
+        value: System
+    - wildcard:
+        match: '*.googleapis.com'
+        value: System
+
     # Apple & Microsoft (国内CDN) 
     - wildcard:
         match: '*.apple.com'
@@ -274,9 +291,6 @@ policy_groups:
 rules:
   # 广告拦截
   - rule_set:
-      match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AdGuardChinese.yaml
-      policy: 猎杀广告
-  - rule_set:
       match: https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/adrules.list
       policy: 猎杀广告
   # 局域网与基础服务直连
@@ -307,6 +321,17 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/iCloud.yaml
       policy: iCloud
+
+  # --- AIGC 规则 ---
+  # OpenAI (ChatGPT)
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
+      policy: AIGC
+  # AI 综合 (包含 Grok, Claude, Gemini 等)
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AI/AI.list
+      policy: AIGC
+
   # 国内直连兜底
   - domain_suffix:
       match: cn
