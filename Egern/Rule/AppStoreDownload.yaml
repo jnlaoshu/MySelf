@@ -1,0 +1,32 @@
+# AppStoreDownload.yaml
+# App Store 下载资源专用规则
+# 更新时间 2026.02.09
+
+payload:
+
+  # 一 核心下载 CDN 域名 直连
+  - DOMAIN-SUFFIX,apps.mzstatic.com
+  - DOMAIN-SUFFIX,iosapps.itunes.apple.com
+  - DOMAIN-SUFFIX,updates-http.cdn-apple.com
+  - DOMAIN-SUFFIX,updates.cdn-apple.com
+  - DOMAIN-SUFFIX,cdn.apple.com
+  - DOMAIN-SUFFIX,appldnld.apple.com
+  - DOMAIN-SUFFIX,download.apple.com
+  - DOMAIN-SUFFIX,swcdn.apple.com
+  - DOMAIN-SUFFIX,swdownload.apple.com
+  - DOMAIN-SUFFIX,fwdownload.apple.com
+
+  # 二 iTunes 下载子域 直连
+  - DOMAIN,aod.itunes.apple.com
+  - DOMAIN,osxapps.itunes.apple.com
+  - DOMAIN,iosapps.itunes.apple.com
+
+  # 三 App Store 静态资源 直连
+  - DOMAIN-SUFFIX,mzstatic.com
+  - DOMAIN-SUFFIX,itunescdn.com
+
+  # 四 美区专属下载回退规则
+  # 当国内 CDN 无法返回内容时 由策略组控制走美国节点
+  - DOMAIN-SUFFIX,apptrailers.itunes.apple.com
+  - DOMAIN-SUFFIX,iosapps.itunes.apple.com.edgekey.net
+  - DOMAIN-SUFFIX,apple.com.edgekey.net
