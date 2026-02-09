@@ -1,7 +1,7 @@
 /*
  * 今日黄历&节假日倒数（含成都义教段学校特定日期）
  * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/Almanac.js
- * 更新：2026.02.06 14:36
+ * 更新：2026.02.10 03:28
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
@@ -155,14 +155,11 @@
     
     const yi = get("yi","Yi","suit").replace(/\./g, " "), ji = get("ji","Ji","avoid").replace(/\./g, " ");
     
-    // 定义每20字符换行的辅助函数
-    const wrap = s => s.replace(/(.{20})/g, "$1\n").replace(/\n$/, "");
-
     const alm = [
       get("chongsha","ChongSha"), 
       get("baiji","BaiJi"), 
-      yi ? `✅ 宜：${wrap(yi)}` : "", 
-      ji ? `❎ 忌：${wrap(ji)}` : ""
+      yi ? `✅ 宜：${yi}` : "", 
+      ji ? `❎ 忌：${ji}` : ""  
     ].filter(Boolean).join("\n");
 
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
