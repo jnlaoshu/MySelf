@@ -1,0 +1,34 @@
+# TestFlight.yaml
+# TestFlight 专用增强规则
+# 更新时间 2026.02.09
+
+payload:
+
+  # 一 TestFlight 核心服务与账号校验
+  - DOMAIN,testflight.apple.com
+  - DOMAIN,api.testflight.apple.com
+  - DOMAIN,beta.apple.com
+  - DOMAIN,developer.apple.com
+  - DOMAIN,itunesconnect.apple.com
+  - DOMAIN,appstoreconnect.apple.com
+
+  # 二 TestFlight API 与应用信息接口
+  - DOMAIN,api-edge.apps.apple.com
+  - DOMAIN,amp-api.apps.apple.com
+  - DOMAIN,apps.apple.com
+
+  # 三 TestFlight 测试包下载 CDN
+  # 优先命中国内 CDN 由策略组控制是否直连
+  - DOMAIN-SUFFIX,appldnld.apple.com
+  - DOMAIN-SUFFIX,swcdn.apple.com
+  - DOMAIN-SUFFIX,swdownload.apple.com
+  - DOMAIN-SUFFIX,fwdownload.apple.com
+  - DOMAIN-SUFFIX,cdn.apple.com
+
+  # 四 iTunes 辅助接口
+  - DOMAIN,itunes.apple.com
+  - DOMAIN-SUFFIX,itunes.apple.com
+
+  # 五 美区判定兜底
+  # 当 TestFlight 请求发生跳转或聚合访问时
+  - DOMAIN-SUFFIX,apple.com
