@@ -1,5 +1,35 @@
 # 规则名称: AppleProxy
+# Apple 外区内容代理规则
 # https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
+# 更新时间 2026.02.09
+
+payload:
+
+  # 一 Apple TV / Apple Music 美区内容
+  - DOMAIN,itunes.apple.com
+  - DOMAIN,music.apple.com
+  - DOMAIN,tv.apple.com
+  - DOMAIN,itunesconnect.apple.com
+  - DOMAIN,appstoreconnect.apple.com
+
+  # 二 TestFlight 美区回退
+  - DOMAIN,testflight.apple.com
+  - DOMAIN,api.testflight.apple.com
+
+  # 三 App Store 美区下载与动态内容
+  - DOMAIN-SUFFIX,apps.apple.com
+  - DOMAIN-SUFFIX,apptrailers.itunes.apple.com
+  - DOMAIN,itunes.apple.com.edgekey.net
+  - DOMAIN,apple.com.edgekey.net
+
+  # 四 iTunes 辅助与 CDN 外区出口
+  - DOMAIN-SUFFIX,appldnld.apple.com
+  - DOMAIN-SUFFIX,swcdn.apple.com
+  - DOMAIN-SUFFIX,fwdownload.apple.com
+
+  # 五 永久代理兜底
+  - DOMAIN-SUFFIX,apple.com
+
 
 domain_set:
   - api-glb-sea.smoot.apple.com
