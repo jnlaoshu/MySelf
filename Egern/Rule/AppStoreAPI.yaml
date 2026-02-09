@@ -1,0 +1,35 @@
+# AppStoreAPI.yaml
+# App Store 账号与 API 专用规则
+# 更新时间 2026.02.09
+
+payload:
+
+  # 一 App Store 核心 API 与页面接口
+  - DOMAIN,apps.apple.com
+  - DOMAIN,itunes.apple.com
+  - DOMAIN,search.itunes.apple.com
+  - DOMAIN,api-edge.apps.apple.com
+  - DOMAIN,amp-api.apple.com
+  - DOMAIN,store.apple.com
+  - DOMAIN,storeedgefd.apple.com
+
+  # 二 账号 登录 与地区判定
+  - DOMAIN,account.apple.com
+  - DOMAIN,gs.apple.com
+  - DOMAIN,buy.itunes.apple.com
+  - DOMAIN,secure.buy.itunes.apple.com
+  - DOMAIN,setup.apple.com
+
+  # 三 App Store Connect 与开发者关联接口
+  - DOMAIN-SUFFIX,appstoreconnect.apple.com
+  - DOMAIN,api.appstoreconnect.apple.com
+  - DOMAIN,developer.apple.com
+
+  # 四 排行榜 评论 推荐 等动态内容接口
+  - DOMAIN-SUFFIX,itunes.apple.com
+  - DOMAIN-SUFFIX,apps.apple.com
+
+  # 五 美区判定兜底
+  # 当 API 发生跳转或聚合请求时 由策略组统一控制出口
+  - DOMAIN-SUFFIX,apple.com
+  - DOMAIN-SUFFIX,itunes.com
