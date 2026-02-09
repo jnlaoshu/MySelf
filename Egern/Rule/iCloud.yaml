@@ -1,0 +1,46 @@
+# iCloud.yaml
+# iCloud 增强专用规则
+# 更新时间 2026.02.09
+
+payload:
+
+  # 一 iCloud 账号 登录 与鉴权
+  - DOMAIN,icloud.com
+  - DOMAIN,setup.icloud.com
+  - DOMAIN,configure.icloud.com
+  - DOMAIN,appleid.apple.com
+  - DOMAIN,gs.apple.com
+  - DOMAIN,me.com
+
+  # 二 iCloud 数据同步与核心服务
+  - DOMAIN,backup.icloud.com
+  - DOMAIN,files.icloud.com
+  - DOMAIN,photos.icloud.com
+  - DOMAIN,docs.icloud.com
+  - DOMAIN,mail.icloud.com
+  - DOMAIN,contacts.icloud.com
+  - DOMAIN,calendar.icloud.com
+  - DOMAIN,notes.icloud.com
+  - DOMAIN,reminders.icloud.com
+  - DOMAIN,drive.icloud.com
+
+  # 三 iCloud 推送与实时同步相关
+  - DOMAIN,push.apple.com
+  - DOMAIN-SUFFIX,push.apple.com
+  - DOMAIN,apns.apple.com
+
+  # 四 iCloud 内容分发与下载 CDN
+  - DOMAIN-SUFFIX,icloud-content.com
+  - DOMAIN-SUFFIX,icloud-content-downloads.com
+  - DOMAIN-SUFFIX,icloud-storage.com
+  - DOMAIN-SUFFIX,cdn-apple.com
+  - DOMAIN-SUFFIX,cdn.apple.com
+
+  # 五 iCloud 服务回退与聚合接口
+  - DOMAIN,cloudd.apple.com
+  - DOMAIN,caldav.icloud.com
+  - DOMAIN,carddav.icloud.com
+
+  # 六 永久直连兜底
+  - DOMAIN-SUFFIX,icloud.com
+  - DOMAIN-SUFFIX,me.com
