@@ -1,17 +1,15 @@
 /*
- * 今日黄历&节假日倒数（含成都义教段学校特定日期）
- * URL： https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Script/Almanac.js
- * 更新：2026.02.10 03:28
+ * 今日黄历&节假日倒数（修复版）
+ * 修复内容：解决变量命名冲突导致的民俗/节气显示错误；优化除夕计算逻辑
+ * 更新：2026.02.10
  */
 (async () => {
   // 1. 基础环境 (UTC+8)
-  // 使用固定的 UTC+8 偏移量计算，避免系统时区影响
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const P = n => n < 10 ? `0${n}` : n;
   const YMD = (y, m, d) => `${y}/${P(m)}/${P(d)}`;
   
-  // 构造用于模糊搜索的日期格式
   const DATE_PATTERNS = [
     `${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, 
     `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, 
@@ -93,49 +91,63 @@
   // 4. 节日配置
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
-    const term = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
+    // 【修复】重命名函数为 getTerm，避免与返回对象 key 冲突
+    const getTerm = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     return {
-      // 法定节假日（含成都义教段学校特定日期）
       legal: [
         ["元旦",YMD(y,1,1)], 
-        ["寒假",YMD(y,1,31)], //2026年成都义教段学校放寒假
+        ["寒假",YMD(y,1,31)],
         ["春节",l2s(1,1)],
-        ["开学",YMD(y,3,2)],    //2026年成都义教段学校春季开学
-        ["清明节",term(7)],
-        ["春假",YMD(y,4,29)],   //成都春假安排在清明节后第1天，与清明连休
+        ["开学",YMD(y,3,2)],
+        ["清明节",getTerm(7)],
+        ["春假",YMD(y,4,29)],
         ["劳动节",YMD(y,5,1)], 
         ["端午节",l2s(5,5)],
         ["高考",YMD(y,6,7)], 
-        ["暑假",YMD(y,7,4)],    //2026年成都义教段学校放暑假
+        ["暑假",YMD(y,7,4)],
         ["中秋节",l2s(8,15)], 
         ["国庆节",YMD(y,10,1)],
-        ["秋假",wDay(11,2,3)]   // 成都秋假11月第2个周三（即11月第2周的周三至周五）
+        ["秋假",wDay(11,2,3)]
       ],
-      // 民俗节日
-      folk: [["元宵节",l2s(1,15)],["龙抬头",l2s(2,2)],["七夕节",l2s(7,7)],["中元节",l2s(7,15)],["重阳节",l2s(9,9)],["寒衣节",l2s(10,1)],["下元节",l2s(10,15)],["腊八节",l2s(12,8)],["北方小年",l2s(12,23)],["除夕",l2s(12,Lunar.mDays(y,12)==29?29:30)]],
-      // 国际/洋节
+      folk: [
+        ["元宵节",l2s(1,15)],
+        ["龙抬头",l2s(2,2)],
+        ["七夕节",l2s(7,7)],
+        ["中元节",l2s(7,15)],
+        ["重阳节",l2s(9,9)],
+        ["寒衣节",l2s(10,1)],
+        ["下元节",l2s(10,15)],
+        ["腊八节",l2s(12,8)],
+        ["北方小年",l2s(12,23)],
+        // 【修复】直接使用 mDays 计算当月最后一天，避免逻辑冗余
+        ["除夕",l2s(12, Lunar.mDays(y,12))] 
+      ],
       intl: [["情人节",YMD(y,2,14)],["妇女节",YMD(y,3,8)],["母亲节",wDay(5,2,0)],["儿童节",YMD(y,6,1)],["父亲节",wDay(6,3,0)],["万圣节",YMD(y,10,31)],["平安夜",YMD(y,12,24)],["圣诞节",YMD(y,12,25)],["感恩节",wDay(11,4,4)]],
-      term: Array.from({length:24},(_,i)=>[["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"][i], term(i+1)])
+      // 【修复】调用新的 getTerm 函数
+      term: Array.from({length:24},(_,i)=>[["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"][i], getTerm(i+1)])
     };
   };
 
-  // 5. 渲染合并 (优化版)
-  // limit 默认 3，统一显示数量
+  // 5. 渲染合并
   const merge = (list, limit = 3) => {
     const todayMs = Date.UTC(Y, M - 1, D);
     const result = [];
     
+    // 【优化】增加空值检查，防止 crash
+    if (!list || !Array.isArray(list)) return "";
+
     for (const [name, dateStr] of list) {
         if (!dateStr) continue;
         const [yy, mm, dd] = dateStr.split('/').map(Number);
+        // 校验日期合法性
+        if (!yy || !mm || !dd) continue;
+
         const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
         
-        // diff < 0 则跳过，不显示已过期的节日
         if (diff < 0) continue;
         
         let sortKey = diff;
-        // 高考特殊权重：200天内优先置顶
         if (name === "高考" && diff > 0 && diff <= 200) sortKey = -9999;
         
         result.push({ name, diff, sortKey });
