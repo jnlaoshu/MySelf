@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.10 00:05
+# 更新时间: 2026.02.10 09:39
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -40,81 +40,34 @@ dns:
     - 119.29.29.29
     - 2400:3200::1
   upstreams:
-    System:
-      - system
-    Alibaba:
+    AliDNS:
       - https://dns.alidns.com/dns-query
-    ByteDance:
-      - 180.184.1.1
-    Tencent:
+    DNSPod:
       - https://doh.pub/dns-query
-    Domestic:
+    Default:
       - https://doh.pub/dns-query
       - https://dns.alidns.com/dns-query
   forward:
-    # --- 防污染特别指定 ---
-    - wildcard:
-        match: '*.openai.com'
-        value: System
-    - wildcard:
-        match: '*.x.ai' # Grok
-        value: System
-    - wildcard:
-        match: '*.grok.com'
-        value: System
-    - wildcard:
-        match: '*.google.com'
-        value: System
-    - wildcard:
-        match: '*.googleapis.com'
-        value: System
-
-    # Apple & Microsoft (国内CDN) 
-    - wildcard:
-        match: '*.apple.com'
-        value: Domestic
-    - wildcard:
-        match: '*.icloud.com'
-        value: Domestic
-    - wildcard:
-        match: '*.windowsupdate.com'
-        value: Domestic
-    - wildcard:
-        match: '*.dl.delivery.mp.microsoft.com'
-        value: Domestic
-    # 游戏下载 (国内CDN) 
-    - wildcard:
-        match: '*.steampowered.com'
-        value: Domestic
-    - wildcard:
-        match: '*.steamstatic.com'
-        value: Domestic
-    # 大厂指定
+    # 大厂指定 (阿里/腾讯)
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba_All.list
-        value: Alibaba
+        value: AliDNS
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent_All.list
-        value: Tencent
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
-        value: ByteDance
+        value: DNSPod
     # 国内综合
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
-        value: Domestic
+        value: Default
     # 最终兜底
     - wildcard:
-        match: '*.cn'
-        value: Domestic
-    - wildcard:
         match: '*'
-        value: Domestic
+        value: Default  
   public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
 policy_groups:
-  # 节点自动测速
+  # 1. 自动测速节点
   - auto_test:
       name: 香港节点
       policies: [全部节点]
@@ -151,6 +104,7 @@ policy_groups:
       flatten: true
       filter: 🇰🇷|韩国|KR|KOR|Korea
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+  # 2. 节点筛选与来源
   - select:
       name: 其他节点
       policies: [全部节点]
@@ -163,12 +117,12 @@ policy_groups:
       urls:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
-  # 核心自选策略
+  # 3. 核心策略组
   - select:
       name: 自选策略
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
-  # Apple 服务分流
+  # 4. Apple 服务分流 (隐藏组)
   - select:
       name: AppStoreDownload
       policies: [DIRECT]
@@ -199,7 +153,8 @@ policy_groups:
       flatten: true
       hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppleProxy.png
-  # 服务分流策略
+
+  # 5. 常用服务分流策略
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
@@ -212,12 +167,12 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
   - select:
       name: Disney
-      policies: [自选策略]
+      policies: [狮城节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
   - select:
       name: GitHub
-      policies: [美国节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
   - select:
@@ -227,7 +182,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
   - select:
       name: HBO
-      policies: [自选策略]
+      policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
   - select:
@@ -237,7 +192,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
   - select:
       name: Netflix
-      policies: [自选策略]
+      policies: [狮城节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
   - select:
@@ -252,17 +207,17 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
   - select:
       name: Telegram
-      policies: [自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
   - select:
       name: TikTok
-      policies: [自选策略]
+      policies: [日本节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
   - select:
       name: Twitter
-      policies: [自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
   - select:
@@ -272,15 +227,16 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
   - select:
       name: YouTube
-      policies: [自选策略]
+      policies: [香港节点,自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
   - select:
       name: YouTubeMusic
-      policies: [自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
-  # 去广告策略
+
+  # 6. 去广告策略组
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
@@ -289,17 +245,23 @@ policy_groups:
 
 # --- 规则集 ---
 rules:
-  # 广告拦截
+  # 1. 广告拦截
+  - rule_set:
+      match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AdGuardChinese.yaml
+      policy: 猎杀广告
   - rule_set:
       match: https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/adrules.list
       policy: 猎杀广告
-  # 局域网与基础服务直连
+
+  # 2. 局域网与基础直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
   - domain_suffix:
       match: ntp.org
       policy: DIRECT
+
+  # 3. Apple 系统服务细分
   # Apple 系统服务直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
@@ -322,29 +284,21 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/iCloud.yaml
       policy: iCloud
 
-  # --- AIGC 规则 ---
-  # OpenAI (ChatGPT)
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list
-      policy: AIGC
-  # AI 综合 (包含 Grok, Claude, Gemini 等)
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/AI/AI.list
-      policy: AIGC
-
-  # 国内直连兜底
+  # 4. 国内直连兜底
   - domain_suffix:
       match: cn
       policy: DIRECT
   - geoip:
       match: CN
       policy: DIRECT
-      no_resolve: true
-  # 国外流量代理兜底
+      no_resolve: true # 避免国内 IP 进行远程 DNS 解析
+
+  # 5. 国外流量代理兜底
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 自选策略
-  # 最终兜底
+  
+  # 6. 最终兜底
   - default:
       policy: 自选策略
 
