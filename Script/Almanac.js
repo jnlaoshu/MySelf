@@ -1,6 +1,6 @@
 /*
- * 今日黄历&节假日倒数（修复版）
- * 修复内容：解决变量命名冲突导致的民俗/节气显示错误；优化除夕计算逻辑
+ * 今日黄历&节假日倒数（增强版）
+ * 功能：修复民俗显示错误 + 增加当天节日置顶显示
  * 更新：2026.02.10
  */
 (async () => {
@@ -17,7 +17,7 @@
   ];
   const WEEK = "日一二三四五六";
 
-  // 2. 农历核心 (查表法 1900-2100)
+  // 2. 农历核心
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0xada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520,0x0dd45],
     gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
@@ -50,7 +50,7 @@
     l2s(y,m,d) { try { let off=0, lp=this.leap(y); for(let i=1900; i<y; i++) off+=this.lDays(i); for(let i=1; i<m; i++) off+=this.mDays(y,i); if(lp>0 && lp<m) off+=((this.info[y-1900]&0x10000)?30:29); return new Date(Date.UTC(1900,0,31)+(off+d-1)*86400000); } catch(e){return null;} }
   };
 
-  // 3. 网络请求 (深度扫描)
+  // 3. 网络请求
   const getAlmanac = async () => {
     if (typeof $httpClient === "undefined") return {};
     return new Promise(r => {
@@ -91,40 +91,27 @@
   // 4. 节日配置
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
-    // 【修复】重命名函数为 getTerm，避免与返回对象 key 冲突
     const getTerm = (n) => YMD(y, Math.floor((n-1)/2)+1, Lunar.term(y,n));
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     return {
       legal: [
-        ["元旦",YMD(y,1,1)], 
-        ["寒假",YMD(y,1,31)],
-        ["春节",l2s(1,1)],
-        ["开学",YMD(y,3,2)],
-        ["清明节",getTerm(7)],
-        ["春假",YMD(y,4,29)],
-        ["劳动节",YMD(y,5,1)], 
-        ["端午节",l2s(5,5)],
-        ["高考",YMD(y,6,7)], 
-        ["暑假",YMD(y,7,4)],
-        ["中秋节",l2s(8,15)], 
-        ["国庆节",YMD(y,10,1)],
+        ["元旦",YMD(y,1,1)], ["寒假",YMD(y,1,31)], ["春节",l2s(1,1)],
+        ["开学",YMD(y,3,2)], ["清明节",getTerm(7)], ["春假",YMD(y,4,29)],
+        ["劳动节",YMD(y,5,1)], ["端午节",l2s(5,5)], ["高考",YMD(y,6,7)], 
+        ["暑假",YMD(y,7,4)], ["中秋节",l2s(8,15)], ["国庆节",YMD(y,10,1)],
         ["秋假",wDay(11,2,3)]
       ],
       folk: [
-        ["元宵节",l2s(1,15)],
-        ["龙抬头",l2s(2,2)],
-        ["七夕节",l2s(7,7)],
-        ["中元节",l2s(7,15)],
-        ["重阳节",l2s(9,9)],
-        ["寒衣节",l2s(10,1)],
-        ["下元节",l2s(10,15)],
-        ["腊八节",l2s(12,8)],
-        ["北方小年",l2s(12,23)],
-        // 【修复】直接使用 mDays 计算当月最后一天，避免逻辑冗余
+        ["元宵节",l2s(1,15)], ["龙抬头",l2s(2,2)], ["七夕节",l2s(7,7)],
+        ["中元节",l2s(7,15)], ["重阳节",l2s(9,9)], ["寒衣节",l2s(10,1)],
+        ["下元节",l2s(10,15)], ["腊八节",l2s(12,8)], ["北方小年",l2s(12,23)],
         ["除夕",l2s(12, Lunar.mDays(y,12))] 
       ],
-      intl: [["情人节",YMD(y,2,14)],["妇女节",YMD(y,3,8)],["母亲节",wDay(5,2,0)],["儿童节",YMD(y,6,1)],["父亲节",wDay(6,3,0)],["万圣节",YMD(y,10,31)],["平安夜",YMD(y,12,24)],["圣诞节",YMD(y,12,25)],["感恩节",wDay(11,4,4)]],
-      // 【修复】调用新的 getTerm 函数
+      intl: [
+        ["情人节",YMD(y,2,14)], ["妇女节",YMD(y,3,8)], ["母亲节",wDay(5,2,0)],
+        ["儿童节",YMD(y,6,1)], ["父亲节",wDay(6,3,0)], ["万圣节",YMD(y,10,31)],
+        ["平安夜",YMD(y,12,24)], ["圣诞节",YMD(y,12,25)], ["感恩节",wDay(11,4,4)]
+      ],
       term: Array.from({length:24},(_,i)=>[["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"][i], getTerm(i+1)])
     };
   };
@@ -133,28 +120,18 @@
   const merge = (list, limit = 3) => {
     const todayMs = Date.UTC(Y, M - 1, D);
     const result = [];
-    
-    // 【优化】增加空值检查，防止 crash
     if (!list || !Array.isArray(list)) return "";
-
     for (const [name, dateStr] of list) {
         if (!dateStr) continue;
         const [yy, mm, dd] = dateStr.split('/').map(Number);
-        // 校验日期合法性
         if (!yy || !mm || !dd) continue;
-
         const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
-        
         if (diff < 0) continue;
-        
         let sortKey = diff;
         if (name === "高考" && diff > 0 && diff <= 200) sortKey = -9999;
-        
         result.push({ name, diff, sortKey });
     }
-
-    return result
-        .sort((a, b) => a.sortKey - b.sortKey)
+    return result.sort((a, b) => a.sortKey - b.sortKey)
         .slice(0, limit)
         .map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`)
         .join(" , ");
@@ -175,10 +152,20 @@
     ].filter(Boolean).join("\n");
 
     const [f1, f2] = [getFests(Y), getFests(Y+1)];
-    
+
+    // 【新增】判断今天是否是节日
+    const todayStr = YMD(Y, M, D);
+    // 合并当年所有节日库，筛出今天日期的
+    const todayFests = [...f1.legal, ...f1.folk, ...f1.intl]
+        .filter(item => item[1] === todayStr)
+        .map(item => item[0]);
+    // 构造显示字符串：如果有，加🎉前缀；如果有多个，用&连接
+    const todayTag = todayFests.length > 0 ? ` 🎉${todayFests.join("&")}` : "";
+
     $done({
       title: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]} ${obj.astro}`,
-      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}\n${alm}\n\n${[
+      // 在 obj.term 后追加 todayTag
+      content: `${obj.gz}(${obj.ani})年 ${obj.cn} ${obj.term||""}${todayTag}\n${alm}\n\n${[
         merge([...f1.legal, ...f2.legal]), 
         merge([...f1.term, ...f2.term]),
         merge([...f1.folk, ...f2.folk]), 
