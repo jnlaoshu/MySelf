@@ -68,7 +68,7 @@ dns:
 # --- 策略组 ---
 policy_groups:
   # 0. 全局自动优选 (自动选择延迟最低节点)
-  - url_test:
+  - auto_test:
       name: 自动优选
       policies: [全部节点]
       url: http://www.gstatic.com/generate_204
