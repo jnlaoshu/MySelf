@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 更新时间: 2026.02.10 09:39
+# 优化时间: 2026.02.11 21:00
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -41,12 +41,12 @@ dns:
     - 2400:3200::1
   upstreams:
     AliDNS:
-      - https://dns.alidns.com/dns-query
+      - h3://dns.alidns.com/dns-query
     DNSPod:
       - https://doh.pub/dns-query
     Default:
       - https://doh.pub/dns-query
-      - https://dns.alidns.com/dns-query
+      - h3://dns.alidns.com/dns-query
   forward:
     # 大厂指定 (阿里/腾讯)
     - proxy_rule_set:
@@ -67,7 +67,7 @@ dns:
 
 # --- 策略组 ---
 policy_groups:
-  # 1. 自动测速节点
+  # 1. 自动测速节点 (地区分类)
   - auto_test:
       name: 香港节点
       policies: [全部节点]
@@ -104,6 +104,7 @@ policy_groups:
       flatten: true
       filter: 🇰🇷|韩国|KR|KOR|Korea
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+  
   # 2. 节点筛选与来源
   - select:
       name: 其他节点
@@ -117,11 +118,13 @@ policy_groups:
       urls:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
-  # 3. 核心策略组
+  
+  # 3. 核心策略组 (手动选择入口)
   - select:
       name: 自选策略
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
+
   # 4. Apple 服务分流 (隐藏组)
   - select:
       name: AppStoreDownload
@@ -262,15 +265,12 @@ rules:
       policy: DIRECT
 
   # 3. Apple 系统服务细分
-  # Apple 系统服务直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
       policy: DIRECT
-  # 外区 Apple 内容代理
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
       policy: AppleProxy
-  # App Store 下载/API/TestFlight/iCloud
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppStoreDownload.yaml
       policy: AppStoreDownload
@@ -284,21 +284,72 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/iCloud.yaml
       policy: iCloud
 
-  # 4. 国内直连兜底
+  # 4. 关键应用分流
+  # AIGC
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+      policy: AIGC
+  # 社交媒体
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+      policy: Telegram
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+      policy: Twitter
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TikTok/TikTok.list
+      policy: TikTok
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+      policy: WeChat
+  # 流媒体
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+      policy: YouTube
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list
+      policy: YouTubeMusic
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Netflix/Netflix.list
+      policy: Netflix
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Disney/Disney.list
+      policy: Disney
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+      policy: Spotify
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/HBO/HBO.list
+      policy: HBO
+  # 开发与工具
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
+      policy: GitHub
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
+      policy: Google
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
+      policy: Microsoft
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
+      policy: PayPal
+
+  # 5. 国内直连兜底
   - domain_suffix:
       match: cn
       policy: DIRECT
   - geoip:
       match: CN
       policy: DIRECT
-      no_resolve: true # 避免国内 IP 进行远程 DNS 解析
+      no_resolve: true
 
-  # 5. 国外流量代理兜底
+  # 6. 国外流量代理兜底
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
       policy: 自选策略
   
-  # 6. 最终兜底
+  # 7. 最终兜底
   - default:
       policy: 自选策略
 
