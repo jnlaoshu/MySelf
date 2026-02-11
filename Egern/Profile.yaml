@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.11 21:00
+# 优化时间: 2026.02.11 21:05
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -67,6 +67,15 @@ dns:
 
 # --- 策略组 ---
 policy_groups:
+  # 0. 全局自动优选 (自动选择延迟最低节点)
+  - url_test:
+      name: 自动优选
+      policies: [全部节点]
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+      tolerance: 50
+      icon: ⚡️
+
   # 1. 自动测速节点 (地区分类)
   - auto_test:
       name: 香港节点
@@ -122,7 +131,7 @@ policy_groups:
   # 3. 核心策略组 (手动选择入口)
   - select:
       name: 自选策略
-      policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
+      policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
 
   # 4. Apple 服务分流 (隐藏组)
