@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.11 21:08
+# 优化时间: 2026.02.11 21:20
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -36,6 +36,7 @@ hijack_dns:
 # --- DNS 配置 ---
 dns:
   bootstrap:
+    - system
     - 223.5.5.5
     - 119.29.29.29
     - 2400:3200::1
@@ -67,15 +68,6 @@ dns:
 
 # --- 策略组 ---
 policy_groups:
-  # 0. 全局自动优选 (自动选择延迟最低节点)
-  - auto_test:
-      name: 自动优选
-      policies: [全部节点]
-      url: http://www.gstatic.com/generate_204
-      interval: 300
-      tolerance: 50
-      icon: ⚡️
-
   # 1. 自动测速节点 (地区分类)
   - auto_test:
       name: 香港节点
@@ -127,14 +119,25 @@ policy_groups:
       urls:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
+
+  # 3. 全局自动优选 (自动选择延迟最低节点)
+  - auto_test:
+      name: 自动优选
+      policies: [全部节点]
+      flatten: true
+      # 不加 filter 默认测试所有节点
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+      tolerance: 50
+      icon: ⚡️
   
-  # 3. 核心策略组 (手动选择入口)
+  # 4. 核心策略组 (手动选择入口)
   - select:
       name: 自选策略
       policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
 
-  # 4. Apple 服务分流 (隐藏组)
+  # 5. Apple 服务分流 (隐藏组)
   - select:
       name: AppStoreDownload
       policies: [DIRECT]
@@ -166,7 +169,7 @@ policy_groups:
       hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppleProxy.png
 
-  # 5. 常用服务分流策略
+  # 6. 常用服务分流策略
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
@@ -248,7 +251,7 @@ policy_groups:
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
 
-  # 6. 去广告策略组
+  # 7. 去广告策略组
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
