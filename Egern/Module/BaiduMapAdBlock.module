@@ -1,38 +1,42 @@
 #!name=百度地图去广告
-#!desc=移除百度地图广告，屏蔽开屏、搜索、首页、动态、TIPS及商业推广，优化规则匹配和 Mock 响应
+#!desc=移除百度地图开屏、搜索栏、个人中心及各种推广内容
 #!author=AI，RuCu6,ddgksf2013
-#!tag=去广告
-#!category=AdBlock
 #!date=2026-02-12 21:40
 
-[Rule]
-# 百度广告域名屏蔽
-DOMAIN,newclient.map.baidu.com,REJECT,extended-matching,pre-matching
-DOMAIN,httpdns.baidubce.com,REJECT,extended-matching,pre-matching
-DOMAIN,ugc.map.baidu.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,baidu.com,REJECT,extended-matching,pre-matching
-
 [Body Rewrite]
-# 搜索页推广内容清理
-http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content 'if .data.posts? != null then .data.posts.content=[] else . end'
-# HttpDNS 映射清理，防止广告接口解析
-http-response-jq ^https?:\/\/httpdns\.baidubce\.com 'if .data? != null then .data["newclient.map.baidu.com"]={} else . end'
-# 我的页面广告清理
-http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter/mine/page 'if .data? != null then del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop) else . end'
-# 附近热词广告清理
-http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living/nearby/hot-words\? 'if .Result? != null then .Result.data=[] else . end'
+# > 个人中心 - 移除各种卡片 (金币、商城、运动等)
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner)'
+
+# > 搜索栏 - 移除热搜词/推荐
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? '.Result.data=[]'
+
+# > 发现页/周边 - 移除富媒体内容
+http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content '.data.posts.content=[]'
+
+# > 语音包 - 移除推荐
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
 
 [Map Local]
-# 搜索推广 Mock
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
-# 开屏/首页左上角广告 Mock
+# > 开屏广告 (Splash) & 首页左上角活动
+# 返回空JSON对象，防止解析错误
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads data-type=text data="{}" status-code=200
-# 商业推广 Mock
+
+# > 搜索框 - 搜索推广/预置词
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
+
+# > 商业推广/跨界营销
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing data-type=text data="{}" status-code=200
-# 我的页面动态 Mock
+
+# > 个人中心 - 地图动态/贡献/消息
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
-# TIPS Mock
-^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus/bounty/tips data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus\/bounty\/tips data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/msgcenter\/pull data-type=text data="{}" status-code=200
+
+# > 各种活动弹窗/运营配置
+^https?:\/\/newclient\.map\.baidu\.com\/operation\/activity data-type=text data="{}" status-code=200
+
+# > 皮肤中心 - 推荐内容
+^https?:\/\/newclient\.map\.baidu\.com\/skin\/center\/recommend data-type=text data="{}" status-code=200
 
 [MITM]
 hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com
