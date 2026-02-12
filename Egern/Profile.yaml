@@ -1,10 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.11 21:20
-
-# 自动更新配置 (如需启用请取消注释)
-# auto_update:
-#   url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-#   interval: 86400
+# 优化时间: 2026.02.12 08:47
 
 # --- 基础配置 ---
 ipv6: true
@@ -14,13 +9,17 @@ allow_external_connections: true
 vif_only: true
 hide_vpn_icon: true
 
-# --- 延迟测试 ---
-proxy_latency_test_url: http://www.gstatic.com/generate_204
-direct_latency_test_url: http://www.apple.com/library/test/success.html
+# --- DNS 劫持 ---
+hijack_dns:
+  - '*:53'
 
 # --- 数据库 ---
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
+
+# --- 延迟测试 ---
+proxy_latency_test_url: http://www.gstatic.com/generate_204
+direct_latency_test_url: http://www.apple.com/library/test/success.html
 
 # --- 路由选项 ---
 compat_route: false
@@ -28,10 +27,6 @@ include_all_networks: false
 include_apns: false
 include_cellular_services: false
 include_local_networks: false
-
-# --- DNS 劫持 ---
-hijack_dns:
-  - '*:53'
 
 # --- DNS 配置 ---
 dns:
@@ -105,7 +100,7 @@ policy_groups:
       flatten: true
       filter: 🇰🇷|韩国|KR|KOR|Korea
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
-  
+
   # 2. 节点筛选与来源
   - select:
       name: 其他节点
@@ -120,17 +115,15 @@ policy_groups:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
 
-  # 3. 全局自动优选 (自动选择延迟最低节点)
+  # 3. 自动测速优选
   - auto_test:
       name: 自动优选
       policies: [全部节点]
       flatten: true
-      # 不加 filter 默认测试所有节点
-      url: http://www.gstatic.com/generate_204
       interval: 300
       tolerance: 50
       icon: ⚡️
-  
+
   # 4. 核心策略组 (手动选择入口)
   - select:
       name: 自选策略
@@ -139,37 +132,25 @@ policy_groups:
 
   # 5. Apple 服务分流 (隐藏组)
   - select:
-      name: AppStoreDownload
-      policies: [DIRECT]
-      flatten: true
-      hidden: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppStoreDownload.png
-  - select:
-      name: AppStoreAPI
-      policies: [美国节点, 自选策略]
-      flatten: true
-      hidden: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppStoreAPI.png
-  - select:
       name: TestFlight
       policies: [美国节点, 自选策略]
       flatten: true
-      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TestFlight.png
+      hidden: true
   - select:
       name: iCloud
       policies: [DIRECT]
       flatten: true
-      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/iCloud.png
+      hidden: true
   - select:
       name: AppleProxy
       policies: [美国节点, 自选策略]
       flatten: true
-      hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppleProxy.png
+      hidden: true
 
-  # 6. 常用服务分流策略
+  # 6. 常用服务分流策略 (A-Z 排序)
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
@@ -242,7 +223,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
   - select:
       name: YouTube
-      policies: [香港节点,自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
   - select:
@@ -284,56 +265,22 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
       policy: AppleProxy
   - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppStoreDownload.yaml
-      policy: AppStoreDownload
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppStoreAPI.yaml
-      policy: AppStoreAPI
-  - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TestFlight.yaml
       policy: TestFlight
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/iCloud.yaml
       policy: iCloud
 
-  # 4. 关键应用分流
-  # AIGC
+  # 4. 关键应用分流 (A-Z 排序)
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
-  # 社交媒体
   - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
-      policy: Telegram
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
-      policy: Twitter
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TikTok/TikTok.list
-      policy: TikTok
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
-      policy: WeChat
-  # 流媒体
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
-      policy: YouTube
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list
-      policy: YouTubeMusic
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Netflix/Netflix.list
-      policy: Netflix
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
+      policy: 美国节点
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Disney/Disney.list
       policy: Disney
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
-      policy: Spotify
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/HBO/HBO.list
-      policy: HBO
-  # 开发与工具
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
       policy: GitHub
@@ -341,11 +288,38 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
       policy: Google
   - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/HBO/HBO.list
+      policy: HBO
+  - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Microsoft/Microsoft.list
       policy: Microsoft
   - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Netflix/Netflix.list
+      policy: Netflix
+  - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/PayPal/PayPal.list
       policy: PayPal
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Spotify/Spotify.list
+      policy: Spotify
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list
+      policy: Telegram
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TikTok/TikTok.list
+      policy: TikTok
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Twitter/Twitter.list
+      policy: Twitter
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
+      policy: WeChat
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
+      policy: YouTube
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list
+      policy: YouTubeMusic
 
   # 5. 国内直连兜底
   - domain_suffix:
@@ -372,7 +346,8 @@ mitm:
 
 # --- 模块配置 ---
 modules:
-  - url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
+  - name: 面板合集
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
     enabled: true
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
