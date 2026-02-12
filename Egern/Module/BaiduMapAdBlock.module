@@ -1,0 +1,41 @@
+#!name=百度地图去广告
+#!desc=移除百度地图广告，屏蔽开屏、搜索、首页、动态、TIPS及商业推广，优化规则匹配和 Mock 响应
+#!author=AI，RuCu6,ddgksf2013
+#!tag=去广告
+#!category=AdBlock
+#!date=2026-02-12 20:21
+
+[Rule]
+# 百度广告域名屏蔽
+DOMAIN,newclient.map.baidu.com,REJECT,extended-matching,pre-matching
+DOMAIN,httpdns.baidubce.com,REJECT,extended-matching,pre-matching
+DOMAIN,ugc.map.baidu.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,baidu.com,REJECT,extended-matching,pre-matching
+
+[Body Rewrite]
+# 搜索页推广内容清理
+http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content 'if .data.posts? != null then .data.posts.content=[] else . end'
+# HttpDNS 映射清理，防止广告接口解析
+http-response-jq ^https?:\/\/httpdns\.baidubce\.com 'if .data? != null then .data["newclient.map.baidu.com"]={} else . end'
+# 我的页面广告清理
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter/mine/page 'if .data? != null then del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop) else . end'
+# 附近热词广告清理
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living/nearby/hot-words\? 'if .Result? != null then .Result.data=[] else . end'
+
+[Map Local]
+# 搜索推广 Mock
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
+# 开屏/首页左上角广告 Mock
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads data-type=text data="{}" status-code=200
+# 商业推广 Mock
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing data-type=text data="{}" status-code=200
+# 我的页面动态 Mock
+^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
+# TIPS Mock
+^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus/bounty/tips data-type=text data="{}" status-code=200
+
+# 占位：以后新增接口可在这里追加 Mock
+# ^https?:\/\/newclient\.map\.baidu\.com\/new_mock/.* data-type=text data="{}" status-code=200
+
+[MITM]
+hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com
