@@ -366,10 +366,10 @@ modules:
     enabled: true
   - name: 高德地图去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.module
-  enabled: true
+    enabled: true
   - name: 百度地图去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.module
-  enabled: true
+    enabled: true
   - name: BiliBili去广告
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
     enabled: true
