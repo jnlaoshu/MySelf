@@ -3,7 +3,7 @@
 #!author=AI，RuCu6,ddgksf2013
 #!tag=去广告
 #!category=AdBlock
-#!date=2026-02-12 20:21
+#!date=2026-02-12 21:40
 
 [Rule]
 # 百度广告域名屏蔽
@@ -33,9 +33,6 @@ http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living/nearby/hot-words
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
 # TIPS Mock
 ^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus/bounty/tips data-type=text data="{}" status-code=200
-
-# 占位：以后新增接口可在这里追加 Mock
-# ^https?:\/\/newclient\.map\.baidu\.com\/new_mock/.* data-type=text data="{}" status-code=200
 
 [MITM]
 hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com
