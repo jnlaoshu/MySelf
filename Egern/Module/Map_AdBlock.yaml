@@ -1,37 +1,81 @@
-#!name=百度地图+高德地图去广告
-#!desc=最大化清理广告，全面屏蔽所有百度和高德广告接口
-#!author=AI，RuCu6,ddgksf2013
+#!name=高德地图+百度地图 去广告纯净整合版
+#!desc=整合高德地图与百度地图广告清理，包含域名拦截、JQ净化、Mock响应及脚本处理
+#!author=AI 修改，RuCu6,ddgksf2013
 #!category=AdBlock
-#!date=2026-02-12 21:52
+#!date=2026-02-12 22:12
 
 [Rule]
-# 百度广告域名封杀
-DOMAIN,newclient.map.baidu.com,REJECT,extended-matching,pre-matching
-DOMAIN,httpdns.baidubce.com,REJECT,extended-matching,pre-matching
-DOMAIN,ugc.map.baidu.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,baidu.com,REJECT,extended-matching,pre-matching
-
-# 高德广告域名封杀
-DOMAIN-SUFFIX,amap.com,REJECT,extended-matching,pre-matching
+# ===============================
+# 高德地图广告域名屏蔽
+# ===============================
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
+DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,amap.com,REJECT,extended-matching,pre-matching
+
 
 [Body Rewrite]
-# 百度 JQ 全量删除广告字段
-http-response-jq ^https?:\/\/.*map\.baidu\.com\/.* 'delpaths([["data","posts"],["data","ads"],["data","promotion"],["Result","data"]])'
+# ===============================
+# 高德地图关键接口 JQ 清理
+# ===============================
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
+http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
 
-# 高德 JQ 全量删除广告字段
-http-response-jq ^https:\/\/m5\.amap\.com\/ws\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"],["data","promotion"]])'
+# ===============================
+# 百度地图 JQ 清理
+# ===============================
+# 个人中心卡片
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner)'
+
+# 搜索热词
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? '.Result.data=[]'
+
+# 富媒体内容
+http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content '.data.posts.content=[]'
+
+# 语音包推荐
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
+
 
 [Map Local]
-# 百度 Mock 全量接口
-^https?:\/\/newclient\.map\.baidu\.com\/.* data-type=text data="{}" status-code=200
+# ===============================
+# 高德地图 Mock 响应
+# ===============================
+^https:\/\/m5\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/oss\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sns\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 高德 Mock 全量接口
-^https:\/\/.*\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+# ===============================
+# 百度地图 Mock 响应
+# ===============================
+# 开屏广告
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads data-type=text data="{}" status-code=200
+
+# 搜索推广
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
+
+# 跨界营销
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing data-type=text data="{}" status-code=200
+
+# 个人中心动态
+^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus\/bounty\/tips data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/msgcenter\/pull data-type=text data="{}" status-code=200
+
+# 活动弹窗
+^https?:\/\/newclient\.map\.baidu\.com\/operation\/activity data-type=text data="{}" status-code=200
+
+# 皮肤中心推荐
+^https?:\/\/newclient\.map\.baidu\.com\/skin\/center\/recommend data-type=text data="{}" status-code=200
+
 
 [Script]
-# 高德广告脚本处理
-http-response ^https:\/\/.*\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
+# ===============================
+# 高德地图广告脚本处理
+# ===============================
+http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
+http-response ^https:\/\/m5-zb\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
+
 
 [MITM]
-hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com, *.amap.com
+hostname = %APPEND% *.amap.com, 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com
