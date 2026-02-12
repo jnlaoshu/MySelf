@@ -1,0 +1,102 @@
+#!name=高德+百度地图 去广告 (长期维护版)
+#!desc=集成本地静态拦截与动态脚本净化。模块化注释，便于排查问题。
+#!author=AI
+#!category=Map
+#!icon=https://raw.githubusercontent.com/Koolson/Qure/master/IconSet/Color/Map_Google.png
+
+#############################################
+# 1. MITM (解密核心)
+# 作用：允许代理软件解密 HTTPS 流量，否则无法去除广告
+#############################################
+[MITM]
+# ⚠️ 注意：不要随意删除 hostname，否则脚本无法生效
+# ⚠️ 注意：也不要随意增加 *.baidu.com 全匹配，防止百度网盘/贴吧无法连接
+hostname = *.amap.com, *.baidu.com, newclient.map.baidu.com, afd.baidu.com, yongche.baidu.com, ecom.map.baidu.com, maphotel.baidu.com
+
+#############################################
+# 2. 域名拦截 (Rule)
+# 作用：直接阻断广告服务器连接，最彻底，但容易误杀
+#############################################
+[Rule]
+# -----------------
+# > 高德地图 (Amap)
+# -----------------
+# [阿里系推广DNS] 拦截后可防止部分追踪
+DOMAIN,adash-emas.cn-hangzhou.aliyuncs.com,REJECT
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT
+# [阿里广告SDK] 核心广告域名
+DOMAIN-SUFFIX,alimama.com,REJECT
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT
+# [图标CDN] ⚠️ 如果发现地图上的功能图标丢失/变成空白，请在此行前加 # 注释掉
+DOMAIN,free-aos-cdn-image.amap.com,REJECT
+
+# -----------------
+# > 百度地图 (Baidu)
+# -----------------
+# [百度广告联盟] 拦截百度系通用的广告接口
+DOMAIN,mobads.baidu.com,REJECT
+DOMAIN,mobads-logs.baidu.com,REJECT
+DOMAIN,crm.baidu.com,REJECT
+DOMAIN,eclick.baidu.com,REJECT
+DOMAIN,nsclick.baidu.com,REJECT
+DOMAIN,toblog.baidu.com,REJECT
+
+#############################################
+# 3. Map Local (静态屏蔽)
+# 作用：直接给广告接口返回空数据。
+# 🔧 维护指南：
+# 如果某个功能（如打车）无法加载，请找到对应注释行，在该行最前面加 # 号禁用即可。
+#############################################
+[Map Local]
+# -----------------
+# > 高德地图 (Amap)
+# -----------------
+# [开屏广告] 启动时的全屏广告 (m5-zb 是备用域名)
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/valueadded\/alimama\/splash_screen data="{}" status-code=200 header="Content-Type:application/json"
+
+# [横幅广告] 首页或各级页面顶部的 Banner 条
+^https:\/\/oss\.amap\.com\/ws\/banner\/.* data="{}" status-code=200 header="Content-Type:application/json"
+
+# [场景推荐] 搜索框附近弹出的“推荐去处”
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/shield\/scene\/recommend\? data="{}" status-code=200 header="Content-Type:application/json"
+
+# [首页配置] ⚠️ 高风险：如果高德主页一片空白或无限加载，请注释掉下面这一行
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/aos\/main\/page\/.* data="{}" status-code=200 header="Content-Type:application/json"
+
+# [导航结束页] 导航结束后的推销页面
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/faas\/amap-navigation\/main-page.* data="{}" status-code=200 header="Content-Type:application/json"
+
+# [打车/酒店/周边] ⚠️ 如果你经常用高德打车，建议注释掉下面以 c3frontend 开头的行
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/c3frontend\/af-(?:hotel|nearby|launch)\/.* data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/boss\/order\/car\/feedback\/.* data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/sharedtrip\/taxi\/.*tips data="{}" status-code=200 header="Content-Type:application/json"
+
+# [其他杂项] 感知服务与AI推荐
+^https:\/\/m5(-zb)?\.amap\.com\/ws\/aos\/perception\/.* data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/ai\.amap\.com\/v1\/ai_rec\/home_qs\? data="{}" status-code=200 header="Content-Type:application/json"
+
+# -----------------
+# > 百度地图 (Baidu)
+# -----------------
+# [更新检测] 屏蔽版本更新提示与入口
+^https:\/\/afd\.baidu\.com\/afd\/entry\?action=(update|query) data="{}" status-code=200 header="Content-Type:application/json"
+# [运营活动] 屏蔽运营弹窗
+^https:\/\/ecom\.map\.baidu\.com\/ad-ops\/.* data="{}" status-code=200 header="Content-Type:application/json"
+# [打车/酒店] 如果使用百度打车，请注释掉下面两行
+^https:\/\/yongche\.baidu\.com\/gomarketing\/api\/popup\/getentrancecordovaurl$ data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/yongche\.baidu\.com\/goorder\/passenger\/.* data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/maphotel\.baidu\.com\/hotel\/goextranet\/activity\/detail\? data="{}" status-code=200 header="Content-Type:application/json"
+
+#############################################
+# 4. Script (动态净化)
+# 作用：智能修改数据包。这部分会自动随远程 GitHub 更新，无需手动维护。
+#############################################
+[Script]
+
+# > 高德地图脚本 (keleeone)
+# 包含 m5 和 m5-zb 泛解析
+高德地图_净化 = type=http-response, pattern=^https:\/\/(?:m5|m5-zb)\.amap\.com\/ws\/.*, script-path=https://raw.githubusercontent.com/keleeone/AmapAdsAutoPatch/main/Amap_remove_ads.js, requires-body=true, timeout=30
+
+# > 百度地图脚本 (jadkg)
+# 针对 newclient 接口
+百度地图_净化 = type=http-response, pattern=^https:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads, script-path=https://raw.githubusercontent.com/jadkg/egern/main/Script/BaiduMap.js, requires-body=true, timeout=30
