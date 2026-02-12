@@ -2,7 +2,7 @@
 #!desc=最大化清理广告，全面屏蔽所有百度和高德广告接口
 #!author=AI，RuCu6,ddgksf2013
 #!category=AdBlock
-#!date=2026-02-12
+#!date=2026-02-12 21:42
 
 [Rule]
 # 百度广告域名封杀
@@ -34,4 +34,4 @@ http-response-jq ^https:\/\/m5\.amap\.com\/ws\/.* 'delpaths([["data","commonMate
 http-response ^https:\/\/.*\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
 
 [MITM]
-hostname = %APPEND% *.baidu.com, *.amap.com
+hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com, *.amap.com
