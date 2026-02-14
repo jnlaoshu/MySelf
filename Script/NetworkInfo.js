@@ -1,6 +1,5 @@
-/*
- * 网络信息
- * * 更新：2026.02.14 08:11
+/* 网络信息
+ * * 更新：2026.02.14 08:16
  */
 
 /*
@@ -61,10 +60,12 @@ const getRadioType = (radio) => {
     const v6 = n.v6 || {};
     const wifi = n.wifi || {};
     
-    // 并行请求：IPIP (本地) 和 IPWhois (节点，强制中文)
+    // 并行请求：
+    // 1. 本地信息：使用 ipip.net (数据最准)
+    // 2. 节点信息：使用 ip-api.com (强制 lang=zh-CN 显示中文)
     const [localInfo, nodeInfo] = await Promise.all([
       http.get('https://myip.ipip.net/json'),
-      http.get('https://ipwho.is/?lang=zh') 
+      http.get('http://ip-api.com/json/?lang=zh-CN') 
     ]);
 
     // --- 1. 标题与运营商处理 ---
@@ -72,7 +73,7 @@ const getRadioType = (radio) => {
     if (Array.isArray(localInfo.location) && localInfo.location.length) {
       rawISP = localInfo.location[localInfo.location.length - 1];
     }
-    if (!rawISP) rawISP = nodeInfo?.connection?.isp || nodeInfo.isp; 
+    if (!rawISP) rawISP = nodeInfo?.isp || nodeInfo?.org; 
     
     const displayISP = fmtISP(rawISP);
     const radioType = n["cellular-data"]?.radio || n.cellular?.radio;
@@ -113,10 +114,12 @@ const getRadioType = (radio) => {
     }
 
     // 节点信息
-    const nodeIP = nodeInfo.ip || nodeInfo.query;
+    // ip-api 返回的 IP 字段是 query，ipwhois 返回的是 ip。这里做兼容处理。
+    const nodeIP = nodeInfo.query || nodeInfo.ip;
+    
     if (nodeIP) {
       content.push(`节点IPv4：${nodeIP}`);
-      // 纯中文位置，无国旗
+      // 纯中文位置 (ip-api 强制返回中文)
       content.push(`节点位置：${nodeInfo.country || ''} ${nodeInfo.city || ''}`);
     } else {
       content.push(`节点IPv4：检测失败`);
