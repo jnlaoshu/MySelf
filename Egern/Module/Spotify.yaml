@@ -1,122 +1,67 @@
-#!name=Spotify长期维护终极版
-#!desc=长期维护稳定版：去广告+Premium增强+歌词翻译+低失效率+高稳定性
-#!author=Long-Term Stable Integration
-#!category=去广告
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
-#!date=2026-02-14
+#!name=Spotify 整合增强版
+#!desc=集成了歌词翻译、去广告、点播解锁(伪Premium)。
+#!author=VirgilClyne & app2smile & 001ProMax
+#!date=2026.02.14 12:26
 
-##############################
-# Header Rewrite
-##############################
-
-[Header Rewrite]
-
-# 防缓存导致功能失效
-^https:\/\/api\.spotify\.com\/ request-header del if-none-match
-^https:\/\/spclient\.wg\.spotify\.com\/ request-header del if-none-match
-^https:\/\/.*-spclient\.spotify\.com\/ request-header del if-none-match
-
-
-##############################
-# Map Local
-##############################
-
-[Map Local]
-
-# 广告系统
-^https:\/\/.*spotify\.com\/ads data-type=text data="{}" status-code=200
-
-# 广告配置
-^https:\/\/.*spotify\.com\/pendragon data-type=text data="{}" status-code=200
-
-# Banner广告
-^https:\/\/spclient\.wg\.spotify\.com\/banner data-type=text data="{}" status-code=200
-
-# 启动广告
-^https:\/\/spclient\.wg\.spotify\.com\/startup data-type=text data="{}" status-code=200
-
-# 推荐广告
-^https:\/\/spclient\.wg\.spotify\.com\/recommendation data-type=text data="{}" status-code=200
-
-# 播客广告
-^https:\/\/spclient\.wg\.spotify\.com\/podcast-ad data-type=text data="{}" status-code=200
-
-
-##############################
-# Script
-##############################
-
-[Script]
-
-######## Premium增强 ########
-
-spotify-premium-bootstrap =
-type=http-response,
-pattern=^https:\/\/.*spotify\.com\/bootstrap,
-requires-body=true,
-binary-body-mode=true,
-timeout=30,
-script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
-
-spotify-premium-user =
-type=http-response,
-pattern=^https:\/\/.*spotify\.com\/user-customization-service,
-requires-body=true,
-binary-body-mode=true,
-timeout=30,
-script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
-
-
-######## 去广告 ########
-
-spotify-adblock =
-type=http-response,
-pattern=^https:\/\/.*spotify\.com\/(bootstrap|user-customization-service),
-requires-body=true,
-binary-body-mode=true,
-timeout=30,
-script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js,
-argument="[false,true]"
-
-
-######## 歌词翻译 ########
-
-spotify-track =
-type=http-response,
-pattern=^https:\/\/api\.spotify\.com\/v1\/tracks,
-requires-body=true,
-timeout=30,
-script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
-
-spotify-lyrics-request =
-type=http-request,
-pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track,
-requires-body=true,
-timeout=30,
-script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
-
-spotify-lyrics-translate =
-type=http-response,
-pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track,
-requires-body=true,
-binary-body-mode=true,
-timeout=30,
-script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
-
-
-##############################
-# Rule
-##############################
+# ---------------------------
+# 模块功能说明：
+# 1. 歌词翻译：将外语歌词翻译为中文 (源自 VirgilClyne)
+# 2. 伪 Premium：去除强制随机播放、允许无限切歌 (源自 app2smile)
+# 3. 去广告：屏蔽音频与弹窗广告 (源自 app2smile & 001ProMax)
+# 
+# 注意事项：
+# - 必须开启 MITM 并信任证书。
+# - 音质无法解锁“超高”，请勿在设置中选择“超高”。
+# - 首次使用建议后台关闭 Spotify 后重启应用。
+# ---------------------------
 
 [Rule]
-
-AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT
-
-
-##############################
-# MITM
-##############################
+# 屏蔽 HTTP3/QUIC 以强制 HTTPS 走 MITM
+AND, ((DOMAIN-SUFFIX, spotify.com), (PROTOCOL, UDP)), REJECT
 
 [MITM]
+hostname = api.spotify.com, spclient.wg.spotify.com, *-spclient.spotify.com
 
-hostname = %APPEND% api.spotify.com, spclient.wg.spotify.com, *-spclient.spotify.com
+[Header Rewrite]
+# 强制让客户端获取最新的用户配置，防止缓存导致解锁失效
+^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
+
+[Map Local]
+# 针对广告数据接口直接返回空，比脚本更省电 (源自 001ProMax)
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/pendragon\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+[Script]
+# ===========================
+# 核心功能：解锁 Premium & 去广告 (源自 app2smile)
+# ===========================
+
+# 处理 Tab页、歌手页面、专辑页面的 UI 限制
+Spotify_UI_Unlock = type=http-request, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/, requires-body=false, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
+
+# 处理 Bootstrap 和 User Customize (核心解锁逻辑：去广告、去随机、无限切歌)
+Spotify_Proto_Unlock = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
+
+# ===========================
+# 增强功能：歌词翻译 (源自 VirgilClyne)
+# ===========================
+
+# 1. 跟踪 API 响应
+Lyrics_Track_Response = type=http-response, pattern=^https?:\/\/api\.spotify\.com\/v1\/tracks\?, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js, requires-body=true
+
+# 2. 歌词请求 (JSON格式)
+Lyrics_Request_JSON = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true
+
+# 3. 歌词请求 (Proto格式)
+Lyrics_Request_Proto = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*), script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true, binary-body-mode=true
+
+# 4. 翻译歌词响应 (JSON格式)
+Lyrics_Translate_JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true
+
+# 5. 翻译歌词响应 (Proto格式)
+Lyrics_Translate_Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true, binary-body-mode=true
+
+# 6. 外部歌词响应 (JSON格式)
+Lyrics_External_JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true
+
+# 7. 外部歌词响应 (Proto格式)
+Lyrics_External_Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true, binary-body-mode=true
