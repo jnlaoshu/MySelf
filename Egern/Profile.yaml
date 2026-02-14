@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.12 22:30
+# 优化时间: 2026.02.14 12:15
 
 # --- 基础配置 ---
 ipv6: true
@@ -364,11 +364,14 @@ modules:
   - name: YouTube Enhance
     url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
     enabled: true
+  - name: 雪球去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
+    enabled: true
   - name: 高德地图去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.module
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
     enabled: true
   - name: 百度地图去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.module
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
     enabled: true
   - name: BiliBili去广告
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
