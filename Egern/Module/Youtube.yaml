@@ -1,0 +1,70 @@
+#!name=YouTube & Music 终极融合版 
+#!desc=旗舰级：极限去广告 + 全链路双语字幕翻译 + YouTube Music歌词翻译 + 界面净化 + 隐私保护
+#!author=融合 Maasea + VirgilClyne + app2smile + Ultimate Privacy
+#!arguments=屏蔽上传按钮:true,屏蔽选段按钮:true,屏蔽Shorts按钮:false,字幕翻译语言:zh-Hans,歌词翻译语言:zh-Hans,启用调试模式:false
+#!arguments-desc=1. 屏蔽参数：[true, false] 2. 翻译参数：[语言代码, off] 3. 开启调试模式可输出日志
+#!整理时间：2026.02.14 17:05
+
+############################
+# 阻断 QUIC/UDP，强制 TCP
+############################
+[Rule]
+AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP)),REJECT
+AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP)),REJECT
+AND,((DOMAIN-SUFFIX,ggpht.com),(PROTOCOL,UDP)),REJECT
+
+############################
+# 阻断广告/跟踪域名
+############################
+DOMAIN, ad.youtube.com, REJECT
+DOMAIN, ad-access.youtube.com, REJECT
+DOMAIN, analytics.youtube.com, REJECT
+DOMAIN, counter.youtube.com, REJECT
+DOMAIN, s.youtube.com, REJECT
+DOMAIN, doubleclick.net, REJECT
+
+############################
+# Map Local 辅助去广告 + 屏蔽统计
+############################
+[Map Local]
+^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200
+^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event\? data-type=text data="" status-code=200
+^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/generate_204\? data-type=text data="" status-code=200
+^https?:\/\/www\.youtube\.com\/pagead\/ data-type=text data="" status-code=200
+^https?:\/\/www\.youtube\.com\/api\/stats\/ data-type=text data="" status-code=200
+
+############################
+# 核心响应脚本：去广告 + 界面净化 + 翻译
+############################
+[Script]
+youtube-response = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch)(\?.*)?$, requires-body=1, max-size=-1, binary-body-mode=1, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js, argument="{\"lyricLang\":\"{{{歌词翻译语言}}}\",\"captionLang\":\"{{{字幕翻译语言}}}\",\"blockUpload\":{{{屏蔽上传按钮}}},\"blockImmersive\":{{{屏蔽选段按钮}}},\"blockShorts\":{{{屏蔽Shorts按钮}}},\"debug\":{{{启用调试模式}}}}"
+
+youtube-adblock = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|search|player), requires-body=1, binary-body-mode=1, max-size=2097152, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/youtube.js
+
+############################
+# JSON / Proto 双协议字幕翻译
+############################
+yt-player-req-json = type=http-request, pattern=^https?:\/\/(www|m|tv)\.youtube\.com\/youtubei\/v1\/player\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_request.js, requires-body=true
+yt-player-res-json = type=http-response, pattern=^https?:\/\/(www|m|tv)\.youtube\.com\/youtubei\/v1\/player\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_response.js, requires-body=true
+
+yt-player-req-proto = type=http-request, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/player\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_request.js, requires-body=true, binary-body-mode=true
+yt-player-res-proto = type=http-response, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/player\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_response.js, requires-body=true, binary-body-mode=true
+
+# TimedText 字幕翻译
+yt-timedtext-req = type=http-request, pattern=^https?:\/\/(www|m)\.youtube\.com\/api\/timedtext\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_request.js
+yt-timedtext-official = type=http-response, pattern=^https?:\/\/(www|m)\.youtube\.com\/api\/timedtext\?.*subtype=(Official|External), script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Composite_Subtitles_response.js, requires-body=true
+yt-timedtext-translate = type=http-response, pattern=^https?:\/\/(www|m)\.youtube\.com\/api\/timedtext\?.*subtype=Translate, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_Translate_response.js, requires-body=true
+
+############################
+# YouTube Music 歌词翻译
+############################
+ytmusic-browse-json = type=http-request, pattern=^https?:\/\/music\.youtube\.com\/youtubei\/v1\/browse\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_request.js, requires-body=true
+ytmusic-browse-proto = type=http-request, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/browse\?, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_request.js, requires-body=true, binary-body-mode=true
+ytmusic-translate-json = type=http-response, pattern=^https?:\/\/music\.youtube\.com\/youtubei\/v1\/browse\?.*subtype=Translate, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_Translate_response.js, requires-body=true
+ytmusic-translate-proto = type=http-response, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/browse\?.*subtype=Translate, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_Translate_response.js, requires-body=true, binary-body-mode=true
+
+############################
+# MITM 全域配置
+############################
+[MITM]
+hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com, www.youtube.com, m.youtube.com, tv.youtube.com, music.youtube.com
