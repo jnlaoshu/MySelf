@@ -1,6 +1,11 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
 # 优化时间: 2026.02.14 12:15
 
+# 自动更新配置 (如需启用请取消注释)
+# auto_update:
+#   url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
+#   interval: 86400
+
 # --- 基础配置 ---
 ipv6: true
 http_port: 3080
