@@ -1,101 +1,67 @@
-请把下来Spotify相关代码进行整合生成一份Egern可用的模块代码：#!name=Spotify歌词增强
-#!desc=将Spotify的外语歌词翻译为简体中文，并提供双语翻译支持。
-#!author=VirgilClyne[https://github.com/VirgilClyne]
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
-#!category=BetaModule
-#!openUrl=https://apps.apple.com/app/id324684580
-#!tag=功能增强
-#!loon_version=3.2.4(787)
-#!homepage=https://hub.kelee.one
-#!date=2025-05-13 15:17:08
+#!name=YouTube 修复版 (Ads+TransFix)
+#!desc=修正翻译报错：开启 Binary 模式支持 Protobuf 字幕流，解决点击翻译时的加载错误。
+#!author=融合 Maasea + VirgilClyne (Fix: Gemini)
+#!arguments=屏蔽上传按钮:true,屏蔽选段按钮:true,屏蔽Shorts按钮:false,启用调试模式:false
+#!整理时间：2026.02.14
 
-[Script]
-跟踪响应·JSON = type=http-response, pattern=^https?:\/\/api\.spotify\.com\/v1\/tracks\?, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js, requires-body=true
-
-歌词请求·JSON = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true
-
-歌词请求·Proto = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*), script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true, binary-body-mode=true
-
-翻译歌词响应·JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true
-
-翻译歌词响应·Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true, binary-body-mode=true
-
-外部歌词响应·JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true
-
-外部歌词响应·Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true, binary-body-mode=true
-
-[MITM]
-hostname = %APPEND% api.spotify.com, spclient.wg.spotify.com
-
-#!name=Spotify歌词增强
-#!desc=将Spotify的外语歌词翻译为简体中文，并提供双语翻译支持。
-#!author=VirgilClyne[https://github.com/VirgilClyne]
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
-#!category=BetaModule
-#!openUrl=https://apps.apple.com/app/id324684580
-#!tag=功能增强
-#!loon_version=3.2.4(787)
-#!homepage=https://github.com/luestr/ProxyResource/blob/main/README.md
-#!date=2025-05-13 15:17:08
-
-[Script]
-跟踪响应·JSON = type=http-response, pattern=^https?:\/\/api\.spotify\.com\/v1\/tracks\?, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js, requires-body=true
-
-歌词请求·JSON = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true
-
-歌词请求·Proto = type=http-request, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*), script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js, requires-body=true, binary-body-mode=true
-
-翻译歌词响应·JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true
-
-翻译歌词响应·Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=Translate, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js, requires-body=true, binary-body-mode=true
-
-外部歌词响应·JSON = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/(.+)\?(.*)format=json(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true
-
-外部歌词响应·Proto = type=http-response, pattern=^https?:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/\w+\?(.*)subtype=External, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js, requires-body=true, binary-body-mode=true
-
-[MITM]
-hostname = %APPEND% api.spotify.com, spclient.wg.spotify.com
-
-#!name=Spotify去广告
-#!desc=移除播放广告，恢复歌手和专辑列表的正常展示。修改插件自定义配置项需要重新登陆方可生效。
-#!author=001ProMax[https://github.com/001ProMax]
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Spotify.png
-#!category=BetaModule
-#!openUrl=https://apps.apple.com/app/id324684580
-#!tag=去广告
-#!loon_version=3.2.4(787)
-#!homepage=https://hub.kelee.one
-#!date=2025-08-10 15:30:17
-#!arguments=tab:false,useractivity:true
-
+############################
+# 1. 阻断 QUIC/UDP (强制 TCP)
+############################
 [Rule]
-AND,((DOMAIN-SUFFIX,spotify.com,extended-matching),(PROTOCOL,QUIC)),REJECT
+AND,((DOMAIN-SUFFIX,googlevideo.com),(PROTOCOL,UDP)),REJECT
+AND,((DOMAIN,youtubei.googleapis.com),(PROTOCOL,UDP)),REJECT
+AND,((DOMAIN-SUFFIX,ggpht.com),(PROTOCOL,UDP)),REJECT
 
-[URL Rewrite]
-^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header
+############################
+# 2. 阻断广告/跟踪域名
+############################
+DOMAIN, ad.youtube.com, REJECT
+DOMAIN, ad-access.youtube.com, REJECT
+DOMAIN, analytics.youtube.com, REJECT
+DOMAIN, counter.youtube.com, REJECT
+DOMAIN, s.youtube.com, REJECT
+DOMAIN, doubleclick.net, REJECT
 
+############################
+# 3. 辅助去广告 (Map Local)
+############################
 [Map Local]
-^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/pendragon\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200
+^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event\? data-type=text data="" status-code=200
+^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/generate_204\? data-type=text data="" status-code=200
+^https?:\/\/www\.youtube\.com\/pagead\/ data-type=text data="" status-code=200
+^https?:\/\/www\.youtube\.com\/api\/stats\/ data-type=text data="" status-code=200
 
+############################
+# 4. 核心脚本：Maasea (仅去广告)
+############################
 [Script]
-Protobuf处理 = type=http-response, pattern=^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com(?::443)?\/(?:bootstrap|user-customization-service), script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js, requires-body=true, binary-body-mode=true, timeout=5, argument="[{{{tab}}},{{{useractivity}}}]"
+# 使用 Maasea 处理核心 Player/Browse 请求以去除广告
+# 关键设置：lyricLang 和 captionLang 设置为 "off"，避免注入冲突
+youtube-response = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch)(\?.*)?$, requires-body=1, max-size=-1, binary-body-mode=1, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js, argument="{\"lyricLang\":\"off\",\"captionLang\":\"off\",\"blockUpload\":{{{屏蔽上传按钮}}},\"blockImmersive\":{{{屏蔽选段按钮}}},\"blockShorts\":{{{屏蔽Shorts按钮}}},\"debug\":{{{启用调试模式}}}}"
 
+############################
+# 5. 字幕翻译 (关键修正区域)
+############################
+# 修正说明：
+# 1. 移除了 request 脚本（防止请求被篡改导致无限转圈）。
+# 2. 保留 response 脚本（负责将返回的字幕加工成双语）。
+# 3. [核心修复] 增加了 binary-body-mode=1，支持 Protobuf 格式。
+
+# 处理官方/外挂字幕
+yt-timedtext-official = type=http-response, pattern=^https?:\/\/(www|m)\.youtube\.com\/api\/timedtext\?.*subtype=(Official|External), script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Composite_Subtitles_response.js, requires-body=true, binary-body-mode=1
+
+# 处理自动生成的机器翻译字幕 (点击"翻译"时触发此接口)
+yt-timedtext-translate = type=http-response, pattern=^https?:\/\/(www|m)\.youtube\.com\/api\/timedtext\?.*subtype=Translate, script-path=https://kelee.one/Resource/Script/YouTube/YouTube_Subtitles_Translate/YouTube_Subtitles_Translate_response.js, requires-body=true, binary-body-mode=1
+
+############################
+# 6. YouTube Music (可选)
+############################
+# 如果不需要 Music 歌词翻译，建议保持注释状态以提升稳定性
+# ytmusic-translate-proto = ...
+
+############################
+# 7. MITM 全域配置
+############################
 [MITM]
-hostname = %APPEND% *-spclient.spotify.com, spclient.wg.spotify.com
-
-
-#!name=Spotify(>=iOS15)
-#!desc=2025.06.27 部分解锁premium,音质不能设置为超高(建议登录后再打开脚本,重启app等待脚本生效)
-# 仓库地址 https://github.com/app2smile/rules
-# 功能: 1.去除播放广告 2.歌手/专辑列表正常展示 3.去除随机播放
-
-[Header Rewrite]
-# if-none-match返回304状态码
-http-request ^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/user-customization-service\/v1\/customize$ header-del if-none-match
-
-[MITM]
-hostname = %APPEND% spclient.wg.spotify.com, *spclient.spotify.com
-
-[Script]
-spotify-json = type=http-request,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/,requires-body=0,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
-spotify-proto = type=http-response,pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$,requires-body=1,binary-body-mode=1,max-size=0,script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js,script-update-interval=0
+hostname = %APPEND% *.googlevideo.com, youtubei.googleapis.com, www.youtube.com, m.youtube.com, tv.youtube.com, music.youtube.com
