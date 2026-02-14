@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.14 12:15
+# 优化时间: 2026.02.14 14:00
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -364,7 +364,7 @@ modules:
     url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
     enabled: true
   - name: Spotify
-    url: https://raw.githubusercontent.com/app2smile/rules/master/module/spotify.module
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Spotify.yaml
     enabled: true
   - name: YouTube Enhance
     url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
