@@ -250,10 +250,7 @@ policy_groups:
 rules:
   # 1. 广告拦截
   - rule_set:
-      match: https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AdGuardChinese.yaml
-      policy: 猎杀广告
-  - rule_set:
-      match: https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/adrules.list
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdRule.yaml
       policy: 猎杀广告
 
   # 2. 局域网与基础直连
