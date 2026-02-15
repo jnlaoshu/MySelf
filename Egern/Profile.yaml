@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.14 14:00
+# 优化时间: 2026.02.15 22:31
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -56,10 +56,6 @@ dns:
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent_All.list
         value: DNSPod
-    # 国内综合
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax_Domain.list
-        value: Default
     # 最终兜底
     - wildcard:
         match: '*'
@@ -73,37 +69,42 @@ policy_groups:
       name: 香港节点
       policies: [全部节点]
       flatten: true
-      filter: 🇭🇰|香港|HK|Hong
+      filter: "🇭🇰|香港|Hong\\s*Kong|HongKong|HK(?!G)|HKG"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+
   - auto_test:
       name: 美国节点
       policies: [全部节点]
       flatten: true
-      filter: 🇺🇸|美国|US|States|American
+      filter: "🇺🇸|美国|United\\s*States|USA|US(?!A)|States|American"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+
   - auto_test:
       name: 台湾节点
       policies: [全部节点]
       flatten: true
-      filter: 🇹🇼|台湾|TW|Tai
+      filter: "🇹🇼|台湾|Taiwan|TW(?!N)|Tai|TWN"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+
   - auto_test:
       name: 日本节点
       policies: [全部节点]
       flatten: true
-      filter: 🇯🇵|日本|JP|Japan
+      filter: "🇯🇵|日本|Japan|JP(?!N)|JPN"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+
   - auto_test:
       name: 狮城节点
       policies: [全部节点]
       flatten: true
-      filter: 🇸🇬|新加坡|狮城|SG|Singapore
+      filter: "🇸🇬|新加坡|狮城|Singapore|SG(?!P)|SGP"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+
   - auto_test:
       name: 韩国节点
       policies: [全部节点]
       flatten: true
-      filter: 🇰🇷|韩国|KR|KOR|Korea
+      filter: "🇰🇷|韩国|Korea|KR(?!W)|KOR"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
   # 2. 节点筛选与来源
@@ -111,8 +112,9 @@ policy_groups:
       name: 其他节点
       policies: [全部节点]
       flatten: true
-      filter: ^((?!🇭🇰|香港|HK|Hong|🇹🇼|台湾|TW|Tai|🇯🇵|日本|JP|Japan|🇸🇬|狮城|SG|Singapore|🇰🇷|韩国|KR|KOR|Korea|🇺🇸|美国|US|States|American).)*$
+      filter: "^(?!.*(🇭🇰|香港|Hong\\s*Kong|HongKong|HK(?!G)|HKG|🇺🇸|美国|United\\s*States|USA|US(?!A)|States|American|🇹🇼|台湾|Taiwan|TW(?!N)|Tai|TWN|🇯🇵|日本|Japan|JP(?!N)|JPN|🇸🇬|新加坡|狮城|Singapore|SG(?!P)|SGP|🇰🇷|韩国|Korea|KR(?!W)|KOR)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
   - external:
       name: 全部节点
       type: select
@@ -334,13 +336,8 @@ rules:
       match: CN
       policy: DIRECT
       no_resolve: true
-
-  # 6. 国外流量代理兜底
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Proxy/Proxy_All.list
-      policy: 自选策略
   
-  # 7. 最终兜底
+  # 6. 最终兜底
   - default:
       policy: 自选策略
 
