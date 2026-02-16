@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.15 22:31
+# 优化时间: 2026.02.16 08:36
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -250,7 +250,7 @@ policy_groups:
 rules:
   # 1. 广告拦截
   - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdRule.yaml
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
 
   # 2. 局域网与基础直连
