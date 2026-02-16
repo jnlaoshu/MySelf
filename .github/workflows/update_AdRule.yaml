@@ -1,4 +1,4 @@
-name: Update AdRule
+name: Update AdBlock Rule
 
 on:
   schedule:
@@ -35,9 +35,9 @@ jobs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         
-        # 强制添加生成的规则文件
-        git add Egern/Rule/AdRule.yaml
+        # 强制添加新文件 AdBlock.yaml
+        git add Egern/Rule/AdBlock.yaml
         
-        # 提交更改 (如果没有变化则跳过)
-        git commit -m "Auto-update: Egern/Rule/AdRule.yaml" || exit 0
+        # 提交更改
+        git commit -m "Auto-update: Egern/Rule/AdBlock.yaml" || exit 0
         git push
