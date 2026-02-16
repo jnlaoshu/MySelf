@@ -5,7 +5,7 @@ from datetime import datetime
 
 # ================= 配置区域 =================
 # 输出文件的完整路径
-OUTPUT_FILE = "Egern/Rule/AdRule.yaml"
+OUTPUT_FILE = "Egern/Rule/AdBlock.yaml"
 
 # 规则源
 URLS = {
@@ -90,7 +90,7 @@ def main():
     # 5. 写入文件
     try:
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-            f.write(f"# Egern AdRule (Merged)\n")
+            f.write(f"# Egern AdBlock Rule (Merged)\n")
             f.write(f"# Total Domains: {len(sorted_domains)}\n")
             f.write(f"# Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write(f"# Sources: Repcz, AdRules, Anti-AD\n\n")
