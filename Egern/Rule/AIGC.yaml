@@ -1,88 +1,73 @@
-# >  https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新：2026.02.09 09:43
+# > https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+# 更新：2026.02.16 21:25
 
 domain_suffix_set:
-  # --- OpenAI & ChatGPT ---
-  - openai.com
+  # --- OpenAI (ChatGPT / Sora / DALL-E) ---
   - chatgpt.com
+  - openai.com
   - oaistatic.com
   - oaiusercontent.com
-  - openaiapi-site.azureedge.net
-  - openaicom.imgix.net
-  - openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
-  - openaicomproductionae4b.blob.core.windows.net
-  - production-openaicom-storage.azureedge.net
-  - chatgpt-async-web.do-ai.run
-  - chatgpt.livekit.cloud
-  - host.livekit.cloud
-  - turn.livekit.cloud
-  
+  - chat.com
+  - sora.com
+  - ai.com
+  # OpenAI Infrastructure
+  - stripe.com
+  - auth0.com
+  - identrust.com
+  - statsigapi.net
+  - featuregates.org
+  - livekit.cloud
+  - azureedge.net
+  - azurefd.net
+
   # --- Anthropic (Claude) ---
   - anthropic.com
   - claude.ai
-  - anthropic.edusercontent.com
+  - claude.com
+  - claudeusercontent.com
 
-  # --- Google (Gemini & Bard) ---
-  - gemini.google.com
-  - bard.google.com
-  - ai.google.dev
-  - aistudio.google.com
-  - alkalimakersuite-pa.clients6.google.com
-  - makersuite-pa.clients6.google.com
-  - proactivebackend-pa.googleapis.com
+  # --- Google (Gemini / Bard / NotebookLM) ---
+  - gemini.google
+  - deepmind.com
+  - deepmind.google
+  - generativeai.google
+  - googleusercontent.com
   - generativelanguage.googleapis.com
-  
-  # --- Microsoft (Copilot & Bing AI) ---
+  - proactivebackend-pa.googleapis.com
+  - aistudio.google.com
+  - notebooklm.google.com
+
+  # --- Microsoft (Copilot / Bing) ---
   - copilot.microsoft.com
+  - bing.com
+  - bingapis.com
   - sydney.bing.com
   - edgeservices.bing.com
-  - www.bing.com
-  - c.bing.com
-  - chat.bing.com
-  - dicord.com # 这里的 discord 通常为 Midjourney 依赖，如下
-  
-  # --- Midjourney & Discord (绘图依赖) ---
-  - midjourney.com
-  - midjourney.app
-  - discord.com
-  - discordapp.com
-  - discordapp.net
-  
-  # --- Meta (Llama/Meta AI) ---
-  - meta.ai
-  - llama.meta.com
-  
+
   # --- xAI (Grok) ---
   - grok.com
   - x.ai
-  
-  # --- Perplexity AI ---
+
+  # --- Meta AI ---
+  - meta.ai
+  - imagine.meta.com
+
+  # --- Others (Perplexity / Poe / Mistral / Groq) ---
   - perplexity.ai
-  
-  # --- Quora (Poe) ---
+  - pplx.ai
   - poe.com
-  - poecdn.net
-  
-  # --- GitHub Copilot ---
-  - copilot-proxy.githubusercontent.com
-  - copilot.githubusercontent.com
-  
-  # --- Stability AI (Stable Diffusion) ---
-  - stability.ai
-  - stable-diffusion.com
-  
-  # --- Groq ---
-  - groq.com
-  
-  # --- Hugging Face ---
-  - huggingface.co
-  - huggingface.tech
-
-  # --- Jasper ---
-  - jasper.ai
-
-  # --- Mistral AI ---
   - mistral.ai
+  - groq.com
+  - huggingface.co
+  - stability.ai
+
+  # --- Midjourney & Discord ---
+  - midjourney.com
+  - mj.run
+  - discord.com
+  - discord.gg
+  - discordapp.com
+  - discordapp.net
 
 domain_keyword_set:
   - openai
