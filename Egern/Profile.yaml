@@ -50,7 +50,7 @@ dns:
       - h3://dns.alidns.com/dns-query
   forward:
     # 阿里系域名 -> 阿里 DNS
-    - alibaba.com: AliDNS
+    alibaba.com: AliDNS
     alibabacloud.com: AliDNS
     aliyun.com: AliDNS
     alipay.com: AliDNS
