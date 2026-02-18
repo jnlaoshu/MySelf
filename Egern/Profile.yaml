@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.18 07:00
+# 优化时间: 2026.02.19 01:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -50,42 +50,36 @@ dns:
       - h3://dns.alidns.com/dns-query
   forward:
     # 阿里系域名 -> 阿里 DNS
-    - domain_suffix:
-        match:
-          - alibaba.com
-          - alibabacloud.com
-          - aliyun.com
-          - alipay.com
-          - taobao.com
-          - tmall.com
-          - amap.com
-          - youku.com
-          - dingtalk.com
-          - ele.me
-          - cainiao.com
-          - hema.com
-          - lazada.com
-        value: AliDNS
+    alibaba.com: AliDNS
+    alibabacloud.com: AliDNS
+    aliyun.com: AliDNS
+    alipay.com: AliDNS
+    taobao.com: AliDNS
+    tmall.com: AliDNS
+    amap.com: AliDNS
+    youku.com: AliDNS
+    dingtalk.com: AliDNS
+    ele.me: AliDNS
+    cainiao.com: AliDNS
+    hema.com: AliDNS
+    lazada.com: AliDNS
+    
     # 腾讯系域名 -> DNSPod
-    - domain_suffix:
-        match:
-          - tencent.com
-          - qq.com
-          - wechat.com
-          - weixin.qq.com
-          - qcloud.com
-          - cloudbase.net
-          - weiyun.com
-          - qpic.cn
-          - gtimg.com
-          - idqqimg.com
-          - tim.qq.com
-          - smoba.qq.com
-        value: DNSPod
-    # 最终兜底
-    - wildcard:
-        match: '*'
-        value: Default
+    tencent.com: DNSPod
+    qq.com: DNSPod
+    wechat.com: DNSPod
+    weixin.qq.com: DNSPod
+    qcloud.com: DNSPod
+    cloudbase.net: DNSPod
+    weiyun.com: DNSPod
+    qpic.cn: DNSPod
+    gtimg.com: DNSPod
+    idqqimg.com: DNSPod
+    tim.qq.com: DNSPod
+    smoba.qq.com: DNSPod
+    
+    # 最终兜底 (注意 * 需要加引号)
+    "*": Default
 
   public_ip_lookup_url: https://myip.ipip.net
 
