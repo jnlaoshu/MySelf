@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.19 02:00
+# 优化时间: 2026.02.19 23:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -50,86 +50,86 @@ dns:
       - h3://dns.alidns.com/dns-query
   forward:
     # --- 阿里系 (AliDNS) ---
-    - wildcard:
-        match: '*.alibaba.com'
+    - domain_suffix:
+        match: alibaba.com
         value: AliDNS
-    - wildcard:
-        match: '*.alibabacloud.com'
+    - domain_suffix:
+        match: alibabacloud.com
         value: AliDNS
-    - wildcard:
-        match: '*.aliyun.com'
+    - domain_suffix:
+        match: aliyun.com
         value: AliDNS
-    - wildcard:
-        match: '*.alipay.com'
+    - domain_suffix:
+        match: alipay.com
         value: AliDNS
-    - wildcard:
-        match: '*.taobao.com'
+    - domain_suffix:
+        match: taobao.com
         value: AliDNS
-    - wildcard:
-        match: '*.tmall.com'
+    - domain_suffix:
+        match: tmall.com
         value: AliDNS
-    - wildcard:
-        match: '*.amap.com'
+    - domain_suffix:
+        match: amap.com
         value: AliDNS
-    - wildcard:
-        match: '*.youku.com'
+    - domain_suffix:
+        match: youku.com
         value: AliDNS
-    - wildcard:
-        match: '*.dingtalk.com'
+    - domain_suffix:
+        match: dingtalk.com
         value: AliDNS
-    - wildcard:
-        match: '*.ele.me'
+    - domain_suffix:
+        match: ele.me
         value: AliDNS
-    - wildcard:
-        match: '*.cainiao.com'
+    - domain_suffix:
+        match: cainiao.com
         value: AliDNS
-    - wildcard:
-        match: '*.hema.com'
+    - domain_suffix:
+        match: hema.com
         value: AliDNS
-    - wildcard:
-        match: '*.lazada.com'
+    - domain_suffix:
+        match: lazada.com
         value: AliDNS
 
     # --- 腾讯系 (DNSPod) ---
-    - wildcard:
-        match: '*.tencent.com'
+    - domain_suffix:
+        match: tencent.com
         value: DNSPod
-    - wildcard:
-        match: '*.qq.com'
+    - domain_suffix:
+        match: qq.com
         value: DNSPod
-    - wildcard:
-        match: '*.wechat.com'
+    - domain_suffix:
+        match: wechat.com
         value: DNSPod
-    - wildcard:
-        match: '*.weixin.qq.com'
+    - domain_suffix:
+        match: weixin.qq.com
         value: DNSPod
-    - wildcard:
-        match: '*.qcloud.com'
+    - domain_suffix:
+        match: qcloud.com
         value: DNSPod
-    - wildcard:
-        match: '*.cloudbase.net'
+    - domain_suffix:
+        match: cloudbase.net
         value: DNSPod
-    - wildcard:
-        match: '*.weiyun.com'
+    - domain_suffix:
+        match: weiyun.com
         value: DNSPod
-    - wildcard:
-        match: '*.qpic.cn'
+    - domain_suffix:
+        match: qpic.cn
         value: DNSPod
-    - wildcard:
-        match: '*.gtimg.com'
+    - domain_suffix:
+        match: gtimg.com
         value: DNSPod
-    - wildcard:
-        match: '*.idqqimg.com'
+    - domain_suffix:
+        match: idqqimg.com
         value: DNSPod
-    - wildcard:
-        match: '*.tim.qq.com'
+    - domain_suffix:
+        match: tim.qq.com
         value: DNSPod
-    - wildcard:
-        match: '*.smoba.qq.com'
+    - domain_suffix:
+        match: smoba.qq.com
         value: DNSPod
 
     # --- 最终兜底 ---
-    - wildcard:
+    - domain_wildcard:
         match: '*'
         value: Default
 
