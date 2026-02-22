@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.19 23:30
+# 优化时间: 2026.02.22 12:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -133,7 +133,7 @@ dns:
         match: '*'
         value: Default
 
-  public_ip_lookup_url: https://myip.ipip.net
+  public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
 policy_groups:
