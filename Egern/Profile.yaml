@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.28 22:38
+# 优化时间: 2026.02.28 22:46
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -126,13 +126,13 @@ dns:
         match: smoba.qq.com
         value: DNSPod
 
-# --- 系统 DNS 兜底 (优化本地解析) ---
+    # --- 系统 DNS 兜底 (优化本地解析) ---
     - domain_suffix:
         match: local
-        value: System
+        value: system
     - domain_suffix:
         match: lan
-        value: System
+        value: system
     - domain_suffix:
         match: router.asus.com # 可根据你的实际路由器域名替换
         value: system
@@ -145,7 +145,6 @@ dns:
   public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
-# (策略组正则匹配已非常完美，无需改动)
 policy_groups:
   # 1. 自动测速节点 (地区分类)
   - auto_test:
