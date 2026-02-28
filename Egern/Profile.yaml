@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.23 11:28
+# 优化时间: 2026.02.28 22:35
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -36,7 +36,6 @@ include_local_networks: false
 # --- DNS 配置 ---
 dns:
   bootstrap:
-    - system
     - 223.5.5.5
     - 119.29.29.29
   upstreams:
@@ -48,6 +47,13 @@ dns:
       - https://doh.pub/dns-query
       - h3://dns.alidns.com/dns-query
   forward:
+    - domain_suffix:
+        match: local
+        value: system
+    - domain_suffix:
+        match: router.asus.com # 可根据你的实际路由器域名替换
+        value: system
+
     # --- 阿里系 (AliDNS) ---
     - domain_suffix:
         match: alibaba.com
@@ -127,6 +133,14 @@ dns:
         match: smoba.qq.com
         value: DNSPod
 
+# --- 系统 DNS 兜底 (优化本地解析) ---
+    - domain_suffix:
+        match: local
+        value: System
+    - domain_suffix:
+        match: lan
+        value: System
+
     # --- 最终兜底 ---
     - domain_wildcard:
         match: '*'
@@ -135,6 +149,7 @@ dns:
   public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
+# (策略组正则匹配已非常完美，无需改动)
 policy_groups:
   # 1. 自动测速节点 (地区分类)
   - auto_test:
