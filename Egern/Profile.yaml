@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.28 22:35
+# 优化时间: 2026.02.28 22:38
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -47,13 +47,6 @@ dns:
       - https://doh.pub/dns-query
       - h3://dns.alidns.com/dns-query
   forward:
-    - domain_suffix:
-        match: local
-        value: system
-    - domain_suffix:
-        match: router.asus.com # 可根据你的实际路由器域名替换
-        value: system
-
     # --- 阿里系 (AliDNS) ---
     - domain_suffix:
         match: alibaba.com
@@ -140,6 +133,9 @@ dns:
     - domain_suffix:
         match: lan
         value: System
+    - domain_suffix:
+        match: router.asus.com # 可根据你的实际路由器域名替换
+        value: system
 
     # --- 最终兜底 ---
     - domain_wildcard:
