@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.02.28 22:46
+# 优化时间: 2026.03.11 07:30
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -43,90 +43,26 @@ dns:
       - h3://dns.alidns.com/dns-query
     DNSPod:
       - https://doh.pub/dns-query
+    ByteDance:
+      - 180.184.1.1
+      - 180.184.2.2
     Default:
       - https://doh.pub/dns-query
       - h3://dns.alidns.com/dns-query
   forward:
-    # --- 阿里系 (AliDNS) ---
-    - domain_suffix:
-        match: alibaba.com
+    # 阿里系走阿里 DNS
+    - rule_set:
+        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba.list
         value: AliDNS
-    - domain_suffix:
-        match: alibabacloud.com
-        value: AliDNS
-    - domain_suffix:
-        match: aliyun.com
-        value: AliDNS
-    - domain_suffix:
-        match: alipay.com
-        value: AliDNS
-    - domain_suffix:
-        match: taobao.com
-        value: AliDNS
-    - domain_suffix:
-        match: tmall.com
-        value: AliDNS
-    - domain_suffix:
-        match: amap.com
-        value: AliDNS
-    - domain_suffix:
-        match: youku.com
-        value: AliDNS
-    - domain_suffix:
-        match: dingtalk.com
-        value: AliDNS
-    - domain_suffix:
-        match: ele.me
-        value: AliDNS
-    - domain_suffix:
-        match: cainiao.com
-        value: AliDNS
-    - domain_suffix:
-        match: hema.com
-        value: AliDNS
-    - domain_suffix:
-        match: lazada.com
-        value: AliDNS
-
-    # --- 腾讯系 (DNSPod) ---
-    - domain_suffix:
-        match: tencent.com
+    # 腾讯系走腾讯 DNS
+    - rule_set:
+        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent.list
         value: DNSPod
-    - domain_suffix:
-        match: qq.com
-        value: DNSPod
-    - domain_suffix:
-        match: wechat.com
-        value: DNSPod
-    - domain_suffix:
-        match: weixin.qq.com
-        value: DNSPod
-    - domain_suffix:
-        match: qcloud.com
-        value: DNSPod
-    - domain_suffix:
-        match: cloudbase.net
-        value: DNSPod
-    - domain_suffix:
-        match: weiyun.com
-        value: DNSPod
-    - domain_suffix:
-        match: qpic.cn
-        value: DNSPod
-    - domain_suffix:
-        match: gtimg.com
-        value: DNSPod
-    - domain_suffix:
-        match: idqqimg.com
-        value: DNSPod
-    - domain_suffix:
-        match: tim.qq.com
-        value: DNSPod
-    - domain_suffix:
-        match: smoba.qq.com
-        value: DNSPod
-
-    # --- 系统 DNS 兜底 (优化本地解析) ---
+    # 字节跳动系走火山引擎自建 DNS
+    - rule_set:
+        match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
+        value: ByteDance
+    # 系统与局域网兜底
     - domain_suffix:
         match: local
         value: system
@@ -134,14 +70,12 @@ dns:
         match: lan
         value: system
     - domain_suffix:
-        match: router.asus.com # 可根据你的实际路由器域名替换
+        match: router.asus.com
         value: system
-
-    # --- 最终兜底 ---
+    # 最终兜底 
     - domain_wildcard:
         match: '*'
         value: Default
-
   public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
@@ -355,6 +289,18 @@ rules:
       policy: DIRECT
 
   # 3. Apple 系统服务细分
+  - domain:
+      match: apps.apple.com
+      policy: DIRECT
+  - domain:
+      match: itunes.apple.com
+      policy: DIRECT
+  - domain:
+      match: buy.itunes.apple.com
+      policy: DIRECT
+  - domain_suffix:
+      match: mzstatic.com
+      policy: DIRECT
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
       policy: DIRECT
@@ -418,7 +364,12 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       policy: YouTube
 
-  # 5. 国内直连兜底
+  # 5. 国内大厂与常见域名直连
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
+      policy: DIRECT
+
+  # 6. 国内直连兜底
   - domain_suffix:
       match: cn
       policy: DIRECT
@@ -427,7 +378,7 @@ rules:
       policy: DIRECT
       no_resolve: true
 
-  # 6. 最终兜底
+  # 7. 最终兜底
   - default:
       policy: 自选策略
 
