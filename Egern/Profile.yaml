@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.03.11 07:30
+# 优化时间: 2026.03.11 07:36
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -51,15 +51,15 @@ dns:
       - h3://dns.alidns.com/dns-query
   forward:
     # 阿里系走阿里 DNS
-   - rule_set:
+    - rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba.list
         value: AliDNS
     # 腾讯系走腾讯 DNS
-  - rule_set:
+    - rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent.list
         value: DNSPod
     # 字节跳动系走火山引擎自建 DNS
-  - rule_set:
+    - rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
         value: ByteDance
     # 系统与局域网兜底
