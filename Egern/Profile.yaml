@@ -1,5 +1,5 @@
 # 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# 优化时间: 2026.03.11 07:56
+# 优化时间: 2026.03.11 08:06
 
 # 自动更新配置 (如需启用请取消注释)
 # auto_update:
@@ -159,37 +159,12 @@ policy_groups:
       policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
 
-  # 5. Apple 服务分流 (隐藏组)
-  - select:
-      name: TestFlight
-      policies: [美国节点, 自选策略]
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TestFlight.png
-      hidden: true
-  - select:
-      name: iCloud 
-      policies: [DIRECT]
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/iCloud.png
-      hidden: true
-  - select:
-      name: AppleProxy
-      policies: [美国节点, 自选策略]
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AppleProxy.png
-      hidden: true
-
-  # 6. 常用服务分流策略 (A-Z 排序)
+  # 5. 常用服务分流策略 (A-Z 排序)
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
-  - select:
-      name: Apple
-      policies: [DIRECT, 自选策略]
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
   - select:
       name: Bing
       policies: [美国节点, 自选策略]
@@ -266,7 +241,7 @@ policy_groups:
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
 
-  # 7. 去广告策略组
+  # 6. 去广告策略组
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
@@ -288,33 +263,7 @@ rules:
       match: ntp.org
       policy: DIRECT
 
-  # 3. Apple 系统服务细分
-  - domain:
-      match: apps.apple.com
-      policy: DIRECT
-  - domain:
-      match: itunes.apple.com
-      policy: DIRECT
-  - domain:
-      match: buy.itunes.apple.com
-      policy: DIRECT
-  - domain_suffix:
-      match: mzstatic.com
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-      policy: AppleProxy
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TestFlight.yaml
-      policy: TestFlight
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/iCloud.yaml
-      policy: iCloud
-
-  # 4. 关键应用分流 (A-Z 排序)
+  # 3. 关键应用分流 (A-Z 排序)
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
@@ -364,12 +313,12 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       policy: YouTube
 
-  # 5. 国内大厂与常见域名直连
+  # 4. 国内大厂与常见域名直连
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       policy: DIRECT
 
-  # 6. 国内直连兜底
+  # 5. 国内直连兜底
   - domain_suffix:
       match: cn
       policy: DIRECT
@@ -378,7 +327,7 @@ rules:
       policy: DIRECT
       no_resolve: true
 
-  # 7. 最终兜底
+  # 6. 最终兜底
   - default:
       policy: 自选策略
 
