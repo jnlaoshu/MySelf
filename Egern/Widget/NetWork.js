@@ -83,48 +83,25 @@ export default async function(ctx) {
       rows.push({ icon: 'xmark.circle.fill', color: '#FF6B6B', text: `节点IPv4：检测失败` });
     }
 
-    // --- 动态垂直重心平衡参数 ---
     const rowCount = rows.length;
-    let fontSize = 'footnote';
-    let iconSize = 13;
-    let rowGap = 5;
-    let titleContentSpacer = 6;
-    let extremeTopSpacer = 5; // 基础位移
+    let fontSize = 'footnote', iconSize = 13, rowGap = 5, titleContentSpacer = 6, extremeTopSpacer = 5;
 
     if (rowCount <= 4) {
-      fontSize = 'body';
-      iconSize = 17;
-      rowGap = 10;
-      titleContentSpacer = 10;
-      extremeTopSpacer = 12; // 标题更往下靠一点，增加“呼吸感”
+      fontSize = 'body'; iconSize = 17; rowGap = 10; titleContentSpacer = 10; extremeTopSpacer = 12;
     } else if (rowCount === 5) {
-      fontSize = 'body';
-      iconSize = 17;
-      rowGap = 7;
-      titleContentSpacer = 8;
-      extremeTopSpacer = 10;
+      fontSize = 'body'; iconSize = 17; rowGap = 7; titleContentSpacer = 8; extremeTopSpacer = 10;
     } else if (rowCount === 6) {
-      fontSize = 'subheadline';
-      iconSize = 15;
-      rowGap = 5;
-      titleContentSpacer = 6;
-      extremeTopSpacer = 8;
+      fontSize = 'subheadline'; iconSize = 15; rowGap = 5; titleContentSpacer = 6; extremeTopSpacer = 8;
     }
 
     const rowElements = rows.map(r => ({
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 8,
+      type: 'stack', direction: 'row', alignItems: 'center', gap: 8,
       children: [
         { type: 'image', src: `sf-symbol:${r.icon}`, color: r.color, width: iconSize, height: iconSize },
         { 
-          type: 'text', 
-          text: r.text, 
+          type: 'text', text: r.text, 
           font: { size: fontSize, weight: 'medium' }, 
-          textColor: '#F5F5F7', 
-          maxLines: 1, 
-          minScale: 0.45 
+          textColor: '#F5F5F7', maxLines: 1, minScale: 0.45 
         }
       ]
     }));
@@ -136,66 +113,32 @@ export default async function(ctx) {
       type: 'widget',
       padding: 16,
       backgroundGradient: {
-        type: 'linear',
-        colors: ['#8E261E', '#4D0F0A'], 
-        startPoint: { x: 0, y: 0 },
-        endPoint: { x: 1, y: 1 }
+        type: 'linear', colors: ['#8E261E', '#4D0F0A'], startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 }
       },
       children: [
-        // 1. 顶部喘息空间（防止标题太靠上）
         { type: 'spacer', length: extremeTopSpacer },
-        // 2. 标题区
         {
-          type: 'stack',
-          direction: 'row',
-          alignItems: 'center',
-          gap: 8,
+          type: 'stack', direction: 'row', alignItems: 'center', gap: 8,
           children: [
             { type: 'image', src: topIconName, color: '#FFFFFF', width: 18, height: 18 },
             { 
               type: 'text', text: title, 
               font: { size: 'headline', weight: 'bold' }, 
-              textColor: '#FFFFFF',
-              maxLines: 1, minScale: 0.8
+              textColor: '#FFFFFF', maxLines: 1, minScale: 0.8
             }
           ]
         },
-        // 3. 标题与内容间距
         { type: 'spacer', length: titleContentSpacer },
-        // 4. 内容主体
-        {
-          type: 'stack',
-          direction: 'column',
-          alignItems: 'start',
-          gap: rowGap, 
-          children: rowElements
-        },
-        // 5. 底部强制弹性填充（把整体内容往上拎，防止沉底）
+        { type: 'stack', direction: 'column', alignItems: 'start', gap: rowGap, children: rowElements },
         { type: 'spacer' }
       ]
     };
 
   } catch (err) {
     return {
-      type: 'widget',
-      padding: 16,
-      backgroundGradient: {
-        type: 'linear', colors: ['#8E261E', '#4D0F0A'], 
-        startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 }
-      },
-      children: [
-        { type: 'spacer', length: 10 },
-        {
-          type: 'stack', direction: 'row', alignItems: 'center', gap: 8,
-          children: [
-            { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: '#FFFFFF', width: 18, height: 18 },
-            { type: 'text', text: '信息获取失败', font: { size: 'headline', weight: 'bold' }, textColor: '#FFFFFF' }
-          ]
-        },
-        { type: 'spacer', length: 10 },
-        { type: 'text', text: '请检查网络连接或脚本配置', font: { size: 'subheadline' }, textColor: '#F5F5F7' },
-        { type: 'spacer' }
-      ]
+      type: 'widget', padding: 16,
+      backgroundGradient: { type: 'linear', colors: ['#8E261E', '#4D0F0A'], startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [{ type: 'text', text: '加载失败，请检查网络', font: { size: 'subheadline' }, textColor: '#F5F5F7' }]
     };
   }
 }
