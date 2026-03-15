@@ -8,9 +8,10 @@
  */
 
 export default async function(ctx) {
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1E212A' }, { light: '#F2F2F7', dark: '#0D0E15' }];
+  // 🎨 Apple HIG 原生级自适应配色
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#F5F5F7' };
+  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
 
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
@@ -62,14 +63,14 @@ export default async function(ctx) {
           { type: 'image', src: 'sf-symbol:timer', color: TEXT_MAIN, width: 18, height: 18 },
           { type: 'spacer', length: 4 },
           { type: 'text', text: '时光倒数', font: { size: 17, weight: 'bold' }, textColor: TEXT_MAIN },
-          { type: 'text', text: titleAddon, font: { size: 15, weight: 'bold' }, textColor: { light: '#FF9500', dark: '#FFD426' } }
+          { type: 'text', text: titleAddon, font: { size: 15, weight: 'bold' }, textColor: { light: '#FF9500', dark: '#FFD60A' } }
       ]},
       { type: 'spacer', length: 14 },
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 10,
         children: [
-          { i: "building.columns.fill", col: { light: '#FF9500', dark: '#FFD426' }, n: "法定", t: format("legal") },
-          { i: "moon.stars.fill", col: { light: '#FF3B30', dark: '#FF9570' }, n: "民俗", t: format("folk") },
-          { i: "globe.americas.fill", col: { light: '#007AFF', dark: '#59B2FF' }, n: "国际", t: format("intl") }
+          { i: "building.columns.fill", col: { light: '#FF9500', dark: '#FFD60A' }, n: "法定", t: format("legal") },
+          { i: "moon.stars.fill", col: { light: '#FF3B30', dark: '#FF453A' }, n: "民俗", t: format("folk") },
+          { i: "globe.americas.fill", col: { light: '#007AFF', dark: '#0A84FF' }, n: "国际", t: format("intl") }
         ].filter(c => c.t).map(cat => ({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 8, children: [
             { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
