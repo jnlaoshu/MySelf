@@ -63,7 +63,7 @@ export default async function(ctx) {
           { type: 'image', src: 'sf-symbol:timer', color: TEXT_MAIN, width: 18, height: 18 },
           { type: 'spacer', length: 4 },
           { type: 'text', text: '时光倒数', font: { size: 17, weight: 'bold' }, textColor: TEXT_MAIN },
-          { type: 'text', text: titleAddon, font: { size: 15, weight: 'bold' }, textColor: { light: '#FF9500', dark: '#FFD60A' } }
+          { type: 'text', text: titleAddon, font: { size: 15, weight: 'bold' }, textColor: { light: '#FF2D55', dark: '#FF375F' } } // 庆典珊瑚粉，增加节日活力
       ]},
       { type: 'spacer', length: 14 },
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 10,
