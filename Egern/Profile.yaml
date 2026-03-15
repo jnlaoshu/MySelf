@@ -338,8 +338,8 @@ mitm:
 
 # --- 模块配置 ---
 modules:
-  - name: 面板合集
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Panel.yaml
+  - name: 桌面小组件合集
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
     enabled: true
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
