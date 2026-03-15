@@ -11,18 +11,16 @@ export default async function (ctx) {
   const regionParam = ctx.env.region || "sichuan/chengdu"; 
   const SHOW_TREND = (ctx.env.SHOW_TREND || "true").trim() !== "false";
 
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1E212A' }, { light: '#F2F2F7', dark: '#0D0E15' }];
+  // 🎨 Apple HIG 原生级自适应配色
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
+  const BLOCK_BG = { light: '#EAEAED', dark: '#2C2C2E' }; // 内部小卡片的高对比背景
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#8E8E93', dark: '#888888' };
-  const BLOCK_BG = { light: '#F2F2F7', dark: '#2A2D36' };
+  const TEXT_SUB = { light: '#8E8E93', dark: '#98989F' };
 
   const CALENDAR_2026 = [
-    {m: 1, d: 12}, {m: 1, d: 23}, {m: 2, d: 9},  {m: 2, d: 23}, 
-    {m: 3, d: 9},  {m: 3, d: 23}, {m: 4, d: 7},  {m: 4, d: 21}, 
-    {m: 5, d: 8},  {m: 5, d: 22}, {m: 6, d: 5},  {m: 6, d: 19}, 
-    {m: 7, d: 3},  {m: 7, d: 17}, {m: 7, d: 31}, {m: 8, d: 14}, 
-    {m: 8, d: 28}, {m: 9, d: 11}, {m: 9, d: 25}, {m: 10, d: 14}, 
-    {m: 10, d: 28}, {m: 11, d: 11}, {m: 11, d: 25}, {m: 12, d: 9}, {m: 12, d: 23}
+    {m: 1, d: 12}, {m: 1, d: 23}, {m: 2, d: 9},  {m: 2, d: 23}, {m: 3, d: 9},  {m: 3, d: 23}, {m: 4, d: 7},  {m: 4, d: 21}, 
+    {m: 5, d: 8},  {m: 5, d: 22}, {m: 6, d: 5},  {m: 6, d: 19}, {m: 7, d: 3},  {m: 7, d: 17}, {m: 7, d: 31}, {m: 8, d: 14}, 
+    {m: 8, d: 28}, {m: 9, d: 11}, {m: 9, d: 25}, {m: 10, d: 14}, {m: 10, d: 28}, {m: 11, d: 11}, {m: 11, d: 25}, {m: 12, d: 9}, {m: 12, d: 23}
   ];
 
   const now = new Date();
@@ -42,7 +40,7 @@ export default async function (ctx) {
   };
 
   const nextAdjust = getNextAdjust();
-  const infoColor = nextAdjust.isUrgent ? { light: '#FF3B30', dark: '#FF453A' } : { light: '#FF9500', dark: '#FFD426' };
+  const infoColor = nextAdjust.isUrgent ? { light: '#FF3B30', dark: '#FF453A' } : { light: '#FF9500', dark: '#FFD60A' };
   
   let prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "";
@@ -74,7 +72,7 @@ export default async function (ctx) {
         const isUp = priceText.includes("上调");
         const isDown = priceText.includes("下调");
         const trendIcon = isUp ? "↑" : (isDown ? "↓" : "-");
-        trendColor = isUp ? { light: '#FF3B30', dark: '#FF453A' } : (isDown ? { light: '#34C759', dark: '#30D158' } : TEXT_SUB);
+        trendColor = isUp ? { light: '#D70015', dark: '#FF453A' } : (isDown ? { light: '#248A3D', dark: '#32D74B' } : TEXT_SUB);
 
         const allPrices = priceText.match(/[\d\.]+\s*元\/升/g);
         let amount = allPrices && allPrices.length > 0 ? (allPrices.length >= 2 ? `${allPrices[0].match(/[\d\.]+/)[0]}-${allPrices[1].match(/[\d\.]+/)[0]}元/L` : `${allPrices[0].match(/[\d\.]+/)[0]}元/L`) : "";
@@ -86,8 +84,8 @@ export default async function (ctx) {
   const priceItems = [
     { label: "92号", val: prices.p92, color: { light: '#FF9500', dark: '#FF9F0A' } },
     { label: "95号", val: prices.p95, color: { light: '#FF3B30', dark: '#FF6B35' } },
-    { label: "98号", val: prices.p98, color: { light: '#C83232', dark: '#FF3B30' } },
-    { label: "柴油", val: prices.diesel, color: { light: '#34C759', dark: '#30D158' } }
+    { label: "98号", val: prices.p98, color: { light: '#C83232', dark: '#FF453A' } },
+    { label: "柴油", val: prices.diesel, color: { light: '#28CD41', dark: '#32D74B' } }
   ].filter(i => i.val);
 
   return {
