@@ -1,0 +1,53 @@
+# ==========================================
+# 📌 模块名称: 专属桌面小组件合集 (Egern Module)
+# ✨ 特色功能: 统一整合今日黄历、节假日倒计时、网络信息和全国油价 4 大专属小组件。支持全局配置油价地区及趋势开关，一键导入，即刻拥有 iOS 深浅模式自适应的高级灰蓝桌面体验。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
+# ⏱️ 更新时间: 2026-03-15
+# ==========================================
+
+name: "专属桌面小组件"
+description: "包含今日黄历、节假日倒计时、网络信息和全国油价的 Egern 小组件合集。全组件支持 iOS 深浅模式自适应与统一的高级灰蓝视觉风格。"
+
+env_schema:
+  region:
+    name: 油价地区
+    description: "您所处省份/省会城市（或直辖市）的拼音，例如：sichuan/chengdu, beijing, shanghai"
+    default_value: "sichuan/chengdu"
+  SHOW_TREND:
+    name: 显示油价调价趋势
+    description: "是否在底部显示本轮调价的涨跌趋势与具体幅度"
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+
+scriptings:
+# 1. 岁时黄历 (节气流转全览版)
+- generic:
+    name: 今日黄历
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
+
+# 2. 节假日倒计时 (时光倒数)
+- generic:
+    name: 节假日倒计时
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
+
+# 3. 实时网络信息面板
+- generic:
+    name: 网络信息
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+
+# 4. 全国油价及调价预测 (默认成都)
+- generic:
+    name: 成都油价
+    script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+
+widgets:
+- name: 今日黄历
+  script_name: 今日黄历
+- name: 节假日倒计时
+  script_name: 节假日倒计时
+- name: 网络信息
+  script_name: 网络信息
+- name: 成都油价
+  script_name: 成都油价
