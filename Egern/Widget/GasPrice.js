@@ -105,7 +105,7 @@ export default async function (ctx) {
             ]
           },
           { type: "spacer" }, 
-          { type: "text", text: `下轮: ${nextAdjust.dateStr} , ${nextAdjust.countdown}`, font: { size: 12, weight: "bold" }, textColor: infoColor, textAlign: "right", lineLimit: 1, minScale: 0.5 }
+          { type: "text", text: `下轮调价: ${nextAdjust.dateStr} , ${nextAdjust.countdown}`, font: { size: 12, weight: "bold" }, textColor: infoColor, textAlign: "right", lineLimit: 1, minScale: 0.5 }
         ]
       },
       { type: 'spacer', length: 14 },
