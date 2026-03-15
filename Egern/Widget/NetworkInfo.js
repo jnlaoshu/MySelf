@@ -8,9 +8,10 @@
  */
 
 export default async function(ctx) {
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1E212A' }, { light: '#F2F2F7', dark: '#0D0E15' }];
+  // 🎨 Apple HIG 原生级自适应配色
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#F5F5F7' };
+  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' }; // 深色下略微提亮副标题，增强网络详情可读性
 
   const http = {
     get: async (url) => {
@@ -47,7 +48,7 @@ export default async function(ctx) {
     let title = `${fmtISP(rawISP)} | ${wifiSsid || getRadioType(cellularRadio) || "未连接"}`;
 
     const rows = [];
-    if (internalIP) rows.push({ icon: 'house.fill', color: { light: '#34C759', dark: '#30D158' }, text: `内网IPv4：${internalIP}` });
+    if (internalIP) rows.push({ icon: 'house.fill', color: { light: '#28CD41', dark: '#32D74B' }, text: `内网IPv4：${internalIP}` });
     if (internalIPv6) rows.push({ icon: 'globe.americas.fill', color: { light: '#32ADE6', dark: '#64D2FF' }, text: `内网IPv6：${internalIPv6}` });
     
     if (localInfo.ip) {
