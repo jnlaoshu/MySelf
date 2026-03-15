@@ -1,7 +1,7 @@
 /**
  * ==========================================
- * 📌 代码名称: 🌐 网络信息小组件
- * ✨ 特色功能: 实时显示 Wi-Fi/数据网络状态、内网与网关 IPv4 地址、双端物理位置定位，全面支持 iOS 系统深浅模式（Light/Dark）自适应切换。
+ * 📌 代码名称: 🌐 网络信息小组件 
+ * ✨ 特色功能: 实时显示 Wi-Fi/数据网络状态、内网与网关 IPv4 地址、双端物理位置定位。新增「点击刷新」交互，支持 iOS 深浅模式（Light/Dark）自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
  * ⏱️ 更新时间: 2026-03-15
  * ==========================================
@@ -80,9 +80,15 @@ export default async function(ctx) {
       backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
         { type: 'spacer', length: 2 },
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-            { type: 'image', src: isWifi ? 'sf-symbol:wifi' : 'sf-symbol:antenna.radiowaves.left.and.right', color: TEXT_MAIN, width: 18, height: 18 },
-            { type: 'text', text: title, font: { size: 'headline', weight: 'bold' }, textColor: TEXT_MAIN, maxLines: 1, minScale: 0.7 }
+        // --- 顶部标题栏与刷新按钮 ---
+        { type: 'stack', direction: 'row', alignItems: 'center', children: [
+            { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+                { type: 'image', src: isWifi ? 'sf-symbol:wifi' : 'sf-symbol:antenna.radiowaves.left.and.right', color: TEXT_MAIN, width: 18, height: 18 },
+                { type: 'text', text: title, font: { size: 'headline', weight: 'bold' }, textColor: TEXT_MAIN, maxLines: 1, minScale: 0.7 }
+            ]},
+            { type: 'spacer' }, // 使用 spacer 将刷新按钮推到最右侧
+            // 刷新按钮交互：支持 iOS 17 桌面静默刷新与全局回落跳转刷新
+            { type: 'image', src: 'sf-symbol:arrow.clockwise.circle.fill', color: TEXT_SUB, width: 18, height: 18, action: 'reload', link: 'egern://' }
         ]},
         { type: 'spacer', length: 6 }, 
         { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: rows.map(r => ({
@@ -99,7 +105,8 @@ export default async function(ctx) {
       type: 'widget', 
       padding: 12, 
       backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x:0, y:0 }, endPoint: { x:1, y:1 } }, 
-      children: [{ type: 'text', text: '加载失败，请检查网络', font: { size: 'subheadline' }, textColor: TEXT_SUB }] 
+      // 错误页面同样加上点击全局刷新的功能
+      children: [{ type: 'text', text: '加载失败，点击刷新', font: { size: 'subheadline' }, textColor: TEXT_SUB, link: 'egern://', action: 'reload' }] 
     };
   }
 }
