@@ -8,11 +8,12 @@
  */
 
 export default async function(ctx) {
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1E212A' }, { light: '#F2F2F7', dark: '#0D0E15' }];
+  // 🎨 Apple HIG 原生级自适应配色
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#F5F5F7' };
-  const THEME_ACCENT_GOLD = { light: '#FF9500', dark: '#FFD426' };
-  const THEME_ACCENT_GREEN = { light: '#34C759', dark: '#30D158' };
+  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
+  const THEME_ACCENT_GOLD = { light: '#FF9500', dark: '#FFD60A' };
+  const THEME_ACCENT_GREEN = { light: '#28CD41', dark: '#32D74B' };
 
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
