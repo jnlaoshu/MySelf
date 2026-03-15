@@ -13,7 +13,7 @@ export default async function (ctx) {
 
   // 🎨 Apple HIG 原生级自适应配色
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
-  const BLOCK_BG = { light: '#EAEAED', dark: '#2C2C2E' }; // 内部小卡片的高对比背景
+  const BLOCK_BG = { light: '#EAEAED', dark: '#2C2C2E' }; 
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
   const TEXT_SUB = { light: '#8E8E93', dark: '#98989F' };
 
@@ -40,7 +40,8 @@ export default async function (ctx) {
   };
 
   const nextAdjust = getNextAdjust();
-  const infoColor = nextAdjust.isUrgent ? { light: '#FF3B30', dark: '#FF453A' } : { light: '#FF9500', dark: '#FFD60A' };
+  // 优化：日常显示科技蓝，72小时内警报变红，避免视觉焦虑
+  const infoColor = nextAdjust.isUrgent ? { light: '#FF3B30', dark: '#FF453A' } : { light: '#007AFF', dark: '#0A84FF' };
   
   let prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "";
@@ -104,7 +105,7 @@ export default async function (ctx) {
             ]
           },
           { type: "spacer" }, 
-          { type: "text", text: `下轮调价: ${nextAdjust.dateStr} , ${nextAdjust.countdown}`, font: { size: 12, weight: "bold" }, textColor: infoColor, textAlign: "right", lineLimit: 1, minScale: 0.5 }
+          { type: "text", text: `下轮: ${nextAdjust.dateStr} , ${nextAdjust.countdown}`, font: { size: 12, weight: "bold" }, textColor: infoColor, textAlign: "right", lineLimit: 1, minScale: 0.5 }
         ]
       },
       { type: 'spacer', length: 14 },
