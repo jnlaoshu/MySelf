@@ -11,7 +11,7 @@ export default async function(ctx) {
   // 🎨 Apple HIG 原生级自适应配色
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' }; // 深色下略微提亮副标题，增强网络详情可读性
+  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' }; 
 
   const http = {
     get: async (url) => {
