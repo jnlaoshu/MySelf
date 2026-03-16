@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (排版优化版)
+ * ⏱️ 更新时间: 2026-03-16 (换行修复版)
  * ==========================================
  */
 
@@ -26,7 +26,7 @@ export default async function(ctx) {
   const DATE_PATTERNS = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}` ];
   const WEEK = "日一二三四五六";
 
-  // 核心农历推算逻辑 (加入取整容错机制)
+  // 核心农历推算逻辑
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
@@ -51,10 +51,10 @@ export default async function(ctx) {
     }
   };
 
-  // ⏱️ 动态时辰推导
+  // ⏱️ 动态时辰推导（已删除别称）
   const currentHour = now.getHours();
   const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
-  const shichenNames = ["子时(夜半)", "丑时(鸡鸣)", "寅时(平旦)", "卯时(日出)", "辰时(食时)", "巳时(隅中)", "午时(日中)", "未时(日昳)", "申时(晡时)", "酉时(日入)", "戌时(黄昏)", "亥时(人定)"];
+  const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
   const shichenStr = shichenNames[shichenIndex];
 
   // 节气分析
@@ -109,7 +109,7 @@ export default async function(ctx) {
   const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
   const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
 
-  // 🔮 核心：本地智能计算冲煞（防止接口缺失）
+  // 🔮 核心：本地智能计算冲煞
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
       const dayOffset = Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000);
@@ -124,7 +124,7 @@ export default async function(ctx) {
       chongshaInfo = `冲${chongAnimal}(${chongGanzhi})煞${shaDir}`;
   }
 
-  // ⭐ 核心：动态生成星级评分（基于宜忌内容智能推演）
+  // ⭐ 核心：动态生成星级评分
   let starStr = getVal("score", "Score", "pingfen", "star");
   if (!starStr || starStr === "暂无") {
       let sc = 4; // 默认平吉（4星）
@@ -136,7 +136,6 @@ export default async function(ctx) {
       let sc = Math.min(5, Math.max(1, parseInt(starStr)));
       starStr = "⭐".repeat(sc);
   } else {
-      // 容错兜底：如果拿到了非数字的奇怪字符
       starStr = "⭐⭐⭐⭐"; 
   }
   
@@ -156,10 +155,11 @@ export default async function(ctx) {
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
       { type: 'spacer', length: 8 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 【核心修改区】去除了 minScale 和苛刻的 maxLines 限制，允许文本以原字号自然折行
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 10 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 10 } ]}] : []),
-          { type: 'text', text: bottomExtraStr, font: { size: 12 }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.8 }
+          // 【核心修改区】将标识与文本合并为一个 Text 组件，彻底解决在 Row 中引发的截断问题，确保原生支持换行
+          ...(rawYi ? [{ type: 'text', text: `✅ 宜：${rawYi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4 }] : []),
+          ...(rawJi ? [{ type: 'text', text: `❎ 忌：${rawJi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4 }] : []),
+          // 【核心修改区】冲煞字号统一调整为 13
+          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
       ]},
       { type: 'spacer', length: 6 },
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
