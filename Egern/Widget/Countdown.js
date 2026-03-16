@@ -1,17 +1,22 @@
 /**
  * ==========================================
- * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）小组件
- * ✨ 特色功能: 自动计算法定节假日、传统民俗、国际节日及专属假期倒数天数，并分类展示，全面支持 iOS 系统深浅模式（Light/Dark）自适应切换。
+ * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
+ * ✨ 特色功能: 汇聚法定、民俗、国际及专属纪念日；精准动态倒数，高亮近期要事与当前节日；采用匀称舒展的流式排版与新中式色彩点缀；全面支持深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026-03-15
+ * ⏱️ 更新时间: 2026.03.17 00.08
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 🎨 Apple HIG 原生级自适应配色
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
-  const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
+  const TEXT_MAIN = { light: '#1C1C1E', dark: '#FFFFFF' };
+  const TEXT_SUB = { light: '#48484A', dark: '#D1D1D6' }; 
+  const TEXT_MUTED = { light: '#8E8E93', dark: '#8E8E93' }; 
+
+  const COLOR_GOLD = { light: '#B58A28', dark: '#D6A53A' }; 
+  const COLOR_RED = { light: '#CA3B32', dark: '#FF453A' };   
+  const COLOR_BLUE = { light: '#3A5F85', dark: '#5E8EB8' };  
+  const COLOR_TEAL = { light: '#628C7B', dark: '#73A491' };  
 
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
@@ -31,16 +36,17 @@ export default async function(ctx) {
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     return {
-      legal: [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["成都春假",YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["高考",YMD(y,6,7),2], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3], ["成都秋假",wDay(11,2,3),3] ],
+      legal: [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["成都春假",YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["高考",YMD(y,6,7),2], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3], ["成都秋假",wDay(11,2,3),3] ],
       folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
-      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["儿童节",YMD(y,6,1),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ]
+      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
+      exclusive: [ ["生日", YMD(y, 12, 13), 1] ]
     };
   };
 
   let stickyFest = "", ongoingFest = "";
-  const f1 = getFests(Y), f2 = getFests(Y + 1), result = { legal: [], folk: [], intl: [] };
+  const f1 = getFests(Y), f2 = getFests(Y + 1), result = { legal: [], folk: [], intl: [], exclusive: [] };
 
-  ["legal", "folk", "intl"].forEach(cat => {
+  ["legal", "folk", "intl", "exclusive"].forEach(cat => {
     f1[cat].concat(f2[cat]).forEach(([name, dateStr, duration]) => {
       if (!dateStr) return;
       const [yy, mm, dd] = dateStr.split('/').map(Number);
@@ -53,28 +59,35 @@ export default async function(ctx) {
   });
 
   const format = (cat) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0,3).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
-  const titleAddon = ongoingFest ? ` 🎉正在进行：${ongoingFest}` : (stickyFest ? `（${stickyFest}）` : "");
+  
+  const titleAddon = ongoingFest ? `🎉 正在进行：${ongoingFest}` : (stickyFest ? `✨ ${stickyFest}` : "");
 
   return {
-    type: 'widget', padding: 16, backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    type: 'widget', 
+    padding: 12, 
+    backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 10 },
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-          { type: 'image', src: 'sf-symbol:timer', color: TEXT_MAIN, width: 18, height: 18 },
-          { type: 'spacer', length: 4 },
-          { type: 'text', text: '时光倒数', font: { size: 17, weight: 'bold' }, textColor: TEXT_MAIN },
-          { type: 'text', text: titleAddon, font: { size: 15, weight: 'bold' }, textColor: { light: '#FF2D55', dark: '#FF375F' } } // 庆典珊瑚粉，增加节日活力
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+          { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
+          { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
+          { type: 'spacer' },
+          { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED }
       ]},
-      { type: 'spacer', length: 14 },
+      { type: 'spacer', length: 12 },
+      
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 10,
         children: [
-          { i: "building.columns.fill", col: { light: '#FF9500', dark: '#FFD60A' }, n: "法定", t: format("legal") },
-          { i: "moon.stars.fill", col: { light: '#FF3B30', dark: '#FF453A' }, n: "民俗", t: format("folk") },
-          { i: "globe.americas.fill", col: { light: '#007AFF', dark: '#0A84FF' }, n: "国际", t: format("intl") }
+          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal") },
+          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk") },
+          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl") },
+          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
         ].filter(c => c.t).map(cat => ({
-          type: 'stack', direction: 'row', alignItems: 'start', gap: 8, children: [
-            { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
-            { type: 'text', text: `${cat.n}：${cat.t}`, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, lineSpacing: 4 }
+          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+            { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+                { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
+                { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
+            ]},
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 236 }
           ]
         }))
       },
