@@ -1,13 +1,18 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及专属纪念日；精准动态倒数，高亮近期要事与当前节日；采用匀称舒展的流式排版与新中式色彩点缀；全面支持深浅模式自适应切换。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及专属纪念日；精准动态倒数，高亮近期要事与当前节日；采用匀称舒展的流式排版与新中式色彩点缀；支持模块化配置专属日期；全面支持深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 00.08
+ * ⏱️ 更新时间: 2026.03.17 00.38
  * ==========================================
  */
 
 export default async function(ctx) {
+  // 👇 动态读取用户在 Egern 模块中填写的专属纪念日，若未填写则使用默认值
+  const excName = ctx.env.EXCLUSIVE_NAME || "生日";
+  const excDateStr = ctx.env.EXCLUSIVE_DATE || "12/13";
+  const [excM, excD] = excDateStr.split('/').map(Number);
+
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
   const TEXT_MAIN = { light: '#1C1C1E', dark: '#FFFFFF' };
   const TEXT_SUB = { light: '#48484A', dark: '#D1D1D6' }; 
@@ -39,7 +44,7 @@ export default async function(ctx) {
       legal: [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["成都春假",YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["高考",YMD(y,6,7),2], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3], ["成都秋假",wDay(11,2,3),3] ],
       folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
-      exclusive: [ ["生日", YMD(y, 12, 13), 1] ]
+      exclusive: [ [excName, YMD(y, excM, excD), 1] ] // 👇 动态变量
     };
   };
 
