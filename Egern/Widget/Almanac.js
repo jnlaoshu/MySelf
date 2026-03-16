@@ -103,8 +103,8 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  const rawYi = String(getVal("yi","Yi","suit") || "").replace(/\./g, " ");
-  const rawJi = String(getVal("ji","Ji","avoid") || "").replace(/\./g, " ");
+  const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
+  const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
 
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
@@ -140,37 +140,40 @@ export default async function(ctx) {
     url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
+      // 取消了破坏纵向空间的顶层 Spacer
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:calendar', color: TEXT_MAIN, width: 16, height: 16 }, 
           { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
           { type: 'spacer' },
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
               { type: 'image', src: 'sf-symbol:sparkles', color: COLOR_GOLD, width: 10, height: 10 },
-              { type: 'text', text: obj.astro, font: { size: 12, weight: 'bold' }, textColor: TEXT_MUTED }
+              { type: 'text', text: obj.astro, font: { size: 12, weight: 'medium' }, textColor: TEXT_MUTED }
           ]}
       ]},
-      { type: 'spacer', length: 6 },
+      { type: 'spacer', length: 4 }, // 恢复原代码的 4
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 13, weight: 'bold' }, textColor: COLOR_GOLD },
       
-      { type: 'spacer', length: 8 },
+      { type: 'spacer', length: 6 }, // 恢复原代码的 6
       
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 3, children: [ // 恢复原代码的 gap 3
           ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
               { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
                   { type: 'image', src: 'sf-symbol:checkmark.circle.fill', color: COLOR_YI, width: 13, height: 13 },
-                  { type: 'text', text: '宜', font: { size: 13, weight: 'heavy' }, textColor: COLOR_YI } 
+                  { type: 'text', text: '宜', font: { size: 12, weight: 'heavy' }, textColor: COLOR_YI } // 恢复字号 12
               ]},
-              { type: 'text', text: rawYi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 228 }
+              // 完全恢复原始配置
+              { type: 'text', text: rawYi, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 236 }
           ]}] : []),
           ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
               { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
                   { type: 'image', src: 'sf-symbol:xmark.circle.fill', color: COLOR_JI, width: 13, height: 13 },
-                  { type: 'text', text: '忌', font: { size: 13, weight: 'heavy' }, textColor: COLOR_JI }
+                  { type: 'text', text: '忌', font: { size: 12, weight: 'heavy' }, textColor: COLOR_JI } // 恢复字号 12
               ]},
-              { type: 'text', text: rawJi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 228 }
+              // 完全恢复原始配置
+              { type: 'text', text: rawJi, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 236 }
           ]}] : []),
           
-          { type: 'spacer', length: 2 }, 
+          { type: 'spacer', length: 1 }, // 恢复原代码的 1
           
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
               { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
@@ -178,11 +181,13 @@ export default async function(ctx) {
                   { type: 'text', text: `冲煞: ${chongshaInfo}`, font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED }
               ]},
               { type: 'text', text: '|', font: { size: 10, weight: 'medium' }, textColor: DIVIDER_COLOR },
-              { type: 'text', text: `运势: ${starStr}`, font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED }
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
+                  { type: 'text', text: `运势: ${starStr}`, font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED }
+              ]}
           ]}
       ]},
       
-      { type: 'spacer', length: 8 },
+      { type: 'spacer', length: 6 }, // 恢复原代码的 6
       
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
           { type: 'image', src: 'sf-symbol:leaf.arrow.circlepath', color: COLOR_TERM, width: 12, height: 12 }, 
