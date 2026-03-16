@@ -1,29 +1,24 @@
 /**
  * ==========================================
- * 📌 代码名称: 📅 岁时黄历（节气流转全览版）
- * ✨ 特色功能:
- * 1. 【时令追踪】深度融合农历、干支生肖、二十四节气动态流转及精准时辰推算。
- * 2. 【运势指南】集成 API 黄历宜忌，辅以本地化「智能冲煞」算法与「宜忌星级」评分。
- * 3. 【视觉美学】Apple HIG 原生级自适应配色，支持深浅模式渐变背景与 SF Symbol 矢量图标。
- * 4. 【交互增强】新增 URL Scheme 支持，点击小组件可一键直达系统日历应用。
- * 5. 【节气预报】最近四大节气倒计时精准提醒，实时捕捉岁时更替脉络。
+ * 📌 代码名称: 📅 岁时黄历 (节气流转全览版)
+ * ✨ 特色功能: 实时获取农历、干支、宜忌冲煞及星座信息，精准推算并展示未来节气预告；采用新中式高定调色，优化原生文字排版防溢出；全面支持 iOS 系统深浅模式（Light/Dark）自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 16:40
+ * ⏱️ 更新时间: 2026.03.17 00.08
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 🎨 Apple HIG 原生级自适应配色 & 全新渐变层
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#151517' }, { light: '#F0F2F6', dark: '#000000' }];
-  const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
-  const TEXT_MUTED = { light: '#8E8E93', dark: '#98989D' }; 
-  const THEME_ACCENT_GOLD = { light: '#A66800', dark: '#F0C674' }; 
-  // 生命绿与警戒红
-  const THEME_ACCENT_GREEN = { light: '#28CD41', dark: '#32D74B' };
-  const THEME_ACCENT_RED = { light: '#FF3B30', dark: '#FF453A' };
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
+  const TEXT_MAIN = { light: '#1C1C1E', dark: '#FFFFFF' };
+  const TEXT_SUB = { light: '#48484A', dark: '#D1D1D6' }; 
+  const TEXT_MUTED = { light: '#8E8E93', dark: '#8E8E93' }; 
+  const DIVIDER_COLOR = { light: '#E5E5EA', dark: '#38383A' }; 
 
-  // 确保基础时间抓取的稳定性
+  const COLOR_GOLD = { light: '#B58A28', dark: '#D6A53A' }; 
+  const COLOR_YI = { light: '#2E8045', dark: '#32D74B' };   
+  const COLOR_JI = { light: '#CA3B32', dark: '#FF453A' };   
+  const COLOR_TERM = { light: '#628C7B', dark: '#73A491' }; 
+
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const Y = Math.floor(now.getFullYear());
   const M = Math.floor(now.getMonth() + 1);
@@ -33,7 +28,6 @@ export default async function(ctx) {
   const DATE_PATTERNS = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}` ];
   const WEEK = "日一二三四五六";
 
-  // 核心农历推算逻辑
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
@@ -58,13 +52,11 @@ export default async function(ctx) {
     }
   };
 
-  // ⏱️ 时辰推导
   const currentHour = now.getHours();
   const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
   const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
   const shichenStr = shichenNames[shichenIndex];
 
-  // 节气分析
   const getTermInfo = (y, n) => ({ name: Lunar.termNames[n - 1], date: new Date(y, Math.floor((n - 1) / 2), Lunar.term(y, n)) });
   const allTerms = [];
   for(let i=1; i<=24; i++) allTerms.push(getTermInfo(Y-1, i));
@@ -84,7 +76,6 @@ export default async function(ctx) {
     }
   }
 
-  // 获取API黄历数据
   const getAlmanac = async () => {
     try {
       const resp = await ctx.http.get(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, { timeout: 8000 });
@@ -112,11 +103,9 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 宜忌抓取
-  const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
-  const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
+  const rawYi = String(getVal("yi","Yi","suit") || "").replace(/\./g, " ");
+  const rawJi = String(getVal("ji","Ji","avoid") || "").replace(/\./g, " ");
 
-  // 🔮 本地智能计算冲煞
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
       const dayOffset = Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000);
@@ -131,7 +120,6 @@ export default async function(ctx) {
       chongshaInfo = `冲${chongAnimal}(${chongGanzhi})煞${shaDir}`;
   }
 
-  // ⭐ 动态生成星级评分
   let starStr = getVal("score", "Score", "pingfen", "star");
   if (!starStr || starStr === "暂无") {
       let sc = 4; 
@@ -145,39 +133,61 @@ export default async function(ctx) {
   } else {
       starStr = "⭐⭐⭐⭐"; 
   }
-  
-  const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starStr}`;
 
   return {
     type: 'widget', 
-    padding: 16, 
-    // 配置跳转日历应用的 URL Scheme
+    padding: 12, 
     url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 4 }, 
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
-          { type: 'image', src: 'sf-symbol:calendar.badge.clock', color: TEXT_MAIN, width: 18, height: 18 },
-          { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 'headline', weight: 'bold' }, textColor: TEXT_MAIN, maxLines: 1 },
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+          { type: 'image', src: 'sf-symbol:calendar', color: TEXT_MAIN, width: 16, height: 16 }, 
+          { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
           { type: 'spacer' },
-          { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
-      ]},
-      { type: 'spacer', length: 4 }, 
-      // 时辰显示
-      { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
-      { type: 'spacer', length: 6 }, 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 严格限定 maxLines: 2，超过自然截断显示 ...
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
-          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
+              { type: 'image', src: 'sf-symbol:sparkles', color: COLOR_GOLD, width: 10, height: 10 },
+              { type: 'text', text: obj.astro, font: { size: 12, weight: 'bold' }, textColor: TEXT_MUTED }
+          ]}
       ]},
       { type: 'spacer', length: 6 },
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-          { type: 'image', src: 'sf-symbol:leaf.fill', color: THEME_ACCENT_GREEN, width: 13, height: 13 },
-          { type: 'text', text: `节气：${upcomingTerms.join(" , ")}`, font: { size: 12, weight: 'bold' }, textColor: THEME_ACCENT_GREEN, maxLines: 1 }
+      { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 13, weight: 'bold' }, textColor: COLOR_GOLD },
+      
+      { type: 'spacer', length: 8 },
+      
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+                  { type: 'image', src: 'sf-symbol:checkmark.circle.fill', color: COLOR_YI, width: 13, height: 13 },
+                  { type: 'text', text: '宜', font: { size: 13, weight: 'heavy' }, textColor: COLOR_YI } 
+              ]},
+              { type: 'text', text: rawYi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 228 }
+          ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+                  { type: 'image', src: 'sf-symbol:xmark.circle.fill', color: COLOR_JI, width: 13, height: 13 },
+                  { type: 'text', text: '忌', font: { size: 13, weight: 'heavy' }, textColor: COLOR_JI }
+              ]},
+              { type: 'text', text: rawJi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 228 }
+          ]}] : []),
+          
+          { type: 'spacer', length: 2 }, 
+          
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
+                  { type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: COLOR_GOLD, width: 11, height: 11 },
+                  { type: 'text', text: `冲煞: ${chongshaInfo}`, font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED }
+              ]},
+              { type: 'text', text: '|', font: { size: 10, weight: 'medium' }, textColor: DIVIDER_COLOR },
+              { type: 'text', text: `运势: ${starStr}`, font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED }
+          ]}
       ]},
-      { type: 'spacer' }
+      
+      { type: 'spacer', length: 8 },
+      
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
+          { type: 'image', src: 'sf-symbol:leaf.arrow.circlepath', color: COLOR_TERM, width: 12, height: 12 }, 
+          { type: 'text', text: `节气预告：${upcomingTerms.join(" , ")}`, font: { size: 11, weight: 'bold' }, textColor: COLOR_TERM }
+      ]}
     ]
   };
 }
