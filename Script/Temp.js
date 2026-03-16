@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (换行修复版)
+ * ⏱️ 更新时间: 2026-03-16 (多行排版终极修复版)
  * ==========================================
  */
 
@@ -114,12 +114,12 @@ export default async function(ctx) {
   if (!chongshaInfo || chongshaInfo === "无") {
       const dayOffset = Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000);
       const c = (dayOffset + 40) % 60;
-      const dayCycle = c < 0 ? c + 60 : c; // 日干支周期索引(0~59)
-      const dayZhi = dayCycle % 12; // 当日地支
+      const dayCycle = c < 0 ? c + 60 : c;
+      const dayZhi = dayCycle % 12; 
       
       const chongAnimal = Lunar.ani[(dayZhi + 6) % 12];
       const shaDir = ["南", "东", "北", "西"][dayZhi % 4];
-      const chongIndex = (dayCycle + 6) % 60; // 天克地冲
+      const chongIndex = (dayCycle + 6) % 60;
       const chongGanzhi = Lunar.gan[chongIndex % 10] + Lunar.zhi[chongIndex % 12];
       chongshaInfo = `冲${chongAnimal}(${chongGanzhi})煞${shaDir}`;
   }
@@ -127,10 +127,10 @@ export default async function(ctx) {
   // ⭐ 核心：动态生成星级评分
   let starStr = getVal("score", "Score", "pingfen", "star");
   if (!starStr || starStr === "暂无") {
-      let sc = 4; // 默认平吉（4星）
-      if (rawYi.includes("诸事不宜") || rawJi.includes("诸事不宜") || rawJi.includes("破屋")) sc = 2; // 凶日
-      else if (rawJi.length > rawYi.length) sc = 3; // 忌多于宜
-      else if (rawYi.length > rawJi.length + 8) sc = 5; // 大吉日
+      let sc = 4;
+      if (rawYi.includes("诸事不宜") || rawJi.includes("诸事不宜") || rawJi.includes("破屋")) sc = 2;
+      else if (rawJi.length > rawYi.length) sc = 3;
+      else if (rawYi.length > rawJi.length + 8) sc = 5;
       starStr = "⭐".repeat(sc);
   } else if (!isNaN(starStr)) {
       let sc = Math.min(5, Math.max(1, parseInt(starStr)));
@@ -155,11 +155,10 @@ export default async function(ctx) {
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
       { type: 'spacer', length: 8 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 【核心修改区】将标识与文本合并为一个 Text 组件，彻底解决在 Row 中引发的截断问题，确保原生支持换行
-          ...(rawYi ? [{ type: 'text', text: `✅ 宜：${rawYi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4 }] : []),
-          ...(rawJi ? [{ type: 'text', text: `❎ 忌：${rawJi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4 }] : []),
-          // 【核心修改区】冲煞字号统一调整为 13
-          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
+          // 【核心修复区】：显式添加 maxLines: 10 打破系统强制截断，增大 lineSpacing 至 6 提升阅读透气感
+          ...(rawYi ? [{ type: 'text', text: `✅ 宜：${rawYi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 6, maxLines: 10 }] : []),
+          ...(rawJi ? [{ type: 'text', text: `❎ 忌：${rawJi}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 6, maxLines: 10 }] : []),
+          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 6, maxLines: 2 }
       ]},
       { type: 'spacer', length: 6 },
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
