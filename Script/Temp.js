@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
- * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式（Light/Dark）自适应切换。
+ * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-15
+ * ⏱️ 更新时间: 2026-03-16 (历法推演强化版)
  * ==========================================
  */
 
@@ -12,8 +12,8 @@ export default async function(ctx) {
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#151517' }, { light: '#F0F2F6', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
   const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
-  const TEXT_MUTED = { light: '#8E8E93', dark: '#98989D' }; // 变浅的次级文字（用于星座）
-  const THEME_ACCENT_GOLD = { light: '#A66800', dark: '#F0C674' }; // 雅致琉璃金，提升文化底蕴
+  const TEXT_MUTED = { light: '#8E8E93', dark: '#98989D' }; 
+  const THEME_ACCENT_GOLD = { light: '#A66800', dark: '#F0C674' }; 
   const THEME_ACCENT_GREEN = { light: '#28CD41', dark: '#32D74B' };
 
   // 确保基础时间抓取的稳定性
@@ -26,7 +26,7 @@ export default async function(ctx) {
   const DATE_PATTERNS = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}` ];
   const WEEK = "日一二三四五六";
 
-  // 核心农历推算逻辑 (已加入底层取整容错机制)
+  // 核心农历推算逻辑 (加入取整容错机制)
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
@@ -34,7 +34,6 @@ export default async function(ctx) {
     termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
     term(y, n) { return new Date((31556925974.7*(y-1900)+[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1]*60000)+Date.UTC(1900,0,6,2,5)).getUTCDate() },
     toObj(y, m, d) {
-      // 核心修复点：使用 Math.round 防止浮点精度误差导致的天数漂移计算错误
       let offset = Math.round((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000), i, temp=0;
       const lDays = (y) => { let i, s=348; for(i=0x8000; i>0x8; i>>=1) s+=((this.info[y-1900] & i) ? 1 : 0); return s + ((this.info[y-1900] & 0xf) ? ((this.info[y-1900]&0x10000)?30:29) : 0) };
       const mDays = (y, m) => (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29;
@@ -106,12 +105,42 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 宜忌及底部详情抓取
+  // 宜忌抓取
   const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
   const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
-  const chongshaInfo = getVal("chongsha", "ChongSha", "chong") || "无";
-  const starScore = getVal("score", "Score", "pingfen", "star", "xingxiu") || "暂无";
-  const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starScore}`;
+
+  // 🔮 核心：本地智能计算冲煞（防止接口缺失）
+  let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
+  if (!chongshaInfo || chongshaInfo === "无") {
+      const dayOffset = Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000);
+      const c = (dayOffset + 40) % 60;
+      const dayCycle = c < 0 ? c + 60 : c; // 日干支周期索引(0~59)
+      const dayZhi = dayCycle % 12; // 当日地支
+      
+      const chongAnimal = Lunar.ani[(dayZhi + 6) % 12];
+      const shaDir = ["南", "东", "北", "西"][dayZhi % 4];
+      const chongIndex = (dayCycle + 6) % 60; // 天克地冲
+      const chongGanzhi = Lunar.gan[chongIndex % 10] + Lunar.zhi[chongIndex % 12];
+      chongshaInfo = `冲${chongAnimal}(${chongGanzhi})煞${shaDir}`;
+  }
+
+  // ⭐ 核心：动态生成星级评分（基于宜忌内容智能推演）
+  let starStr = getVal("score", "Score", "pingfen", "star");
+  if (!starStr || starStr === "暂无") {
+      let sc = 4; // 默认平吉（4星）
+      if (rawYi.includes("诸事不宜") || rawJi.includes("诸事不宜") || rawJi.includes("破屋")) sc = 2; // 凶日
+      else if (rawJi.length > rawYi.length) sc = 3; // 忌多于宜
+      else if (rawYi.length > rawJi.length + 8) sc = 5; // 大吉日
+      starStr = "⭐".repeat(sc);
+  } else if (!isNaN(starStr)) {
+      let sc = Math.min(5, Math.max(1, parseInt(starStr)));
+      starStr = "⭐".repeat(sc);
+  } else {
+      // 容错兜底：如果拿到了非数字的奇怪字符
+      starStr = "⭐⭐⭐⭐"; 
+  }
+  
+  const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starStr}`;
 
   return {
     type: 'widget', padding: 16, backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
@@ -120,17 +149,15 @@ export default async function(ctx) {
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
           { type: 'image', src: 'sf-symbol:calendar.badge.clock', color: TEXT_MAIN, width: 18, height: 18 },
           { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 'headline', weight: 'bold' }, textColor: TEXT_MAIN, maxLines: 1, minScale: 0.8 },
-          { type: 'spacer' }, // 撑开布局，把星座推向右侧对齐
-          { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 } // 字体缩2号、取消加粗、颜色变浅
+          { type: 'spacer' },
+          { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
       ]},
       { type: 'spacer', length: 6 }, 
-      // 加入当前时辰别称拼接
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
       { type: 'spacer', length: 8 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
           ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
           ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
-          // 将冲煞及星级评分放到宜忌正下方
           { type: 'text', text: bottomExtraStr, font: { size: 12 }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: 6 },
