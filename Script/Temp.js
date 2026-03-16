@@ -2,32 +2,31 @@
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式（Light/Dark）自适应切换。
- * ⏱ 更新时间: 2026-03-16 (终极视觉优化版：高级排版与质感配色)
+ * ⏱ 更新时间: 2026-03-16 
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 🎨 Apple HIG 原生级自适应配色 (已优化渐变质感与对比度)
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#151517' }, { light: '#F0F2F6', dark: '#000000' }];
+  // 🎨 Apple HIG 原生级自适应配色
+  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F5F9', dark: '#000000' }];
   const TEXT_MAIN = { light: '#000000', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#4A4A4F', dark: '#E0E0E6' }; // 略微提高副标题亮度，防刺眼
-  const THEME_ACCENT_GOLD = { light: '#A66800', dark: '#F0C674' }; // 更纯正的琉璃金
-  const THEME_ACCENT_GREEN = { light: '#248A3D', dark: '#32D74B' }; // 浅色下略深，保证文字辨识度
+  const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
+  const THEME_ACCENT_GOLD = { light: '#B27600', dark: '#E5C07B' }; // 雅致琉璃金
+  const THEME_ACCENT_GREEN = { light: '#28CD41', dark: '#32D74B' };
 
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
-  const HOUR = now.getHours(); 
+  const HOUR = now.getHours(); // 获取当前小时数
   const P = n => n < 10 ? `0${n}` : n;
   const DATE_PATTERNS = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}` ];
   const WEEK = "日一二三四五六";
 
-  // 🕒 时辰古称与精细时间
+  // 🕒 计算当前时辰与详情 (仅保留古称，去除具体时间段)
   const ZHI_LIST = "子丑寅卯辰巳午未申酉戌亥";
   const SHICHEN_NAMES = ["夜半", "鸡鸣", "平旦", "日出", "食时", "隅中", "日中", "日昳", "晡时", "日入", "黄昏", "人定"];
   const zhiIdx = Math.floor((HOUR + 1) % 24 / 2);
-  const startHour = zhiIdx === 0 ? 23 : zhiIdx * 2 - 1;
-  const endHour = startHour + 2 >= 24 ? (startHour + 2) % 24 : startHour + 2;
-  const currentShichen = `${ZHI_LIST[zhiIdx]}时(${SHICHEN_NAMES[zhiIdx]} ${P(startHour)}:00-${P(endHour)}:00)`;
+  // 生成如: 子时(夜半)
+  const currentShichen = `${ZHI_LIST[zhiIdx]}时(${SHICHEN_NAMES[zhiIdx]})`;
 
   // 🏮 冲煞参考常量
   const CHONG = ["马","羊","猴","鸡","狗","猪","鼠","牛","虎","兔","龙","蛇"];
@@ -56,7 +55,9 @@ export default async function(ctx) {
       
       const dayIdx = Math.floor((Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000 + 40);
       const dayBranch = dayIdx % 12;
-      const ASTRO_EMOJIS = ["♑ 摩羯座", "♒ 水瓶座", "♓ 双鱼座", "♈ 白羊座", "♉ 金牛座", "♊ 双子座", "♋ 巨蟹座", "♌ 狮子座", "♍ 处女座", "♎ 天秤座", "♏ 天蝎座", "♐ 射手座", "♑ 摩羯座"];
+      
+      // 🔮 去除了 Emoji，恢复纯文字星座
+      const ASTRO_NAMES = ["摩羯座", "水瓶座", "双鱼座", "白羊座", "金牛座", "双子座", "巨蟹座", "狮子座", "处女座", "天秤座", "天蝎座", "射手座", "摩羯座"];
       const astroIdx = m - (d < [20, 19, 21, 21, 21, 22, 23, 23, 23, 23, 22, 22][m - 1] ? 1 : 0);
       
       return { 
@@ -64,7 +65,7 @@ export default async function(ctx) {
         ani: this.ani[(lYear-4)%12], 
         cn: `${isLeap?"闰":""}${this.monStr[i-1]}月${lD==10?"初十":lD==20?"二十":lD==30?"三十":["初","十","廿","卅"][Math.floor(lD/10)]+this.nStr[lD%10]}`, 
         term: (this.term(y,tId+1)==d) ? this.termNames[tId] : "", 
-        astro: ASTRO_EMOJIS[astroIdx],
+        astro: ASTRO_NAMES[astroIdx],
         chong: `冲${CHONG[dayBranch]}煞${SHA[dayBranch]}`,
         stars: "⭐".repeat((dayIdx % 3) + 3)
       };
@@ -119,42 +120,42 @@ export default async function(ctx) {
   const rawYi = (getVal("yi","Yi","suit") || "诸事不宜").replace(/\./g, " ");
   const rawJi = (getVal("ji","Ji","avoid") || "诸事大吉").replace(/\./g, " ");
   
+  // ⚠️ 冲煞与百忌数据逻辑融合
   const apiChongsha = getVal("chongsha","ChongSha");
   const apiBaiji = getVal("baiji","BaiJi");
+  // 如果API有冲煞数据，优先用API的详细冲煞；否则使用本地简单计算的冲煞
   const finalChongsha = apiChongsha || obj.chong; 
 
   return {
-    type: 'widget', padding: 18, // 增加四周呼吸感
-    backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    type: 'widget', padding: 16, backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 6 }, 
+      { type: 'spacer', length: 8 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
-          { type: 'image', src: 'sf-symbol:calendar.badge.clock', color: TEXT_MAIN, width: 20, height: 20 },
-          // 主标题加重加粗，拉起视觉层级
-          { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 'title3', weight: 'heavy' }, textColor: TEXT_MAIN, maxLines: 1, minScale: 0.8 },
+          { type: 'image', src: 'sf-symbol:calendar.badge.clock', color: TEXT_MAIN, width: 18, height: 18 },
+          { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK[now.getDay()]}`, font: { size: 'headline', weight: 'bold' }, textColor: TEXT_MAIN, maxLines: 1, minScale: 0.8 },
           { type: 'spacer' },
-          // 副标题星座使用半粗体
-          { type: 'text', text: obj.astro, font: { size: 'subheadline', weight: 'semibold' }, textColor: TEXT_SUB }
+          { type: 'text', text: obj.astro, font: { size: 'subheadline', weight: 'medium' }, textColor: TEXT_SUB }
       ]},
       { type: 'spacer', length: 6 }, 
-      // 农历与时辰使用粗体（Bold），颜色使用更深的琉璃金
-      { type: 'text', text: `${obj.gz}(${obj.ani})年 · ${obj.cn} · ${currentShichen}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'bold' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
-      { type: 'spacer', length: 10 }, 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 5, children: [
-          ...(apiBaiji ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '📜 百忌：', font: { size: 13, weight: 'bold' }, textColor: TEXT_SUB }, { type: 'text', text: apiBaiji, font: { size: 13, weight: 'regular' }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.8 }]}] : []),
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
+      // 运用新的 currentShichen
+      { type: 'text', text: `${obj.gz}(${obj.ani})年 · ${obj.cn} · ${currentShichen}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 13, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
+      { type: 'spacer', length: 8 }, 
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
+          // 独立显示彭祖百忌（若存在）
+          ...(apiBaiji ? [{ type: 'text', text: `📜 百忌：${apiBaiji}`, font: { size: 12 }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.8 }] : []),
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
           
           { type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [
-              { type: 'text', text: '⚠️ 冲煞：', font: { size: 13, weight: 'bold' }, textColor: TEXT_SUB },
-              { type: 'text', text: `${finalChongsha} · ${obj.stars}`, font: { size: 13, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.7 }
+              { type: 'text', text: '⚠️ 冲煞：', font: { size: 13 }, textColor: TEXT_SUB },
+              // 融合后的冲煞与星星
+              { type: 'text', text: `${finalChongsha} · ${obj.stars}`, font: { size: 13 }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.7 }
           ]}
       ]},
-      { type: 'spacer', length: 8 },
+      { type: 'spacer', length: 6 },
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-          { type: 'image', src: 'sf-symbol:leaf.fill', color: THEME_ACCENT_GREEN, width: 14, height: 14 },
-          // 节气文字加粗加重
-          { type: 'text', text: `节气：${upcomingTerms.join(" , ")}`, font: { size: 12, weight: 'heavy' }, textColor: THEME_ACCENT_GREEN, maxLines: 1, minScale: 0.5 }
+          { type: 'image', src: 'sf-symbol:leaf.fill', color: THEME_ACCENT_GREEN, width: 13, height: 13 },
+          { type: 'text', text: `节气：${upcomingTerms.join(" , ")}`, font: { size: 12, weight: 'bold' }, textColor: THEME_ACCENT_GREEN, maxLines: 1, minScale: 0.5 }
       ]},
       { type: 'spacer' }
     ]
