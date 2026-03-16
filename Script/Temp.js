@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (色彩保留与时辰恢复版)
+ * ⏱️ 更新时间: 2026-03-16 (日历跳转功能版)
  * ==========================================
  */
 
@@ -144,7 +144,11 @@ export default async function(ctx) {
   const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starStr}`;
 
   return {
-    type: 'widget', padding: 16, backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    type: 'widget', 
+    padding: 16, 
+    // 【核心新增】：配置跳转日历应用的 URL Scheme
+    url: 'calshow://',
+    backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
       { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
@@ -154,7 +158,7 @@ export default async function(ctx) {
           { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
       ]},
       { type: 'spacer', length: 4 }, 
-      // 恢复时辰显示在副标题中
+      // 恢复时辰显示
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
       { type: 'spacer', length: 6 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
