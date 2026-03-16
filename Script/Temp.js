@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
- * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
+ * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，支持 iOS 深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (终极精修排版版)
+ * ⏱️ 更新时间: 2026-03-16 (物理防爆屏排版与精修版)
  * ==========================================
  */
 
@@ -52,7 +52,7 @@ export default async function(ctx) {
     }
   };
 
-  // ⏱️ 时辰推导
+  // ⏱️ 时辰推导（精准时辰）
   const currentHour = now.getHours();
   const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
   const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
@@ -106,9 +106,19 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 恢复自然获取，去掉强行拆分的做法，交还给 Flex 引擎自动排版
-  const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
-  const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
+  // 🔮 【核心修复区】：物理截断换行函数（防爆屏）
+  // 避免使用容易引起布局崩溃的 flex，直接在代码层面将长文本每行拆成 5 个词，并用真实换行符 \n 衔接
+  const forceWrap = (str, itemsPerLine = 6) => {
+      if (!str) return "";
+      const arr = str.trim().split(/\s+|\./).filter(Boolean);
+      const line1 = arr.slice(0, itemsPerLine).join(" ");
+      const line2 = arr.slice(itemsPerLine, itemsPerLine * 2).join(" ");
+      return line2 ? `${line1}\n${line2}` : line1;
+  };
+
+  // 使用 forceWrap 函数处理获取到的宜忌数据
+  const rawYi = forceWrap(getVal("yi","Yi","suit"), 6);
+  const rawJi = forceWrap(getVal("ji","Ji","avoid"), 6);
 
   // 本地智能计算冲煞
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
@@ -139,10 +149,14 @@ export default async function(ctx) {
   } else {
       starStr = "⭐⭐⭐⭐"; 
   }
+  
+  // 恢复图标与底栏排版
+  const bottomExtraStr = `⚡ 冲煞：${chongshaInfo} | ⭐ 星级：${starStr}`;
 
   return {
     type: 'widget', 
     padding: 16, 
+    // 配置跳转日历应用
     url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
@@ -158,16 +172,10 @@ export default async function(ctx) {
       { type: 'spacer', length: 6 }, 
       
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 【终极排版】：去除杂乱 Emoji，配合 flex: 1 完美自动向下换行
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [ 
-              { type: 'text', text: '宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, 
-              { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2, flex: 1 } 
-          ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [ 
-              { type: 'text', text: '忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, 
-              { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2, flex: 1 } 
-          ]}] : []),
-          { type: 'text', text: `冲煞：${chongshaInfo} | 星级：${starStr}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
+          // 彻底抛弃坑人的 flex，利用 \n 物理断行，配合 maxLines: 2 实现安全截断
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
+          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
       ]},
       { type: 'spacer', length: 6 },
       
