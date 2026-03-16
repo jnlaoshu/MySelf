@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (回滚修复版)
+ * ⏱️ 更新时间: 2026-03-16 (色彩保留与时辰恢复版)
  * ==========================================
  */
 
@@ -53,6 +53,12 @@ export default async function(ctx) {
     }
   };
 
+  // ⏱️ 恢复时辰推导（不带别称）
+  const currentHour = now.getHours();
+  const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
+  const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
+  const shichenStr = shichenNames[shichenIndex];
+
   // 节气分析
   const getTermInfo = (y, n) => ({ name: Lunar.termNames[n - 1], date: new Date(y, Math.floor((n - 1) / 2), Lunar.term(y, n)) });
   const allTerms = [];
@@ -101,7 +107,7 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 宜忌抓取，保持原汁原味的空格替换
+  // 宜忌抓取
   const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
   const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
 
@@ -140,7 +146,6 @@ export default async function(ctx) {
   return {
     type: 'widget', padding: 16, backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      // 【核心修复区】：压缩了此处的 length 长度，为底部的换行文本挤出垂直空间
       { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
           { type: 'image', src: 'sf-symbol:calendar.badge.clock', color: TEXT_MAIN, width: 18, height: 18 },
@@ -149,12 +154,13 @@ export default async function(ctx) {
           { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
       ]},
       { type: 'spacer', length: 4 }, 
-      { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
+      // 恢复时辰显示在副标题中
+      { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
       { type: 'spacer', length: 6 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 【核心修复区】：明确提供充足的 maxLines: 6，并分离了颜色区块
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 6 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 6 } ]}] : []),
+          // 严格限定 maxLines: 2，超过自然截断显示 ...
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
           { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
       ]},
       { type: 'spacer', length: 6 },
