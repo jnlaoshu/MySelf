@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (物理强制换行终极版)
+ * ⏱️ 更新时间: 2026-03-16 (终极精修排版版)
  * ==========================================
  */
 
@@ -52,7 +52,7 @@ export default async function(ctx) {
     }
   };
 
-  // ⏱️ 时辰推导（恢复，无别称）
+  // ⏱️ 时辰推导
   const currentHour = now.getHours();
   const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
   const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
@@ -106,19 +106,9 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 🔮 【核心修复区】：物理强制换行函数
-  // 原理：直接将字符串打散，每4个词为一行，主动插入 \n，保留最多两行
-  const forceWrap = (str, itemsPerLine = 4) => {
-      if (!str) return "";
-      const arr = str.trim().split(/\s+|\./).filter(Boolean); // 拆分空格或原有的点
-      const line1 = arr.slice(0, itemsPerLine).join(" ");
-      const line2 = arr.slice(itemsPerLine, itemsPerLine * 2).join(" "); // 只取第二行所需的量
-      return line2 ? `${line1}\n${line2}` : line1;
-  };
-
-  // 使用 forceWrap 函数处理获取到的原始字符串
-  const rawYi = forceWrap(getVal("yi","Yi","suit"));
-  const rawJi = forceWrap(getVal("ji","Ji","avoid"));
+  // 恢复自然获取，去掉强行拆分的做法，交还给 Flex 引擎自动排版
+  const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
+  const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
 
   // 本地智能计算冲煞
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
@@ -139,7 +129,6 @@ export default async function(ctx) {
   let starStr = getVal("score", "Score", "pingfen", "star");
   if (!starStr || starStr === "暂无") {
       let sc = 4; 
-      // 简单判断吉凶
       if (rawYi.includes("诸事不宜") || rawJi.includes("诸事不宜") || rawJi.includes("破屋")) sc = 2; 
       else if (rawJi.length > rawYi.length) sc = 3; 
       else if (rawYi.length > rawJi.length + 8) sc = 5; 
@@ -150,13 +139,10 @@ export default async function(ctx) {
   } else {
       starStr = "⭐⭐⭐⭐"; 
   }
-  
-  const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starStr}`;
 
   return {
     type: 'widget', 
     padding: 16, 
-    // 点击跳转系统日历配置
     url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
@@ -168,16 +154,23 @@ export default async function(ctx) {
           { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
       ]},
       { type: 'spacer', length: 4 }, 
-      // 恢复包含时辰的字符串
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
       { type: 'spacer', length: 6 }, 
+      
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 已经通过 `forceWrap` 植入物理 \n，再配合 maxLines: 2，完美实现两行截断
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
-          { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
+          // 【终极排版】：去除杂乱 Emoji，配合 flex: 1 完美自动向下换行
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [ 
+              { type: 'text', text: '宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, 
+              { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2, flex: 1 } 
+          ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [ 
+              { type: 'text', text: '忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, 
+              { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2, flex: 1 } 
+          ]}] : []),
+          { type: 'text', text: `冲煞：${chongshaInfo} | 星级：${starStr}`, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
       ]},
       { type: 'spacer', length: 6 },
+      
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
           { type: 'image', src: 'sf-symbol:leaf.fill', color: THEME_ACCENT_GREEN, width: 13, height: 13 },
           { type: 'text', text: `节气：${upcomingTerms.join(" , ")}`, font: { size: 12, weight: 'bold' }, textColor: THEME_ACCENT_GREEN, maxLines: 1 }
