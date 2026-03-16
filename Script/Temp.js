@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
- * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，支持 iOS 深浅模式。
+ * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (物理防爆屏排版与精修版)
+ * ⏱️ 更新时间: 2026-03-16 (日历跳转功能版)
  * ==========================================
  */
 
@@ -14,6 +14,7 @@ export default async function(ctx) {
   const TEXT_SUB = { light: '#3C3C43', dark: '#EBEBF5' };
   const TEXT_MUTED = { light: '#8E8E93', dark: '#98989D' }; 
   const THEME_ACCENT_GOLD = { light: '#A66800', dark: '#F0C674' }; 
+  // 【保留优化】生命绿与警戒红
   const THEME_ACCENT_GREEN = { light: '#28CD41', dark: '#32D74B' };
   const THEME_ACCENT_RED = { light: '#FF3B30', dark: '#FF453A' };
 
@@ -52,7 +53,7 @@ export default async function(ctx) {
     }
   };
 
-  // ⏱️ 时辰推导（精准时辰）
+  // ⏱️ 恢复时辰推导（不带别称）
   const currentHour = now.getHours();
   const shichenIndex = Math.floor((currentHour + 1) % 24 / 2);
   const shichenNames = ["子时", "丑时", "寅时", "卯时", "辰时", "巳时", "午时", "未时", "申时", "酉时", "戌时", "亥时"];
@@ -106,21 +107,11 @@ export default async function(ctx) {
   const api = await getAlmanac();
   const getVal = (...k) => { for(let i of k) if(api[i]) return api[i]; return ""; };
   
-  // 🔮 【核心修复区】：物理截断换行函数（防爆屏）
-  // 避免使用容易引起布局崩溃的 flex，直接在代码层面将长文本每行拆成 5 个词，并用真实换行符 \n 衔接
-  const forceWrap = (str, itemsPerLine = 6) => {
-      if (!str) return "";
-      const arr = str.trim().split(/\s+|\./).filter(Boolean);
-      const line1 = arr.slice(0, itemsPerLine).join(" ");
-      const line2 = arr.slice(itemsPerLine, itemsPerLine * 2).join(" ");
-      return line2 ? `${line1}\n${line2}` : line1;
-  };
+  // 宜忌抓取
+  const rawYi = getVal("yi","Yi","suit").replace(/\./g, " ");
+  const rawJi = getVal("ji","Ji","avoid").replace(/\./g, " ");
 
-  // 使用 forceWrap 函数处理获取到的宜忌数据
-  const rawYi = forceWrap(getVal("yi","Yi","suit"), 6);
-  const rawJi = forceWrap(getVal("ji","Ji","avoid"), 6);
-
-  // 本地智能计算冲煞
+  // 🔮 本地智能计算冲煞
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
       const dayOffset = Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000);
@@ -135,7 +126,7 @@ export default async function(ctx) {
       chongshaInfo = `冲${chongAnimal}(${chongGanzhi})煞${shaDir}`;
   }
 
-  // 动态生成星级评分
+  // ⭐ 动态生成星级评分
   let starStr = getVal("score", "Score", "pingfen", "star");
   if (!starStr || starStr === "暂无") {
       let sc = 4; 
@@ -150,13 +141,12 @@ export default async function(ctx) {
       starStr = "⭐⭐⭐⭐"; 
   }
   
-  // 恢复图标与底栏排版
-  const bottomExtraStr = `⚡ 冲煞：${chongshaInfo} | ⭐ 星级：${starStr}`;
+  const bottomExtraStr = `⚡冲煞：${chongshaInfo} | ⭐星级：${starStr}`;
 
   return {
     type: 'widget', 
     padding: 16, 
-    // 配置跳转日历应用
+    // 【核心新增】：配置跳转日历应用的 URL Scheme
     url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
@@ -168,17 +158,16 @@ export default async function(ctx) {
           { type: 'text', text: obj.astro, font: { size: 14, weight: 'regular' }, textColor: TEXT_MUTED, maxLines: 1 }
       ]},
       { type: 'spacer', length: 4 }, 
+      // 恢复时辰显示
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1 },
       { type: 'spacer', length: 6 }, 
-      
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          // 彻底抛弃坑人的 flex，利用 \n 物理断行，配合 maxLines: 2 实现安全截断
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 2 } ]}] : []),
+          // 严格限定 maxLines: 2，超过自然截断显示 ...
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_GREEN }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13, weight: 'bold' }, textColor: THEME_ACCENT_RED }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2, maxLines: 2 } ]}] : []),
           { type: 'text', text: bottomExtraStr, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 2 }
       ]},
       { type: 'spacer', length: 6 },
-      
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
           { type: 'image', src: 'sf-symbol:leaf.fill', color: THEME_ACCENT_GREEN, width: 13, height: 13 },
           { type: 'text', text: `节气：${upcomingTerms.join(" , ")}`, font: { size: 12, weight: 'bold' }, textColor: THEME_ACCENT_GREEN, maxLines: 1 }
