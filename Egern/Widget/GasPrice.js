@@ -1,15 +1,16 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测（默认成都）
- * ✨ 特色功能: 实时获取各标号油价及涨跌趋势；精简油价单位为 ¥/L；智能预告并精准倒数下轮调价窗口；像素级对齐家族顶部标题，内置防崩溃兜底，全面支持深浅模式。
+ * ✨ 特色功能: 实时获取各标号油价及涨跌趋势；精简油价单位为 ¥/L；智能预告并精准倒数下轮调价窗口；支持模块化配置地区；像素级对齐家族顶部标题，内置防崩溃兜底，全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.17 00.08
+ * ⏱️ 更新时间: 2026.03.17 00.38
  * ==========================================
  */
 
 export default async function (ctx) {
   try {
-    const regionParam = ctx.env.region || "sichuan/chengdu"; 
+    // 👇 优先读取 Egern 模块中的 GAS_REGION，如果没配则兼容旧版 region 变量，默认为成都
+    const regionParam = ctx.env.GAS_REGION || ctx.env.region || "sichuan/chengdu"; 
     const SHOW_TREND = (ctx.env.SHOW_TREND || "true").trim() !== "false";
 
     const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
