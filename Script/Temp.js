@@ -1,200 +1,233 @@
+/**
+ * ==========================================
+ * 📌 代码名称: 📅 岁时黄历（官方规范重构版）
+ * ✨ 特色功能: 原生数据逻辑原封不动。引入官方 DSL 构建写法，通过 VStack 容器包裹彻底解锁多行折行与完美悬挂对齐。
+ * ==========================================
+ */
+
+// --- 参照官方示例引入的 UI 构建函数 (DSL) ---
+
+function txt(text, fontSize, weight, color, opts) {
+  var el = {
+    type: "text",
+    text: text,
+    font: { weight: weight || "regular", size: fontSize },
+  };
+  if (color) el.textColor = color;
+  if (opts) { for (var k in opts) el[k] = opts[k]; }
+  return el;
+}
+
+function icon(systemName, size, tintColor, opts) {
+  var el = {
+    type: "image",
+    src: "sf-symbol:" + systemName,
+    width: size,
+    height: size,
+  };
+  if (tintColor) el.color = tintColor;
+  if (opts) { for (var k in opts) el[k] = opts[k]; }
+  return el;
+}
+
+function hstack(children, opts) {
+  var el = {
+    type: "stack",
+    direction: "row",
+    alignItems: "center",
+    children: children.filter(function(c) { return c != null; }),
+  };
+  if (opts) { for (var k in opts) el[k] = opts[k]; }
+  return el;
+}
+
+function vstack(children, opts) {
+  var el = {
+    type: "stack",
+    direction: "column",
+    alignItems: "start",
+    children: children.filter(function(c) { return c != null; }),
+  };
+  if (opts) { for (var k in opts) el[k] = opts[k]; }
+  return el;
+}
+
+function spacer(length) {
+  var el = { type: "spacer" };
+  if (length != null) el.length = length;
+  return el;
+}
+
+// --- 主程序入口 ---
+
 export default async function(ctx) {
-  const http = {
-    get: async (url) => {
-      try {
-        const resp = await ctx.http.get(url, {
-          headers: { "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1" },
-          timeout: 10000
-        });
-        const text = await resp.text();
-        const json = JSON.parse(text);
-        return json.data || json; 
-      } catch (e) {
-        return {};
-      }
-    }
+  // 🎨 配色定义
+  const BG_GRADIENT = {
+    type: 'linear',
+    colors: [{ light: '#F5F8FF', dark: '#1E212A' }, { light: '#E8ECF4', dark: '#0D0E15' }],
+    startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 }
   };
-
-  const fmtISP = (isp) => {
-    if (!isp) return "未知运营商";
-    const s = isp.toLowerCase();
-    const raw = isp.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
-    if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
-    if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
-    if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
-    if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
-    return raw;
-  };
-
-  const getRadioType = (radio) => {
-    if (!radio) return "";
-    const map = {
-      "GPRS": "2.5G", "CDMA1X": "2.5G", "EDGE": "2.75G",
-      "WCDMA": "3G", "HSDPA": "3.5G", "HSUPA": "3.75G", 
-      "LTE": "4G", "LTEA": "4G", "LTE+": "4G", 
-      "NRNSA": "5G", "NR": "5G", "NR5G": "5G"
-    };
-    return map[radio.toUpperCase().replace(/\s+/g, "")] || radio;
-  };
+  const TEXT_MAIN = { light: '#111111', dark: '#FFFFFF' };
+  const TEXT_SUB = { light: '#555555', dark: '#EBEBF5' };
+  const THEME_ACCENT_GOLD = { light: '#B27600', dark: '#E5C07B' }; 
+  const THEME_ACCENT_GREEN = { light: '#248A3D', dark: '#32D74B' };
 
   try {
-    const d = ctx.device || {};
-    const internalIP = d.ipv4?.address;
-    const internalIPv6 = d.ipv6?.address;
-    const wifiSsid = d.wifi?.ssid;
-    const cellularRadio = d.cellular?.radio;
+    // ⬇️ 你的原生数据处理逻辑 (原封不动) ⬇️
+    const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
+    const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+    const P = n => n < 10 ? `0${n}` : n;
+    const DATE_PATTERNS = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}` ];
+    const WEEK = "日一二三四五六";
 
-    const [localInfo, nodeInfo] = await Promise.all([
-      http.get('https://myip.ipip.net/json'),
-      http.get('http://ip-api.com/json/?lang=zh-CN') 
-    ]);
-
-    let rawISP = "";
-    if (Array.isArray(localInfo.location) && localInfo.location.length) {
-      rawISP = localInfo.location[localInfo.location.length - 1];
-    }
-    if (!rawISP) rawISP = nodeInfo?.isp || nodeInfo?.org; 
-    
-    const displayISP = fmtISP(rawISP);
-    
-    let title = `${displayISP} | `;
-    if (wifiSsid) title += wifiSsid;
-    else if (cellularRadio) title += getRadioType(cellularRadio);
-    else title += "未连接";
-
-    const rows = [];
-    if (internalIP) rows.push({ icon: 'house.fill', color: '#66D175', text: `内网IPv4：${internalIP}` });
-    if (internalIPv6) rows.push({ icon: 'globe.americas.fill', color: '#70D7FF', text: `内网IPv6：${internalIPv6}` });
-    
-    if (localInfo.ip) {
-      rows.push({ icon: 'location.circle.fill', color: '#59B2FF', text: `本地IPv4：${localInfo.ip}` });
-      const locStr = Array.isArray(localInfo.location) ? localInfo.location.slice(0, 3).join('').trim() : '';
-      if (locStr) rows.push({ icon: 'map.fill', color: '#FFD426', text: `本地位置：${locStr}` });
-    } else {
-      rows.push({ icon: 'exclamationmark.circle.fill', color: '#FF6B6B', text: `本地IPv4：检测失败` });
-    }
-
-    const nodeIP = nodeInfo.query || nodeInfo.ip;
-    if (nodeIP) {
-      rows.push({ icon: 'network', color: '#D4A5FF', text: `节点IPv4：${nodeIP}` });
-      const nodeLoc = `${nodeInfo.country || ''} ${nodeInfo.city || ''}`.trim();
-      if (nodeLoc) rows.push({ icon: 'paperplane.circle.fill', color: '#FF9570', text: `节点位置：${nodeLoc}` });
-    } else {
-      rows.push({ icon: 'xmark.circle.fill', color: '#FF6B6B', text: `节点IPv4：检测失败` });
-    }
-
-    // --- 动态垂直重心平衡参数 ---
-    const rowCount = rows.length;
-    let fontSize = 'footnote';
-    let iconSize = 13;
-    let rowGap = 5;
-    let titleContentSpacer = 6;
-    let extremeTopSpacer = 5; // 基础位移
-
-    if (rowCount <= 4) {
-      fontSize = 'body';
-      iconSize = 17;
-      rowGap = 10;
-      titleContentSpacer = 10;
-      extremeTopSpacer = 12; // 标题更往下靠一点，增加“呼吸感”
-    } else if (rowCount === 5) {
-      fontSize = 'body';
-      iconSize = 17;
-      rowGap = 7;
-      titleContentSpacer = 8;
-      extremeTopSpacer = 10;
-    } else if (rowCount === 6) {
-      fontSize = 'subheadline';
-      iconSize = 15;
-      rowGap = 5;
-      titleContentSpacer = 6;
-      extremeTopSpacer = 8;
-    }
-
-    const rowElements = rows.map(r => ({
-      type: 'stack',
-      direction: 'row',
-      alignItems: 'center',
-      gap: 8,
-      children: [
-        { type: 'image', src: `sf-symbol:${r.icon}`, color: r.color, width: iconSize, height: iconSize },
-        { 
-          type: 'text', 
-          text: r.text, 
-          font: { size: fontSize, weight: 'medium' }, 
-          textColor: '#F5F5F7', 
-          maxLines: 1, 
-          minScale: 0.45 
+    const Lunar = {
+      info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
+      gan: "甲乙丙丁戊己庚辛壬癸", zhi: "子丑寅卯辰巳午未申酉戌亥", ani: "鼠牛虎兔龙蛇马羊猴鸡狗猪",
+      nStr: ["日","一","二","三","四","五","六","七","八","九","十"], monStr: ["正","二","三","四","五","六","七","八","九","十","冬","腊"],
+      termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
+      term(y, n) { return new Date((31556925974.7*(y-1900)+[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1]*60000)+Date.UTC(1900,0,6,2,5)).getUTCDate() },
+      toObj(y, m, d) {
+        let offset = (Date.UTC(y,m-1,d) - Date.UTC(1900,0,31))/86400000, i, temp=0;
+        const lDays = (y) => { let i, s=348; for(i=0x8000; i>0x8; i>>=1) s+=((this.info[y-1900] & i) ? 1 : 0); return s + ((this.info[y-1900] & 0xf) ? ((this.info[y-1900]&0x10000)?30:29) : 0) };
+        const mDays = (y, m) => (this.info[y-1900] & (0x10000 >> m)) ? 30 : 29;
+        for(i=1900; i<2101 && offset>0; i++) { temp=lDays(i); offset-=temp; }
+        if(offset<0) { offset+=temp; i--; }
+        const lYear=i, leap=this.info[lYear-1900] & 0xf; let isLeap=false;
+        for(i=1; i<13 && offset>0; i++) {
+          if(leap>0 && i==(leap+1) && !isLeap) { --i; isLeap=true; temp=((this.info[lYear-1900]&0x10000)?30:29); } else { temp=mDays(lYear,i); }
+          if(isLeap && i==(leap+1)) isLeap=false; offset-=temp;
         }
-      ]
-    }));
-
-    const isWifi = !!wifiSsid;
-    const topIconName = isWifi ? 'sf-symbol:wifi' : 'sf-symbol:antenna.radiowaves.left.and.right';
-
-    return {
-      type: 'widget',
-      padding: 16,
-      backgroundGradient: {
-        type: 'linear',
-        colors: ['#8E261E', '#4D0F0A'], 
-        startPoint: { x: 0, y: 0 },
-        endPoint: { x: 1, y: 1 }
-      },
-      children: [
-        // 1. 顶部喘息空间（防止标题太靠上）
-        { type: 'spacer', length: extremeTopSpacer },
-        // 2. 标题区
-        {
-          type: 'stack',
-          direction: 'row',
-          alignItems: 'center',
-          gap: 8,
-          children: [
-            { type: 'image', src: topIconName, color: '#FFFFFF', width: 18, height: 18 },
-            { 
-              type: 'text', text: title, 
-              font: { size: 'headline', weight: 'bold' }, 
-              textColor: '#FFFFFF',
-              maxLines: 1, minScale: 0.8
-            }
-          ]
-        },
-        // 3. 标题与内容间距
-        { type: 'spacer', length: titleContentSpacer },
-        // 4. 内容主体
-        {
-          type: 'stack',
-          direction: 'column',
-          alignItems: 'start',
-          gap: rowGap, 
-          children: rowElements
-        },
-        // 5. 底部强制弹性填充（把整体内容往上拎，防止沉底）
-        { type: 'spacer' }
-      ]
+        if(offset==0 && leap>0 && i==leap+1) if(isLeap) isLeap=false; else { isLeap=true; --i; }
+        if(offset<0) { offset+=temp; i--; }
+        const lD = offset+1, tId = m*2-(d<this.term(y,m*2-1)?2:1);
+        return { gz: this.gan[(lYear-4)%10]+this.zhi[(lYear-4)%12], ani: this.ani[(lYear-4)%12], cn: `${isLeap?"闰":""}${this.monStr[i-1]}月${lD==10?"初十":lD==20?"二十":lD==30?"三十":["初","十","廿","卅"][Math.floor(lD/10)]+this.nStr[lD%10]}`, term: (this.term(y,tId+1)==d) ? this.termNames[tId] : "", astro: "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m*2-(d<[20,19,21,21,21,22,23,23,23,23,22,22][m-1]?2:0),2)+"座" };
+      }
     };
 
-  } catch (err) {
+    const getTermInfo = (y, n) => ({ name: Lunar.termNames[n - 1], date: new Date(y, Math.floor((n - 1) / 2), Lunar.term(y, n)) });
+    const allTerms = [];
+    for(let i=1; i<=24; i++) allTerms.push(getTermInfo(Y-1, i));
+    for(let i=1; i<=24; i++) allTerms.push(getTermInfo(Y, i));
+    for(let i=1; i<=24; i++) allTerms.push(getTermInfo(Y+1, i));
+
+    let currentTerm = "", upcomingTerms = [];
+    const todayMs = new Date(Y, M - 1, D).getTime();
+    for (let i = 0; i < allTerms.length; i++) {
+      const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
+      if (diff === 0) {
+        currentTerm = allTerms[i].name; 
+        upcomingTerms = allTerms.slice(i + 1, i + 5).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`); break;
+      } else if (diff > 0) {
+        currentTerm = allTerms[i - 1].name;
+        upcomingTerms = allTerms.slice(i, i + 4).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`); break;
+      }
+    }
+
+    const getAlmanac = async () => {
+      try {
+        const resp = await ctx.http.get(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, { timeout: 8000 });
+        let found = {};
+        const scan = (obj) => {
+          if (!obj || typeof obj !== 'object' || Object.keys(found).length > 0) return;
+          for (let key in obj) {
+            const val = obj[key]; if (!val) continue;
+            if (DATE_PATTERNS.some(p => String(key).includes(p))) { found = val; return; }
+            if (typeof val === 'object') {
+               const dStr = String(val.date || val.day || val.gregorian || val.oDate || "");
+               if (DATE_PATTERNS.some(p => dStr.includes(p))) { found = val; return; }
+               if (val.day == D && (val.month == M || (!val.month && !val.year)) && !dStr.includes(`-${P(M + 1)}-`) && !dStr.includes(`-${M + 1}-`)) {
+                   if (Object.keys(found).length === 0) found = val; 
+               }
+               scan(val);
+            }
+          }
+        };
+        scan(JSON.parse(await resp.text())); return found;
+      } catch (e) { return {}; }
+    };
+
+    const obj = Lunar.toObj(Y, M, D);
+    const api = await getAlmanac();
+    
+    const getValStr = (...keys) => { 
+      for(let k of keys) {
+        if(api[k]) return Array.isArray(api[k]) ? api[k].join(" ") : String(api[k]);
+      }
+      return ""; 
+    };
+
+    const rawYi = getValStr("yi","Yi","suit").replace(/\./g, " ");
+    const rawJi = getValStr("ji","Ji","avoid").replace(/\./g, " ");
+    const chongbaiStr = [getValStr("chongsha","ChongSha"), getValStr("baiji","BaiJi")].filter(Boolean).join(" | ");
+
+    // ⬆️ 你的原生数据处理逻辑结束 ⬆️
+
+    // ===============================================
+    // 🎨 UI 组装：官方 DSL 方法完美还原悬挂对齐排版
+    // ===============================================
+
+    // 🏆 构造宜忌悬挂缩进容器：
+    // 左边是包裹了文字的固定宽度 vstack，右边是包裹了长文本的弹性(flex) vstack，高度会由右侧文本自动撑开！
+    var yiRow = rawYi ? hstack([
+      vstack([txt("✅ 宜：", 12, "bold", TEXT_MAIN)], { width: 50 }),
+      vstack([txt(rawYi, 12, "regular", TEXT_SUB, { maxLines: 3 })], { flex: 1 })
+    ], { alignItems: "start" }) : null;
+
+    var jiRow = rawJi ? hstack([
+      vstack([txt("❎ 忌：", 12, "bold", TEXT_MAIN)], { width: 50 }),
+      vstack([txt(rawJi, 12, "regular", TEXT_SUB, { maxLines: 3 })], { flex: 1 })
+    ], { alignItems: "start" }) : null;
+
+    var chongbaiRow = chongbaiStr ? txt(chongbaiStr, 12, "regular", TEXT_SUB, { maxLines: 1 }) : null;
+
     return {
       type: 'widget',
       padding: 16,
-      backgroundGradient: {
-        type: 'linear', colors: ['#8E261E', '#4D0F0A'], 
-        startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 }
-      },
+      backgroundGradient: BG_GRADIENT,
       children: [
-        { type: 'spacer', length: 10 },
-        {
-          type: 'stack', direction: 'row', alignItems: 'center', gap: 8,
-          children: [
-            { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: '#FFFFFF', width: 18, height: 18 },
-            { type: 'text', text: '信息获取失败', font: { size: 'headline', weight: 'bold' }, textColor: '#FFFFFF' }
-          ]
-        },
-        { type: 'spacer', length: 10 },
-        { type: 'text', text: '请检查网络连接或脚本配置', font: { size: 'subheadline' }, textColor: '#F5F5F7' },
-        { type: 'spacer' }
+        spacer(8),
+        
+        // 头部：日期
+        hstack([
+          icon("calendar.badge.clock", 18, TEXT_MAIN),
+          txt(`${Y}年${M}月${D}日 星期${WEEK[now.getDay()]} ${obj.astro}`, 16, "bold", TEXT_MAIN, { maxLines: 1, minScale: 0.8 })
+        ], { gap: 8 }),
+        
+        spacer(6),
+        
+        // 副标题：农历与节气
+        txt(`${obj.gz}(${obj.ani})年 ${obj.cn}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, 14, "medium", THEME_ACCENT_GOLD, { maxLines: 1, minScale: 0.8 }),
+        
+        spacer(8),
+        
+        // 宜忌内容区：直接推入组装好的悬挂行
+        vstack([
+          chongbaiRow,
+          yiRow,
+          jiRow
+        ], { gap: 4 }),
+        
+        spacer(6),
+        
+        // 底部：未来节气推演 (同样利用弹性容器包裹确保不截断)
+        hstack([
+          icon("leaf.fill", 13, THEME_ACCENT_GREEN),
+          vstack([
+            txt(`节气：${upcomingTerms.join(" , ")}`, 12, "bold", THEME_ACCENT_GREEN, { maxLines: 1, minScale: 0.5 })
+          ], { flex: 1 })
+        ], { gap: 4 }),
+        
+        spacer()
+      ].filter(function(c) { return c != null; }) // 过滤掉为空的行，保证高度紧凑
+    };
+
+  } catch (error) {
+    return {
+      type: 'widget', padding: 16, backgroundGradient: BG_GRADIENT,
+      children: [
+        txt('🚧 黄历加载出错:', 14, "bold", "#FF3B30"),
+        spacer(4),
+        txt(String(error.message || error), 12, "regular", TEXT_MAIN, { maxLines: 4 })
       ]
     };
   }
