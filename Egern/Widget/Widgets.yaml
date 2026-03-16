@@ -1,6 +1,6 @@
 # ==========================================
 # 📌 模块名称: Egern 小组件合集
-# ✨ 特色功能: 包含岁时黄历、时光倒数、网络信息、全国油价 4 款像素级对齐的新中式风格桌面小组件；支持图形化配置专属纪念日与油价查询地区；一键极速安装，全系支持深浅模式自适应。
+# ✨ 特色功能: 包含岁时黄历、时光倒数、网络信息、全国油价 4 款像素级对齐的新中式风格桌面小组件；支持图形化配置最多 6 个专属纪念日与油价查询地区；一键极速安装，全系支持深浅模式自适应。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
 # ⏱️ 更新时间: 2026.03.17 00.48
 # ==========================================
@@ -9,14 +9,45 @@ name: "Egern 小组件合集"
 description: "包含：岁时黄历、时光倒数、网络信息、全国油价 4 款像素级对齐的新中式风格桌面小组件。"
 
 env_schema:
-  EXCLUSIVE_NAME:
-    name: 专属纪念日名称
-    description: "时光倒数小组件中的专属节日名称，例如：*生日、结婚纪念日"
-    default_value: "生日"
-  EXCLUSIVE_DATE:
-    name: 专属纪念日日期
-    description: "格式必须为 MM/DD，例如：12/13 或 05/20"
+  EXCLUSIVE_NAME_1:
+    name: 专属纪念日 1
+    description: "例如：我的生日、结婚纪念日"
+    default_value: "我的生日"
+  EXCLUSIVE_DATE_1:
+    name: 纪念日 1 日期
+    description: "格式必须为 MM/DD，例如：12/13"
     default_value: "12/13"
+  EXCLUSIVE_NAME_2:
+    name: 专属纪念日 2
+    description: "留空则不显示"
+  EXCLUSIVE_DATE_2:
+    name: 纪念日 2 日期
+    description: "格式 MM/DD"
+  EXCLUSIVE_NAME_3:
+    name: 专属纪念日 3
+    description: "留空则不显示"
+  EXCLUSIVE_DATE_3:
+    name: 纪念日 3 日期
+    description: "格式 MM/DD"
+  EXCLUSIVE_NAME_4:
+    name: 专属纪念日 4
+    description: "留空则不显示"
+  EXCLUSIVE_DATE_4:
+    name: 纪念日 4 日期
+    description: "格式 MM/DD"
+  EXCLUSIVE_NAME_5:
+    name: 专属纪念日 5
+    description: "留空则不显示"
+  EXCLUSIVE_DATE_5:
+    name: 纪念日 5 日期
+    description: "格式 MM/DD"
+  EXCLUSIVE_NAME_6:
+    name: 专属纪念日 6
+    description: "留空则不显示"
+  EXCLUSIVE_DATE_6:
+    name: 纪念日 6 日期
+    description: "格式 MM/DD"
+    
   GAS_REGION:
     name: 油价地区
     description: "全国油价小组件的查询地区拼音，例如：sichuan/chengdu、beijing、shanghai"
@@ -30,22 +61,15 @@ env_schema:
     default_value: "true"
 
 scriptings:
-# 1. 岁时黄历 (节气流转全览版)
 - generic:
     name: 岁时黄历
     script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
-
-# 2. 节假日倒计时 (时光倒数)
 - generic:
     name: 时光倒数
     script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
-
-# 3. 实时网络信息面板
 - generic:
     name: 网络信息
     script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
-
-# 4. 全国油价及调价预测 (默认成都)
 - generic:
     name: 全国油价
     script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
