@@ -3,7 +3,7 @@
  * 📌 代码名称: 📅 岁时黄历（节气流转全览版）小组件
  * ✨ 特色功能: 深度融合农历信息、传统宜忌、星座运势与最近四大节气动态追踪，全面支持 iOS 系统深浅模式自适应切换。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026-03-16 (历法推演强化版)
+ * ⏱️ 更新时间: 2026-03-16 (排版优化版)
  * ==========================================
  */
 
@@ -156,8 +156,9 @@ export default async function(ctx) {
       { type: 'text', text: `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` ✨今日${obj.term}` : ` · 当前${currentTerm}`}`, font: { size: 14, weight: 'medium' }, textColor: THEME_ACCENT_GOLD, maxLines: 1, minScale: 0.8 },
       { type: 'spacer', length: 8 }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: 4, children: [
-          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
-          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 4, minScale: 0.7 } ]}] : []),
+          // 【核心修改区】去除了 minScale 和苛刻的 maxLines 限制，允许文本以原字号自然折行
+          ...(rawYi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '✅ 宜：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawYi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 10 } ]}] : []),
+          ...(rawJi ? [{ type: 'stack', direction: 'row', alignItems: 'start', gap: 2, children: [ { type: 'text', text: '❎ 忌：', font: { size: 13 }, textColor: TEXT_SUB }, { type: 'text', text: rawJi, font: { size: 13 }, textColor: TEXT_SUB, lineSpacing: 4, maxLines: 10 } ]}] : []),
           { type: 'text', text: bottomExtraStr, font: { size: 12 }, textColor: TEXT_SUB, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: 6 },
