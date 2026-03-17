@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持开关春秋假，支持自定义置顶任意节日；专属节日限制最多展示 2 行（超出优雅截断）；采用流式排版与新中式色彩点缀；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；专属自动换行防溢出，法定展示 4 个；支持各城市春/秋假自定义；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 11:00
+ * ⏱️ 更新时间: 2026.03.17 11:23
  * ==========================================
  */
 
@@ -11,6 +11,8 @@ export default async function(ctx) {
   // 动态读取环境配置
   const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
+  const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
+  const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
 
   // 读取用户填写的最多 6 个专属纪念日
   const customDays = [];
@@ -21,15 +23,12 @@ export default async function(ctx) {
     const n = nameKey || (i === 1 ? "我的生日" : "");
     const d = dateKey || (i === 1 ? "12/13" : "");
     
-    if (n && d && d.includes('/')) {
-      customDays.push({ name: n, date: d });
-    }
+    if (n && d && d.includes('/')) customDays.push({ name: n, date: d });
   }
 
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
   const TEXT_MAIN = { light: '#1C1C1E', dark: '#FFFFFF' };
   const TEXT_SUB = { light: '#48484A', dark: '#D1D1D6' }; 
-  const TEXT_MUTED = { light: '#8E8E93', dark: '#8E8E93' }; 
 
   const COLOR_GOLD = { light: '#B58A28', dark: '#D6A53A' }; 
   const COLOR_RED = { light: '#CA3B32', dark: '#FF453A' };   
@@ -49,19 +48,25 @@ export default async function(ctx) {
     l2s(y,m,d) { try { let off=0, lp=this.info[y-1900]&0xf; for(let i=1900; i<y; i++) off+=this.lDays(i); for(let i=1; i<m; i++) { off+=this.mDays(y,i); if(lp>0 && i===lp) off+=((this.info[y-1900]&0x10000)?30:29); } return new Date(Date.UTC(1900,0,31)+(off+d-1)*86400000); } catch(e){return null;} }
   };
 
+  const getCustomDate = (y, dateStr, defaultCalc) => {
+    if (!dateStr) return defaultCalc();
+    let [m, d] = dateStr.split('/').map(Number);
+    return (m && d) ? YMD(y, m, d) : defaultCalc();
+  };
+
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
-    // 动态生成法定节假日，控制春秋假
+    // 法定节假日 (加入春秋假自定义日期逻辑)
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
-      legalFests.push(["春假",YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3),3]);
-      legalFests.push(["秋假",wDay(11,2,3),3]);
+      legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
+      legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
 
-    // 动态生成专属节假日，固定有高考
+    // 专属节假日 (加入高考)
     const exclusiveFests = customDays.map(item => {
       const [m, d] = item.date.split('/').map(Number);
       return [item.name, YMD(y, m, d), 1];
@@ -71,12 +76,15 @@ export default async function(ctx) {
     return {
       legal: legalFests,
       folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
-      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["儿童节",YMD(y,6,1),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
+      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive: exclusiveFests
     };
   };
 
-  let stickyFest = "", ongoingFest = "";
+  let stickyFest = "";
+  let minPinnedDiff = Infinity; // 💎 记录最小的置顶天数，防止明年覆盖今年
+  const todayFests = []; // 💎 记录今天的所有节日，用于优先置顶展示
+  
   const f1 = getFests(Y), f2 = getFests(Y + 1), result = { legal: [], folk: [], intl: [], exclusive: [] };
 
   ["legal", "folk", "intl", "exclusive"].forEach(cat => {
@@ -85,12 +93,15 @@ export default async function(ctx) {
       const [yy, mm, dd] = dateStr.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
       
-      // 正在进行的法定节日
-      if (cat === "legal" && diff <= 0 && diff > -duration) ongoingFest = name;
+      // 💎 如果刚好是今天（含法定持续期间），加入高亮数组
+      if (diff <= 0 && diff > -(duration || 1)) {
+        if (!todayFests.includes(name)) todayFests.push(name);
+      }
       if (diff < 0) return;
       
-      // 用户指定的置顶节日逻辑
-      if (pinnedHoliday && name === pinnedHoliday && diff > 0) {
+      // 💎 获取距今最近的那一个置顶节日
+      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff < minPinnedDiff) {
+        minPinnedDiff = diff;
         stickyFest = `${name} ${diff}天`;
       }
       
@@ -98,13 +109,17 @@ export default async function(ctx) {
     });
   });
 
-  // 根据分类不同设置展示数量上限，专属最大支持获取 6 个参与渲染
+  // 根据分类设置数量上限：法定 4，专属 6，其他 3
   const format = (cat) => {
-    const limit = cat === "exclusive" ? 6 : 3;
+    const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
   };
   
-  const titleAddon = ongoingFest ? `🎉 正在进行：${ongoingFest}` : (stickyFest ? `✨ ${stickyFest}` : "");
+  // 💎 顶栏联合文字组装：当天节日 + 置顶节日
+  let topAddons = [];
+  if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
+  if (stickyFest) topAddons.push(`✨ ${stickyFest}`);
+  const titleAddon = topAddons.join(" | ");
 
   return {
     type: 'widget', 
@@ -127,12 +142,13 @@ export default async function(ctx) {
           { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
         ].filter(c => c.t).map(cat => ({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+            // 左侧图标+分类名
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 👇 核心调整：maxLines 强制锁在 2，宽度 236。超出的内容将自动被截断呈现省略号
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 236 }
+            // 💎 右侧文字：使用 flex: 1 替代固定宽度，触发原生的自然换行。超 2 行优雅截断。
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, flex: 1 }
           ]
         }))
       },
