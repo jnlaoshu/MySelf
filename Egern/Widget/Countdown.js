@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 全景覆盖法定、民俗、国际节假日及多达 6 个专属纪念日倒数；支持指定节日始终置顶与当天节日动态高亮提醒；精控分类显示（法定/民俗/国际限单行，专属限双行），超长文本自然截断防溢出；全局采用绝对网格等距排版，视觉规整舒展；完美自适应深浅色模式。
+ * ✨ 特色功能: 全景覆盖法定、民俗、国际及6大专属倒数；法定精控前4个显示；采用自研“绝对等距网格引擎”，法定/民俗/国际锁死单行，专属特批双行；内置“数字与日期防割裂引擎”，智能将连续数字（如 12、04/03）绑定为不可分割整体，彻底杜绝数字被跨行斩断的视觉痛点；全局行距100%统一，视觉重心沉稳；全系适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 15:21
+ * ⏱️ 更新时间: 2026.03.17 15:38
  * ==========================================
  */
 
@@ -94,44 +94,47 @@ export default async function(ctx) {
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
   const formatRegular = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
 
-  const getExclusiveLines = (items) => {
-    const sliced = items.sort((a,b) => a.diff - b.diff).slice(0, 6);
-    if (sliced.length === 0) return [];
-    
-    let lines = [];
-    let currentLine = [];
-    let currentLen = 0;
-    const MAX_W = 38; 
-    const getW = (s) => { let w=0; for(let i=0;i<s.length;i++) w += s.charCodeAt(i)>255 ? 2 : 1.1; return w; };
+  // 💎 终极防割裂切割引擎：不仅计算宽度，还将【连续的数字和日期符号】绑定为一个不可分割的词汇块（Token）！
+  const getExclusiveLines = (str) => {
+    if (!str) return [];
+    let firstLine = "";
+    let w = 0;
+    const MAX_W = 40.5; // 物理极限安全宽度
+    let breakIndex = -1;
 
-    for (let i = 0; i < sliced.length; i++) {
-        let str = formatItem(sliced[i]);
-        let strW = getW(str);
-        if (currentLine.length === 0) {
-            currentLine.push(str);
-            currentLen = strW;
+    // 正则魔法：将连续的数字、英文字母、斜杠、点号绑定为一个整体；其余汉字或符号则单字拆分。
+    const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
+
+    for (let i = 0; i < tokens.length; i++) {
+        let token = tokens[i];
+        let tokenW = 0;
+        // 计算整个 token（词汇块或单字）的总宽度
+        for(let j = 0; j < token.length; j++) {
+            tokenW += token.charCodeAt(j) > 255 ? 2 : 1.1; 
+        }
+
+        // 如果加上这个 token 就超宽了，则立刻在这个 token 前断开！
+        if (w + tokenW > MAX_W) {
+            breakIndex = i;
+            break;
         } else {
-            let additionW = getW("，") + strW;
-            if (currentLen + additionW <= MAX_W) {
-                currentLine.push(str);
-                currentLen += additionW;
-            } else {
-                lines.push(currentLine.join("，"));
-                currentLine = [str];
-                currentLen = strW;
-            }
+            firstLine += token;
+            w += tokenW;
         }
     }
-    if (currentLine.length > 0) lines.push(currentLine.join("，"));
 
-    if (lines.length > 2) {
-        let firstLine = lines[0];
-        let restLine = lines.slice(1).join("，");
-        lines = [firstLine, restLine];
+    if (breakIndex === -1) {
+        return [str];
+    } else {
+        // 第一行如果末尾正好是逗号或空格，清理掉以防难看
+        firstLine = firstLine.replace(/[，\s]+$/, '');
+        // 剩下的 token 拼成第二行，并清理开头的逗号或空格
+        let restLine = tokens.slice(breakIndex).join("").replace(/^[，\s]+/, '');
+        return [firstLine, restLine];
     }
-    return lines;
   };
 
+  // 💎 网格化打平逻辑：保证所有输出行在同基层面，强制统一间距
   let gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst) => {
       gridRows.push({
@@ -140,21 +143,32 @@ export default async function(ctx) {
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : '#00000000', width: 13, height: 13 },
                   { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
               ]},
+              // 所有提取出来的行统统锁死 maxLines: 1，交由原生处理最后的 ... 截断
               { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 248 }
           ]
       });
   };
 
-  if (result.legal.length) pushRow("building.columns.fill", COLOR_RED, "法定", formatRegular("legal", 4), true);
-  if (result.folk.length) pushRow("moon.stars.fill", COLOR_GOLD, "民俗", formatRegular("folk", 3), true);
-  if (result.intl.length) pushRow("globe.americas.fill", COLOR_BLUE, "国际", formatRegular("intl", 3), true);
-  if (result.exclusive.length) {
-      let excLines = getExclusiveLines(result.exclusive);
-      excLines.forEach((lineStr, idx) => {
-          pushRow("gift.fill", COLOR_TEAL, "专属", lineStr, idx === 0);
+  // 法定、民俗、国际锁死推入单行
+  let tLegal = formatStr("legal", 4);
+  if (tLegal) pushRow("building.columns.fill", COLOR_RED, "法定", tLegal, true);
+
+  let tFolk = formatStr("folk");
+  if (tFolk) pushRow("moon.stars.fill", COLOR_GOLD, "民俗", tFolk, true);
+
+  let tIntl = formatStr("intl");
+  if (tIntl) pushRow("globe.americas.fill", COLOR_BLUE, "国际", tIntl, true);
+
+  // 专属进入防割裂切割引擎
+  let tExc = formatStr("exclusive", 6);
+  if (tExc) {
+      let excLines = getExclusiveLines(tExc);
+      excLines.forEach((line, idx) => {
+          pushRow("gift.fill", COLOR_TEAL, "专属", line, idx === 0);
       });
   }
 
+  // 💎 精准间距调配
   const visualLines = gridRows.length;
   let dynamicGap = 8;     
   let dynamicSpacer = 10; 
@@ -174,7 +188,7 @@ export default async function(ctx) {
     padding: 12, 
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 4 }, 
+      { type: 'spacer', length: 4 }, // 标题栏配重对齐
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
