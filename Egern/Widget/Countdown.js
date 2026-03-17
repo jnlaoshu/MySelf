@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；完美修复长文本溢出，坚固双层排版永不越界；专属换行截断，法定展示 4 个；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；完美修复排版崩溃，采用原生安全流式排版；专属换行截断，法定展示 4 个；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 11:35
+ * ⏱️ 更新时间: 2026.03.17 11:45
  * ==========================================
  */
 
@@ -59,7 +59,7 @@ export default async function(ctx) {
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
-    // 法定节假日 (加入春秋假)
+    // 法定节假日
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
@@ -122,15 +122,12 @@ export default async function(ctx) {
     padding: 12, 
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
-          { type: 'spacer', length: 6 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
           { type: 'spacer' },
-          // 💎 防止标题栏的置顶文字过长顶飞左边标题，加入自适应包裹护盾
-          { type: 'stack', direction: 'column', alignItems: 'end', flex: 1, children: [
-              { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8 }
-          ]}
+          // 还原原生安全的置顶区域文本处理方式
+          { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: 12 },
       
@@ -142,19 +139,15 @@ export default async function(ctx) {
           { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
         ].filter(c => c.t).map(cat => ({
           
-          // 🛡️ 核心排版重构：绝对安全的双层嵌套护盾！
-          type: 'stack', direction: 'row', alignItems: 'start', children: [
-            
-            // 🧱 第 1 层：左侧固定容器（强锁 width: 52 宽度，宁死不退！）
-            { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, width: 52, children: [
+          // 💎 复刻完美生效的网络组件 (Component 3) 排版法！
+          // 去掉所有 stack 上的 width 和 flex 魔法，让原生引擎乖乖工作
+          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+            { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            
-            // 📦 第 2 层：右侧弹性收纳盒（强制文本遵守边界，乖乖换行）
-            { type: 'stack', direction: 'column', alignItems: 'start', flex: 1, children: [
-                { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2 }
-            ]}
+            // 💎 只在文本本身套上宽盾 (width: 230)，系统自然会将其完美换行且不超过边界
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 230 }
           ]
 
         }))
