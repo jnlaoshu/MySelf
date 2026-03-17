@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；内置 AI 动态排版引擎，智能预判字数与折行数，自动调整黄金间距，单行舒展双行防挤；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天与置顶节日高亮；摒弃复杂动态逻辑，采用原生最稳固的流式排版，间距恒定舒展，完美双行折断；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:00
+ * ⏱️ 更新时间: 2026.03.17 13:10
  * ==========================================
  */
 
@@ -61,12 +61,14 @@ export default async function(ctx) {
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
+    // 法定节假日
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
       legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
 
+    // 专属节假日
     const exclusiveFests = customDays.map(item => {
       const [m, d] = item.date.split('/').map(Number);
       return [item.name, YMD(y, m, d), 1];
@@ -111,30 +113,6 @@ export default async function(ctx) {
     const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
   };
-
-  const tLegal = format("legal");
-  const tFolk = format("folk");
-  const tIntl = format("intl");
-  const tExclusive = format("exclusive");
-
-  // 💎 核心 AI 动态排版逻辑：根据字符串长度精准预判每个分类占据的行数
-  // width: 250 的情况下，通常超过 34 个中英文字符就会换行
-  const getLineCount = (str) => str.length > 34 ? 2 : 1;
-  const totalLines = getLineCount(tLegal) + getLineCount(tFolk) + getLineCount(tIntl) + getLineCount(tExclusive);
-
-  // 💎 根据预判的总行数，分配黄金间距！
-  let dynamicSpacer = 14; 
-  let dynamicGap = 10;    
-  
-  if (totalLines === 5) {
-    // 恰好 5 行（有一项换行了），收缩空间保命
-    dynamicSpacer = 9;
-    dynamicGap = 7;
-  } else if (totalLines >= 6) {
-    // 超过 6 行（极限情况），极致收缩
-    dynamicSpacer = 6;
-    dynamicGap = 4;
-  }
   
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -155,25 +133,29 @@ export default async function(ctx) {
           ]}
       ]},
       
-      // 💎 使用预判好的标题区域留白
-      { type: 'spacer', length: dynamicSpacer }, 
+      // 💎 恒定标题留白：12。最完美的头肩比分隔。
+      { type: 'spacer', length: 12 }, 
       
-      // 💎 使用预判好的分类行距
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
+      // 💎 恒定行间距：8。单行时底部不空，双行时毫不局促。
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 8,
         children: [
-          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: tLegal },
-          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: tFolk },
-          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: tIntl },
-          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: tExclusive }
+          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal") },
+          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk") },
+          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl") },
+          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
         ].filter(c => c.t).map(cat => ({
           
-          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-            { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+          // 🛡️ 原生绝对安全排版架构，抛弃所有 flex 和魔法控制
+          type: 'stack', direction: 'row', alignItems: 'start', children: [
+            
+            // 左侧图标与标题，固定安全宽度 50
+            { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 放宽最大行数为 2，由外部动态间距去规避溢出崩溃
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 250 }
+            
+            // 右侧节日列表，固定安全宽度 236，统一开放 maxLines: 2。原生自然换行，永不截断左侧！
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 236 }
           ]
 
         }))
