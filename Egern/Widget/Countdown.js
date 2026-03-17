@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日高亮；完美双行折行排版；终极优化黄金垂直间距，消除底部突兀留白；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日高亮；卡点 iOS 渲染极限的黄金垂直间距，完美保障双行折行排版；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 12:45
+ * ⏱️ 更新时间: 2026.03.17 12:48
  * ==========================================
  */
 
@@ -133,11 +133,9 @@ export default async function(ctx) {
           ]}
       ]},
       
-      // 💎 视觉优化 1：标题区和列表区的隔断撑大到 14，拉开主次区域空间感
-      { type: 'spacer', length: 14 }, 
+      { type: 'spacer', length: 10 }, 
       
-      // 💎 视觉优化 2：分类列表之间的 gap 撑大到 10，让 4 行内容自然呼吸填补底部空缺
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 10,
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 7,
         children: [
           { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal"), lines: 2 },
           { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk"), lines: 1 },
