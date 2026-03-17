@@ -92,7 +92,7 @@ export default async function(ctx) {
   });
 
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
-  const formatRegular = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
+  const formatStr = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
 
   // 💎 终极防割裂切割引擎：不仅计算宽度，还将【连续的数字和日期符号】绑定为一个不可分割的词汇块（Token）！
   const getExclusiveLines = (str) => {
