@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；精准分配换行权限，突破系统高度锁死机制，专属独享双行特权；间距恒定舒展，完美对齐黄历组件高度；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；自研网格对齐引擎，彻底统一所有行距；智能预判折行并动态分配黄金留白，消除一切拥挤与空洞；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:25
+ * ⏱️ 更新时间: 2026.03.17 13:30
  * ==========================================
  */
 
@@ -61,14 +61,12 @@ export default async function(ctx) {
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
-    // 法定节假日
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
       legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
 
-    // 专属节假日
     const exclusiveFests = customDays.map(item => {
       const [m, d] = item.date.split('/').map(Number);
       return [item.name, YMD(y, m, d), 1];
@@ -109,11 +107,66 @@ export default async function(ctx) {
     });
   });
 
-  const format = (cat) => {
-    const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
-    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
+  // 💎 核心引擎 1：超级切词器！放弃原生折行，由我们自己计算字数拆分为数组
+  const getChunkedLines = (items, maxItems, maxLinesLimit) => {
+    const sliced = items.sort((a,b) => a.diff - b.diff).slice(0, maxItems);
+    if (sliced.length === 0) return [];
+    let lines = [];
+    let curr = [];
+    let currLen = 0;
+    
+    for (let i = 0; i < sliced.length; i++) {
+        let str = sliced[i].diff === 0 ? `🎉${sliced[i].name}` : `${sliced[i].name} ${sliced[i].diff}天`;
+        // 如果已经到了允许的最后一行，直接把剩下的全都塞进去交由系统去 ... 截断
+        if (lines.length === maxLinesLimit - 1) {
+            curr.push(str);
+        } else {
+            // 阈值设为 19（极其安全），超过则分段形成新行
+            if (curr.length > 0 && currLen + str.length > 19) {
+                lines.push(curr.join("，"));
+                curr = [str];
+                currLen = str.length;
+            } else {
+                curr.push(str);
+                currLen += str.length + 1; // 算上逗号
+            }
+        }
+    }
+    if (curr.length > 0) lines.push(curr.join("，"));
+    return lines;
   };
+
+  // 生成排版数组：法定最多算 2 行，民俗 1 行，国际 1 行，专属最多算 2 行
+  const legalLines = getChunkedLines(result.legal, 4, 2);
+  const folkLines = getChunkedLines(result.folk, 3, 1);
+  const intlLines = getChunkedLines(result.intl, 3, 1);
+  const exclusiveLines = getChunkedLines(result.exclusive, 6, 2);
+
+  const categories = [
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", linesArr: legalLines },
+    { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", linesArr: folkLines },
+    { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", linesArr: intlLines },
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", linesArr: exclusiveLines }
+  ].filter(c => c.linesArr.length > 0);
+
+  // 💎 核心引擎 2：精确统计绝对的“视觉行数”
+  const visualLines = categories.reduce((sum, cat) => sum + cat.linesArr.length, 0);
+
+  // 💎 根据行数分配极限网格间距！
+  let dynamicSpacer = 12;
+  let dynamicGap = 8;
   
+  if (visualLines <= 4) {
+      dynamicSpacer = 16; // 最多 4 行时，上下舒展
+      dynamicGap = 12;
+  } else if (visualLines === 5) {
+      dynamicSpacer = 12; // 标准 5 行（专属或法定有 1 个发生了折行）
+      dynamicGap = 7;
+  } else if (visualLines >= 6) {
+      dynamicSpacer = 8;  // 极限 6 行（专属和法定同时发生了折行），极致收缩保命
+      dynamicGap = 4;
+  }
+
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
   if (stickyFest) topAddons.push(`✨ ${stickyFest}`);
@@ -133,28 +186,26 @@ export default async function(ctx) {
           ]}
       ]},
       
-      // 💎 标题下留白：12，保证头肩比协调
-      { type: 'spacer', length: 12 }, 
+      { type: 'spacer', length: dynamicSpacer }, 
       
-      // 💎 行间距：8，与上方“岁时黄历”完全一致的黄金比例
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 8,
-        children: [
-          // 💎 核心破局点：精准发放换行权限！
-          // 前三个分类被强制锁定 maxLines: 1，绝不允许多占空间。系统预判总高度安全，从而赦免了最后一行！
-          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal"), maxL: 1 },
-          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk"), maxL: 1 },
-          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl"), maxL: 1 },
-          // 👑 “专属”成为全村唯一的希望，独享 maxLines: 2 的最高权限
-          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive"), maxL: 2 }
-        ].filter(c => c.t).map(cat => ({
+      // 💎 核心引擎 3：彻底统一内外 gap！
+      // 外部大分类之间的 gap，和内部长文本折行后的 gap 是同一个变量！
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
+        children: categories.map(cat => ({
           
           type: 'stack', direction: 'row', alignItems: 'start', children: [
+            // 左侧依然锁死 50 护盾，绝不越界
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 文本区宽度 245 完美触边换行。将每行的 maxLines 单独应用到组件渲染上！
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.maxL, width: 245 }
+            // 右侧是独立的多行文本容器，它内部的 gap 也严格应用 dynamicGap！从而达到“每一行高度一致”的神级效果！
+            { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: 
+                cat.linesArr.map(textLine => ({
+                    // 单行强锁 maxLines: 1，一旦达到预设宽度边缘就会完美且安全地展示系统原生的 ...
+                    type: 'text', text: textLine, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 242
+                }))
+            }
           ]
 
         }))
