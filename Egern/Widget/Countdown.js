@@ -3,36 +3,37 @@
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
  * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属纪念日倒数；自动抓取并展示距离当前最近的 3 个法定、民俗和国际节日；支持自定义配置最多 6 个专属纪念日（如生日、纪念日等）；智能保护连续数字与日期格式，确保日期数据作为一个整体展示而不被截断；全面适配 iOS 深浅色模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 23:20
+ * ⏱️ 更新时间: 2026.03.17 23:22
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 动态读取环境配置
-  const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
-  const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
-  const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
-  const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
+  // ===================== 1. 环境配置与色彩引擎 =====================
+  const env = ctx.env;
+  const showSchoolHolidays = (env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
+  const pinnedHoliday = (env.PINNED_HOLIDAY || "").trim();
+  const springDateStr = (env.SPRING_BREAK_DATE || "").trim();
+  const autumnDateStr = (env.AUTUMN_BREAK_DATE || "").trim();
 
-  // 读取用户填写的最多 6 个专属纪念日
-  const customDays = [];
-  for (let i = 1; i <= 6; i++) {
-    const nameKey = i === 1 ? (ctx.env.EXCLUSIVE_NAME_1 || ctx.env.EXCLUSIVE_NAME) : ctx.env[`EXCLUSIVE_NAME_${i}`];
-    const dateKey = i === 1 ? (ctx.env.EXCLUSIVE_DATE_1 || ctx.env.EXCLUSIVE_DATE) : ctx.env[`EXCLUSIVE_DATE_${i}`];
-    const n = nameKey || (i === 1 ? "我的生日" : "");
-    const d = dateKey || (i === 1 ? "12/13" : "");
-    if (n && n.trim() !== "" && d && d.includes('/')) customDays.push({ name: n.trim(), date: d.trim() });
-  }
+  // 优雅抽取专属纪念日
+  const customDays = [1, 2, 3, 4, 5, 6].map(i => {
+    const n = env[i === 1 ? 'EXCLUSIVE_NAME_1' : `EXCLUSIVE_NAME_${i}`] ?? (i === 1 ? env.EXCLUSIVE_NAME ?? "我的生日" : "");
+    const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "12/13" : "");
+    return { name: n?.trim(), date: d?.trim() };
+  }).filter(item => item.name && item.date?.includes('/'));
 
-  const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
-  const TEXT_MAIN = { light: '#1C1C1E', dark: '#FFFFFF' };
-  const TEXT_SUB = { light: '#48484A', dark: '#D1D1D6' }; 
+  const C = {
+    bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    main: { light: '#1C1C1E', dark: '#FFFFFF' },
+    sub: { light: '#48484A', dark: '#D1D1D6' },
+    gold: { light: '#B58A28', dark: '#D6A53A' },
+    red: { light: '#CA3B32', dark: '#FF453A' },
+    blue: { light: '#3A5F85', dark: '#5E8EB8' },
+    teal: { light: '#628C7B', dark: '#73A491' },
+    transparent: '#00000000'
+  };
 
-  const COLOR_GOLD = { light: '#B58A28', dark: '#D6A53A' }; 
-  const COLOR_RED = { light: '#CA3B32', dark: '#FF453A' };   
-  const COLOR_BLUE = { light: '#3A5F85', dark: '#5E8EB8' };  
-  const COLOR_TEAL = { light: '#628C7B', dark: '#73A491' };  
-
+  // ===================== 2. 时间与历法运算 =====================
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
@@ -52,138 +53,124 @@ export default async function(ctx) {
     return (m && d) ? YMD(y, m, d) : defaultCalc();
   };
 
+  // ===================== 3. 节日数据抽取 =====================
   const getFests = (y) => {
-    const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
+    const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r ? YMD(r.getUTCFullYear(), r.getUTCMonth()+1, r.getUTCDate()) : ""; };
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
-    let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
+    let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
-      legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
-      legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
+      legal.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
+      legal.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
     
-    const exclusiveFests = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
-    exclusiveFests.push(["高考", YMD(y, 6, 7), 2]);
+    let exclusive = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
+    exclusive.push(["高考", YMD(y, 6, 7), 2]);
     
     return {
-      legal: legalFests, 
+      legal, 
       folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
-      exclusive: exclusiveFests
+      exclusive
     };
   };
 
-  let stickyFest = "";
-  let minPinnedDiff = Infinity; 
-  const todayFests = []; 
-  const f1 = getFests(Y), f2 = getFests(Y + 1), result = { legal: [], folk: [], intl: [], exclusive: [] };
+  const result = { legal: [], folk: [], intl: [], exclusive: [] };
+  const todayFests = [];
+  let stickyFest = "", minPinnedDiff = Infinity; 
+  const f1 = getFests(Y), f2 = getFests(Y + 1);
 
-  ["legal", "folk", "intl", "exclusive"].forEach(cat => {
-    f1[cat].concat(f2[cat]).forEach(([name, dateStr, duration]) => {
+  Object.keys(result).forEach(cat => {
+    [...f1[cat], ...f2[cat]].forEach(([name, dateStr, duration]) => {
       if (!dateStr) return;
       const [yy, mm, dd] = dateStr.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
-      if (diff <= 0 && diff > -(duration || 1)) if (!todayFests.includes(name)) todayFests.push(name);
+      
+      if (diff <= 0 && diff > -(duration || 1) && !todayFests.includes(name)) todayFests.push(name);
       if (diff < 0) return;
-      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff < minPinnedDiff) { minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; }
-      if (!result[cat].find(i => i.name === name)) result[cat].push({ name, diff });
+      
+      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff < minPinnedDiff) { 
+          minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
+      }
+      if (!result[cat].some(i => i.name === name)) result[cat].push({ name, diff });
     });
   });
 
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
-  const formatStr = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
+  const formatStr = (cat, limit) => result[cat].sort((a,b) => a.diff - b.diff).slice(0, limit).map(formatItem).join("，");
 
+  // ===================== 4. 文本引擎与布局生成 =====================
   const getExclusiveLines = (str) => {
     if (!str) return [];
-    let firstLine = "";
-    let w = 0;
-    const MAX_W = 45; // 提升至 45，多容纳约 2 个汉字
-    let breakIndex = -1;
-
+    let firstLine = "", w = 0;
     const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
 
     for (let i = 0; i < tokens.length; i++) {
-        let token = tokens[i];
-        let tokenW = 0;
-        for(let j = 0; j < token.length; j++) {
-            tokenW += token.charCodeAt(j) > 255 ? 2 : 1.1; 
-        }
+        const token = tokens[i];
+        const tokenW = [...token].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1.1), 0);
 
-        if (w + tokenW > MAX_W) {
-            breakIndex = i;
-            break;
-        } else {
-            firstLine += token;
-            w += tokenW;
+        if (w + tokenW > 45) {
+            return [
+                firstLine.replace(/[，\s]+$/, ''),
+                tokens.slice(i).join("").replace(/^[，\s]+/, '')
+            ];
         }
+        firstLine += token;
+        w += tokenW;
     }
-
-    if (breakIndex === -1) {
-        return [str];
-    } else {
-        firstLine = firstLine.replace(/[，\s]+$/, '');
-        let restLine = tokens.slice(breakIndex).join("").replace(/^[，\s]+/, '');
-        return [firstLine, restLine];
-    }
+    return [str];
   };
 
-  let gridRows = [];
+  const gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst) => {
       gridRows.push({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
               { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
-                  { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : '#00000000', width: 13, height: 13 },
-                  { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
+                  { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : C.transparent, width: 13, height: 13 },
+                  { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : C.transparent }
               ]},
-              // 容器宽度放宽至 260，防止被截断
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 260 }
+              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, width: 260 }
           ]
       });
   };
 
-  let tLegal = formatStr("legal", 3);
-  if (tLegal) pushRow("building.columns.fill", COLOR_RED, "法定", tLegal, true);
+  const tLegal = formatStr("legal", 3);
+  if (tLegal) pushRow("building.columns.fill", C.red, "法定", tLegal, true);
 
-  let tFolk = formatStr("folk", 3);
-  if (tFolk) pushRow("moon.stars.fill", COLOR_GOLD, "民俗", tFolk, true);
+  const tFolk = formatStr("folk", 3);
+  if (tFolk) pushRow("moon.stars.fill", C.gold, "民俗", tFolk, true);
 
-  let tIntl = formatStr("intl", 3);
-  if (tIntl) pushRow("globe.americas.fill", COLOR_BLUE, "国际", tIntl, true);
+  const tIntl = formatStr("intl", 3);
+  if (tIntl) pushRow("globe.americas.fill", C.blue, "国际", tIntl, true);
 
-  let tExc = formatStr("exclusive", 6);
+  const tExc = formatStr("exclusive", 6);
   if (tExc) {
-      let excLines = getExclusiveLines(tExc);
-      excLines.forEach((line, idx) => {
-          pushRow("gift.fill", COLOR_TEAL, "专属", line, idx === 0);
+      getExclusiveLines(tExc).forEach((line, idx) => {
+          pushRow("gift.fill", C.teal, "专属", line, idx === 0);
       });
   }
 
+  // ===================== 5. 组装与输出 =====================
   const visualLines = gridRows.length;
-  let dynamicGap = 8;     
-  let dynamicSpacer = 10; 
-  
-  if (visualLines <= 4) {
-      dynamicGap = 11;
-      dynamicSpacer = 12;
-  }
+  const dynamicGap = visualLines <= 4 ? 11 : 8;     
+  const dynamicSpacer = visualLines <= 4 ? 12 : 10; 
 
-  let topAddons = [];
+  const topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
   if (stickyFest) topAddons.push(`✨ ${stickyFest}`);
-  const titleAddon = topAddons.join(" | ");
 
   return {
     type: 'widget', 
     padding: 12, 
-    backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
       { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-          { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
-          { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
+          { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: C.main, width: 16, height: 16 },
+          { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: C.main },
           { type: 'spacer' },
-          { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8 }
+          { type: 'text', text: topAddons.join(" | "), font: { size: 12, weight: 'bold' }, textColor: C.red, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: dynamicSpacer }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: gridRows },
