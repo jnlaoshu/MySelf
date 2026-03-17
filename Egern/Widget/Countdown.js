@@ -1,18 +1,20 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚多节日；法定精准限制 4 个；参照黄历组件采用固定宽度物理换行，彻底消除右侧留白；全局行距精调，实现视觉层面的高度对齐与等距感；全面支持深浅模式。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日；法定精控4个显示；支持任意节日置顶与当天高亮展示；采用 246px 极限安全宽度，完美激活 iOS 原生触边折行引擎，彻底解决单行截断与排版崩溃问题；内置动态间距补偿，确保跨分类视觉等距与底部留白舒展；全系支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:55
+ * ⏱️ 更新时间: 2026.03.16 23:48
  * ==========================================
  */
 
 export default async function(ctx) {
+  // 动态读取环境配置
   const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
   const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
 
+  // 读取用户填写的最多 6 个专属纪念日
   const customDays = [];
   for (let i = 1; i <= 6; i++) {
     const nameKey = i === 1 ? (ctx.env.EXCLUSIVE_NAME_1 || ctx.env.EXCLUSIVE_NAME) : ctx.env[`EXCLUSIVE_NAME_${i}`];
@@ -54,16 +56,18 @@ export default async function(ctx) {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r?YMD(r.getUTCFullYear(),r.getUTCMonth()+1,r.getUTCDate()):""; };
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
+    
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
       legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
+    
     const exclusiveFests = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
     exclusiveFests.push(["高考", YMD(y, 6, 7), 2]);
+    
     return {
-      legal: legalFests,
-      folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
+      legal: legalFests, folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive: exclusiveFests
     };
@@ -90,17 +94,18 @@ export default async function(ctx) {
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
   };
 
+  // 💎 核心换行放权：明确分配 maxLines，系统据此允许文字容器原生折行
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 2 },
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } // 专属特批双行权限
   ].filter(c => c.t);
 
-  // 💎 动态间距控制，保证单双行都能填满
-  const hasTwoLines = categoriesData.some(c => c.t.length > 20); // 估算是否折行
-  const dynamicGap = hasTwoLines ? 7 : 10;
-  const dynamicSpacer = hasTwoLines ? 10 : 14;
+  // 💎 动态视觉留白：根据专属总字数智能判定是否折行以分配间距（22个字符左右为折行临界点）
+  const hasTwoLines = categoriesData.some(c => c.t.length > 22); 
+  const dynamicGap = hasTwoLines ? 10 : 12;
+  const dynamicSpacer = hasTwoLines ? 12 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -121,13 +126,14 @@ export default async function(ctx) {
       { type: 'spacer', length: dynamicSpacer }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
         children: categoriesData.map(cat => ({
+          // 回归最稳定的原生行布局结构
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 这里是关键：锁定 255 物理宽度，让系统原生硬换行，填满右侧
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
+            // 💎 极限安全宽度 246px：既能无限贴近右侧消除留白，又不会溢出边框导致系统防爆截断！
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 246 }
           ]
         }))
       },
