@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；专属自动换行防溢出，法定展示 4 个；支持各城市春/秋假自定义；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；完美修复长文本溢出，专属最多换 2 行并防挤出；支持各城市春/秋假自定义；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 11:23
+ * ⏱️ 更新时间: 2026.03.17 11:35
  * ==========================================
  */
 
@@ -82,8 +82,8 @@ export default async function(ctx) {
   };
 
   let stickyFest = "";
-  let minPinnedDiff = Infinity; // 💎 记录最小的置顶天数，防止明年覆盖今年
-  const todayFests = []; // 💎 记录今天的所有节日，用于优先置顶展示
+  let minPinnedDiff = Infinity; 
+  const todayFests = []; 
   
   const f1 = getFests(Y), f2 = getFests(Y + 1), result = { legal: [], folk: [], intl: [], exclusive: [] };
 
@@ -93,13 +93,11 @@ export default async function(ctx) {
       const [yy, mm, dd] = dateStr.split('/').map(Number);
       const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
       
-      // 💎 如果刚好是今天（含法定持续期间），加入高亮数组
       if (diff <= 0 && diff > -(duration || 1)) {
         if (!todayFests.includes(name)) todayFests.push(name);
       }
       if (diff < 0) return;
       
-      // 💎 获取距今最近的那一个置顶节日
       if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff < minPinnedDiff) {
         minPinnedDiff = diff;
         stickyFest = `${name} ${diff}天`;
@@ -109,13 +107,11 @@ export default async function(ctx) {
     });
   });
 
-  // 根据分类设置数量上限：法定 4，专属 6，其他 3
   const format = (cat) => {
     const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
   };
   
-  // 💎 顶栏联合文字组装：当天节日 + 置顶节日
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
   if (stickyFest) topAddons.push(`✨ ${stickyFest}`);
@@ -130,7 +126,10 @@ export default async function(ctx) {
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
           { type: 'spacer' },
-          { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED }
+          // 💎 防止标题栏的自定义置顶文字过长顶飞左侧，加了固定宽度和自适应缩放兜底
+          { type: 'stack', direction: 'row', alignItems: 'center', children: [
+              { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8, width: 160 }
+          ]}
       ]},
       { type: 'spacer', length: 12 },
       
@@ -141,14 +140,14 @@ export default async function(ctx) {
           { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl") },
           { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
         ].filter(c => c.t).map(cat => ({
+          // 💎 核心排版修复：父级使用 'start' 顶部对齐（允许文字向下自然扩展两行）
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-            // 左侧图标+分类名
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 右侧文字：使用 flex: 1 替代固定宽度，触发原生的自然换行。超 2 行优雅截断。
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, flex: 1 }
+            // 💎 去掉罪魁祸首 flex: 1，换回极其安全的固定宽度 230，配合 maxLines: 2 完美换行并截断
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 230 }
           ]
         }))
       },
