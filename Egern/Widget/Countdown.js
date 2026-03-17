@@ -1,20 +1,18 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持节日置顶与当天高亮展示；采用 Flex 弹性布局对标黄历组件视觉宽度，强制激活原生多行渲染引擎，彻底解决专属折行失效与右侧留白问题；内置动态间距补偿，确保跨分类像素级等距。
+ * ✨ 特色功能: 汇聚多节日；法定精准限制 4 个；参照黄历组件采用固定宽度物理换行，彻底消除右侧留白；全局行距精调，实现视觉层面的高度对齐与等距感；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.16 23:08
+ * ⏱️ 更新时间: 2026.03.17 13:55
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 动态读取环境配置
   const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
   const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
 
-  // 读取用户填写的最多 6 个专属纪念日
   const customDays = [];
   for (let i = 1; i <= 6; i++) {
     const nameKey = i === 1 ? (ctx.env.EXCLUSIVE_NAME_1 || ctx.env.EXCLUSIVE_NAME) : ctx.env[`EXCLUSIVE_NAME_${i}`];
@@ -64,7 +62,8 @@ export default async function(ctx) {
     const exclusiveFests = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
     exclusiveFests.push(["高考", YMD(y, 6, 7), 2]);
     return {
-      legal: legalFests, folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
+      legal: legalFests,
+      folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive: exclusiveFests
     };
@@ -91,18 +90,17 @@ export default async function(ctx) {
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
   };
 
-  // 💎 排版数据层：法定限制 4 个显示
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 2 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } 
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
   ].filter(c => c.t);
 
-  // 💎 动态视觉算法：侦测文字长度预判折行
-  const isWrapped = categoriesData.some(c => c.t.length > 20); 
-  const dynamicGap = isWrapped ? 10 : 12;
-  const dynamicSpacer = isWrapped ? 12 : 14;
+  // 💎 动态间距控制，保证单双行都能填满
+  const hasTwoLines = categoriesData.some(c => c.t.length > 20); // 估算是否折行
+  const dynamicGap = hasTwoLines ? 7 : 10;
+  const dynamicSpacer = hasTwoLines ? 10 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -128,14 +126,8 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 核心修复：使用 flex: 1 强制撑开容器，确保系统识别到充足宽度从而激活原生折行
-            { 
-              type: 'stack', 
-              flex: 1, 
-              children: [
-                { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines }
-              ]
-            }
+            // 💎 这里是关键：锁定 255 物理宽度，让系统原生硬换行，填满右侧
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
           ]
         }))
       },
