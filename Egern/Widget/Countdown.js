@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天与置顶节日高亮；引入 AI 动态高度分配，智能侦测专属行数并应用黄金间距，优先填满底部空白；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；精准分配换行权限，突破系统高度锁死机制，专属独享双行特权；间距恒定舒展，完美对齐黄历组件高度；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:20
+ * ⏱️ 更新时间: 2026.03.17 13:25
  * ==========================================
  */
 
@@ -61,12 +61,14 @@ export default async function(ctx) {
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
+    // 法定节假日
     let legalFests = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legalFests.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
       legalFests.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
     }
 
+    // 专属节假日
     const exclusiveFests = customDays.map(item => {
       const [m, d] = item.date.split('/').map(Number);
       return [item.name, YMD(y, m, d), 1];
@@ -109,21 +111,8 @@ export default async function(ctx) {
 
   const format = (cat) => {
     const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
-    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
+    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
   };
-
-  const tLegal = format("legal");
-  const tFolk = format("folk");
-  const tIntl = format("intl");
-  const tExclusive = format("exclusive");
-
-  // 💎 核心 AI 动态排版判断：监测专属是否超长导致折行
-  // 宽度 245 约容纳 20 个中文字符，超过该长度必折成 2 行
-  const isExclusiveTwoLines = tExclusive.length > 20;
-
-  // 💎 根据折行状态分配黄金间距（容忍法定节假日被截断，优先保障整块留白不突兀）
-  const dynamicSpacer = isExclusiveTwoLines ? 12 : 14; // 折行时压缩标题留白，单行时舒展开
-  const dynamicGap = isExclusiveTwoLines ? 10 : 12;    // 折行时压缩行距，单行时大幅撑开消除底部空白
   
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -144,17 +133,19 @@ export default async function(ctx) {
           ]}
       ]},
       
-      // 应用动态智能留白
-      { type: 'spacer', length: dynamicSpacer }, 
+      // 💎 标题下留白：12，保证头肩比协调
+      { type: 'spacer', length: 12 }, 
       
-      // 应用动态智能行距
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
+      // 💎 行间距：8，与上方“岁时黄历”完全一致的黄金比例
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 8,
         children: [
-          // 彻底放开双行限制，让系统在极端尺寸下自动从法定开始向后“温柔截断”
-          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: tLegal },
-          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: tFolk },
-          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: tIntl },
-          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: tExclusive }
+          // 💎 核心破局点：精准发放换行权限！
+          // 前三个分类被强制锁定 maxLines: 1，绝不允许多占空间。系统预判总高度安全，从而赦免了最后一行！
+          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal"), maxL: 1 },
+          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk"), maxL: 1 },
+          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl"), maxL: 1 },
+          // 👑 “专属”成为全村唯一的希望，独享 maxLines: 2 的最高权限
+          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive"), maxL: 2 }
         ].filter(c => c.t).map(cat => ({
           
           type: 'stack', direction: 'row', alignItems: 'start', children: [
@@ -162,8 +153,8 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 宽度 245 完美顶到边缘折行，maxLines: 2 安全托底
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 245 }
+            // 文本区宽度 245 完美触边换行。将每行的 maxLines 单独应用到组件渲染上！
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.maxL, width: 245 }
           ]
 
         }))
