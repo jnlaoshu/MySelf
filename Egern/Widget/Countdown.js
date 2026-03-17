@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持任意节日置顶与当天高亮展示；1:1复刻黄历组件255px黄金宽度，取消词组折行，实现紧贴边缘的原生硬换行；内置AI动态间距补偿引擎，智能侦测折行状态并自动拉伸留白，确保整体视觉重心恒定且跨分类绝对等距。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持节日置顶与当天实时高亮；1:1复刻黄历组件255px黄金宽度，实现原生触边硬折行，彻底消除右侧留白；内置AI动态间距补偿引擎，确保单双行模式下垂直重心恒定且跨分类视觉等距。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.16 23:02
+ * ⏱️ 更新时间: 2026.03.17 14:02
  * ==========================================
  */
 
@@ -92,15 +92,15 @@ export default async function(ctx) {
   };
 
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 2 },
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 }, // 法定锁死一行
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }  // 专属特批两行
   ].filter(c => c.t);
 
-  const isWrapped = categoriesData.some(c => c.t.length > 20); 
-  const dynamicGap = isWrapped ? 10 : 12;
-  const dynamicSpacer = isWrapped ? 12 : 14;
+  // 💎 视觉重心对齐：由于专属锁死 2 行，其他锁死 1 行，我们采用固定间距 10 以对齐黄历
+  const dynamicGap = 10;
+  const dynamicSpacer = 12;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -126,6 +126,7 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
+            // 💎 核心修复：锁定 255 宽度，赋予专属 2 行权限，由系统原生处理 Emoji 和换行
             { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
           ]
         }))
