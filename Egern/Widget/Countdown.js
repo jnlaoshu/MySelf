@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持任意节日置顶与当天高亮展示；破解 iOS 垂直溢出防爆机制，通过智能微调行距强制夺回双行折行权限；加入隐形断句符，彻底解决系统因字符粘连导致的单行截断问题；全系支持深浅模式。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持自定义置顶与当天高亮展示；采用自研“词组级智能网格引擎”，按完整词组拆分行数组，彻底解决原生换行间距不一的痛点，实现跨分类与多行文本的 100% 像素级等距；并利用 245px 宽度实现原生触边省略号截断，杜绝留白与溢出；全系支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 14:54
+ * ⏱️ 更新时间: 2026.03.17 15:00
  * ==========================================
  */
 
@@ -91,23 +91,81 @@ export default async function(ctx) {
     });
   });
 
-  // 💎 核心修复：加入空格作为辅助断句符（"， "），打破数字粘连，给系统提供完美的换行喘息点
-  const format = (cat, limit) => {
-    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("， ");
+  // 💎 核心排版引擎：词组级平铺打散算法
+  // 我们不再交由系统去处理生硬的换行，而是自己把过长的词组分装成独立的数组行！
+  const getChunkedLines = (items, maxItems, maxLinesLimit) => {
+    const sliced = items.sort((a,b) => a.diff - b.diff).slice(0, maxItems);
+    if (sliced.length === 0) return [];
+
+    let lines = [];
+    let currLine = [];
+    let currLen = 0;
+    const SAFE_LEN = 20; // 根据 245px 宽度测算出的安全视觉长度
+
+    // 智能算宽：汉字与 Emoji 算 1，数字字母算 0.5
+    const getLen = (s) => { let l = 0; for (let i=0; i<s.length; i++) l += (s.charCodeAt(i) > 255 ? 1 : 0.55); return l; };
+
+    for (let i = 0; i < sliced.length; i++) {
+        let itemStr = sliced[i].diff === 0 ? `🎉${sliced[i].name}` : `${sliced[i].name} ${sliced[i].diff}天`;
+        let itemLen = getLen(itemStr);
+
+        if (currLine.length === 0) {
+            currLine.push(itemStr);
+            currLen = itemLen;
+        } else {
+            let additionLen = 1 + itemLen; // 加上逗号的宽度
+            if (currLen + additionLen <= SAFE_LEN) {
+                currLine.push(itemStr);
+                currLen += additionLen;
+            } else {
+                lines.push(currLine.join("，"));
+                currLine = [itemStr];
+                currLen = itemLen;
+            }
+        }
+    }
+    if (currLine.length > 0) lines.push(currLine.join("，"));
+
+    // 强制限制行数：把超出的所有词汇，全部合并塞进最后一行！
+    // 交给最后一行自带的原生 maxLines: 1 去完美触发 ... 截断
+    if (lines.length > maxLinesLimit) {
+        let lastLineStr = lines.slice(maxLinesLimit - 1).join("，");
+        lines = lines.slice(0, maxLinesLimit - 1);
+        lines.push(lastLineStr);
+    }
+    return lines;
   };
 
-  // 明确分配 maxLines，系统据此允许文字容器原生折行
+  // 生成打平后的多行数组，法定允许折2行，专属允许折2行
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
-    { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
-    { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } 
-  ].filter(c => c.t);
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", arr: getChunkedLines(result.legal, 4, 2) },
+    { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", arr: getChunkedLines(result.folk, 3, 1) },
+    { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", arr: getChunkedLines(result.intl, 3, 1) },
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", arr: getChunkedLines(result.exclusive, 6, 2) }
+  ].filter(c => c.arr.length > 0);
 
-  // 💎 极限防爆机制：一旦预判专属超长需要双行，立即将垂直间距压减至安全线以下，强制系统放行双行渲染！
-  const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
-  const dynamicGap = hasTwoLines ? 7 : 10;
-  const dynamicSpacer = hasTwoLines ? 8 : 12;
+  // 💎 彻底扁平化网格：将所有行视为同级兄弟节点
+  let gridRows = [];
+  categoriesData.forEach(cat => {
+    cat.arr.forEach((lineText, index) => {
+      gridRows.push({
+        type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+          // 左侧：首行带图标与文字，第二行用隐藏的幽灵节点精确定位
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
+              { type: 'image', src: index === 0 ? `sf-symbol:${cat.i}` : 'sf-symbol:circle', color: index === 0 ? cat.col : '#00000000', width: 13, height: 13 },
+              { type: 'text', text: index === 0 ? cat.n : " ", font: { size: 12, weight: 'heavy' }, textColor: index === 0 ? cat.col : '#00000000' }
+          ]},
+          // 右侧：全部锁死 maxLines: 1。因为处于同一层级，所以行间距绝对像素级相等！
+          { type: 'text', text: lineText, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 245 }
+        ]
+      });
+    });
+  });
+
+  // 💎 黄金等距算法：根据实际展现的物理行数，分配最舒展的统一行间距
+  const visualLines = gridRows.length;
+  const dynamicGap = visualLines > 4 ? 8 : 12; // 5行时用8保证安全，4行时用12填补空白
+  const dynamicSpacer = visualLines > 4 ? 10 : 16; 
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -126,18 +184,10 @@ export default async function(ctx) {
           { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: dynamicSpacer }, 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
-        children: categoriesData.map(cat => ({
-          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-            { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
-                { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
-                { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
-            ]},
-            // 💎 黄金物理定宽 250px：刚好卡在边框内且有充足余量让原生双行顺利流出！
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 250 }
-          ]
-        }))
-      },
+      
+      // 👑 见证奇迹的时刻：因为所有行都是独立的兄弟节点，这里的 dynamicGap 实现了字面意义上的绝对等距！
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: gridRows },
+      
       { type: 'spacer' }
     ]
   };
