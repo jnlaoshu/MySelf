@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日；法定精控4个显示；支持任意节日置顶与当天高亮展示；采用 246px 极限安全宽度，完美激活 iOS 原生触边折行引擎，彻底解决单行截断与排版崩溃问题；内置动态间距补偿，确保跨分类视觉等距与底部留白舒展；全系支持深浅模式。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控前4个显示；支持自定义节日置顶与当天实时高亮；采用 245px 黄金安全容器，完美避开系统宽度溢出限制，强势激活原生双行弹性折行引擎；内置 AI 动态间距补偿，确保跨分类单双行自由切换且底部视觉留白匀称舒展；全系深浅模式适配。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.16 23:48
+ * ⏱️ 更新时间: 2026.03.17 14:50
  * ==========================================
  */
 
@@ -67,7 +67,8 @@ export default async function(ctx) {
     exclusiveFests.push(["高考", YMD(y, 6, 7), 2]);
     
     return {
-      legal: legalFests, folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
+      legal: legalFests, 
+      folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive: exclusiveFests
     };
@@ -94,18 +95,18 @@ export default async function(ctx) {
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
   };
 
-  // 💎 核心换行放权：明确分配 maxLines，系统据此允许文字容器原生折行
+  // 💎 排版数据层：法定严格限制 4 个显示并锁死 1 行，专属限制 6 个并特批 2 行
   const categoriesData = [
     { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } // 专属特批双行权限
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } 
   ].filter(c => c.t);
 
-  // 💎 动态视觉留白：根据专属总字数智能判定是否折行以分配间距（22个字符左右为折行临界点）
-  const hasTwoLines = categoriesData.some(c => c.t.length > 22); 
+  // 💎 动态留白补偿：判定文字长度是否会触发原生折行，以此调节间距
+  const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
   const dynamicGap = hasTwoLines ? 10 : 12;
-  const dynamicSpacer = hasTwoLines ? 12 : 14;
+  const dynamicSpacer = hasTwoLines ? 10 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -126,14 +127,14 @@ export default async function(ctx) {
       { type: 'spacer', length: dynamicSpacer }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
         children: categoriesData.map(cat => ({
-          // 回归最稳定的原生行布局结构
-          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+          // 💎 回退至绝对稳定的物理定宽布局，去掉了破坏边界的 gap 和 flex
+          type: 'stack', direction: 'row', alignItems: 'start', children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 极限安全宽度 246px：既能无限贴近右侧消除留白，又不会溢出边框导致系统防爆截断！
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 246 }
+            // 💎 安全极限 245：(50+245=295 < 300边际防爆线)，完美触发原生双行折叠！
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 245 }
           ]
         }))
       },
