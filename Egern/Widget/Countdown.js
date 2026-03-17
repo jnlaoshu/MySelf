@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日；法定/民俗/国际锁死单行显示，专属特批最多双行显示；重用自研“绝对网格打平”引擎，通过智能词组切割将专属第二行转化为独立容器，实现所有行间距 100% 绝对一致（等距网格）；原生触边完美截断；全系支持深浅模式。
+ * ✨ 特色功能: 全景覆盖法定、民俗、国际节假日及多达 6 个专属纪念日倒数；支持指定节日始终置顶与当天节日动态高亮提醒；精控分类显示（法定/民俗/国际限单行，专属限双行），超长文本自然截断防溢出；全局采用绝对网格等距排版，视觉规整舒展；完美自适应深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 15:15
+ * ⏱️ 更新时间: 2026.03.17 15:21
  * ==========================================
  */
 
@@ -94,8 +94,6 @@ export default async function(ctx) {
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
   const formatRegular = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
 
-  // 💎 核心引擎 1：专属智能切词组装！
-  // 通过计算字符物理宽度，确保词组不断裂。满了第一行就切出第二行。
   const getExclusiveLines = (items) => {
     const sliced = items.sort((a,b) => a.diff - b.diff).slice(0, 6);
     if (sliced.length === 0) return [];
@@ -103,7 +101,7 @@ export default async function(ctx) {
     let lines = [];
     let currentLine = [];
     let currentLen = 0;
-    const MAX_W = 38; // 物理临界安全宽度
+    const MAX_W = 38; 
     const getW = (s) => { let w=0; for(let i=0;i<s.length;i++) w += s.charCodeAt(i)>255 ? 2 : 1.1; return w; };
 
     for (let i = 0; i < sliced.length; i++) {
@@ -126,7 +124,6 @@ export default async function(ctx) {
     }
     if (currentLine.length > 0) lines.push(currentLine.join("，"));
 
-    // 强控最大 2 行！如果有 3 行及以上，全部拍扁塞进第 2 行交给系统原生截断！
     if (lines.length > 2) {
         let firstLine = lines[0];
         let restLine = lines.slice(1).join("，");
@@ -135,7 +132,6 @@ export default async function(ctx) {
     return lines;
   };
 
-  // 💎 核心引擎 2：网格打平组装！
   let gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst) => {
       gridRows.push({
@@ -144,7 +140,6 @@ export default async function(ctx) {
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : '#00000000', width: 13, height: 13 },
                   { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
               ]},
-              // 所有行（包括专属的两行）全部统一设置 maxLines: 1，由系统处理最后的原生 ... 截断
               { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 248 }
           ]
       });
@@ -156,21 +151,16 @@ export default async function(ctx) {
   if (result.exclusive.length) {
       let excLines = getExclusiveLines(result.exclusive);
       excLines.forEach((lineStr, idx) => {
-          // 专属的第一行带图标，第二行使用隐形图标占位，实现视觉上的换行效果！
           pushRow("gift.fill", COLOR_TEAL, "专属", lineStr, idx === 0);
       });
   }
 
-  // 💎 核心引擎 3：根据打平后的绝对物理行数，分配等距间距
   const visualLines = gridRows.length;
-  let dynamicGap = 10;
-  let dynamicSpacer = 12;
+  let dynamicGap = 8;     
+  let dynamicSpacer = 10; 
   
   if (visualLines <= 4) {
-      dynamicGap = 12;
-      dynamicSpacer = 14;
-  } else if (visualLines === 5) {
-      dynamicGap = 10; 
+      dynamicGap = 11;
       dynamicSpacer = 12;
   }
 
@@ -184,6 +174,7 @@ export default async function(ctx) {
     padding: 12, 
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
+      { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
@@ -191,7 +182,6 @@ export default async function(ctx) {
           { type: 'text', text: titleAddon, font: { size: 12, weight: 'bold' }, textColor: COLOR_RED, maxLines: 1, minScale: 0.8 }
       ]},
       { type: 'spacer', length: dynamicSpacer }, 
-      // 💎 见证奇迹：网格容器的 gap 10px 会绝对公平地作用于每一行（包括专属的两行之间）！
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: gridRows },
       { type: 'spacer' }
     ]
