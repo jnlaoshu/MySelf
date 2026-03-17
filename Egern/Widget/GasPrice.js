@@ -1,15 +1,15 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测（默认成都）
- * ✨ 特色功能: 实时获取各标号油价及涨跌趋势；精简油价单位为 ¥/L；智能预告并精准倒数下轮调价窗口；支持模块化配置地区；像素级对齐家族顶部标题，内置防崩溃兜底，全面支持深浅模式。
+ * ✨ 特色功能: 实时获取各标号油价及涨跌趋势；精简油价单位为 ¥/L；智能预告并精准倒数下轮调价窗口；支持模块化配置地区；支持点击跳转哈啰App；统一上下角标字号，像素级完美对齐。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.17 00.38
+ * ⏱️ 更新时间: 2026.03.17 08:42
  * ==========================================
  */
 
 export default async function (ctx) {
   try {
-    // 👇 优先读取 Egern 模块中的 GAS_REGION，如果没配则兼容旧版 region 变量，默认为成都
+    // 👇 优先读取 Egern 模块中的 GAS_REGION，兜底为成都
     const regionParam = ctx.env.GAS_REGION || ctx.env.region || "sichuan/chengdu"; 
     const SHOW_TREND = (ctx.env.SHOW_TREND || "true").trim() !== "false";
 
@@ -41,10 +41,10 @@ export default async function (ctx) {
           const days = Math.floor(totalHours / 24);
           const hours = totalHours % 24;
           const dateStr = `${String(item.m).padStart(2, "0")}.${String(item.d).padStart(2, "0")} 24:00`;
-          return { dateStr, countdown: `(${days}d${hours}h 后)`, isUrgent: totalHours < 72 };
+          return { dateStr, days, hours, isUrgent: totalHours < 72, hasCountdown: true };
         }
       }
-      return { dateStr: "待更新", countdown: "", isUrgent: false };
+      return { dateStr: "待更新", isUrgent: false, hasCountdown: false };
     };
 
     const nextAdjust = getNextAdjust();
@@ -97,7 +97,9 @@ export default async function (ctx) {
     ].filter(i => i.val);
 
     return {
-      type: "widget", padding: 12,
+      type: "widget", 
+      padding: 12,
+      url: "hellobike://",
       backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
         { type: "stack", direction: "row", alignItems: "center", children: [
@@ -106,7 +108,16 @@ export default async function (ctx) {
                 { type: "text", text: `${regionName || "成都"}油价`, font: { size: 15, weight: "heavy" }, textColor: TEXT_MAIN }
             ]},
             { type: "spacer" }, 
-            { type: "text", text: `下轮调价: ${nextAdjust.dateStr} ${nextAdjust.countdown}`, font: { size: 12, weight: "bold" }, textColor: infoColor }
+            
+            // 💎 右上角：统一字号为 11
+            { type: "stack", direction: "row", alignItems: "center", children: [
+                { type: "text", text: "下轮调价: ", font: { size: 11, weight: "medium" }, textColor: infoColor },
+                { type: "text", text: nextAdjust.dateStr, font: { size: 11, weight: "bold" }, textColor: infoColor },
+                ...(nextAdjust.hasCountdown ? [
+                    { type: "text", text: ` (${nextAdjust.days}d${nextAdjust.hours}h `, font: { size: 11, weight: "bold" }, textColor: infoColor },
+                    { type: "text", text: "后)", font: { size: 11, weight: "medium" }, textColor: infoColor }
+                ] : [])
+            ]}
         ]},
         
         { type: 'spacer', length: 12 },
@@ -129,13 +140,15 @@ export default async function (ctx) {
           type: "stack", direction: "row", alignItems: "center",
           children: [
             { type: "stack", direction: "row", alignItems: "center", gap: 4, children: [
-                { type: "image", src: "sf-symbol:clock.fill", width: 10, height: 10, color: TEXT_MUTED },
-                { type: "text", text: updateTimeStr, font: { size: 10, weight: 'medium' }, textColor: TEXT_MUTED }
+                // 💎 左下角：统一图标 11，字号 11
+                { type: "image", src: "sf-symbol:arrow.triangle.2.circlepath", width: 11, height: 11, color: TEXT_MUTED },
+                { type: "text", text: updateTimeStr, font: { size: 11, weight: 'bold' }, textColor: TEXT_MUTED }
             ]},
             { type: "spacer" },
             { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
-                { type: "text", text: "本轮调价: ", font: { size: 10, weight: 'medium' }, textColor: TEXT_MUTED },
-                { type: "text", text: trendInfo, font: { size: 10, weight: "bold" }, textColor: trendColor, lineLimit: 1, minScale: 0.7 }
+                // 💎 右下角：统一字号为 11
+                { type: "text", text: "本轮调价: ", font: { size: 11, weight: 'medium' }, textColor: TEXT_MUTED },
+                { type: "text", text: trendInfo, font: { size: 11, weight: "bold" }, textColor: trendColor, lineLimit: 1, minScale: 0.7 }
             ]}
           ]
         },
