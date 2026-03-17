@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 全景覆盖法定、民俗、国际及6大专属倒数；法定精控前4个显示；采用自研“绝对等距网格引擎”，法定/民俗/国际锁死单行，专属特批双行；内置“数字与日期防割裂引擎”，智能将连续数字（如 12、04/03）绑定为不可分割整体，彻底杜绝数字被跨行斩断的视觉痛点；全局行距100%统一，视觉重心沉稳；全系适配深浅色模式。
+ * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属倒数；精准控制信息密度，法定、民俗、国际均仅提取最近的 3 个展示，专属纪念日特批展示 6 个；内置“数字与日期防割裂引擎”，智能将连续数字绑定为不可分割整体，彻底杜绝数字跨行斩断；全系适配深浅色模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 15:38
+ * ⏱️ 更新时间: 2026.03.17 22:07
  * ==========================================
  */
 
@@ -149,17 +149,17 @@ export default async function(ctx) {
       });
   };
 
-  // 法定、民俗、国际锁死推入单行
-  let tLegal = formatStr("legal", 4);
+  // 💎 严格控制前三项（法定、民俗、国际）最多只显示 3 个，避免文本过长
+  let tLegal = formatStr("legal", 3);
   if (tLegal) pushRow("building.columns.fill", COLOR_RED, "法定", tLegal, true);
 
-  let tFolk = formatStr("folk");
+  let tFolk = formatStr("folk", 3);
   if (tFolk) pushRow("moon.stars.fill", COLOR_GOLD, "民俗", tFolk, true);
 
-  let tIntl = formatStr("intl");
+  let tIntl = formatStr("intl", 3);
   if (tIntl) pushRow("globe.americas.fill", COLOR_BLUE, "国际", tIntl, true);
 
-  // 专属进入防割裂切割引擎
+  // 💎 专属项目特批，最大可显示 6 个，并进入防割裂切割引擎
   let tExc = formatStr("exclusive", 6);
   if (tExc) {
       let excLines = getExclusiveLines(tExc);
