@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定、民俗、国际及 6 大专属节日；支持任意节日始终置顶与当天节日动态高亮；1:1 对标黄历组件 255px 黄金宽度实现原生硬换行，极限消除右侧留白；内置动态间距补偿引擎，根据折行状态智能调优垂直空间布局；全系支持深浅模式自适应。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持任意节日置顶与当天高亮展示；1:1复刻黄历组件255px黄金宽度，取消词组折行，实现紧贴边缘的原生硬换行；内置AI动态间距补偿引擎，智能侦测折行状态并自动拉伸留白，确保整体视觉重心恒定且跨分类绝对等距。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:58
+ * ⏱️ 更新时间: 2026.03.16 23:02
  * ==========================================
  */
 
@@ -98,10 +98,9 @@ export default async function(ctx) {
     { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
   ].filter(c => c.t);
 
-  // 💎 智能补偿逻辑：根据文字长度预估是否折行，动态分配合理间距
-  const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
-  const dynamicGap = hasTwoLines ? 10 : 12;
-  const dynamicSpacer = hasTwoLines ? 12 : 14;
+  const isWrapped = categoriesData.some(c => c.t.length > 20); 
+  const dynamicGap = isWrapped ? 10 : 12;
+  const dynamicSpacer = isWrapped ? 12 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -127,7 +126,6 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 1:1 对标黄历组件宽度 (255px)，取消人工切割，依赖系统硬折行，彻底消除右侧空白
             { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
           ]
         }))
