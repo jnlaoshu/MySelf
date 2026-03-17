@@ -2,7 +2,7 @@
 # 📌 模块名称: Egern 小组件合集
 # ✨ 特色功能: 包含岁时黄历、时光倒数、网络信息、全国油价 4 款像素级对齐的新中式风格桌面小组件；支持图形化配置最多 6 个专属纪念日与油价查询地区；一键极速安装，全系支持深浅模式自适应。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.17 00.48
+# ⏱️ 更新时间: 2026.03.17 11:08
 # ==========================================
 
 name: "Egern 小组件合集"
@@ -47,6 +47,18 @@ env_schema:
   EXCLUSIVE_DATE_6:
     name: 纪念日 6 日期
     description: "格式 MM/DD"
+
+  PINNED_HOLIDAY:
+    name: 始终置顶节假日
+    description: "输入你想高亮置顶在右上角的节日名称（例如：春节、我的生日）。留空则不置顶特定节日。"
+    default_value: ""
+  SHOW_SCHOOL_HOLIDAYS:
+    name: 显示春假和秋假
+    description: "是否在法定节假日中显示春假和秋假"
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
     
   GAS_REGION:
     name: 油价地区
