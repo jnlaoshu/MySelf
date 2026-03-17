@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；攻克 iOS 垂直高度预判截断机制，精准分配换行权限，完美保障双行流式排版；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；完美双行折行排版；优化 4 行分类的黄金行间距，视觉更舒展；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 12:45
+ * ⏱️ 更新时间: 2026.03.17 12:35
  * ==========================================
  */
 
@@ -109,7 +109,6 @@ export default async function(ctx) {
     });
   });
 
-  // 💎 核心 1：恢复带空格的逗号 " , "，iOS 的文本引擎对空格的换行识别是最完美的！
   const format = (cat) => {
     const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
@@ -134,12 +133,12 @@ export default async function(ctx) {
           ]}
       ]},
       
-      { type: 'spacer', length: 8 }, 
+      // 💎 优化一：标题与列表的间距从 8 提升至 10，呼吸感更强
+      { type: 'spacer', length: 10 }, 
       
-      // 💎 核心 2：稍微缩减行距到 5，确保留给专属行的两行高度完全充裕
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 5,
+      // 💎 优化二：4行分类的间距（gap）从 5 提升至黄金间距 8，舒展不局促
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 8,
         children: [
-          // 💎 核心 3：精准发放换行权限！只有包含 4 个以上的才允许 2 行，其他死锁 1 行，大幅降低预判高度
           { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal"), lines: 2 },
           { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk"), lines: 1 },
           { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl"), lines: 1 },
@@ -151,7 +150,6 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 核心 4：绝对安全的宽度护盾，保证文本碰到边界立刻折行
             { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 250 }
           ]
 
