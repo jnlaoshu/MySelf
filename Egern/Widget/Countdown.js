@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；极致释放垂直空间，完美保障专属列表双行折行排版；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属纪念日；支持当天节日与置顶节日联合高亮；攻克 iOS 垂直高度预判截断机制，精准分配换行权限，完美保障双行流式排版；全面支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 12:30
+ * ⏱️ 更新时间: 2026.03.17 12:45
  * ==========================================
  */
 
@@ -109,10 +109,10 @@ export default async function(ctx) {
     });
   });
 
-  // 💎 换成全角中文逗号，更省空间且排版更自然
+  // 💎 核心 1：恢复带空格的逗号 " , "，iOS 的文本引擎对空格的换行识别是最完美的！
   const format = (cat) => {
     const limit = cat === "exclusive" ? 6 : (cat === "legal" ? 4 : 3);
-    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
+    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join(" , ");
   };
   
   let topAddons = [];
@@ -134,16 +134,16 @@ export default async function(ctx) {
           ]}
       ]},
       
-      // 💎 把这里的 spacer 从 12 压榨到 8，腾出垂直空间
       { type: 'spacer', length: 8 }, 
       
-      // 💎 把这里的 gap 从 10 压榨到 6，让“专属”彻底摆脱垂直高度不够的束缚！
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 6,
+      // 💎 核心 2：稍微缩减行距到 5，确保留给专属行的两行高度完全充裕
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: 5,
         children: [
-          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal") },
-          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk") },
-          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl") },
-          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive") }
+          // 💎 核心 3：精准发放换行权限！只有包含 4 个以上的才允许 2 行，其他死锁 1 行，大幅降低预判高度
+          { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal"), lines: 2 },
+          { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk"), lines: 1 },
+          { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl"), lines: 1 },
+          { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive"), lines: 2 }
         ].filter(c => c.t).map(cat => ({
           
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
@@ -151,7 +151,8 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 2, width: 230 }
+            // 💎 核心 4：绝对安全的宽度护盾，保证文本碰到边界立刻折行
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 250 }
           ]
 
         }))
