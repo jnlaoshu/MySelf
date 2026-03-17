@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属倒数；精准控制信息密度，法定、民俗、国际均仅提取最近的 3 个展示，专属特批 6 个；内置“数字防割裂引擎”，智能将连续数字绑定为整体；采用绝对等距网格，通过扩容 265px 文字边界与 44 字符阈值，完美吃满第一行右侧留白，并运用透明镜像法实现双行 100% 垂直对齐；全系适配深浅模式。
+ * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属纪念日倒数；自动抓取并展示距离当前最近的 3 个法定、民俗和国际节日；支持自定义配置最多 6 个专属纪念日（如生日、纪念日等）；智能保护连续数字与日期格式，确保日期数据作为一个整体展示而不被截断；全面适配 iOS 深浅色模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 22:20
+ * ⏱️ 更新时间: 2026.03.17 23:20
  * ==========================================
  */
 
@@ -94,13 +94,11 @@ export default async function(ctx) {
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
   const formatStr = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
 
-  // 💎 终极防割裂切割引擎：扩充物理容量
   const getExclusiveLines = (str) => {
     if (!str) return [];
     let firstLine = "";
     let w = 0;
-    // ⬇️ 将边界拓展到 44，让第一行能够吃进更多字符填补留白
-    const MAX_W = 44; 
+    const MAX_W = 45; // 提升至 45，多容纳约 2 个汉字
     let breakIndex = -1;
 
     const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
@@ -130,24 +128,20 @@ export default async function(ctx) {
     }
   };
 
-  // 💎 网格化打平逻辑
   let gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst) => {
       gridRows.push({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-              // ⬇️ 缩小左侧预留宽度至 45，为右侧腾出空间
-              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 45, children: [
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : '#00000000', width: 13, height: 13 },
-                  // ⬇️ 次行使用完全相同的标题占位（透明色），保证 100% 物理垂直对齐
-                  { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
+                  { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
               ]},
-              // ⬇️ 文字框扩容至 265，使得第一行和第二行的框体保持绝对一致，完美向右拉伸
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 265 }
+              // 容器宽度放宽至 260，防止被截断
+              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 260 }
           ]
       });
   };
 
-  // 前三项严格限流显示 3 个
   let tLegal = formatStr("legal", 3);
   if (tLegal) pushRow("building.columns.fill", COLOR_RED, "法定", tLegal, true);
 
@@ -157,7 +151,6 @@ export default async function(ctx) {
   let tIntl = formatStr("intl", 3);
   if (tIntl) pushRow("globe.americas.fill", COLOR_BLUE, "国际", tIntl, true);
 
-  // 专属项目特批显示 6 个
   let tExc = formatStr("exclusive", 6);
   if (tExc) {
       let excLines = getExclusiveLines(tExc);
@@ -166,7 +159,6 @@ export default async function(ctx) {
       });
   }
 
-  // 精准间距调配
   const visualLines = gridRows.length;
   let dynamicGap = 8;     
   let dynamicSpacer = 10; 
