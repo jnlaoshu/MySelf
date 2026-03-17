@@ -1,18 +1,20 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚多节日；法定精准限制 4 个；参照黄历组件采用固定宽度物理换行，彻底消除右侧留白；全局行距精调，实现视觉层面的高度对齐与等距感；全面支持深浅模式。
+ * ✨ 特色功能: 集成法定、民俗、国际及 6 大专属节日；支持任意节日始终置顶与当天节日动态高亮；1:1 对标黄历组件 255px 黄金宽度实现原生硬换行，极限消除右侧留白；内置动态间距补偿引擎，根据折行状态智能调优垂直空间布局；全系支持深浅模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:55
+ * ⏱️ 更新时间: 2026.03.17 13:58
  * ==========================================
  */
 
 export default async function(ctx) {
+  // 动态读取环境配置
   const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
   const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
 
+  // 读取用户填写的最多 6 个专属纪念日
   const customDays = [];
   for (let i = 1; i <= 6; i++) {
     const nameKey = i === 1 ? (ctx.env.EXCLUSIVE_NAME_1 || ctx.env.EXCLUSIVE_NAME) : ctx.env[`EXCLUSIVE_NAME_${i}`];
@@ -62,8 +64,7 @@ export default async function(ctx) {
     const exclusiveFests = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
     exclusiveFests.push(["高考", YMD(y, 6, 7), 2]);
     return {
-      legal: legalFests,
-      folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
+      legal: legalFests, folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
       intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive: exclusiveFests
     };
@@ -97,10 +98,10 @@ export default async function(ctx) {
     { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
   ].filter(c => c.t);
 
-  // 💎 动态间距控制，保证单双行都能填满
-  const hasTwoLines = categoriesData.some(c => c.t.length > 20); // 估算是否折行
-  const dynamicGap = hasTwoLines ? 7 : 10;
-  const dynamicSpacer = hasTwoLines ? 10 : 14;
+  // 💎 智能补偿逻辑：根据文字长度预估是否折行，动态分配合理间距
+  const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
+  const dynamicGap = hasTwoLines ? 10 : 12;
+  const dynamicSpacer = hasTwoLines ? 12 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -126,7 +127,7 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 这里是关键：锁定 255 物理宽度，让系统原生硬换行，填满右侧
+            // 💎 1:1 对标黄历组件宽度 (255px)，取消人工切割，依赖系统硬折行，彻底消除右侧空白
             { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
           ]
         }))
