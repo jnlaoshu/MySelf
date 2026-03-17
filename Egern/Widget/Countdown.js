@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控前4个显示；支持自定义节日置顶与当天实时高亮；采用 245px 黄金安全容器，完美避开系统宽度溢出限制，强势激活原生双行弹性折行引擎；内置 AI 动态间距补偿，确保跨分类单双行自由切换且底部视觉留白匀称舒展；全系深浅模式适配。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持任意节日置顶与当天高亮展示；破解 iOS 垂直溢出防爆机制，通过智能微调行距强制夺回双行折行权限；加入隐形断句符，彻底解决系统因字符粘连导致的单行截断问题；全系支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 14:50
+ * ⏱️ 更新时间: 2026.03.17 14:54
  * ==========================================
  */
 
@@ -91,11 +91,12 @@ export default async function(ctx) {
     });
   });
 
+  // 💎 核心修复：加入空格作为辅助断句符（"， "），打破数字粘连，给系统提供完美的换行喘息点
   const format = (cat, limit) => {
-    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
+    return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("， ");
   };
 
-  // 💎 排版数据层：法定严格限制 4 个显示并锁死 1 行，专属限制 6 个并特批 2 行
+  // 明确分配 maxLines，系统据此允许文字容器原生折行
   const categoriesData = [
     { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
@@ -103,10 +104,10 @@ export default async function(ctx) {
     { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } 
   ].filter(c => c.t);
 
-  // 💎 动态留白补偿：判定文字长度是否会触发原生折行，以此调节间距
+  // 💎 极限防爆机制：一旦预判专属超长需要双行，立即将垂直间距压减至安全线以下，强制系统放行双行渲染！
   const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
-  const dynamicGap = hasTwoLines ? 10 : 12;
-  const dynamicSpacer = hasTwoLines ? 10 : 14;
+  const dynamicGap = hasTwoLines ? 7 : 10;
+  const dynamicSpacer = hasTwoLines ? 8 : 12;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -127,14 +128,13 @@ export default async function(ctx) {
       { type: 'spacer', length: dynamicSpacer }, 
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap,
         children: categoriesData.map(cat => ({
-          // 💎 回退至绝对稳定的物理定宽布局，去掉了破坏边界的 gap 和 flex
-          type: 'stack', direction: 'row', alignItems: 'start', children: [
+          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 安全极限 245：(50+245=295 < 300边际防爆线)，完美触发原生双行折叠！
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 245 }
+            // 💎 黄金物理定宽 250px：刚好卡在边框内且有充足余量让原生双行顺利流出！
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 250 }
           ]
         }))
       },
