@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属倒数；精准控制信息密度，法定、民俗、国际均仅提取最近的 3 个展示，专属纪念日特批展示 6 个；内置“数字与日期防割裂引擎”，智能将连续数字绑定为不可分割整体，彻底杜绝数字跨行斩断；全系适配深浅色模式自适应。
+ * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属倒数；精准控制信息密度，法定、民俗、国际均仅提取最近的 3 个展示，专属特批 6 个；内置“数字防割裂引擎”，智能将连续数字绑定为整体；采用绝对等距网格，通过扩容 265px 文字边界与 44 字符阈值，完美吃满第一行右侧留白，并运用透明镜像法实现双行 100% 垂直对齐；全系适配深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 22:07
+ * ⏱️ 更新时间: 2026.03.17 22:20
  * ==========================================
  */
 
@@ -94,26 +94,24 @@ export default async function(ctx) {
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
   const formatStr = (cat, limit) => result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(formatItem).join("，");
 
-  // 💎 终极防割裂切割引擎：不仅计算宽度，还将【连续的数字和日期符号】绑定为一个不可分割的词汇块（Token）！
+  // 💎 终极防割裂切割引擎：扩充物理容量
   const getExclusiveLines = (str) => {
     if (!str) return [];
     let firstLine = "";
     let w = 0;
-    const MAX_W = 40.5; // 物理极限安全宽度
+    // ⬇️ 将边界拓展到 44，让第一行能够吃进更多字符填补留白
+    const MAX_W = 44; 
     let breakIndex = -1;
 
-    // 正则魔法：将连续的数字、英文字母、斜杠、点号绑定为一个整体；其余汉字或符号则单字拆分。
     const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
 
     for (let i = 0; i < tokens.length; i++) {
         let token = tokens[i];
         let tokenW = 0;
-        // 计算整个 token（词汇块或单字）的总宽度
         for(let j = 0; j < token.length; j++) {
             tokenW += token.charCodeAt(j) > 255 ? 2 : 1.1; 
         }
 
-        // 如果加上这个 token 就超宽了，则立刻在这个 token 前断开！
         if (w + tokenW > MAX_W) {
             breakIndex = i;
             break;
@@ -126,30 +124,30 @@ export default async function(ctx) {
     if (breakIndex === -1) {
         return [str];
     } else {
-        // 第一行如果末尾正好是逗号或空格，清理掉以防难看
         firstLine = firstLine.replace(/[，\s]+$/, '');
-        // 剩下的 token 拼成第二行，并清理开头的逗号或空格
         let restLine = tokens.slice(breakIndex).join("").replace(/^[，\s]+/, '');
         return [firstLine, restLine];
     }
   };
 
-  // 💎 网格化打平逻辑：保证所有输出行在同基层面，强制统一间距
+  // 💎 网格化打平逻辑
   let gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst) => {
       gridRows.push({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
+              // ⬇️ 缩小左侧预留宽度至 45，为右侧腾出空间
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 45, children: [
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : '#00000000', width: 13, height: 13 },
-                  { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
+                  // ⬇️ 次行使用完全相同的标题占位（透明色），保证 100% 物理垂直对齐
+                  { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : '#00000000' }
               ]},
-              // 所有提取出来的行统统锁死 maxLines: 1，交由原生处理最后的 ... 截断
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 248 }
+              // ⬇️ 文字框扩容至 265，使得第一行和第二行的框体保持绝对一致，完美向右拉伸
+              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 265 }
           ]
       });
   };
 
-  // 💎 严格控制前三项（法定、民俗、国际）最多只显示 3 个，避免文本过长
+  // 前三项严格限流显示 3 个
   let tLegal = formatStr("legal", 3);
   if (tLegal) pushRow("building.columns.fill", COLOR_RED, "法定", tLegal, true);
 
@@ -159,7 +157,7 @@ export default async function(ctx) {
   let tIntl = formatStr("intl", 3);
   if (tIntl) pushRow("globe.americas.fill", COLOR_BLUE, "国际", tIntl, true);
 
-  // 💎 专属项目特批，最大可显示 6 个，并进入防割裂切割引擎
+  // 专属项目特批显示 6 个
   let tExc = formatStr("exclusive", 6);
   if (tExc) {
       let excLines = getExclusiveLines(tExc);
@@ -168,7 +166,7 @@ export default async function(ctx) {
       });
   }
 
-  // 💎 精准间距调配
+  // 精准间距调配
   const visualLines = gridRows.length;
   let dynamicGap = 8;     
   let dynamicSpacer = 10; 
@@ -188,7 +186,7 @@ export default async function(ctx) {
     padding: 12, 
     backgroundGradient: { type: 'linear', colors: BG_COLORS, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 4 }, // 标题栏配重对齐
+      { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: TEXT_MAIN, width: 16, height: 16 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: TEXT_MAIN },
