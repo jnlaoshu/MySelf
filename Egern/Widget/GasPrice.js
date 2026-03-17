@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测面板
- * ✨ 特色功能: 实时抓取各标号油价及近期涨跌趋势；精简油价单位展示；智能预告并精准倒数下轮油价调整窗口；内置四宫格圆角卡片 UI，信息密度极佳；全面接入家族式色彩引擎与黄金比例视觉锚点；底层采用二维数组扁平化与 matchAll 现代正则解析引擎，大幅提升爬虫提取效率与执行稳定性；支持点击一键跳转哈啰 App；全系适配深浅色模式。
+ * ✨ 特色功能: 实时抓取全国各省市（支持环境变量动态配置）各标号汽柴油最新价格与近期涨跌趋势；基于内置历法算法，智能推算并精准倒数下轮油价调整窗口（精确到天/小时）；底层采用 matchAll 现代正则解析引擎，直接爬取解析官方网页流，彻底摆脱第三方 API 速率限制与不稳定因素；支持点击面板一键唤起哈啰出行 App；全系支持系统深浅色模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.18 00:38
+ * ⏱️ 更新时间: 2026.03.18 00:40
  * ==========================================
  */
 
@@ -26,7 +26,6 @@ export default async function (ctx) {
   };
 
   // ===================== 2. 调价日历与智能倒数 =====================
-  // 💎 优化：二维数组降维，提升执行速度与代码整洁度
   const CALENDAR_2026 = [
     [1,12], [1,23], [2,9], [2,23], [3,9], [3,23], [4,7], [4,21], [5,8], [5,22], 
     [6,5], [6,19], [7,3], [7,17], [7,31], [8,14], [8,28], [9,11], [9,25], 
@@ -38,7 +37,6 @@ export default async function (ctx) {
   const P = n => String(n).padStart(2, "0");
   const updateTimeStr = `${P(now.getMonth() + 1)}.${P(now.getDate())} ${P(now.getHours())}:${P(now.getMinutes())}`;
 
-  // 💎 优化：使用 Array.find() 取代冗长的 for 循环
   const getNextAdjust = () => {
     const nextDate = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59) > now);
     if (!nextDate) return { dateStr: "待更新", isUrgent: false, hasCountdown: false };
@@ -69,7 +67,6 @@ export default async function (ctx) {
     
     regionName = (html.match(/<title>([^_]+)_/) || [])[1]?.replace(/(油价|实时|今日|最新|价格)/g, '').trim() || "未知";
     
-    // 💎 优化：全面拥抱 matchAll，代码极致精简
     for (const match of html.matchAll(/<dt>(.*?)<\/dt>[\s\S]*?<dd>(.*?)\(元\)<\/dd>/g)) {
       const val = parseFloat(match[2]);
       if (match[1].includes("92")) prices.p92 = val;
@@ -78,7 +75,6 @@ export default async function (ctx) {
       else if (match[1].includes("柴") || match[1].includes("0号")) prices.diesel = val;
     }
     
-    // 趋势解析引擎
     if (SHOW_TREND) {
       const trendMatch = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
       if (trendMatch) {
@@ -112,7 +108,6 @@ export default async function (ctx) {
     children: [
       { type: 'spacer', length: 6 }, 
 
-      // Header: 标题与下轮调价
       { type: "stack", direction: "row", alignItems: "center", children: [
           { type: "stack", direction: "row", alignItems: "center", gap: 6, children: [
               { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 16, height: 16, color: C.main },
@@ -131,7 +126,6 @@ export default async function (ctx) {
       
       { type: 'spacer', length: 10 }, 
 
-      // Body: 四宫格卡片矩阵
       {
         type: "stack", direction: "row", gap: 6,
         children: priceItems.map(row => ({
@@ -146,7 +140,6 @@ export default async function (ctx) {
 
       { type: 'spacer', length: 10 },
 
-      // Footer: 更新时间与本轮趋势
       {
         type: "stack", direction: "row", alignItems: "center",
         children: [
