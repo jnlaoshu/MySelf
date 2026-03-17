@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持节日置顶与当天实时高亮；1:1复刻黄历组件255px黄金宽度，实现原生触边硬折行，彻底消除右侧留白；内置AI动态间距补偿引擎，确保单双行模式下垂直重心恒定且跨分类视觉等距。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属节日，法定精控4个显示；支持节日置顶与当天实时高亮；利用245px黄金宽度容器实现原生触边折行，彻底解决留白与Emoji乱码问题；内置动态间距补偿引擎，确保视觉重心恒定且跨分类等距平衡；全系支持深浅模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 14:02
+ * ⏱️ 更新时间: 2026.03.17 14:15
  * ==========================================
  */
 
@@ -91,16 +91,18 @@ export default async function(ctx) {
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
   };
 
+  // 💎 核心排版引擎：法定精控 4 个显示并锁死单行（支持省略号）；专属限制 6 个并开放双行折行权限
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 }, // 法定锁死一行
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }  // 专属特批两行
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
   ].filter(c => c.t);
 
-  // 💎 视觉重心对齐：由于专属锁死 2 行，其他锁死 1 行，我们采用固定间距 10 以对齐黄历
-  const dynamicGap = 10;
-  const dynamicSpacer = 12;
+  // 💎 动态视觉平衡逻辑：若文字触发了系统折行，则压缩间距防止底部溢出；单行时则拉大间距填满余白。
+  const isWrapped = categoriesData.some(c => c.t.length > 20); 
+  const dynamicGap = isWrapped ? 10 : 12;
+  const dynamicSpacer = isWrapped ? 12 : 14;
 
   let topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
@@ -126,8 +128,8 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 核心修复：锁定 255 宽度，赋予专属 2 行权限，由系统原生处理 Emoji 和换行
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
+            // 💎 恢复原生硬换行逻辑：固定 245px 宽度 + 系统原生折行（绝不再人工切词）
+            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 245 }
           ]
         }))
       },
