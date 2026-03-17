@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚法定、民俗、国际及多达 6 个专属节日；法定精准限制 4 个；1:1 复刻黄历组件固定宽度（255）实现原生硬换行，彻底消除右侧空白；内置自适应留白补偿算法，根据折行状态动态调整间距，保障底部视觉平衡；全系支持深浅模式自适应。
+ * ✨ 特色功能: 集成法定、民俗、国际及 6 大专属节日；支持任意节日始终置顶与当天节日动态高亮；1:1 对标黄历组件 255px 黄金宽度实现原生硬换行，极限消除右侧留白；内置动态间距补偿引擎，根据折行状态智能调优垂直空间布局；全系支持深浅模式自适应。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 14:02
+ * ⏱️ 更新时间: 2026.03.17 13:58
  * ==========================================
  */
 
@@ -98,8 +98,8 @@ export default async function(ctx) {
     { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
   ].filter(c => c.t);
 
-  // 💎 动态留白补偿算法：复刻黄历组件的 255 黄金宽度，并智能计算折行对间距的影响
-  const hasTwoLines = categoriesData.some(c => c.t.length > 20); // 预估是否触发系统折行
+  // 💎 智能补偿逻辑：根据文字长度预估是否折行，动态分配合理间距
+  const hasTwoLines = categoriesData.some(c => c.t.length > 20); 
   const dynamicGap = hasTwoLines ? 10 : 12;
   const dynamicSpacer = hasTwoLines ? 12 : 14;
 
@@ -127,7 +127,7 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 1:1 对标黄历宽度 (255px)，取消人工切割，由系统硬性贴边折行
+            // 💎 1:1 对标黄历组件宽度 (255px)，取消人工切割，依赖系统硬折行，彻底消除右侧空白
             { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 255 }
           ]
         }))
