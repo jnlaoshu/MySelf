@@ -1,31 +1,25 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 汇聚多节日；自研 AI 字符切割与绝对网格对齐引擎，彻底抹平系统原生换行导致的“间距不一”问题，实现跨分类 100% 像素级视觉等距；全面支持深浅模式。
+ * ✨ 特色功能: 汇聚多节日；法定精准限制 4 个；自研词组级网格切割引擎，第一行完美折行，最后一行原生极限触边截断（彻底消除右侧多余留白）；实现跨分类 100% 绝对网格等距。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 13:45
+ * ⏱️ 更新时间: 2026.03.17 13:50
  * ==========================================
  */
 
 export default async function(ctx) {
-  // 动态读取环境配置
   const showSchoolHolidays = (ctx.env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (ctx.env.PINNED_HOLIDAY || "").trim();
   const springDateStr = (ctx.env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (ctx.env.AUTUMN_BREAK_DATE || "").trim();
 
-  // 读取用户填写的最多 6 个专属纪念日
   const customDays = [];
   for (let i = 1; i <= 6; i++) {
     const nameKey = i === 1 ? (ctx.env.EXCLUSIVE_NAME_1 || ctx.env.EXCLUSIVE_NAME) : ctx.env[`EXCLUSIVE_NAME_${i}`];
     const dateKey = i === 1 ? (ctx.env.EXCLUSIVE_DATE_1 || ctx.env.EXCLUSIVE_DATE) : ctx.env[`EXCLUSIVE_DATE_${i}`];
-    
     const n = nameKey || (i === 1 ? "我的生日" : "");
     const d = dateKey || (i === 1 ? "12/13" : "");
-    
-    if (n && n.trim() !== "" && d && d.includes('/')) {
-      customDays.push({ name: n.trim(), date: d.trim() });
-    }
+    if (n && n.trim() !== "" && d && d.includes('/')) customDays.push({ name: n.trim(), date: d.trim() });
   }
 
   const BG_COLORS = [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }]; 
@@ -102,70 +96,75 @@ export default async function(ctx) {
     });
   });
 
-  // 💎 核心绝招：自研 AI 字符物理切割器！
-  // 彻底废弃系统的不可控原生换行，手动精确切断字符串。被切断的行将成为平级的独立行！
-  const getChunkedLines = (items, maxLinesLimit) => {
-    const fullString = items.sort((a,b)=>a.diff-b.diff).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
-    if (!fullString) return [];
+  // 💎 核心引擎 1：超级词组级网格切割器！
+  // 以完整节日词组为单位拼装，安全折行。把剩余全部扔进最后一行，靠原生渲染触边截断！
+  const getChunkedLines = (items, maxItems, maxLinesLimit) => {
+    const sliced = items.sort((a,b) => a.diff - b.diff).slice(0, maxItems);
+    if (sliced.length === 0) return [];
     
     let lines = [];
-    let currentLine = "";
-    let currentW = 0;
-    const MAX_W = 36; // 精准极限物理字宽设定，完美塞进 236 宽度绝不越界
-
-    for (let i = 0; i < fullString.length; i++) {
-      let char = fullString[i];
-      // 智能防止新行以标点符号开头，影响美观
-      if (currentLine === "" && (char === "，" || char === " ")) continue;
-
-      let charW = char.charCodeAt(0) > 255 ? 2 : 1.1; 
-      if (currentW + charW > MAX_W) {
-        lines.push(currentLine);
-        // 如果正好切在逗号上，直接丢弃该逗号
-        currentLine = char === "，" ? "" : char; 
-        currentW = char === "，" ? 0 : charW;
+    let currArr = [];
+    let currW = 0;
+    // 恰好设定在换行边缘的保险宽度，防止第一行就被原生系统打上 ...
+    const MAX_W = 40; 
+    
+    const getW = (s) => { let w=0; for(let i=0;i<s.length;i++) w += s.charCodeAt(i)>255 ? 2 : 1.1; return w; };
+    
+    for (let i = 0; i < sliced.length; i++) {
+      let str = sliced[i].diff === 0 ? `🎉${sliced[i].name}` : `${sliced[i].name} ${sliced[i].diff}天`;
+      let strW = getW(str);
+      
+      if (currArr.length === 0) {
+        currArr.push(str);
+        currW = strW;
       } else {
-        currentLine += char;
-        currentW += charW;
+        let addW = getW("，") + strW;
+        if (currW + addW <= MAX_W) {
+          currArr.push(str);
+          currW += addW;
+        } else {
+          // 放不下了，把当前拼好的数组变成一行推入
+          lines.push(currArr.join("，"));
+          currArr = [str];
+          currW = strW;
+        }
       }
     }
-    if (currentLine) lines.push(currentLine);
-
-    // 超出行数强行打上省略号
+    if (currArr.length > 0) lines.push(currArr.join("，"));
+    
+    // 关键修正：如果切出来的行数超标，把后面所有的文本合体，全塞进允许的最后一行！
+    // 原生的 maxLines: 1 会在右边缘极度贴边处自然打上省略号，彻底消除右侧留白！
     if (lines.length > maxLinesLimit) {
-      let lastLine = lines[maxLinesLimit - 1];
-      if (lastLine.length > 2) lastLine = lastLine.substring(0, lastLine.length - 1) + "...";
-      else lastLine += "...";
-      lines[maxLinesLimit - 1] = lastLine;
-      lines = lines.slice(0, maxLinesLimit);
+      let lastLineStr = lines.slice(maxLinesLimit - 1).join("，");
+      lines = lines.slice(0, maxLinesLimit - 1);
+      lines.push(lastLineStr);
     }
     return lines;
   };
 
-  // 法定允许折 2 行，民俗、国际锁死 1 行，专属允许折 2 行
+  // 💎 法定严格限制 4 个显示（超出会自然截断）；专属限制 6 个
   const categoriesData = [
-    { i: "building.columns.fill", col: COLOR_RED, n: "法定", arr: getChunkedLines(result.legal, 2) },
-    { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", arr: getChunkedLines(result.folk, 1) },
-    { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", arr: getChunkedLines(result.intl, 1) },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", arr: getChunkedLines(result.exclusive, 2) }
+    { i: "building.columns.fill", col: COLOR_RED, n: "法定", arr: getChunkedLines(result.legal, 4, 2) },
+    { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", arr: getChunkedLines(result.folk, 3, 1) },
+    { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", arr: getChunkedLines(result.intl, 3, 1) },
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", arr: getChunkedLines(result.exclusive, 6, 2) }
   ].filter(c => c.arr.length > 0);
 
-  // 💎 核心引擎 2：把所有行“一视同仁”打平为绝对网格！
+  // 💎 核心引擎 2：把所有行“一视同仁”打平为绝对等距网格！
   let gridRows = [];
   categoriesData.forEach(cat => {
     cat.arr.forEach((lineText, index) => {
       gridRows.push(
         { type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
             
-            // 完美对齐的左侧占位护盾
+            // 左侧对齐占位护盾
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
-                // 第一行显示正常图标和名字，折行（第二行）则填入隐形的占位符，保证高度 100% 绝对一致！
                 { type: 'image', src: index === 0 ? `sf-symbol:${cat.i}` : 'sf-symbol:circle', color: index === 0 ? cat.col : '#00000000', width: 13, height: 13 },
                 { type: 'text', text: index === 0 ? cat.n : " ", font: { size: 12, weight: 'heavy' }, textColor: index === 0 ? cat.col : '#00000000' }
             ]},
             
-            // 右侧是经过我们精准切割后的单行文本，统一设置 maxLines: 1，再也不受原生系统牵制！
-            { type: 'text', text: lineText, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 236 }
+            // 右侧是动态拼装好的字符串！靠 245 宽度和原生 maxLines: 1 提供终极贴边防留白！
+            { type: 'text', text: lineText, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: 1, width: 245 }
         ]}
       );
     });
@@ -174,7 +173,7 @@ export default async function(ctx) {
   // 💎 核心引擎 3：根据完全打平后的绝对总行数，动态分配最舒展的黄金留白
   const visualLines = gridRows.length;
   let dynamicSpacer = 12;
-  let dynamicGap = 8; // 👑 我们现在用同一个 8px 管控一切间距！
+  let dynamicGap = 8; 
   
   if (visualLines <= 4) {
       dynamicSpacer = 16; 
@@ -208,7 +207,7 @@ export default async function(ctx) {
       
       { type: 'spacer', length: dynamicSpacer }, 
       
-      // 👑 见证奇迹：因为全是打平的单行网格，这里的 gap 将 100% 绝对公平地作用于每一行文本！
+      // 👑 因为全是打平的单行网格，这里的 gap 将 100% 绝对公平地作用于每一行文本！
       { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: gridRows },
       
       { type: 'spacer' }
