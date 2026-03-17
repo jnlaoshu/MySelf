@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 集成法定/民俗/国际及6大专属节日，法定精控4个显示；支持节日置顶与当天实时高亮；利用245px黄金宽度容器实现原生触边折行，彻底解决留白与Emoji乱码问题；内置动态间距补偿引擎，确保视觉重心恒定且跨分类等距平衡；全系支持深浅模式。
+ * ✨ 特色功能: 集成法定/民俗/国际及6大专属纪念日，法定精控4个显示；支持节日置顶与当天高亮展示；采用 Flex 弹性布局对标黄历组件视觉宽度，强制激活原生多行渲染引擎，彻底解决专属折行失效与右侧留白问题；内置动态间距补偿，确保跨分类像素级等距。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 14:15
+ * ⏱️ 更新时间: 2026.03.16 23:08
  * ==========================================
  */
 
@@ -91,15 +91,15 @@ export default async function(ctx) {
     return result[cat].sort((a,b)=>a.diff-b.diff).slice(0, limit).map(i => i.diff === 0 ? `🎉${i.name}` : `${i.name} ${i.diff}天`).join("，");
   };
 
-  // 💎 核心排版引擎：法定精控 4 个显示并锁死单行（支持省略号）；专属限制 6 个并开放双行折行权限
+  // 💎 排版数据层：法定限制 4 个显示
   const categoriesData = [
     { i: "building.columns.fill", col: COLOR_RED, n: "法定", t: format("legal", 4), lines: 1 },
     { i: "moon.stars.fill", col: COLOR_GOLD, n: "民俗", t: format("folk", 3), lines: 1 },
     { i: "globe.americas.fill", col: COLOR_BLUE, n: "国际", t: format("intl", 3), lines: 1 },
-    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 }
+    { i: "gift.fill", col: COLOR_TEAL, n: "专属", t: format("exclusive", 6), lines: 2 } 
   ].filter(c => c.t);
 
-  // 💎 动态视觉平衡逻辑：若文字触发了系统折行，则压缩间距防止底部溢出；单行时则拉大间距填满余白。
+  // 💎 动态视觉算法：侦测文字长度预判折行
   const isWrapped = categoriesData.some(c => c.t.length > 20); 
   const dynamicGap = isWrapped ? 10 : 12;
   const dynamicSpacer = isWrapped ? 12 : 14;
@@ -128,8 +128,14 @@ export default async function(ctx) {
                 { type: 'image', src: `sf-symbol:${cat.i}`, color: cat.col, width: 13, height: 13 },
                 { type: 'text', text: cat.n, font: { size: 12, weight: 'heavy' }, textColor: cat.col }
             ]},
-            // 💎 恢复原生硬换行逻辑：固定 245px 宽度 + 系统原生折行（绝不再人工切词）
-            { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines, width: 245 }
+            // 💎 核心修复：使用 flex: 1 强制撑开容器，确保系统识别到充足宽度从而激活原生折行
+            { 
+              type: 'stack', 
+              flex: 1, 
+              children: [
+                { type: 'text', text: cat.t, font: { size: 12, weight: 'medium' }, textColor: TEXT_SUB, maxLines: cat.lines }
+              ]
+            }
           ]
         }))
       },
