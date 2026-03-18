@@ -1,7 +1,8 @@
 # ==========================================
 # 📌 模块名称: 一汽奥迪 App 极速净屏模块
-# ✨ 主要功能: 底层拦截开屏广告、首页展位广告、轮播图以及全域的隐私行为追踪探针。
-# ⏱️ 更新时间: 2026-03-18
+# ✨ 主要功能: 底层拦截开屏广告、首页展位广告、轮播大图以及全域的隐私行为追踪探针。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/refs/heads/main/Egern/Module/Audi_AdBlock.yaml
+# ⏱️ 更新时间: 2026.03.18 11:40
 # ==========================================
 name: "一汽奥迪去广告"
 description: "底层阻断一汽奥迪 App 商业广告与行为探针，提升启动速度。"
@@ -20,18 +21,18 @@ url_rewrites:
     location: reject
     status_code: 200
 
-  # 2. 猎杀首页中间的广告展位 (Booth)
+  # 2. 猎杀首页中间烦人的广告展位 (Booth)
   - match: ^https?:\/\/audi2c\.faw-vw\.com\/cnapi\/v1\/index_booth\/page
     location: reject
     status_code: 200
 
   # 3. 猎杀首页顶部滚动轮播大图 (Carousel)
-  # ⚠️ 注: 如果屏蔽此项导致首页顶部有灰色空白且你觉得影响美观，可在行首加 # 注释掉此规则
+  # ⚠️ 注: 如果屏蔽此项导致首页顶部有灰色空白且影响美观，可在行首加 # 注释掉此规则
   - match: ^https?:\/\/audi2c\.faw-vw\.com\/cnapi\/v2\/carouse_figure\/get\/on_shelf
     location: reject
     status_code: 200
 
-  # 4. 猎杀商城及全局行为追踪、隐私日志上报 (Trackers)
+  # 4. 猎杀全局行为追踪与隐私日志上报 (Trackers)
   # 直接掐断整个 api-ubtas 域名，极大降低 App 后台耗电并保护隐私
   - match: ^https?:\/\/api-ubtas\.faw-vw\.com\/.*
     location: reject
