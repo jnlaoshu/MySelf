@@ -1,9 +1,9 @@
 /**
  * ==========================================
- * 📌 代码名称: 🖥️ 服务器监控
- * ✨ 主要功能: 基于 Egern 原生 SSH 引擎构建的服务器探针。采用 Apple 原生 Bento Box 四宫格悬浮卡片布局，搭载 Cyber-Pro 专属色彩引擎，全局支持系统深浅色自适应；并发抓取并流式渲染 CPU、内存、磁盘与网络 I/O 核心负载，提供兼具硬核性能与极简美学的桌面级运维体验。
+ * 📌 代码名称: 🖥️ 服务器监控 (Bento 鹅卵石重构版)
+ * ✨ 主要功能: 彻底颠覆官方线性布局，引入 Apple 风格的 Bento Box (鹅卵石 Neo) 悬浮卡片 UI。搭载 "Cyber-Pro" 极客色彩引擎，OLED 纯黑底色与低饱和高级冷暖色碰撞，打造极具未来感的桌面服务器主控台。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.18 23:10
+ * ⏱️ 更新时间: 2026.03.18 23:15
  * ==========================================
  */
 
@@ -113,11 +113,13 @@ export default async function (ctx) {
     text: { light: '#1D1D1F', dark: '#F5F5F7' },
     muted: { light: '#86868B', dark: '#98989D' },
     dim: { light: '#A1A1A6', dark: '#636366' },
-    cpu: { light: '#00C7BE', dark: '#32ADE6' },
-    mem: { light: '#AF52DE', dark: '#BF5AF2' },
-    disk: { light: '#FF9500', dark: '#FF9F0A' },
-    net: { light: '#FF2D55', dark: '#FF375F' },
-    temp: { light: '#FF3B30', dark: '#FF453A' },
+    
+    // 重新调配的柔和霓虹色
+    cpu: { light: '#009688', dark: '#50E3C2' }, // 深青色 (Teal)
+    mem: { light: '#673AB7', dark: '#A389F1' }, // 丁香紫 (Lilac)
+    disk: { light: '#FFC107', dark: '#F5C850' }, // 琥珀黄 (Amber)
+    net: { light: '#E91E63', dark: '#F7A1C2' }, // 珊瑚粉 (Coral)
+    temp: { light: '#FF3B30', dark: '#FF453A' }, // 警告红
   };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
@@ -133,41 +135,47 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
+  // 四宫格卡片渲染函数，应用更柔和的鹅卵石 Neo 圆角与背景标签布局
   const bentoCell = (icon, label, pct, detailText, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cellBg, cornerRadius: 14, padding: 10, gap: 5,
+    backgroundColor: C.cellBg, cornerRadius: 25, padding: [12, 10, 10, 10], gap: 6,
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
+      // 鵝卵石主标题标签
+      { type: 'stack', direction: 'row', alignItems: 'center', cornerRadius: 25, backgroundColor: color, opacity: 0.1, padding: [4, 6], gap: 6, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 14, height: 14 },
-        { type: 'text', text: label, font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'text', text: label, font: { size: 12, weight: 'bold' }, textColor: color },
         { type: 'spacer' },
-        { type: 'text', text: `${pct}%`, font: { size: 14, weight: 'heavy', family: 'Menlo' }, textColor: color }
+        { type: 'text', text: `${pct}%`, font: { size: 16, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
       { type: 'spacer' },
-      bar(pct, color, 5),
+      bar(pct, color, 6),
       { type: 'text', text: detailText, font: { size: 9, family: 'Menlo' }, textColor: C.dim, maxLines: 1 }
     ]
   });
 
   const netCell = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cellBg, cornerRadius: 14, padding: 10, gap: 5,
+    backgroundColor: C.cellBg, cornerRadius: 25, padding: [12, 10, 10, 10], gap: 6,
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
+      // 网络鵝卵石主标题标签
+      { type: 'stack', direction: 'row', alignItems: 'center', cornerRadius: 25, backgroundColor: C.net, opacity: 0.1, padding: [4, 6], gap: 6, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 14, height: 14 },
-        { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'text', text: 'NET', font: { size: 12, weight: 'bold' }, textColor: C.net },
         { type: 'spacer' }
       ]},
       { type: 'spacer' },
-      { type: 'stack', direction: 'row', children: [
-        { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.net },
-        { type: 'spacer' },
-        { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
-      ]},
-      { type: 'stack', direction: 'row', children: [
-        { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.dim },
-        { type: 'spacer' },
-        { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.dim }
+      // 双行数据鵝卵石标签
+      { type: 'stack', direction: 'column', gap: 4, cornerRadius: 10, backgroundColor: C.barBg, padding: 6, children: [
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 12, weight: 'bold', family: 'Menlo' }, textColor: C.net },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 12, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
+        ]},
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 10, family: 'Menlo' }, textColor: C.dim },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 10, family: 'Menlo' }, textColor: C.dim }
+        ]}
       ]}
     ]
   });
@@ -232,6 +240,6 @@ export default async function (ctx) {
 
   return {
     type: 'widget', backgroundColor: C.bg, padding: 16,
-    children: [{ type: 'text', text: '全新 Bento 布局专为 Medium 尺寸打造，请切换小组件尺寸体验。', textColor: C.text, font: { size: 14, weight: 'medium' } }]
+    children: [{ type: 'text', text: '全新 Bento 鹅卵石 Neo 布局专为 Medium 尺寸打造，请切换小组件尺寸体验。', textColor: C.text, font: { size: 14, weight: 'medium' } }]
   };
 }
