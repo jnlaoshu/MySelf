@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标。
+ * ✨ 主要功能: 基于 SSH 直连协议，实时获取并测算远端主机的 CPU 负载、物理内存与 Swap 占用、磁盘存储利用率、网络实时上下行速率与历史吞吐总量、以及系统持续运行时长，内建防阻断容错机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 06:45
+ * ⏱️ 更新时间: 2026.03.19 06:50
  * ==========================================
  */
 
@@ -44,16 +44,17 @@ export default async function (ctx) {
     const p = stdout.split(SEP).map(s => s.trim());
     const hostname = customName || p[0] || 'server';
     
-    // Uptime 抓取与深度简写 (years -> y, weeks -> w, days -> d, etc.)
-    const uptimeRaw = (p[2] || '').replace(/^up\s+/, '').replace(/,\s*$/, '');
-    const uptime = uptimeRaw
+    let uptimeRaw = (p[2] || '').replace(/^up\s+/, '').replace(/,\s*$/, '');
+    let uptime = uptimeRaw
       .replace(/years?/g, 'y')
       .replace(/weeks?/g, 'w')
       .replace(/days?/g, 'd')
       .replace(/hours?/g, 'h')
-      .replace(/minutes?/g, 'm')
-      .replace(/seconds?/g, 's')
-      .replace(/,\s*/g, ' ');
+      .replace(/minutes?|mins?/g, 'm')
+      .replace(/seconds?|secs?/g, 's')
+      .replace(/,\s*/g, ' ')
+      .replace(/\s+/g, ' ');
+    uptime = uptime.replace(/(\d+):(\d+)/, (match, h, m) => `${Number(h)} h ${Number(m)} m`);
     
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
@@ -98,48 +99,48 @@ export default async function (ctx) {
     trafFg: { light: '#5856D6', dark: '#5E5CE6' }
   };
 
-  const topStatBox = (val, label, bg, fg) => ({
-    type: 'stack', direction: 'column', flex: 1, alignItems: 'center', gap: 4,
-    backgroundColor: bg, cornerRadius: 10, padding: [12, 0],
+  const topBox = (val, label, bg, fg) => ({
+    type: 'stack', direction: 'column', flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: bg, cornerRadius: 8, padding: [12, 0], gap: 4,
     children: [
-      { type: 'text', text: val, font: { size: 16, weight: 'heavy', family: 'Menlo' }, textColor: fg },
+      { type: 'text', text: val, font: { size: 18, weight: 'heavy', family: 'Menlo' }, textColor: fg },
       { type: 'text', text: label, font: { size: 10, weight: 'bold' }, textColor: C.sub }
     ]
   });
 
-  const bottomDataBox = (title, upStr, downStr, bg, fg) => ({
-    type: 'stack', direction: 'column', flex: 1, alignItems: 'center', gap: 4,
-    backgroundColor: bg, cornerRadius: 10, padding: [10, 0],
+  const bottomBox = (title, val1, val2, bg, fg) => ({
+    type: 'stack', direction: 'column', flex: 1, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: bg, cornerRadius: 8, padding: [12, 0], gap: 4,
     children: [
       { type: 'text', text: title, font: { size: 10, weight: 'bold' }, textColor: fg },
-      { type: 'text', text: `↑ ${upStr}`, font: { size: 11, weight: 'heavy', family: 'Menlo' }, textColor: C.text },
-      { type: 'text', text: `↓ ${downStr}`, font: { size: 11, weight: 'heavy', family: 'Menlo' }, textColor: C.text }
+      { type: 'text', text: val1, font: { size: 11, weight: 'heavy', family: 'Menlo' }, textColor: C.text },
+      { type: 'text', text: val2, font: { size: 11, weight: 'heavy', family: 'Menlo' }, textColor: C.text }
     ]
   });
 
   if (d.error) return { type: 'widget', backgroundColor: C.bg, padding: 16, children: [{ type: 'text', text: 'Error', font: { size: 16, weight: 'bold' }, textColor: C.text }, { type: 'text', text: d.error, font: { size: 11 }, textColor: C.sub }] };
 
   return {
-    type: 'widget', backgroundColor: C.bg, padding: [16, 14],
+    type: 'widget', backgroundColor: C.bg, padding: [14, 14],
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', children: [
-        { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text },
+        { type: 'text', text: d.hostname, font: { size: 15, weight: 'heavy' }, textColor: C.text },
         { type: 'spacer' },
         { type: 'image', src: 'sf-symbol:clock', color: C.dskFg, width: 12, height: 12 },
         { type: 'spacer', length: 4 },
         { type: 'text', text: d.uptime, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.dskFg }
       ]},
-      { type: 'spacer', length: 16 },
-      { type: 'stack', direction: 'row', gap: 6, children: [
-        topStatBox(`${d.cpuPct}%`, 'CPU', C.cpuBg, C.cpuFg),
-        topStatBox(`${d.memPct}%`, 'Mem', C.memBg, C.memFg),
-        topStatBox(`${d.swapPct}%`, 'Swap', C.swapBg, C.swapFg),
-        topStatBox(`${d.diskPct}%`, 'Disk', C.dskBg, C.dskFg)
+      { type: 'spacer', length: 12 },
+      { type: 'stack', direction: 'row', gap: 4, children: [
+        topBox(`${d.cpuPct}%`, 'CPU', C.cpuBg, C.cpuFg),
+        topBox(`${d.memPct}%`, 'Mem', C.memBg, C.memFg),
+        topBox(`${d.swapPct}%`, 'Swap', C.swapBg, C.swapFg),
+        topBox(`${d.diskPct}%`, 'Disk', C.dskBg, C.dskFg)
       ]},
-      { type: 'spacer', length: 8 },
-      { type: 'stack', direction: 'row', gap: 6, children: [
-        bottomDataBox('Net Speed', fmtSpeed(d.txRate), fmtSpeed(d.rxRate), C.netBg, C.netFg),
-        bottomDataBox('Total Traffic', fmtBytes(d.netTx), fmtBytes(d.netRx), C.trafBg, C.trafFg)
+      { type: 'spacer', length: 4 },
+      { type: 'stack', direction: 'row', gap: 4, children: [
+        bottomBox('Net Speed', `↑ ${fmtSpeed(d.txRate)}`, `↓ ${fmtSpeed(d.rxRate)}`, C.netBg, C.netFg),
+        bottomBox('Total Traffic', `↑ ${fmtBytes(d.netTx)}`, `↓ ${fmtBytes(d.netRx)}`, C.trafBg, C.trafFg)
       ]}
     ]
   };
