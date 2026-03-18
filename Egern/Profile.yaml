@@ -1,9 +1,9 @@
 # ==========================================
-# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮专用配置
-# ✨ 特色功能: 集成了智能 DNS 劫持与分流、自动测速节点筛选、精细化的应用路由策略（涵盖 AIGC、流媒体及常用服务）、全面的广告拦截规则，并无缝接入多款实用模块（如小组件合集、Sub-Store 等）。
-# ⚠️ 版本要求: 建议使用 Egern TestFlight 2.17.0 (727) 或更高版本以获得最佳兼容性与体验。
+# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
+# ✨ 主要功能: 集成智能 DNS 劫持与精准分流；基于正则清洗的自动化测速节点优选；精细化应用路由策略（AIGC、流媒体及大厂服务原生分流）；模块化接入去广告引擎、ScriptHub 与专属桌面小组件。
+# ⚠️ 版本要求: 建议使用 Egern TestFlight 2.17.0 (727) 或更高版本以获得最佳兼容性与底层引擎红利。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026-03-15 18:28
+# ⏱️ 更新时间: 2026-03-18 08:00
 # ==========================================
 
 # 自动更新配置 (如需启用请取消注释)
@@ -13,11 +13,13 @@
 
 # --- 基础配置 ---
 ipv6: false
+ipv6_vif: false # 彻底阻断底层的 IPv6 握手尝试，提升连接速度
 http_port: 3080
 socks_port: 3090
 allow_external_connections: true
 vif_only: true
 hide_vpn_icon: true
+public_ip_lookup_url: https://ifconfig.me/ip # 提权至全局根层级
 
 # --- DNS 劫持 ---
 hijack_dns:
@@ -81,7 +83,6 @@ dns:
     - domain_wildcard:
         match: '*'
         value: Default
-  public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- 策略组 ---
 policy_groups:
