@@ -1,12 +1,16 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价 4 款小组件；提供可视化配置面板，支持自定义倒数日、全局置顶节假日及指定油价查询地区；底层共享统一色彩与弹性排版规范；支持一键模块化部署与深浅模式自适应。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价 4 款实用组件；支持可视化配置自定义倒数日、自动触发节假日置顶、动态油价查询地区等环境变量；共享统一的弹性和色彩原生引擎；一键模块化部署，全系支持系统深浅色模式。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.18 08:00
+# ⏱️ 更新时间: 2026.03.18 10:30
 # ==========================================
 
 name: "Egern 桌面小组件合集"
 description: "包含：岁时黄历、时光倒数、网络信息、全国油价 4 款桌面小组件。"
+
+# 开启模块更新，更新间隔锁定为 12 小时
+auto_update:
+  interval: 43200
 
 env_schema:
   EXCLUSIVE_NAME_1:
@@ -15,48 +19,48 @@ env_schema:
     default_value: "我的生日"
   EXCLUSIVE_DATE_1:
     name: 📅 纪念日 1 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    default_value: "12/13"
+    description: "日期格式必须严格为 MM/DD（如：11/10）"
+    default_value: "11/10"
     
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
     name: 📅 纪念日 2 日期
-    description: "日期格式必须严格为 MM/DD"
+    description: "日期格式必须严格为 MM/DD（如：12/13）"
     
   EXCLUSIVE_NAME_3:
     name: 🎁 专属纪念日 3
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_3:
     name: 📅 纪念日 3 日期
-    description: "日期格式必须严格为 MM/DD"
+    description: "日期格式必须严格为 MM/DD（如：12/13）"
     
   EXCLUSIVE_NAME_4:
     name: 🎁 专属纪念日 4
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_4:
     name: 📅 纪念日 4 日期
-    description: "日期格式必须严格为 MM/DD"
+    description: "日期格式必须严格为 MM/DD（如：12/13）"
     
   EXCLUSIVE_NAME_5:
     name: 🎁 专属纪念日 5
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_5:
     name: 📅 纪念日 5 日期
-    description: "日期格式必须严格为 MM/DD"
+    description: "日期格式必须严格为 MM/DD（如：12/13）"
     
   EXCLUSIVE_NAME_6:
     name: 🎁 专属纪念日 6
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_6:
     name: 📅 纪念日 6 日期
-    description: "日期格式必须严格为 MM/DD"
+    description: "日期格式必须严格为 MM/DD（如：12/13）"
 
   PINNED_HOLIDAY:
     name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（如：高考、春节）。留空则关闭置顶。"
-    default_value: ""
+    description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。可根据需要自行修改，留空则关闭置顶。"
+    default_value: "高考"
     
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
@@ -68,26 +72,18 @@ env_schema:
     
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的推算逻辑"
+    description: "格式 MM/DD（如：04/01）。留空则默认使用系统内置的成都春假推算逻辑"
     default_value: ""
     
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的推算逻辑"
+    description: "格式 MM/DD（如：11/08）。留空则默认使用系统内置的成都秋假推算逻辑"
     default_value: ""
 
   GAS_REGION:
     name: 📍 油价查询地区
-    description: "油价查询地区的拼音路径。格式如：sichuan/chengdu 或 beijing"
+    description: "直辖市请直接输入直辖市名拼音，如beijing；其他省份的请输入省份/省会拼音，如sichuan/chengdu。"
     default_value: "sichuan/chengdu"
-    
-  SHOW_TREND:
-    name: 📈 显示调价趋势
-    description: "是否在面板底部显示本轮调价的涨跌趋势及预测金额"
-    options:
-      - "true"
-      - "false"
-    default_value: "true"
 
 scriptings:
   - generic:
