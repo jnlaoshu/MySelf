@@ -1,6 +1,6 @@
 # > Clash Party@laoshu 自用配置
-# > 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
-# > Update: 2026.03.18 16:00
+# > https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
+# > Update: 2026.01.18 16:08
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
@@ -34,9 +34,11 @@ profile:
   store-selected: true
   store-fake-ip: true
 
-# 修复点 1：移除过于激进的 IP 解析，将 PT 站加入嗅探白名单防止握手失败
 sniffer:
   enable: true
+  override-destination: true
+  force-dns-mapping: true
+  parse-pure-ip: true
   sniff:
     HTTP:
       ports: [80, 8080-8880]
@@ -48,7 +50,6 @@ sniffer:
   skip-domain:
     - "Mijia Cloud"
     - "+.push.apple.com"
-    - "+.byr.pt"
 
 tun:
   enable: true
@@ -71,9 +72,7 @@ dns:
   nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-  # 修复点 2：移除会导致报错的 classical 规则集，使用 geosite 和精确域名，确保真实 IPv6 暴露
   fake-ip-filter:
-    - "+.byr.pt"
     - "+.lan"
     - "+.local"
     - "time.*.com"
@@ -89,7 +88,7 @@ geox-url:
   geosite: "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
   mmdb: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb"
   asn: "https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb"
-
+  
 # 锚点参数
 pg: &pg {type: select, proxies: [Proxy, 香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT]}
 url-test: &url-test {type: url-test, url: https://www.google.com/generate_204, interval: 300, tolerance: 0, include-all: true}
