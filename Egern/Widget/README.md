@@ -2,11 +2,11 @@
 
 # Egern 桌面小组件合集
 
-本项目提供了一套专为 [Egern](https://github.com/egerndaddy/quick-start) 网络代理工具设计的 iOS 桌面小组件（Widgets）。集合了日常高频使用的 4 款核心工具，底层共享统一色彩与弹性排版规范，全系原生支持 iOS 深浅色模式。
+本项目提供了一套专为 [Egern](https://github.com/egerndaddy/quick-start) 网络代理工具设计的 iOS 桌面小组件（Widgets）。集合了日常高频使用的 5 款核心工具，底层共享统一色彩与弹性排版规范，全系原生支持 iOS 深浅色模式。
 
 **📦 模块安装链接 (YAML)：**
 ```http
-https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
+[https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml)
 ```
 
 ---
@@ -37,6 +37,12 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 * **趋势倒数**：内置历法推算，精准倒数下轮油价调整窗口（精确到小时）。
 * **底层机制**：采用现代正则解析引擎，配合原生 Flex 布局呈现绝对等宽四宫格。
 
+### 5. 🖥️ 服务器监控 (Server Monitor)
+🔗 **源码链接：** [ServerMonitor.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js)
+* **核心功能**：通过原生 SSH 隧道直连远程 VPS、NAS 或软路由。
+* **实时探针**：并发抓取并解析系统负载 (Load)、磁盘占用率 (Disk) 与在线运行状态。
+* **底层机制**：采用本地极简正则解析引擎兼容多平台，搭载原生弹性流式布局与防断连崩溃保护。
+
 ---
 
 ## 🚀 安装与部署
@@ -54,17 +60,18 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 
 通过在 Egern 模块详情页中直观配置环境变量：
 
-* **纪念日**：支持自定义专属日期（格式 `MM/DD`，如 `11/10`）。
+* **纪念日**：支持自定义专属日期（格式 `MM/DD`，如 `12/13`）。
 * **自动置顶**：通过 `PINNED_HOLIDAY` 指定需要全盘高亮的置顶节日（默认：高考）。
 * **油价查询**：直辖市输入拼音（如 `beijing`），其他输入省份/省会（如 `sichuan/chengdu`）。
-* **休假推算**：留空春/秋假自定义日期，则自动启用内置推算逻辑。
+* **休假推算**：留空春/秋假自定义日期，则自动启用内置成都专属推算逻辑。
+* **SSH 探针**：需填入目标主机的 IP、用户名及完整的私钥文本 (Ed25519/RSA)。
 
 ---
 
 ## 📝 更新日志
 
 * **2026.03.18**
-  * 新增底层成都春秋假自动动态推算逻辑。
-  * 引入 ≤200 天触发条件的小组件智能置顶潜伏机制。
+  * 新增 **服务器监控 (SSH 探针)** 第 5 款小组件，全网首发原生 SSH 终端支持。
+  * 引入 ≤200 天触发条件的小组件智能置顶潜伏机制与底层成都春秋假自动动态推算逻辑。
   * 移除旧版所有硬编码物理限宽，全面升级真弹性 (Flex) 响应式布局。
   * 模块总配置文件引入 12 小时循环更新声明机制。
