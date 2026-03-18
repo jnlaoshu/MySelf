@@ -4,7 +4,7 @@
 
 **📦 模块安装链接 (YAML)：**
 ```http
-[https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml)
+https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
 ```
 
 ---
