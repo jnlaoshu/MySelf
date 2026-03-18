@@ -2,7 +2,7 @@
 
 # Egern 桌面小组件合集
 
-本项目提供了一套专为 [Egern](https://github.com/egernapp/Egern) 网络代理工具设计的 iOS 桌面小组件（Widgets）。集合了日常高频使用的 4 款核心工具，底层共享统一色彩与弹性排版规范，全系原生支持 iOS 深浅色模式。
+本项目提供了一套专为 [Egern](https://github.com/egerndaddy/quick-start) 网络代理工具设计的 iOS 桌面小组件（Widgets）。集合了日常高频使用的 4 款核心工具，底层共享统一色彩与弹性排版规范，全系原生支持 iOS 深浅色模式。
 
 **📦 模块安装链接 (YAML)：**
 ```http
