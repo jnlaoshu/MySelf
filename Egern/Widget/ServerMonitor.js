@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 通过 SSH 直连获取核心指标。深度适配系统 UI，采用等宽双列布局与卡片式交互设计，确保与上方组件视觉高度协调，打造清晰、严谨的运维看板。
+ * ✨ 主要功能: 极简原生版。基于 SSH 协议实时获取核心指标，采用 Apple 标准四宫格矩阵布局。彻底移除视觉干扰，像素级对齐系统组件间距与比例，打造极其协调、通透的运维看板。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 00:20
+ * ⏱️ 更新时间: 2026.03.19 00:30
  * ==========================================
  */
 
@@ -35,7 +35,6 @@ export default async function (ctx) {
     await session.close();
     const p = stdout.split(SEP).map(s => s.trim());
     const hostname = customName || p[0] || 'server';
-    const la = (p[1] || '0 0 0').split(' ');
     const uptime = (p[2] || '').replace(/^up\s+/, '').replace(/,\s*$/, '');
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
@@ -45,72 +44,68 @@ export default async function (ctx) {
     ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
     const mm = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)).split(/\s+/);
     const memTotal = Number(mm[1]) || 1, memUsed = Number(mm[2]) || 0, memPct = Math.round((memUsed / memTotal) * 100);
-    const df = (p[5] || '').split(/\s+/), diskTotal = Number(df[1]) || 1, diskUsed = Number(df[2]) || 0, diskPct = parseInt(df[4]) || 0;
+    const df = (p[5] || '').split(/\s+/), diskPct = parseInt(df[4]) || 0;
     const nn = (p[8] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
     const prevNet = ctx.storage.getJSON('_net'), now = Date.now();
     let rxRate = 0, txRate = 0;
     if (prevNet && prevNet.ts) { const el = (now - prevNet.ts) / 1000; if (el > 0 && el < 3600) { rxRate = Math.max(0, (netRx - prevNet.rx) / el); txRate = Math.max(0, (netTx - prevNet.tx) / el); } }
     ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
-    d = { hostname, uptime, cpuPct, cores: parseInt(p[6]) || 1, load: la[0], memUsed, memTotal, memPct, diskUsed, diskTotal, diskPct, rxRate, txRate, procs: parseInt(p[11]) || 0 };
+    d = { hostname, uptime, cpuPct, memPct, diskPct, rxRate, txRate };
   } catch (e) { d = { error: String(e.message || e) }; }
 
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    card: { light: '#F5F5F7', dark: '#2C2C2E' },
-    accent: { light: '#007AFF', dark: '#0A84FF' },
-    text: { light: '#1D1D1F', dark: '#F5F5F7' },
-    sub: { light: '#86868B', dark: '#98989D' }
+    card: { light: '#F2F2F7', dark: '#2C2C2E' },
+    text: { light: '#1C1C1E', dark: '#FFFFFF' },
+    sub: { light: '#8E8E93', dark: '#8E8E93' }
   };
 
+  // 极简迷你进度条
   const bar = (pct, color) => ({
-    type: 'stack', direction: 'row', height: 3, backgroundColor: { light: '#E5E5EA', dark: '#3A3A3C' }, cornerRadius: 1.5,
-    children: pct > 0 ? [{ type: 'stack', flex: pct, height: 3, backgroundColor: color, cornerRadius: 1.5, children: [] }, { type: 'spacer', flex: 100 - pct }] : [{ type: 'spacer' }]
+    type: 'stack', direction: 'row', height: 2.5, backgroundColor: { light: '#E5E5EA', dark: '#3A3A3C' }, cornerRadius: 1.25,
+    children: pct > 0 ? [{ type: 'stack', flex: pct, height: 2.5, backgroundColor: color, cornerRadius: 1.25, children: [] }, { type: 'spacer', flex: 100 - pct }] : [{ type: 'spacer' }]
   });
 
-  const infoBox = (title, value, sub, pct, color) => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 10, padding: 8, gap: 4,
+  // 仿“成都油价”等宽盒子布局
+  const gridBox = (label, value, pct, color) => ({
+    type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 12, padding: [10, 8], gap: 4, alignItems: 'center',
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', children: [
-        { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.sub },
-        { type: 'spacer' },
-        { type: 'text', text: `${pct}%`, font: { size: 11, weight: 'semibold', family: 'Menlo' }, textColor: color }
-      ]},
-      { type: 'text', text: value, font: { size: 16, weight: 'heavy', family: 'Menlo' }, textColor: C.text },
-      bar(pct, color),
-      { type: 'text', text: sub, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1 }
+      { type: 'text', text: label, font: { size: 10, weight: 'semibold' }, textColor: C.sub },
+      { type: 'text', text: value, font: { size: 15, weight: 'heavy', family: 'Menlo' }, textColor: C.text },
+      { type: 'spacer', length: 2 },
+      bar(pct, color)
     ]
   });
 
-  if (d.error) return { type: 'widget', backgroundColor: C.bg, padding: 16, children: [{ type: 'text', text: 'Connection Failed', font: { size: 16, weight: 'bold' }, textColor: C.text }, { type: 'text', text: d.error, font: { size: 12 }, textColor: C.sub }] };
+  if (d.error) return { type: 'widget', backgroundColor: C.bg, padding: 16, children: [{ type: 'text', text: 'Error', font: { size: 16, weight: 'bold' }, textColor: C.text }, { type: 'text', text: d.error, font: { size: 11 }, textColor: C.sub }] };
 
   return {
-    type: 'widget', backgroundColor: C.bg, padding: 12,
+    type: 'widget', backgroundColor: C.bg, padding: [12, 14],
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', children: [
-        { type: 'image', src: 'sf-symbol:server.rack', color: C.accent, width: 14, height: 14 },
-        { type: 'spacer', length: 6 },
-        { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text },
+        { type: 'text', text: d.hostname.toUpperCase(), font: { size: 13, weight: 'heavy' }, textColor: C.text },
         { type: 'spacer' },
         { type: 'text', text: d.uptime, font: { size: 10 }, textColor: C.sub }
       ]},
-      { type: 'spacer', length: 10 },
-      { type: 'stack', direction: 'row', gap: 10, children: [
-        infoBox('CPU', `${d.cpuPct}%`, `${d.cores}C / Ld ${d.load}`, d.cpuPct, '#34C759'),
-        infoBox('MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}/${fmtBytes(d.memTotal)}`, d.memPct, C.accent)
+      { type: 'spacer', length: 12 },
+      // 第一排：CPU & MEM
+      { type: 'stack', direction: 'row', gap: 8, children: [
+        gridBox('CPU', `${d.cpuPct}%`, d.cpuPct, '#34C759'),
+        gridBox('MEM', `${d.memPct}%`, d.memPct, '#007AFF')
       ]},
-      { type: 'spacer', length: 10 },
-      { type: 'stack', direction: 'row', gap: 10, children: [
-        infoBox('DISK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)}/${fmtBytes(d.diskTotal)}`, d.diskPct, '#FF9500'),
-        { type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 10, padding: 8, gap: 4, children: [
-          { type: 'text', text: 'NETWORK', font: { size: 11, weight: 'bold' }, textColor: C.sub },
-          { type: 'stack', direction: 'row', children: [
-            { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: '#FF2D55' },
-            { type: 'spacer' },
-            { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.accent }
+      { type: 'spacer', length: 8 },
+      // 第二排：DISK & NET
+      { type: 'stack', direction: 'row', gap: 8, children: [
+        gridBox('DISK', `${d.diskPct}%`, d.diskPct, '#FF9500'),
+        { type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 12, padding: [10, 8], gap: 4, alignItems: 'center', children: [
+          { type: 'text', text: 'NET', font: { size: 10, weight: 'semibold' }, textColor: C.sub },
+          { type: 'stack', direction: 'row', gap: 4, children: [
+             { type: 'text', text: `↓${fmtBytes(d.rxRate)}`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: '#FF2D55' },
+             { type: 'text', text: `↑${fmtBytes(d.txRate)}`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: '#AF52DE' }
           ]},
-          { type: 'spacer' },
-          { type: 'text', text: `${d.procs} processes running`, font: { size: 9 }, textColor: C.sub }
+          { type: 'spacer', length: 2 },
+          { type: 'stack', height: 2.5, children: [{ type: 'spacer' }] } // 占位保持高度对齐
         ]}
       ]}
     ]
