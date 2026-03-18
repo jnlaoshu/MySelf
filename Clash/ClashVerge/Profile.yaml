@@ -1,6 +1,6 @@
 # > Clash Verge Rev@laoshu 自用配置
 # > https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashVerge/Profile.yaml
-# > Update: 2026.01.18 17:40
+# > Update: 2026.03.18 16:20
 
 # --- 基础参数 ---
 mode: rule
@@ -39,9 +39,9 @@ sniffer:
   override-destination: true # 流量重定向，防止 DNS 劫持
   force-dns-mapping: true    # 强制将嗅探到的域名映射回 Fake-IP
   sniff:
-    HTTP: { ports: [80, 8080-8880], override-destination: true }
-    TLS: { ports: [443, 8443], override-destination: true }
-    QUIC: { ports: [443, 8443], override-destination: true }
+    HTTP: { ports: [80, 8080-8880] }
+    TLS: { ports: [443, 8443] }
+    QUIC: { ports: [443, 8443] }
 
 # --- Tun 模式 (无感代理核心) ---
 tun:
@@ -62,6 +62,13 @@ dns:
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   prefer-h3: true       # 开启 DoH 的 HTTP/3 支持，查询更快
+  
+  # 【新增】默认 DNS：用于解析下方加密 DNS 的域名，防止死循环
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+    - 1.1.1.1
+    - 8.8.8.8
   
   # 1. 默认 DNS (解析国外域名，使用加密 DNS)
   nameserver:
@@ -92,7 +99,7 @@ dns:
     - "ntp.*.com"
     - "+.msftconnecttest.com"
     - "+.msftncsi.com"
-    - "+.byr.pt"         # 关键：BYR 不走 Fake-IP
+    - "+.byr.pt"          # 关键：BYR 不走 Fake-IP
     - "+.edu.cn"         # 建议：教育网域名直连
 
 # --- 锚点参数 ---
@@ -104,7 +111,6 @@ c: &c {type: http, behavior: classical, format: yaml, interval: 86400} # 格式�
 # --- 代理提供商 ---
 proxy-providers:
   Subscribe:
-    # 建议直接在 Verge Rev UI 中填入订阅链接，这里仅作兼容保留
     url: http://127.0.0.1:38324/download/collection/AllServer
     <<: *p
 
@@ -137,30 +143,30 @@ proxy-groups:
   - {name: YouTube, <<: *pg, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png}  
   - {name: Final, <<: *pg, include-all: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png}
 
-# --- 规则集 (保持原样) ---
+# --- 规则集 (已全部替换为 blackmatrix7 Clash 格式) ---
 rule-providers:
-  Reject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Reject.yaml}
-  AIGC: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml}  
-  AppleCN: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml}
-  AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml}
-  Disney: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml}
-  Github: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Github.yaml}
-  Google: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml}
-  HBO: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml}
-  Microsoft: {<<: *c, url:https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml}
-  Netflix: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml}  
-  OneDrive: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/OneDrive.yaml}
-  PayPal: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml}
-  Spotify: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml}  
-  Telegram: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml}
-  Twitter: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml}
-  TikTok: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml}
-  WeChat: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml}  
-  YouTube: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml}
+  Reject: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml}
+  AIGC: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml}  
+  AppleCN: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml}
+  AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml}
+  Disney: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml}
+  Github: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml}
+  Google: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml}
+  HBO: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml}
+  Microsoft: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml}
+  Netflix: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml}  
+  OneDrive: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml}
+  PayPal: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml}
+  Spotify: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml}  
+  Telegram: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml}
+  Twitter: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml}
+  TikTok: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml}
+  WeChat: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml}  
+  YouTube: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml}
   Proxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}  
   Direct: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
   Lan: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}  
-  China: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
+  China: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
 
 # --- 规则 (逻辑优化) ---
 rules: 
@@ -188,7 +194,7 @@ rules:
   - RULE-SET,WeChat,WeChat
   - RULE-SET,YouTube,YouTube
   - RULE-SET,Proxy,Proxy  
-  - RULE-SET,Direct,DIRECT    
+  - RULE-SET,Direct,DIRECT   
   - RULE-SET,Lan,DIRECT
   
   # 兜底：先匹配 GeoSite CN，因为它比庞大的 IP 库匹配快得多
