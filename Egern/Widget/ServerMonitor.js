@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: 🖥️ 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 Egern 原生 SSH 引擎构建的满血版服务器探针。并发抓取 Linux 底层核心指标，通过原生弹性布局与动态预警色，实时渲染 CPU、内存、磁盘与网络 I/O 的流式直方图及进度条；完美适配全尺寸桌面组件，内置防断连容错机制。
+ * ✨ 主要功能: 基于 Egern 原生 SSH 引擎的满血监控面板。深度重构 UI 渲染底层，全局原生支持 iOS 深浅色自适应主题；采用流式图表与动态预警色实时呈现 CPU、内存、磁盘及网络核心负载；内置防断连容错机制，打造极致统一的桌面极客美学。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.18 22:20
+ * ⏱️ 更新时间: 2026.03.18 22:55
  * ==========================================
  */
 
@@ -16,6 +16,7 @@ export default async function (ctx) {
     ctx.env.privateKey = ctx.env.SSH_KEY || ctx.env.privateKey || "";
     ctx.env.port = ctx.env.SSH_PORT || ctx.env.port || 22;
   }
+  const customName = (ctx.env.SSH_NAME || "").trim();
 
   // ─── Helpers ────────────────────────────────
   const fmtBytes = b => {
@@ -38,24 +39,24 @@ export default async function (ctx) {
 
     const SEP = '<<SEP>>';
     const cmds = [
-      'hostname -s 2>/dev/null || hostname',                                                       // 0
-      'cat /proc/loadavg',                                                                         // 1
-      'uptime -p 2>/dev/null || uptime',                                                           // 2
-      'head -1 /proc/stat',                                                                        // 3
-      'free -b',                                                                                   // 4
-      'df -B1 / | tail -1',                                                                        // 5
-      'nproc',                                                                                     // 6
-      'uname -r',                                                                                  // 7
-      "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",  // 8
-      'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0', // 9
-      "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'", // 10
-      "ls /proc 2>/dev/null | grep -c '^[0-9]' || echo 0",                                        // 11
+      'hostname -s 2>/dev/null || hostname',                                                       
+      'cat /proc/loadavg',                                                                         
+      'uptime -p 2>/dev/null || uptime',                                                           
+      'head -1 /proc/stat',                                                                        
+      'free -b',                                                                                   
+      'df -B1 / | tail -1',                                                                        
+      'nproc',                                                                                     
+      'uname -r',                                                                                  
+      "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",  
+      'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0', 
+      "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'", 
+      "ls /proc 2>/dev/null | grep -c '^[0-9]' || echo 0",                                        
     ];
     const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
     await session.close();
 
     const p = stdout.split(SEP).map(s => s.trim());
-    const hostname = p[0] || 'server';
+    const hostname = customName || p[0] || 'server';
     const la = (p[1] || '0 0 0').split(' ');
     const load = [la[0], la[1], la[2]];
     const uptime = (p[2] || '').replace(/^up\s+/, '').replace(/,\s*$/, '');
@@ -141,26 +142,29 @@ export default async function (ctx) {
     d = { error: String(e.message || e) };
   }
 
-  // ─── Theme ──────────────────────────────────
-
+  // ─── Theme (深度重构的深浅色引擎与苹果原生预警色) ──────────────────
   const C = {
-    bg1: '#0d1117', bg2: '#161b22',
-    barBg: '#30363d',
-    text: '#e6edf3', muted: '#7d8590', dim: '#484f58',
-    cpu: '#3fb950', mem: '#58a6ff', swap: '#a371f7',
-    net: '#f778ba', disk: '#d29922', temp: '#ff7b72',
+    bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    barBg: { light: '#E5E5EA', dark: '#38383A' },
+    text: { light: '#1C1C1E', dark: '#FFFFFF' },
+    muted: { light: '#8E8E93', dark: '#8E8E93' },
+    dim: { light: '#C7C7CC', dark: '#48484A' },
+    cpu: { light: '#34C759', dark: '#30D158' },
+    mem: { light: '#007AFF', dark: '#0A84FF' },
+    swap: { light: '#AF52DE', dark: '#BF5AF2' },
+    net: { light: '#FF2D55', dark: '#FF375F' },
+    disk: { light: '#FF9500', dark: '#FF9F0A' },
+    temp: { light: '#FF3B30', dark: '#FF453A' },
   };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
-  const alphaHex = a => Math.round(a * 255).toString(16).padStart(2, '0');
 
   const bgGradient = {
-    type: 'linear', colors: [C.bg1, C.bg2],
-    startPoint: { x: 0, y: 0 }, endPoint: { x: 0.3, y: 1 },
+    type: 'linear', colors: C.bg,
+    startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 },
   };
 
   // ─── Reusable Components ────────────────────
-
   const bar = (pct, color, h = 6) => ({
     type: 'stack', direction: 'row', height: h, borderRadius: h / 2,
     backgroundColor: C.barBg,
@@ -181,7 +185,8 @@ export default async function (ctx) {
         const r = v / mx;
         return {
           type: 'stack', flex: 1, borderRadius: 1, children: [],
-          backgroundColor: color + alphaHex(0.3 + 0.7 * r),
+          backgroundColor: color,
+          opacity: 0.3 + 0.7 * r,
           height: Math.max(1, Math.round(r * h)),
         };
       }),
@@ -208,13 +213,13 @@ export default async function (ctx) {
   const header = (iconSize) => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
       { type: 'image', src: 'sf-symbol:server.rack', color: C.cpu, width: iconSize, height: iconSize },
-      { type: 'text', text: d.hostname, font: { size: 'headline', weight: 'bold' }, textColor: C.text, maxLines: 1 },
+      { type: 'text', text: d.hostname, font: { size: 15, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
       { type: 'spacer' },
       ...(d.temp > 0 ? [
         { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 },
         { type: 'text', text: `${d.temp}°C`, font: { size: 11, family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
       ] : []),
-      { type: 'text', text: d.uptime, font: { size: 'caption2' }, textColor: C.muted, maxLines: 1, minScale: 0.7 },
+      { type: 'text', text: d.uptime, font: { size: 'caption2', weight: 'medium' }, textColor: C.muted, maxLines: 1, minScale: 0.7 },
     ],
   });
 
@@ -226,11 +231,10 @@ export default async function (ctx) {
     ],
   };
 
-  // ─── Error ──────────────────────────────────
-
+  // ─── Error Handling ──────────────────────────────────
   if (d.error) {
     return {
-      type: 'widget', padding: 16, gap: 8, backgroundColor: C.bg1,
+      type: 'widget', padding: 16, gap: 8, backgroundGradient: bgGradient,
       children: [
         { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
           { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 20, height: 20 },
@@ -241,8 +245,7 @@ export default async function (ctx) {
     };
   }
 
-  // ─── Lock Screen ────────────────────────────
-
+  // ─── Widget Render Logic ────────────────────────────
   if (ctx.widgetFamily === 'accessoryInline') {
     return {
       type: 'widget',
@@ -276,15 +279,13 @@ export default async function (ctx) {
     };
   }
 
-  // ─── Small Widget ───────────────────────────
-
   if (ctx.widgetFamily === 'systemSmall') {
     return {
       type: 'widget', backgroundGradient: bgGradient, padding: 12, gap: 6,
       children: [
         { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:server.rack', color: C.cpu, width: 13, height: 13 },
-          { type: 'text', text: d.hostname, font: { size: 'subheadline', weight: 'bold' }, textColor: C.text, maxLines: 1, minScale: 0.8 },
+          { type: 'text', text: d.hostname, font: { size: 15, weight: 'heavy' }, textColor: C.text, maxLines: 1, minScale: 0.8 },
           { type: 'spacer' },
           ...(d.temp > 0 ? [{ type: 'text', text: `${d.temp}°`, font: { size: 11, family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) }] : []),
         ]},
@@ -296,16 +297,13 @@ export default async function (ctx) {
     };
   }
 
-  // ─── Medium Widget ──────────────────────────
-
   if (ctx.widgetFamily === 'systemMedium') {
     return {
-      type: 'widget', backgroundGradient: bgGradient, padding: [10, 14],
+      type: 'widget', backgroundGradient: bgGradient, padding: 14,
       children: [
         header(14),
         { type: 'spacer' },
         { type: 'stack', direction: 'column', gap: 6, children: [
-          // CPU
           { type: 'stack', direction: 'column', gap: 2, children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
               { type: 'image', src: 'sf-symbol:cpu', color: C.cpu, width: 11, height: 11 },
@@ -316,7 +314,6 @@ export default async function (ctx) {
             ]},
             bar(d.cpuPct, pctColor(d.cpuPct, 60, 85), 4),
           ]},
-          // MEM
           { type: 'stack', direction: 'column', gap: 2, children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
               { type: 'image', src: 'sf-symbol:memorychip', color: C.mem, width: 11, height: 11 },
@@ -327,7 +324,6 @@ export default async function (ctx) {
             ]},
             bar(d.memPct, pctColor(d.memPct, 60, 85), 4),
           ]},
-          // DSK
           { type: 'stack', direction: 'column', gap: 2, children: [
             { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
               { type: 'image', src: 'sf-symbol:internaldrive', color: C.disk, width: 11, height: 11 },
@@ -338,7 +334,6 @@ export default async function (ctx) {
             ]},
             bar(d.diskPct, pctColor(d.diskPct, 70, 90), 4),
           ]},
-          // NET
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
             { type: 'image', src: 'sf-symbol:network', color: C.net, width: 11, height: 11 },
             { type: 'text', text: 'NET', font: { size: 'caption1', weight: 'semibold' }, textColor: C.text },
@@ -355,16 +350,12 @@ export default async function (ctx) {
     };
   }
 
-  // ─── Large / ExtraLarge Widget ──────────────
-
   return {
     type: 'widget', backgroundGradient: bgGradient, padding: [12, 14], gap: 6,
     children: [
       header(16),
       divider,
       { type: 'spacer' },
-
-      // CPU
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:cpu', color: C.cpu, width: 13, height: 13 },
         { type: 'text', text: `CPU ${d.cores}C`, font: { size: 'caption1', weight: 'bold' }, textColor: C.text },
@@ -376,8 +367,6 @@ export default async function (ctx) {
       bar(d.cpuPct, pctColor(d.cpuPct, 60, 85), 6),
       divider,
       { type: 'spacer' },
-
-      // Memory
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:memorychip', color: C.mem, width: 13, height: 13 },
         { type: 'text', text: 'MEM', font: { size: 'caption1', weight: 'bold' }, textColor: C.text },
@@ -397,8 +386,6 @@ export default async function (ctx) {
       ] : []),
       divider,
       { type: 'spacer' },
-
-      // Disk
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:internaldrive', color: C.disk, width: 13, height: 13 },
         { type: 'text', text: 'Disk', font: { size: 'caption1', weight: 'bold' }, textColor: C.text },
@@ -414,8 +401,6 @@ export default async function (ctx) {
       ]},
       divider,
       { type: 'spacer' },
-
-      // Network
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
         { type: 'text', text: 'Network', font: { size: 'caption1', weight: 'bold' }, textColor: C.text },
@@ -429,8 +414,6 @@ export default async function (ctx) {
         { type: 'text', text: `Total ↑${fmtBytes(d.netTx)}`, font: { size: 10, family: 'Menlo' }, textColor: C.dim },
       ]},
       divider,
-
-      // Footer
       footer,
     ],
   };
