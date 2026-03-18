@@ -1,16 +1,15 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测面板
- * ✨ 主要功能: 实时抓取各省市汽柴油最新价格与调价趋势；内置历法算法精准倒数下轮油价调整窗口；应用 Flex 等宽修正呈现绝对等比例四宫格；支持环境变量动态指定查询地区；支持点击唤起哈啰出行 App；适配深浅色模式。
+ * ✨ 主要功能: 实时抓取指定省市各标号汽柴油价格及调价趋势；内置历法推算并精准倒数下轮油价调整窗口；基于 Flex 等宽呈现绝对等比例四宫格布局；支持点击唤起哈啰出行 App；原生适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.18 08:00
+ * ⏱️ 更新时间: 2026.03.18 10:30
  * ==========================================
  */
 
 export default async function (ctx) {
   const env = ctx.env || {};
   const regionParam = env.GAS_REGION || env.region || "sichuan/chengdu"; 
-  const SHOW_TREND = (env.SHOW_TREND || "true").trim() !== "false";
 
   const C = {
     bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
@@ -72,22 +71,20 @@ export default async function (ctx) {
       else if (match[1].includes("柴") || match[1].includes("0号")) prices.diesel = val;
     }
     
-    if (SHOW_TREND) {
-      const trendMatch = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
-      if (trendMatch) {
-        const [, timeText, priceText] = trendMatch;
-        const rawDate = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
-        const adjustDate = rawDate ? `${P(rawDate[1])}.${P(rawDate[2])} ${P(rawDate[3])}:00` : "未知时间";
-        
-        const isUp = priceText.includes("上调");
-        const isDown = priceText.includes("下调");
-        trendColor = isUp ? C.red : (isDown ? C.teal : C.muted);
-        
-        const amounts = (priceText.match(/[\d\.]+\s*元\/升/g) || []).map(p => p.match(/[\d\.]+/)[0]);
-        const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
-        
-        trendInfo = `${adjustDate}, ${isUp ? "↑" : (isDown ? "↓" : "-")} ${amountStr}`.trim();
-      }
+    const trendMatch = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
+    if (trendMatch) {
+      const [, timeText, priceText] = trendMatch;
+      const rawDate = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
+      const adjustDate = rawDate ? `${P(rawDate[1])}.${P(rawDate[2])} ${P(rawDate[3])}:00` : "未知时间";
+      
+      const isUp = priceText.includes("上调");
+      const isDown = priceText.includes("下调");
+      trendColor = isUp ? C.red : (isDown ? C.teal : C.muted);
+      
+      const amounts = (priceText.match(/[\d\.]+\s*元\/升/g) || []).map(p => p.match(/[\d\.]+/)[0]);
+      const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
+      
+      trendInfo = `${adjustDate}, ${isUp ? "↑" : (isDown ? "↓" : "-")} ${amountStr}`.trim();
     }
   } catch (e) {}
 
