@@ -1,14 +1,13 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测面板
- * ✨ 特色功能: 实时抓取全国各省市（支持环境变量动态配置）各标号汽柴油最新价格与近期涨跌趋势；基于内置历法算法，智能推算并精准倒数下轮油价调整窗口（精确到天/小时）；底层采用 matchAll 现代正则解析引擎，直接爬取解析官方网页流，彻底摆脱第三方 API 速率限制与不稳定因素；支持点击面板一键唤起哈啰出行 App；全系支持系统深浅色模式自适应。
+ * ✨ 主要功能: 实时抓取各省市汽柴油最新价格与调价趋势；内置历法算法精准倒数下轮油价调整窗口；应用 Flex 等宽修正呈现绝对等比例四宫格；支持环境变量动态指定查询地区；支持点击唤起哈啰出行 App；适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.18 00:40
+ * ⏱️ 更新时间: 2026.03.18 08:00
  * ==========================================
  */
 
 export default async function (ctx) {
-  // ===================== 1. 环境配置与家族色彩 =====================
   const env = ctx.env || {};
   const regionParam = env.GAS_REGION || env.region || "sichuan/chengdu"; 
   const SHOW_TREND = (env.SHOW_TREND || "true").trim() !== "false";
@@ -25,7 +24,6 @@ export default async function (ctx) {
     blue: { light: '#3A5F85', dark: '#5E8EB8' } 
   };
 
-  // ===================== 2. 调价日历与智能倒数 =====================
   const CALENDAR_2026 = [
     [1,12], [1,23], [2,9], [2,23], [3,9], [3,23], [4,7], [4,21], [5,8], [5,22], 
     [6,5], [6,19], [7,3], [7,17], [7,31], [8,14], [8,28], [9,11], [9,25], 
@@ -55,7 +53,6 @@ export default async function (ctx) {
   const nextAdjust = getNextAdjust();
   const infoColor = nextAdjust.isUrgent ? C.red : C.gold;
 
-  // ===================== 3. 数据爬取与正则解析 =====================
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "未知";
   let trendInfo = "暂无数据";
@@ -101,13 +98,10 @@ export default async function (ctx) {
     { label: "柴油", val: prices.diesel, color: C.teal }
   ].filter(i => i.val);
 
-  // ===================== 4. 布局构造与输出 =====================
   return {
     type: "widget", padding: 12, url: "hellobike://",
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 6 }, 
-
       { type: "stack", direction: "row", alignItems: "center", children: [
           { type: "stack", direction: "row", alignItems: "center", gap: 6, children: [
               { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 16, height: 16, color: C.main },
