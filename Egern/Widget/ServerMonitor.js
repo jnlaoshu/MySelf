@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 彻底重构的纯净版。删除导致排版溢出的图表模块，像素级对齐原生四宫格卡片设计。保证字号清晰、边界安全、零渲染溢出，提供极致稳定的服务器资源可视化看板。
+ * ✨ 主要功能: 极简原生版最终优化。彻底修正底层渲染属性拼写错误，完美激活 16px 大圆角与胶囊进度条；精准放大四大核心卡片之间的呼吸间距，实现与 iOS 原生及油价组件 100% 像素级对齐的桌面极客质感。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 00:05
+ * ⏱️ 更新时间: 2026.03.19 00:10
  * ==========================================
  */
 
@@ -102,13 +102,12 @@ export default async function (ctx) {
     d = { error: String(e.message || e) };
   }
 
-  // ─── 极致干净的原生色彩库 ───
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    cardBg: { light: '#F7F7F9', dark: '#2C2C2E' }, // 完全对齐油价组件的卡片底色
+    cardBg: { light: '#F7F7F9', dark: '#2C2C2E' },
     barBg: { light: '#E5E5EA', dark: '#38383A' },
     text: { light: '#000000', dark: '#FFFFFF' },
-    subText: { light: '#8E8E93', dark: '#98989D' }, 
+    subText: { light: '#666666', dark: '#999999' },
     muted: { light: '#8E8E93', dark: '#8E8E93' },
     cpu: { light: '#34C759', dark: '#30D158' },
     mem: { light: '#007AFF', dark: '#0A84FF' },
@@ -119,46 +118,43 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
-  // 极简横向进度条
+  // 进度条修复：使用正确的 cornerRadius 属性
   const bar = (pct, color) => ({
-    type: 'stack', direction: 'row', height: 4, borderRadius: 2,
+    type: 'stack', direction: 'row', height: 6, cornerRadius: 3, 
     backgroundColor: C.barBg,
     children: pct > 0
       ? [
-          { type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] },
+          { type: 'stack', flex: Math.max(1, pct), height: 6, cornerRadius: 3, backgroundColor: color, children: [] },
           ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : []),
         ]
       : [{ type: 'spacer' }],
   });
 
-  // 标准化数据卡片 (无任何冗余高度)
-  const statCard = (icon, title, pct, subtext, color) => ({
+  // 卡片修复：使用正确的 cornerRadius: 16
+  const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, cornerRadius: 16, padding: [10, 12], gap: 4,
+    backgroundColor: C.cardBg, cornerRadius: 16, padding: [10, 12], gap: 6, 
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
-        { type: 'spacer', length: 6 },
-        { type: 'text', text: title, font: { size: 12, weight: 'bold' }, textColor: C.text },
+        { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' },
-        { type: 'text', text: `${pct}%`, font: { size: 14, weight: 'heavy', family: 'Menlo' }, textColor: color }
+        { type: 'text', text: value, font: { size: 14, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
       { type: 'spacer' },
       bar(pct, color),
-      { type: 'spacer', length: 2 },
-      { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+      { type: 'text', text: subtext, font: { size: 10, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
     ]
   });
 
-  // 专属网络卡片
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, cornerRadius: 16, padding: [10, 12], gap: 4,
+    backgroundColor: C.cardBg, cornerRadius: 16, padding: [10, 12], gap: 6,
     children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
-        { type: 'spacer', length: 6 },
-        { type: 'text', text: 'NET', font: { size: 12, weight: 'bold' }, textColor: C.text },
+        { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'spacer' }
       ]},
       { type: 'spacer' },
       { type: 'stack', direction: 'row', children: [
@@ -166,16 +162,14 @@ export default async function (ctx) {
         { type: 'spacer' },
         { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
       ]},
-      { type: 'spacer', length: 2 },
       { type: 'stack', direction: 'row', children: [
-        { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
+        { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText },
         { type: 'spacer' },
-        { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }
+        { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText }
       ]}
     ]
   });
 
-  // 顶部干净的 Header
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 6, padding: [0, 2], children: [
       { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
@@ -203,20 +197,20 @@ export default async function (ctx) {
     };
   }
 
-  // ─── 核心渲染逻辑 ───
+  // ─── 完美十字间距布局：gap 倍增，彻底隔开四个卡片 ───
   if (ctx.widgetFamily === 'systemMedium') {
     return {
       type: 'widget', backgroundColor: C.bg, padding: 14,
       children: [
         header(),
-        { type: 'spacer', length: 8 },
-        { type: 'stack', direction: 'row', gap: 8, children: [
-          statCard('cpu', 'CPU', d.cpuPct, `${d.cores}C | Ld: ${d.load[0]}`, C.cpu),
-          statCard('memorychip', 'MEM', d.memPct, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, C.mem)
+        { type: 'spacer', length: 10 },
+        { type: 'stack', direction: 'row', gap: 12, children: [ // 横向间距扩大至 12
+          statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
+          statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
         ]},
-        { type: 'spacer', length: 8 },
-        { type: 'stack', direction: 'row', gap: 8, children: [
-          statCard('internaldrive', 'DSK', d.diskPct, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, C.disk),
+        { type: 'spacer', length: 10 }, // 纵向间距扩大至 10
+        { type: 'stack', direction: 'row', gap: 12, children: [ // 横向间距扩大至 12
+          statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
           netCard()
         ]}
       ],
@@ -225,11 +219,11 @@ export default async function (ctx) {
 
   if (ctx.widgetFamily === 'systemSmall') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: 12, gap: 8,
+      type: 'widget', backgroundColor: C.bg, padding: 14, gap: 8,
       children: [
         header(),
-        statCard('cpu', 'CPU', d.cpuPct, `Ld: ${d.load[0]}`, C.cpu),
-        statCard('memorychip', 'MEM', d.memPct, `${fmtBytes(d.memUsed)}`, C.mem),
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
+        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem),
       ],
     };
   }
