@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 协议实时获取服务器 CPU、内存、磁盘及网络底层状态。在极简卡片布局基础上，全面引入 iOS 原生大圆角 (Radius 16) 与胶囊进度条设计，在保障零溢出的同时，提供极致圆润、现代的桌面视觉体验。
+ * ✨ 主要功能: 基于 SSH 协议实时获取服务器 CPU、内存、磁盘及网络底层状态。在极简卡片布局基础上，修复底层属性拼写错误，彻底激活 iOS 原生大圆角 (Radius 16) 与胶囊进度条设计，呈现极致圆润、现代的桌面视觉体验。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.18 23:50
+ * ⏱️ 更新时间: 2026.03.18 23:55
  * ==========================================
  */
 
@@ -104,7 +104,7 @@ export default async function (ctx) {
 
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    cardBg: { light: '#F2F2F7', dark: '#2C2C2E' }, // 稍微调亮一点卡片底色，让它更通透
+    cardBg: { light: '#F2F2F7', dark: '#2C2C2E' }, 
     barBg: { light: '#E5E5EA', dark: '#38383A' },
     text: { light: '#000000', dark: '#FFFFFF' },
     subText: { light: '#666666', dark: '#999999' }, 
@@ -118,7 +118,7 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
-  // 胶囊化进度条：增高至 6，圆角至 3
+  // 胶囊化进度条
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 6, borderRadius: 3,
     backgroundColor: C.barBg,
@@ -130,10 +130,10 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
-  // 圆角升级为 16，左右 padding 微调避免文字撞墙
+  // 这里的属性修正为 borderRadius: 16 ！！！
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, cornerRadius: 16, padding: [8, 12], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 16, padding: [8, 12], gap: 4,
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
@@ -149,7 +149,7 @@ export default async function (ctx) {
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, cornerRadius: 16, padding: [8, 12], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 16, padding: [8, 12], gap: 4,
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
@@ -197,7 +197,6 @@ export default async function (ctx) {
     };
   }
 
-  // 维持 12 的外围 padding，保证安全距离
   if (ctx.widgetFamily === 'systemMedium') {
     return {
       type: 'widget', backgroundColor: C.bg, padding: 12, 
