@@ -1,22 +1,22 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 主要功能: 提取并按就近时间排序展示未来 3 个法定、民俗与国际节日；支持环境变量配置至多 6 个专属纪念日及指定节假日全局置顶；使用底层 Flex 弹性布局防止长文本溢出截断；原生适配系统深浅色模式。
+ * ✨ 主要功能: 自动提取并按就近时间排序展示未来 3 个法定、民俗与国际节日；支持自定义最多 6 个专属纪念日；内置成都本土化春/秋假动态推算逻辑；包含倒数 ≤200 天触发的智能置顶机制；原生适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.18 08:00
+ * ⏱️ 更新时间: 2026.03.18 10:30
  * ==========================================
  */
 
 export default async function(ctx) {
   const env = ctx.env;
   const showSchoolHolidays = (env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
-  const pinnedHoliday = (env.PINNED_HOLIDAY || "").trim();
+  const pinnedHoliday = env.PINNED_HOLIDAY !== undefined ? env.PINNED_HOLIDAY.trim() : "高考";
   const springDateStr = (env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (env.AUTUMN_BREAK_DATE || "").trim();
 
   const customDays = [1, 2, 3, 4, 5, 6].map(i => {
     const n = env[i === 1 ? 'EXCLUSIVE_NAME_1' : `EXCLUSIVE_NAME_${i}`] ?? (i === 1 ? env.EXCLUSIVE_NAME ?? "我的生日" : "");
-    const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "12/13" : "");
+    const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "11/10" : "");
     return { name: n?.trim(), date: d?.trim() };
   }).filter(item => item.name && item.date?.includes('/'));
 
@@ -57,8 +57,16 @@ export default async function(ctx) {
     
     let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
-      legal.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
-      legal.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
+      legal.push(["春假", getCustomDate(y, springDateStr, () => {
+          const qm = Lunar.term(y, 7);
+          const sb = new Date(qm.getTime() - 3 * 86400000);
+          return YMD(sb.getUTCFullYear(), sb.getUTCMonth()+1, sb.getUTCDate());
+      }), 3]);
+      legal.push(["秋假", getCustomDate(y, autumnDateStr, () => {
+          const nov1 = new Date(Date.UTC(y, 10, 1));
+          const offset = (3 - nov1.getUTCDay() + 7) % 7;
+          return YMD(y, 11, 1 + offset + 7);
+      }), 3]);
     }
     
     let exclusive = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
@@ -86,7 +94,7 @@ export default async function(ctx) {
       if (diff <= 0 && diff > -(duration || 1) && !todayFests.includes(name)) todayFests.push(name);
       if (diff < 0) return;
       
-      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff < minPinnedDiff) { 
+      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff <= 200 && diff < minPinnedDiff) { 
           minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
       }
       if (!result[cat].some(i => i.name === name)) result[cat].push({ name, diff });
@@ -152,7 +160,7 @@ export default async function(ctx) {
 
   const topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
-  if (stickyFest) topAddons.push(`✨ ${stickyFest}`);
+  if (stickyFest) topAddons.push(`🔝 ${stickyFest}`);
 
   return {
     type: 'widget', 
