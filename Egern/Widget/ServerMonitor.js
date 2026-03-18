@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 极简原生版。基于 SSH 协议实时获取核心指标，采用 Apple 标准四宫格矩阵布局。彻底移除视觉干扰，像素级对齐系统组件间距与比例，打造极其协调、通透的运维看板。
+ * ✨ 主要功能: 基于 SSH 协议直连服务器，实时抓取并解析 CPU 负载、内存占用、磁盘容量、网络 I/O 速率、系统运行时间及核心温度等底层硬件指标，内置网络超时与异常断连的捕捉及反馈机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 00:30
+ * ⏱️ 更新时间: 2026.03.19 06:15
  * ==========================================
  */
 
@@ -61,13 +61,11 @@ export default async function (ctx) {
     sub: { light: '#8E8E93', dark: '#8E8E93' }
   };
 
-  // 极简迷你进度条
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 2.5, backgroundColor: { light: '#E5E5EA', dark: '#3A3A3C' }, cornerRadius: 1.25,
     children: pct > 0 ? [{ type: 'stack', flex: pct, height: 2.5, backgroundColor: color, cornerRadius: 1.25, children: [] }, { type: 'spacer', flex: 100 - pct }] : [{ type: 'spacer' }]
   });
 
-  // 仿“成都油价”等宽盒子布局
   const gridBox = (label, value, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 12, padding: [10, 8], gap: 4, alignItems: 'center',
     children: [
@@ -84,19 +82,17 @@ export default async function (ctx) {
     type: 'widget', backgroundColor: C.bg, padding: [12, 14],
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', children: [
-        { type: 'text', text: d.hostname.toUpperCase(), font: { size: 13, weight: 'heavy' }, textColor: C.text },
+        { type: 'text', text: d.hostname, font: { size: 13, weight: 'heavy' }, textColor: C.text },
         { type: 'spacer' },
         { type: 'text', text: d.uptime, font: { size: 10 }, textColor: C.sub }
       ]},
       { type: 'spacer', length: 12 },
-      // 第一排：CPU & MEM
-      { type: 'stack', direction: 'row', gap: 8, children: [
+      { type: 'stack', direction: 'row', gap: 2, children: [
         gridBox('CPU', `${d.cpuPct}%`, d.cpuPct, '#34C759'),
         gridBox('MEM', `${d.memPct}%`, d.memPct, '#007AFF')
       ]},
-      { type: 'spacer', length: 8 },
-      // 第二排：DISK & NET
-      { type: 'stack', direction: 'row', gap: 8, children: [
+      { type: 'spacer', length: 2 },
+      { type: 'stack', direction: 'row', gap: 2, children: [
         gridBox('DISK', `${d.diskPct}%`, d.diskPct, '#FF9500'),
         { type: 'stack', direction: 'column', flex: 1, backgroundColor: C.card, cornerRadius: 12, padding: [10, 8], gap: 4, alignItems: 'center', children: [
           { type: 'text', text: 'NET', font: { size: 10, weight: 'semibold' }, textColor: C.sub },
@@ -105,7 +101,7 @@ export default async function (ctx) {
              { type: 'text', text: `↑${fmtBytes(d.txRate)}`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: '#AF52DE' }
           ]},
           { type: 'spacer', length: 2 },
-          { type: 'stack', height: 2.5, children: [{ type: 'spacer' }] } // 占位保持高度对齐
+          { type: 'stack', height: 2.5, children: [{ type: 'spacer' }] } 
         ]}
       ]}
     ]
