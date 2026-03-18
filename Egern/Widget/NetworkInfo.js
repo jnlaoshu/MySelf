@@ -1,14 +1,13 @@
 /**
  * ==========================================
  * 📌 代码名称: 🌐 实时网络信息面板
- * ✨ 特色功能: 实时侦测内网、本地与节点 IP 及详尽地理位置；集成 IP 纯净度检测、防欺诈风险评分与 ASN (自治系统编号) 深度解析；动态测算网络请求延迟（Ping）并进行状态分级警示；智能提取地区代码并映射国旗 Emoji；自动识别 Wi-Fi / 蜂窝网络代际状态；精准匹配当前运营商，并支持点击面板一键唤起官方营业厅 App（已适配移动、电信、联通）；底层采用高容错并发请求与数组滤空拼接算法，拒绝空值报错；全系适配深浅色模式。
+ * ✨ 主要功能: 实时侦测内网、本地与节点 IP 及详尽地理位置；解析 ASN 与防欺诈风险评分；动态测算 Ping 延迟并进行状态警示；智能映射国旗 Emoji；识别网络代际状态及当前运营商，支持点击唤起对应营业厅 App；采用原生弹性布局 (Flex)，适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
- * ⏱️ 更新时间: 2026.03.18 00:23
+ * ⏱️ 更新时间: 2026.03.18 08:00
  * ==========================================
  */
 
 export default async function(ctx) {
-  // ===================== 1. 家族式色彩引擎 =====================
   const C = {
     bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
     main: { light: '#1C1C1E', dark: '#FFFFFF' },
@@ -22,7 +21,6 @@ export default async function(ctx) {
     cyan: { light: '#628C7B', dark: '#73A491' }      
   };
 
-  // ===================== 2. 核心通信与解析包 =====================
   const httpGet = async (url) => {
     try {
       const start = Date.now();
@@ -34,13 +32,16 @@ export default async function(ctx) {
   };
 
   const getFlagEmoji = (cc) => {
-    if (!/^[a-zA-Z]{2}$/.test(cc || "")) return "";
-    return String.fromCodePoint(...[...cc.toUpperCase()].map(c => 127397 + c.charCodeAt()));
+    if (!cc) return "";
+    const str = String(cc).toUpperCase();
+    if (!/^[A-Z]{2}$/.test(str)) return "";
+    return String.fromCodePoint(...[...str].map(c => 127397 + c.charCodeAt(0)));
   };
 
-  const fmtISP = (isp = "") => {
-    const s = isp.toLowerCase();
-    const raw = isp.replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
+  const fmtISP = (isp) => {
+    if (!isp) return "未知";
+    const s = String(isp).toLowerCase();
+    const raw = String(isp).replace(/\s*\(中国\)\s*/, "").replace(/\s+/g, " ").trim();
     if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
     if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
     if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
@@ -48,12 +49,10 @@ export default async function(ctx) {
     return raw || "未知";
   };
 
-  // ===================== 3. 数据探针与核心逻辑 =====================
   try {
     const d = ctx.device || {};
     const [internalIP, gatewayIP, wifiSsid, cellularRadio] = [d.ipv4?.address, d.ipv4?.gateway, d.wifi?.ssid, d.cellular?.radio];
 
-    // 并发请求，榨干网络性能
     const [localResp, nodeResp, pureResp] = await Promise.all([
       httpGet('https://myip.ipip.net/json'), 
       httpGet('http://ip-api.com/json/?lang=zh-CN'),
@@ -62,46 +61,44 @@ export default async function(ctx) {
 
     const { data: local, ping: localPing } = localResp;
     const { data: node, ping: nodePing } = nodeResp;
-    const pure = pureResp.data;
+    const pure = pureResp.data || {}; 
 
-    // Ping 值探测与颜色降维
     const pingMs = nodePing || localPing || 0;
     const pingColor = pingMs === 0 ? C.muted : (pingMs < 100 ? C.teal : (pingMs < 200 ? C.gold : C.red));
 
-    // 运营商识别与 App URL Scheme 映射
-    const currentISP = fmtISP((Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node?.isp || node?.org);
-    const radioType = { "GPRS": "2.5G", "EDGE": "2.75G", "WCDMA": "3G", "LTE": "4G", "NR": "5G", "NRNSA": "5G" }[cellularRadio?.toUpperCase().trim()] || cellularRadio || "";
+    const rawISP = (Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node?.isp || node?.org;
+    const currentISP = fmtISP(rawISP);
+    
+    const rawRadio = cellularRadio ? String(cellularRadio).toUpperCase().trim() : "";
+    const radioType = { "GPRS": "2.5G", "EDGE": "2.75G", "WCDMA": "3G", "LTE": "4G", "NR": "5G", "NRNSA": "5G" }[rawRadio] || rawRadio;
     const jumpUrl = { "中国移动": "leadeon://", "中国电信": "ctclient://", "中国联通": "chinaunicom://" }[currentISP] || "";
 
-    // 结构化拼接输出（滤除空值，拒绝 undefiend 污染）
     const r1Content = [internalIP || "未连接", gatewayIP !== internalIP ? gatewayIP : null].filter(Boolean).join(" / ");
     const locStr = Array.isArray(local.location) ? local.location.slice(0, 3).join('').trim() : '';
     const r2Content = [local.ip || "获取中...", locStr].filter(Boolean).join(" / ");
     const nodeLoc = [getFlagEmoji(node.countryCode), node.country, node.city].filter(Boolean).join(" ");
-    const r3Content = [node.query || node.ip || "获取中...", nodeLoc, node.as?.split(' ')[0]].filter(Boolean).join(" / ");
+    const asnStr = node.as ? String(node.as).split(' ')[0] : "";
+    const r3Content = [node.query || node.ip || "获取中...", nodeLoc, asnStr].filter(Boolean).join(" / ");
 
-    // 风险评测逻辑
     const risk = pure.fraudScore;
     const riskTxt = risk === undefined ? "未知风险" : (risk >= 80 ? `极高危(${risk})` : risk >= 70 ? `高危(${risk})` : risk >= 40 ? `中危(${risk})` : `低危(${risk})`);
-    const r4Content = `${pure.isResidential === true ? "原生住宅" : (pure.isResidential === false ? "商业机房" : "未知属性")} / ${riskTxt}`;
+    const nativeText = pure.isResidential === true ? "原生住宅" : (pure.isResidential === false ? "商业机房" : "未知属性");
+    const r4Content = `${nativeText} / ${riskTxt}`;
 
-    // ===================== 4. 视觉渲染引擎 =====================
     const buildRow = (icon, color, label, content) => ({
       type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 45, children: [
             { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
             { type: 'text', text: label, font: { size: 12, weight: 'heavy' }, textColor: color }
         ]},
-        { type: 'text', text: content, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, width: 320 }
+        { type: 'text', text: content, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, flex: 1 }
       ]
     });
 
-    const widget = {
+    const widgetConfig = {
       type: 'widget', padding: 12, 
-      ...(jumpUrl && { url: jumpUrl }),
       backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
-        { type: 'spacer', length: 6 }, 
         { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
             { type: 'image', src: wifiSsid ? 'sf-symbol:wifi' : (cellularRadio ? 'sf-symbol:antenna.radiowaves.left.and.right' : 'sf-symbol:wifi.slash'), color: C.main, width: 16, height: 16 },
             { type: 'text', text: `${currentISP} · ${wifiSsid || radioType || "未连接"}`, font: { size: 15, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.7 },
@@ -122,9 +119,19 @@ export default async function(ctx) {
         { type: 'spacer' } 
       ]
     };
-    return widget;
+    
+    if (jumpUrl) widgetConfig.url = jumpUrl;
+    return widgetConfig;
 
   } catch (err) {
-    return { type: 'widget', padding: 12, backgroundGradient: { type: 'linear', colors: [{light:'#FFF',dark:'#1C1C1E'},{light:'#F5F5F9',dark:'#0C0C0E'}], startPoint: { x:0, y:0 }, endPoint: { x:1, y:1 } }, children: [{ type: 'text', text: '网络探测异常', textColor: {light:'#8E8E93',dark:'#8E8E93'} }] };
+    return {
+      type: 'widget', padding: 12, 
+      backgroundGradient: { type: 'linear', colors: [{light:'#FFFFFF',dark:'#1C1C1E'}, {light:'#F5F5F9',dark:'#0C0C0E'}], startPoint: { x:0, y:0 }, endPoint: { x:1, y:1 } },
+      children: [
+        { type: 'text', text: '小组件崩溃 ⚠️', font: { size: 14, weight: 'heavy' }, textColor: '#FF453A' },
+        { type: 'spacer', length: 4 },
+        { type: 'text', text: String(err.message || err), font: { size: 11 }, textColor: '#8E8E93', maxLines: 5 }
+      ]
+    };
   }
 }
