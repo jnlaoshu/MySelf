@@ -1,21 +1,19 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 特色功能: 全景覆盖法定、民俗、国际及专属纪念日倒数；自动抓取并展示距离当前最近的 3 个法定、民俗和国际节日；支持自定义配置最多 6 个专属纪念日（如生日、纪念日等）；智能保护连续数字与日期格式，确保日期数据作为一个整体展示而不被截断；全面适配 iOS 深浅色模式自适应。
+ * ✨ 主要功能: 提取并按就近时间排序展示未来 3 个法定、民俗与国际节日；支持环境变量配置至多 6 个专属纪念日及指定节假日全局置顶；使用底层 Flex 弹性布局防止长文本溢出截断；原生适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.17 23:22
+ * ⏱️ 更新时间: 2026.03.18 08:00
  * ==========================================
  */
 
 export default async function(ctx) {
-  // ===================== 1. 环境配置与色彩引擎 =====================
   const env = ctx.env;
   const showSchoolHolidays = (env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
   const pinnedHoliday = (env.PINNED_HOLIDAY || "").trim();
   const springDateStr = (env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (env.AUTUMN_BREAK_DATE || "").trim();
 
-  // 优雅抽取专属纪念日
   const customDays = [1, 2, 3, 4, 5, 6].map(i => {
     const n = env[i === 1 ? 'EXCLUSIVE_NAME_1' : `EXCLUSIVE_NAME_${i}`] ?? (i === 1 ? env.EXCLUSIVE_NAME ?? "我的生日" : "");
     const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "12/13" : "");
@@ -33,7 +31,6 @@ export default async function(ctx) {
     transparent: '#00000000'
   };
 
-  // ===================== 2. 时间与历法运算 =====================
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
@@ -53,13 +50,12 @@ export default async function(ctx) {
     return (m && d) ? YMD(y, m, d) : defaultCalc();
   };
 
-  // ===================== 3. 节日数据抽取 =====================
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r ? YMD(r.getUTCFullYear(), r.getUTCMonth()+1, r.getUTCDate()) : ""; };
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
-    let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
+    let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
     if (showSchoolHolidays) {
       legal.push(["春假", getCustomDate(y, springDateStr, () => YMD(y, 4, Lunar.term(y, 7).getUTCDate() - 3)), 3]);
       legal.push(["秋假", getCustomDate(y, autumnDateStr, () => wDay(11,2,3)), 3]);
@@ -71,7 +67,7 @@ export default async function(ctx) {
     return {
       legal, 
       folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
-      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["儿童节",YMD(y,6,1),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
+      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive
     };
   };
@@ -100,7 +96,6 @@ export default async function(ctx) {
   const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
   const formatStr = (cat, limit) => result[cat].sort((a,b) => a.diff - b.diff).slice(0, limit).map(formatItem).join("，");
 
-  // ===================== 4. 文本引擎与布局生成 =====================
   const getExclusiveLines = (str) => {
     if (!str) return [];
     let firstLine = "", w = 0;
@@ -130,7 +125,7 @@ export default async function(ctx) {
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : C.transparent, width: 13, height: 13 },
                   { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : C.transparent }
               ]},
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, width: 260 }
+              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, flex: 1 }
           ]
       });
   };
@@ -151,7 +146,6 @@ export default async function(ctx) {
       });
   }
 
-  // ===================== 5. 组装与输出 =====================
   const visualLines = gridRows.length;
   const dynamicGap = visualLines <= 4 ? 11 : 8;     
   const dynamicSpacer = visualLines <= 4 ? 12 : 10; 
@@ -165,7 +159,6 @@ export default async function(ctx) {
     padding: 12, 
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-      { type: 'spacer', length: 4 }, 
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
           { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: C.main, width: 16, height: 16 },
           { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: C.main },
