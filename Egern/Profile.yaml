@@ -1,6 +1,6 @@
 # ==========================================
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
-# ✨ 主要功能: 集成智能 DNS 劫持与精准分流；基于正则清洗的自动化测速节点优选；精细化应用路由策略（AIGC、流媒体及大厂服务原生分流）；模块化接入去广告引擎、ScriptHub 与专属桌面小组件。
+# ✨ 主要功能: 集成智能 DNS 劫持与精准分流；基于原生正则引擎降维优化的自动化测速节点筛选；精细化应用路由策略（AIGC、流媒体及大厂服务原生分流）；模块化接入去广告引擎、ScriptHub 与专属极客桌面小组件。
 # ⚠️ 版本要求: 建议使用 Egern TestFlight 2.17.0 (727) 或更高版本以获得最佳兼容性与底层引擎红利。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
 # ⏱️ 更新时间: 2026-03-18 08:00
@@ -13,13 +13,12 @@
 
 # --- 基础配置 ---
 ipv6: false
-ipv6_vif: false # 彻底阻断底层的 IPv6 握手尝试，提升连接速度
 http_port: 3080
 socks_port: 3090
 allow_external_connections: true
 vif_only: true
 hide_vpn_icon: true
-public_ip_lookup_url: https://ifconfig.me/ip # 提权至全局根层级
+public_ip_lookup_url: https://ifconfig.me/ip
 
 # --- DNS 劫持 ---
 hijack_dns:
@@ -43,6 +42,7 @@ include_local_networks: false
 # --- DNS 配置 ---
 dns:
   bootstrap:
+    - system
     - 223.5.5.5
     - 119.29.29.29
   upstreams:
@@ -57,19 +57,15 @@ dns:
       - https://doh.pub/dns-query
       - h3://dns.alidns.com/dns-query
   forward:
-    # 阿里系走阿里 DNS
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Alibaba/Alibaba.list
         value: AliDNS
-    # 腾讯系走腾讯 DNS
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Tencent/Tencent.list
         value: DNSPod
-    # 字节跳动系走火山引擎自建 DNS
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ByteDance/ByteDance.list
         value: ByteDance
-    # 系统与局域网兜底
     - domain_suffix:
         match: local
         value: system
@@ -79,19 +75,17 @@ dns:
     - domain_suffix:
         match: router.asus.com
         value: system
-    # 最终兜底 
     - domain_wildcard:
         match: '*'
         value: Default
 
 # --- 策略组 ---
 policy_groups:
-  # 1. 自动测速节点 (地区分类)
   - auto_test:
       name: 香港节点
       policies: [全部节点]
       flatten: true
-      filter: "🇭🇰|香港|Hong\\s*Kong|HongKong|HK(?!G)|HKG"
+      filter: "🇭🇰|香港|Hong\\s*Kong|HK"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
@@ -99,7 +93,7 @@ policy_groups:
       name: 美国节点
       policies: [全部节点]
       flatten: true
-      filter: "🇺🇸|美国|United\\s*States|USA|US(?!A)|States|American"
+      filter: "🇺🇸|美国|United\\s*States|US|States|American"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
@@ -107,7 +101,7 @@ policy_groups:
       name: 台湾节点
       policies: [全部节点]
       flatten: true
-      filter: "🇹🇼|台湾|Taiwan|TW(?!N)|Tai|TWN"
+      filter: "🇹🇼|台湾|Taiwan|TW|Tai"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
@@ -115,7 +109,7 @@ policy_groups:
       name: 日本节点
       policies: [全部节点]
       flatten: true
-      filter: "🇯🇵|日本|Japan|JP(?!N)|JPN"
+      filter: "🇯🇵|日本|Japan|JP"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
@@ -123,7 +117,7 @@ policy_groups:
       name: 狮城节点
       policies: [全部节点]
       flatten: true
-      filter: "🇸🇬|新加坡|狮城|Singapore|SG(?!P)|SGP"
+      filter: "🇸🇬|新加坡|狮城|Singapore|SG"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
@@ -131,17 +125,16 @@ policy_groups:
       name: 韩国节点
       policies: [全部节点]
       flatten: true
-      filter: "🇰🇷|韩国|Korea|KR(?!W)|KOR"
+      filter: "🇰🇷|韩国|Korea|KR|KOR"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
-  # 2. 节点筛选与来源
   - select:
       name: 其他节点
       policies: [全部节点]
       flatten: true
-      filter: "^(?!.*(🇭🇰|香港|Hong\\s*Kong|HongKong|HK(?!G)|HKG|🇺🇸|美国|United\\s*States|USA|US(?!A)|States|American|🇹🇼|台湾|Taiwan|TW(?!N)|Tai|TWN|🇯🇵|日本|Japan|JP(?!N)|JPN|🇸🇬|新加坡|狮城|Singapore|SG(?!P)|SGP|🇰🇷|韩国|Korea|KR(?!W)|KOR)).*$"
+      filter: "^(?!.*(🇭🇰|香港|Hong\\s*Kong|HK|🇺🇸|美国|United\\s*States|US|States|American|🇹🇼|台湾|Taiwan|TW|Tai|🇯🇵|日本|Japan|JP|🇸🇬|新加坡|狮城|Singapore|SG|🇰🇷|韩国|Korea|KR|KOR)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
   - external:
       name: 全部节点
@@ -150,7 +143,6 @@ policy_groups:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
 
-  # 3. 自动测速优选
   - auto_test:
       name: 自动优选
       policies: [全部节点]
@@ -159,13 +151,11 @@ policy_groups:
       tolerance: 50
       icon: ⚡️
 
-  # 4. 核心策略组 (手动选择入口)
   - select:
       name: 自选策略
       policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
 
-  # 5. 常用服务分流策略 (A-Z 排序)
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
@@ -247,7 +237,6 @@ policy_groups:
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
 
-  # 6. 去广告策略组
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
@@ -256,12 +245,10 @@ policy_groups:
 
 # --- 规则集 ---
 rules:
-  # 1. 广告拦截
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
 
-  # 2. 局域网与基础直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
@@ -269,7 +256,6 @@ rules:
       match: ntp.org
       policy: DIRECT
 
-  # 3. 关键应用分流 (A-Z 排序)
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
@@ -319,12 +305,10 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       policy: YouTube
 
-  # 4. 国内大厂与常见域名直连
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       policy: DIRECT
 
-  # 5. 国内直连兜底
   - domain_suffix:
       match: cn
       policy: DIRECT
@@ -333,7 +317,6 @@ rules:
       policy: DIRECT
       no_resolve: true
 
-  # 6. 最终兜底
   - default:
       policy: 自选策略
 
