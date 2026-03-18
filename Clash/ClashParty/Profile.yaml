@@ -1,6 +1,6 @@
 # > Clash Party@laoshu 自用配置
 # > https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
-# > Update: 2026.01.18 17:00
+# > Update: 2026.03.18 15:56
 
 p: &p {type: http, interval: 86400, health-check: {enable: true, url: https://www.google.com/generate_204, interval: 300, timeout: 5000}}
 proxy-providers:
@@ -36,11 +36,25 @@ skip-auth-prefixes:
 profile:
   store-selected: true
   store-fake-ip: true
+  
+# 优化点 1：开启嗅探，确保准确提取域名进行路由匹配
 sniffer:
-  enable: false
-  override-destination: false
+  enable: true
+  override-destination: true
   force-dns-mapping: true
   parse-pure-ip: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+    QUIC:
+      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+    - "+.push.apple.com"
+
 tun:
   enable: true
   stack: mixed
@@ -50,6 +64,7 @@ tun:
   auto-route: true
   auto-redirect: true
   auto-detect-interface: true
+  
 dns:
   enable: true
   ipv6: true
@@ -61,12 +76,17 @@ dns:
   nameserver:
     - https://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
+  # 优化点 2：联动规则集，让国内/直连域名获取真实 IPv6，国外域名保持 Fake-IP 加速
   fake-ip-filter:
-    - "*"
-    - +.lan
-    - +.local
+    - rule-set:Direct
+    - rule-set:Lan
+    - rule-set:China
+    - "+.byr.pt"
+    - "+.lan"
+    - "+.local"
     - time.*.com
     - ntp.*.com
+    
 geo-auto-update: true
 geo-update-interval: 24    
 geodata-mode: true
@@ -135,6 +155,8 @@ rule-providers:
   China: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/refs/heads/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
   
 rules: 
+  # 优化点 3：增加专属直连规则，确保 PT 网站绝对绕过代理环境
+  - DOMAIN-SUFFIX,byr.pt,DIRECT  
   - RULE-SET,Reject,REJECT  
   - RULE-SET,AIGC,AIGC
   - RULE-SET,AppleCN,DIRECT
