@@ -1,18 +1,19 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款实用组件；支持可视化配置自定义倒数日、自动触发节假日置顶、动态油价查询地区及 SSH 远程探针参数；共享统一的弹性和色彩原生引擎；一键模块化部署，全系支持系统深浅色模式。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及标准化 SSH 远程探针参数；全系支持系统深浅色模式与弹性流式渲染。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.18 16:30
+# ⏱️ 更新时间: 2026.03.18 22:20
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款桌面小组件。"
+description: "包含：岁时黄历、时光倒数、网络信息、全国油价，及满血版服务器监控。"
 
-# 开启模块更新，更新间隔锁定为 12 小时
+# 开启模块自动更新，更新间隔锁定为 12 小时
 auto_update:
   interval: 43200
 
 env_schema:
+  # --- 🎁 专属纪念日配置 ---
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称（如：我的生日、结婚纪念日）"
@@ -21,47 +22,42 @@ env_schema:
     name: 📅 纪念日 1 日期
     description: "日期格式必须严格为 MM/DD（如：12/13）"
     default_value: "11/10"
-    
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
     name: 📅 纪念日 2 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    
+    description: "日期格式必须严格为 MM/DD"
   EXCLUSIVE_NAME_3:
     name: 🎁 专属纪念日 3
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_3:
     name: 📅 纪念日 3 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    
+    description: "日期格式必须严格为 MM/DD"
   EXCLUSIVE_NAME_4:
     name: 🎁 专属纪念日 4
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_4:
     name: 📅 纪念日 4 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    
+    description: "日期格式必须严格为 MM/DD"
   EXCLUSIVE_NAME_5:
     name: 🎁 专属纪念日 5
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_5:
     name: 📅 纪念日 5 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    
+    description: "日期格式必须严格为 MM/DD"
   EXCLUSIVE_NAME_6:
     name: 🎁 专属纪念日 6
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_6:
     name: 📅 纪念日 6 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
+    description: "日期格式必须严格为 MM/DD"
 
+  # --- ✨ 节假日与油价配置 ---
   PINNED_HOLIDAY:
     name: ✨ 始终置顶节假日
     description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。可根据需要自行修改，留空则关闭置顶。"
     default_value: "高考"
-    
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
     description: "是否在法定节假日列表中显示“春假”和“秋假”的倒数"
@@ -69,40 +65,39 @@ env_schema:
       - "true"
       - "false"
     default_value: "true"
-    
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
-    description: "格式 MM/DD（如：12/13）。留空则默认使用系统内置的成都春假推算逻辑"
+    description: "格式 MM/DD。留空则默认使用系统内置的成都春假推算逻辑"
     default_value: ""
-    
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
-    description: "格式 MM/DD（如：12/13）。留空则默认使用系统内置的成都秋假推算逻辑"
+    description: "格式 MM/DD。留空则默认使用系统内置的成都秋假推算逻辑"
     default_value: ""
-
   GAS_REGION:
     name: 📍 油价查询地区
-    description: "直辖市请直接输入直辖市名拼音，如beijing；其他省份的请输入省份/省会拼音，如sichuan/chengdu。"
+    description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
     default_value: "sichuan/chengdu"
 
-  SSH_NAME:
-    name: 🖥️ 服务器名称
-    description: "为你的服务器起个名字（如：我的群晖 NAS）"
-    default_value: "My Server"
-    
+  # --- 🖥️ SSH 服务器探针配置 (标准化全大写变量) ---
   SSH_HOST:
-    name: 🌐 服务器 IP/域名
+    name: 🌐 服务器 IP / 域名
     description: "例如：192.168.1.1 或 server.example.com"
     default_value: ""
-    
+  SSH_PORT:
+    name: 🔌 SSH 端口号
+    description: "默认端口通常为 22，如修改过请填写实际端口"
+    default_value: "22"
   SSH_USER:
     name: 👤 SSH 用户名
-    description: "通常为 root 或 admin"
+    description: "常规机器填 root；甲骨文云(Oracle)请务必填 ubuntu 或 opc"
     default_value: "root"
-    
+  SSH_PWD:
+    name: 🔐 SSH 密码
+    description: "使用密码登录时填写（推荐使用下方私钥登录更安全）"
+    default_value: ""
   SSH_KEY:
     name: 🔑 SSH 私钥 (Ed25519/RSA)
-    description: "严格按照官方文档，必须提供私钥。请粘贴完整的私钥文本 (包含 -----BEGIN...-----)"
+    description: "使用密钥登录时填写。请完整粘贴私钥文本 (必须包含 -----BEGIN... 等头尾标识及原样换行)"
     default_value: ""
 
 scriptings:
@@ -120,6 +115,7 @@ scriptings:
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
   - generic:
       name: 服务器监控
+      # 已无缝切换至你私有的极致优化版本
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
 widgets:
