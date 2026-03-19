@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及 6 节点集群监控配置。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及满血版 6 节点集群监控配置。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.20 06:40
+# ⏱️ 更新时间: 2026.03.20 07:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -160,6 +160,46 @@ env_schema:
     default_value: ""
   SSH4_KEY:
     name: 🔑 [节点4] 私钥
+    default_value: ""
+
+  # --- 节点 5 ---
+  SSH5_NAME:
+    name: 🏷️ [节点5] 显示名称
+    default_value: ""
+  SSH5_HOST:
+    name: 🌐 [节点5] IP / 域名
+    default_value: ""
+  SSH5_PORT:
+    name: 🔌 [节点5] 端口
+    default_value: "22"
+  SSH5_USER:
+    name: 👤 [节点5] 用户名
+    default_value: "root"
+  SSH5_PWD:
+    name: 🔐 [节点5] 密码
+    default_value: ""
+  SSH5_KEY:
+    name: 🔑 [节点5] 私钥
+    default_value: ""
+
+  # --- 节点 6 ---
+  SSH6_NAME:
+    name: 🏷️ [节点6] 显示名称
+    default_value: ""
+  SSH6_HOST:
+    name: 🌐 [节点6] IP / 域名
+    default_value: ""
+  SSH6_PORT:
+    name: 🔌 [节点6] 端口
+    default_value: "22"
+  SSH6_USER:
+    name: 👤 [节点6] 用户名
+    default_value: "root"
+  SSH6_PWD:
+    name: 🔐 [节点6] 密码
+    default_value: ""
+  SSH6_KEY:
+    name: 🔑 [节点6] 私钥
     default_value: ""
 
 scriptings:
