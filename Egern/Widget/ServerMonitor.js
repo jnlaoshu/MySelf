@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 11:55
+ * ⏱️ 更新时间: 2026.03.19 12:05
  * ==========================================
  */
 
@@ -137,7 +137,6 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
-  // 胶囊化进度条，高度压缩至 4 防止裁切
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 4, borderRadius: 2,
     backgroundColor: C.barBg,
@@ -149,10 +148,9 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
-  // 圆角 8，启用 justifyContent 分散对齐，彻底告别底部被切
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [8, 10], justifyContent: 'space-between',
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [6, 10], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
@@ -169,7 +167,7 @@ export default async function (ctx) {
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [8, 10], justifyContent: 'space-between',
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [6, 10], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
@@ -192,8 +190,9 @@ export default async function (ctx) {
   });
 
   const header = () => ({
-    type: 'stack', direction: 'row', alignItems: 'center', gap: 6, padding: [0, 4], children: [
+    type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0, children: [
       { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
+      { type: 'spacer', length: 6 },
       { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
       { type: 'spacer' },
       ...(d.temp > 0 ? [
@@ -201,9 +200,11 @@ export default async function (ctx) {
         { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
         { type: 'spacer', length: 6 }
       ] : []),
-      { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
-      { type: 'spacer', length: 2 },
-      { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 },
+      // 强制打包时钟和文字，严格控制间距
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+        { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
+        { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 }
+      ]}
     ],
   });
 
@@ -220,18 +221,18 @@ export default async function (ctx) {
     };
   }
 
-  // padding [8, 14, 10, 14]: 顶部 8 (强制标题栏上移)，底部 10 (预留空间)
+  // 极限压缩顶部 Padding（从 8 压到 3），强行上移标题对齐组件 1
   if (ctx.widgetFamily === 'systemMedium') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: [8, 14, 10, 14], 
+      type: 'widget', backgroundColor: C.bg, padding: [3, 14, 10, 14], 
       children: [
         header(),
-        { type: 'spacer', length: 6 },
+        { type: 'spacer', length: 4 }, // 标题下方间距，带动下方卡片整体上移
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
         ]},
-        // 上下卡片精确留白 2 个像素
+        // 上下卡片精确留白 2 像素
         { type: 'spacer', length: 2 }, 
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
@@ -243,7 +244,7 @@ export default async function (ctx) {
 
   if (ctx.widgetFamily === 'systemSmall') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: [8, 10, 10, 10], gap: 6,
+      type: 'widget', backgroundColor: C.bg, padding: [4, 10, 10, 10], gap: 6,
       children: [
         header(),
         statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
