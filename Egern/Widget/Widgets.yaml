@@ -1,14 +1,13 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及标准化 SSH 远程探针参数；全系支持系统深浅色模式与弹性流式渲染。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及标准化 6 节点 SSH 远程探针参数；全系支持系统深浅色模式与弹性流式渲染。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.18 22:20
+# ⏱️ 更新时间: 2026.03.19 17:05
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价，及满血版服务器监控。"
+description: "包含：岁时黄历、时光倒数、网络信息、全国油价，及支持 6 节点集群监控的满血版服务器监控。"
 
-# 开启模块自动更新，更新间隔锁定为 12 小时
 auto_update:
   interval: 43200
 
@@ -78,26 +77,127 @@ env_schema:
     description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
     default_value: "sichuan/chengdu"
 
-  # --- 🖥️ SSH 服务器探针配置 (标准化全大写变量) ---
-  SSH_HOST:
-    name: 🌐 服务器 IP / 域名
-    description: "例如：192.168.1.1 或 server.example.com"
+  # ==================================
+  # 🖥️ 服务器探针配置 (最高支持 6 节点)
+  # ==================================
+  # --- 节点 1 ---
+  SSH1_NAME:
+    name: 🏷️ [节点 1] 显示名称
+    default_value: "Server 01"
+  SSH1_HOST:
+    name: 🌐 [节点 1] IP / 域名
     default_value: ""
-  SSH_PORT:
-    name: 🔌 SSH 端口号
-    description: "默认端口通常为 22，如修改过请填写实际端口"
+  SSH1_PORT:
+    name: 🔌 [节点 1] 端口
     default_value: "22"
-  SSH_USER:
-    name: 👤 SSH 用户名
-    description: "常规机器填 root；甲骨文云(Oracle)请务必填 ubuntu 或 opc"
+  SSH1_USER:
+    name: 👤 [节点 1] 用户名
     default_value: "root"
-  SSH_PWD:
-    name: 🔐 SSH 密码
-    description: "使用密码登录时填写（推荐使用下方私钥登录更安全）"
+  SSH1_PWD:
+    name: 🔐 [节点 1] 密码
     default_value: ""
-  SSH_KEY:
-    name: 🔑 SSH 私钥 (Ed25519/RSA)
-    description: "使用密钥登录时填写。请完整粘贴私钥文本 (必须包含 -----BEGIN... 等头尾标识及原样换行)"
+  SSH1_KEY:
+    name: 🔑 [节点 1] 私钥 (优先)
+    default_value: ""
+
+  # --- 节点 2 ---
+  SSH2_NAME:
+    name: 🏷️ [节点 2] 显示名称
+    default_value: "Server 02"
+  SSH2_HOST:
+    name: 🌐 [节点 2] IP / 域名
+    default_value: ""
+  SSH2_PORT:
+    name: 🔌 [节点 2] 端口
+    default_value: "22"
+  SSH2_USER:
+    name: 👤 [节点 2] 用户名
+    default_value: "root"
+  SSH2_PWD:
+    name: 🔐 [节点 2] 密码
+    default_value: ""
+  SSH2_KEY:
+    name: 🔑 [节点 2] 私钥 (优先)
+    default_value: ""
+
+  # --- 节点 3 ---
+  SSH3_NAME:
+    name: 🏷️ [节点 3] 显示名称
+    default_value: ""
+  SSH3_HOST:
+    name: 🌐 [节点 3] IP / 域名
+    default_value: ""
+  SSH3_PORT:
+    name: 🔌 [节点 3] 端口
+    default_value: "22"
+  SSH3_USER:
+    name: 👤 [节点 3] 用户名
+    default_value: "root"
+  SSH3_PWD:
+    name: 🔐 [节点 3] 密码
+    default_value: ""
+  SSH3_KEY:
+    name: 🔑 [节点 3] 私钥 (优先)
+    default_value: ""
+
+  # --- 节点 4 ---
+  SSH4_NAME:
+    name: 🏷️ [节点 4] 显示名称
+    default_value: ""
+  SSH4_HOST:
+    name: 🌐 [节点 4] IP / 域名
+    default_value: ""
+  SSH4_PORT:
+    name: 🔌 [节点 4] 端口
+    default_value: "22"
+  SSH4_USER:
+    name: 👤 [节点 4] 用户名
+    default_value: "root"
+  SSH4_PWD:
+    name: 🔐 [节点 4] 密码
+    default_value: ""
+  SSH4_KEY:
+    name: 🔑 [节点 4] 私钥 (优先)
+    default_value: ""
+
+  # --- 节点 5 ---
+  SSH5_NAME:
+    name: 🏷️ [节点 5] 显示名称
+    default_value: ""
+  SSH5_HOST:
+    name: 🌐 [节点 5] IP / 域名
+    default_value: ""
+  SSH5_PORT:
+    name: 🔌 [节点 5] 端口
+    default_value: "22"
+  SSH5_USER:
+    name: 👤 [节点 5] 用户名
+    default_value: "root"
+  SSH5_PWD:
+    name: 🔐 [节点 5] 密码
+    default_value: ""
+  SSH5_KEY:
+    name: 🔑 [节点 5] 私钥 (优先)
+    default_value: ""
+
+  # --- 节点 6 ---
+  SSH6_NAME:
+    name: 🏷️ [节点 6] 显示名称
+    default_value: ""
+  SSH6_HOST:
+    name: 🌐 [节点 6] IP / 域名
+    default_value: ""
+  SSH6_PORT:
+    name: 🔌 [节点 6] 端口
+    default_value: "22"
+  SSH6_USER:
+    name: 👤 [节点 6] 用户名
+    default_value: "root"
+  SSH6_PWD:
+    name: 🔐 [节点 6] 密码
+    default_value: ""
+  SSH6_KEY:
+    name: 🔑 [节点 6] 私钥 (优先)
     default_value: ""
 
 scriptings:
@@ -115,7 +215,6 @@ scriptings:
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
   - generic:
       name: 服务器监控
-      # 已无缝切换至你私有的极致优化版本
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
 widgets:
