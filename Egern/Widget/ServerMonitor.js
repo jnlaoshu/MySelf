@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 12:20
+ * ⏱️ 更新时间: 2026.03.19 12:30
  * ==========================================
  */
 
@@ -121,9 +121,9 @@ export default async function (ctx) {
     d = { error: String(e.message || e) };
   }
 
+  // 恢复油价组件专属淡雅背景色
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    cardBg: { light: '#F2F2F7', dark: '#2C2C2E' }, 
     barBg: { light: '#E5E5EA', dark: '#38383A' },
     text: { light: '#000000', dark: '#FFFFFF' },
     subText: { light: '#666666', dark: '#999999' }, 
@@ -133,6 +133,10 @@ export default async function (ctx) {
     disk: { light: '#FF9500', dark: '#FF9F0A' },
     net: { light: '#FF2D55', dark: '#FF375F' },
     temp: { light: '#FF3B30', dark: '#FF453A' },
+    cpuBg: { light: '#F2FBF5', dark: '#1A291E' },
+    memBg: { light: '#F0F8FF', dark: '#1A2433' },
+    dskBg: { light: '#FFF9F0', dark: '#33261A' },
+    netBg: { light: '#FFF0F3', dark: '#331A20' },
   };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
@@ -148,9 +152,9 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
-  const statCard = (icon, title, value, subtext, pct, color) => ({
+  const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
+    backgroundColor: bg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
@@ -165,9 +169,9 @@ export default async function (ctx) {
     ]
   });
 
-  const netCard = () => ({
+  const netCard = (bg) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
+    backgroundColor: bg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
@@ -226,16 +230,17 @@ export default async function (ctx) {
       type: 'widget', backgroundColor: C.bg, padding: [10, 14, 14, 14], 
       children: [
         header(),
-        { type: 'spacer', length: 8 }, // 缩减头部与卡片距离，释放高度给卡片
-        { type: 'stack', direction: 'row', flex: 1, gap: 8, children: [
-          statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
-          statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
+        { type: 'spacer', length: 8 }, 
+        // 【核心修改】将原本的 gap: 8 缩小至 gap: 2，让左右列间距与上下行间距一致
+        { type: 'stack', direction: 'row', flex: 1, gap: 2, children: [
+          statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
+          statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
         ]},
         // 上下卡片精确留白 2 像素
         { type: 'spacer', length: 2 }, 
-        { type: 'stack', direction: 'row', flex: 1, gap: 8, children: [
-          statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
-          netCard()
+        { type: 'stack', direction: 'row', flex: 1, gap: 2, children: [
+          statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg),
+          netCard(C.netBg)
         ]}
       ],
     };
@@ -246,8 +251,8 @@ export default async function (ctx) {
       type: 'widget', backgroundColor: C.bg, padding: 12, gap: 6,
       children: [
         header(),
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
-        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem),
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
+        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem, C.memBg),
       ],
     };
   }
