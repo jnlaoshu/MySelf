@@ -1,23 +1,56 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。全面适配最高 6 节点集群监控，通过小组件“参数”动态读取模块内的独立配置，各节点网速缓存严格隔离。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。支持最高 6 节点集群监控，内建优雅的“空状态”拦截，未配置参数时自动提示。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 17:05
+ * ⏱️ 更新时间: 2026.03.19 17:25
  * ==========================================
  */
 
 export default async function (ctx) {
-  // 核心魔法：读取桌面上长按小组件填写的“参数”(1到6)，不填则默认读取节点 1
+  // 读取桌面上长按小组件填写的“参数”(1到6)，不填则默认读取节点 1
   const nodeId = (ctx.parameter || "1").trim();
 
-  // 动态拼接变量名读取配置，例如节点 1 读取 SSH1_HOST，节点 6 读取 SSH6_HOST
+  // 动态读取环境变量
   const host = (ctx.env && ctx.env[`SSH${nodeId}_HOST`]) || "";
   const username = (ctx.env && ctx.env[`SSH${nodeId}_USER`]) || "root";
   const password = (ctx.env && ctx.env[`SSH${nodeId}_PWD`]) || "";
   const privateKey = (ctx.env && ctx.env[`SSH${nodeId}_KEY`]) || "";
   const port = Number((ctx.env && ctx.env[`SSH${nodeId}_PORT`]) || 22);
   const customName = (ctx.env && ctx.env[`SSH${nodeId}_NAME`]) ? ctx.env[`SSH${nodeId}_NAME`].trim() : `Node ${nodeId}`;
+
+  // 🎨 颜色库提取到最外层，方便所有界面复用
+  const C = {
+    bg: { light: '#FFFFFF', dark: '#1C1C1E' },
+    barBg: { light: '#E5E5EA', dark: '#38383A' },
+    text: { light: '#000000', dark: '#FFFFFF' },
+    subText: { light: '#666666', dark: '#999999' }, 
+    muted: { light: '#8E8E93', dark: '#8E8E93' },
+    cpu: { light: '#34C759', dark: '#30D158' },
+    mem: { light: '#007AFF', dark: '#0A84FF' },
+    disk: { light: '#FF9500', dark: '#FF9F0A' },
+    net: { light: '#FF2D55', dark: '#FF375F' },
+    temp: { light: '#FF3B30', dark: '#FF453A' },
+    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
+    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
+    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
+    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
+  };
+
+  // 🛑 核心拦截：如果当前节点没有填写 IP，直接返回“空状态”提示界面，终止后续无用连接
+  if (!host) {
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: 16,
+      children: [
+        { type: 'stack', direction: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, children: [
+          { type: 'image', src: 'sf-symbol:server.rack', color: C.muted, width: 32, height: 32 },
+          { type: 'spacer', length: 2 },
+          { type: 'text', text: `未配置节点 ${nodeId}`, font: { size: 14, weight: 'bold' }, textColor: C.text },
+          { type: 'text', text: '请在 Egern 模块设置中填写服务器 IP 等信息', font: { size: 10 }, textColor: C.muted, maxLines: 2 }
+        ]}
+      ]
+    };
+  }
 
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
@@ -103,7 +136,7 @@ export default async function (ctx) {
     const nn = (p[8] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
     
-    // 网速缓存数据严格隔离，防止多服务器叠放时流量跳错
+    // 网速缓存数据隔离
     const netKey = `_net_n${nodeId}`;
     const prevNet = ctx.storage.getJSON(netKey);
     const now = Date.now();
@@ -124,23 +157,6 @@ export default async function (ctx) {
   } catch (e) {
     d = { error: String(e.message || e) };
   }
-
-  const C = {
-    bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    barBg: { light: '#E5E5EA', dark: '#38383A' },
-    text: { light: '#000000', dark: '#FFFFFF' },
-    subText: { light: '#666666', dark: '#999999' }, 
-    muted: { light: '#8E8E93', dark: '#8E8E93' },
-    cpu: { light: '#34C759', dark: '#30D158' },
-    mem: { light: '#007AFF', dark: '#0A84FF' },
-    disk: { light: '#FF9500', dark: '#FF9F0A' },
-    net: { light: '#FF2D55', dark: '#FF375F' },
-    temp: { light: '#FF3B30', dark: '#FF453A' },
-    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
-    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
-    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
-    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
-  };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
