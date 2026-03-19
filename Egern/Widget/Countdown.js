@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 主要功能: 自动提取并排序展示未来法定、民俗、国际节日及专属纪念日；内置成都春/秋假动态推算与 ≤200 天高亮置顶机制；节假日当天自动聚合至标题栏展示；原生适配深浅色模式。
+ * ✨ 主要功能: 自动提取并排序展示未来法定、民俗、国际节日及专属纪念日；内置成都春/秋假动态推算与 ≤200 天高亮置顶机制；节假日当天自动聚合至标题栏展示，并智能屏蔽该节日明年的重复倒数；原生适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.19 21:45
+ * ⏱️ 更新时间: 2026.03.19 22:00
  * ==========================================
  */
 
@@ -99,7 +99,10 @@ export default async function(ctx) {
         if (pinnedHoliday && name === pinnedHoliday && diff <= 200 && diff < minPinnedDiff) { 
             minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
         }
-        if (!result[cat].some(i => i.name === name)) result[cat].push({ name, diff });
+        // 🛑 核心防重逻辑：如果该节日已在今日列表中，彻底屏蔽其明年的倒数！
+        if (!result[cat].some(i => i.name === name) && !todayFests.includes(name)) {
+            result[cat].push({ name, diff });
+        }
       });
     });
   });
