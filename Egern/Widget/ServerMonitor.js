@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：单节点显示四宫格硬核面板，多节点顺序抓取（防 iOS 底层 SSH 并发冲突）并自动无缝变身紧凑列表模式。
+ * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：多节点并发抓取，内建 2.5s 极限防白屏护盾与底层连接强制回收机制，自动无缝变身紧凑列表模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 07:30 (防并发冲突版)
+ * ⏱️ 更新时间: 2026.03.20 07:45 (极限防白屏版)
  * ==========================================
  */
 
@@ -46,7 +46,6 @@ export default async function (ctx) {
           port: Number(ctx.env[`SSH${i}_PORT`] || 22),
           username: (ctx.env[`SSH${i}_USER`] || 'root').trim(),
           password: ctx.env[`SSH${i}_PWD`] || '',
-          // 强化私钥换行符解析，防止格式错乱
           privateKey: (ctx.env[`SSH${i}_KEY`] || '').replace(/\\n/g, '\n'),
           name: (ctx.env[`SSH${i}_NAME`] || '').trim(),
           idx: i
@@ -75,11 +74,13 @@ export default async function (ctx) {
   // 2. 核心抓取函数
   const fetchServer = async (srv) => {
     let d = { host: srv.host, customName: srv.name };
+    let session = null;
     try {
-      const session = await ctx.ssh.connect({
+      // 🔥 核心修改 1：极限 2.5秒超时，绝不允许阻塞导致小组件被 iOS 白屏杀掉
+      session = await ctx.ssh.connect({
         host: srv.host, port: srv.port, username: srv.username,
         ...(srv.privateKey ? { privateKey: srv.privateKey } : { password: srv.password }),
-        timeout: 8000,
+        timeout: 2500, 
       });
 
       const SEP = '<<SEP>>';
@@ -97,8 +98,7 @@ export default async function (ctx) {
         "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'"
       ];
       const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
-      await session.close();
-
+      
       const p = stdout.split(SEP).map(s => s.trim());
       d.hostname = srv.name || p[0] || 'server';
       const la = (p[1] || '0 0 0').split(' ');
@@ -170,15 +170,17 @@ export default async function (ctx) {
     } catch (e) {
       d.error = String(e.message || e);
       d.hostname = srv.name || srv.host;
+    } finally {
+      // 🔥 核心修改 2：底层强制连接销毁。无论发生什么报错，保证 session 绝对断开，不堵塞线程
+      if (session) {
+        try { await session.close(); } catch (err) {}
+      }
     }
     return d;
   };
 
-  // 🚀 核心修复：将并发抓取 (Promise.all) 改为“顺序排队抓取”，完美避开 iOS 底层 SSH 桥接冲突
-  const results = [];
-  for (const srv of servers) {
-    results.push(await fetchServer(srv));
-  }
+  // 🚀 核心修改 3：恢复并发请求，因为有了 2.5s 护盾和 finally 销毁，并发不会再崩溃了
+  const results = await Promise.all(servers.map(fetchServer));
 
   // ==========================================
   // 模式 A: 只有 1 台机器 -> 渲染完美的四宫格详情卡片
@@ -298,7 +300,6 @@ export default async function (ctx) {
   };
 
   const listRows = results.map(d => {
-    // 修复离线状态下的排版挤压问题
     if (d.error) {
       return {
         type: 'stack', direction: 'row', alignItems: 'center', height: 22, gap: 6, children: [
