@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 11:48
+ * ⏱️ 更新时间: 2026.03.19 11:55
  * ==========================================
  */
 
@@ -57,12 +57,12 @@ export default async function (ctx) {
     const la = (p[1] || '0 0 0').split(' ');
     const load = [la[0], la[1], la[2]];
     
-    // Uptime 补全“月”的中文精确换算 (年 月 天 时 分 秒)
+    // Uptime 中文精确换算 (年 月 天 时 分 秒)
     let uptimeStr = "0秒";
     const upSec = parseFloat((p[2] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
       const y = Math.floor(upSec / 31536000);
-      const mo = Math.floor((upSec % 31536000) / 2592000); // 约30天为一月
+      const mo = Math.floor((upSec % 31536000) / 2592000);
       const days = Math.floor((upSec % 2592000) / 86400);
       const h = Math.floor((upSec % 86400) / 3600);
       const m = Math.floor((upSec % 3600) / 60);
@@ -74,7 +74,7 @@ export default async function (ctx) {
       if (h > 0) parts.push(`${h}时`);
       if (m > 0) parts.push(`${m}分`);
       if (s > 0) parts.push(`${s}秒`);
-      uptimeStr = parts.join(''); // 去除空格以防文字超长换行
+      uptimeStr = parts.join(''); // 去除空格
     }
 
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
@@ -137,54 +137,56 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
-  // 胶囊化进度条
+  // 胶囊化进度条，高度压缩至 4 防止裁切
   const bar = (pct, color) => ({
-    type: 'stack', direction: 'row', height: 6, borderRadius: 3,
+    type: 'stack', direction: 'row', height: 4, borderRadius: 2,
     backgroundColor: C.barBg,
     children: pct > 0
       ? [
-          { type: 'stack', flex: Math.max(1, pct), height: 6, borderRadius: 3, backgroundColor: color, children: [] },
+          { type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] },
           ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : []),
         ]
       : [{ type: 'spacer' }],
   });
 
-  // 圆角调小为 10，上下 padding 压缩为 6，腾出空间防止被切
+  // 圆角 8，启用 justifyContent 分散对齐，彻底告别底部被切
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 10, padding: [6, 10], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [8, 10], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
         { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
+        { type: 'text', text: value, font: { size: 12, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
-      { type: 'spacer' },
-      bar(pct, color),
-      { type: 'text', text: subtext, font: { size: 10, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+      { type: 'stack', direction: 'column', gap: 3, children: [
+        bar(pct, color),
+        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+      ]}
     ]
   });
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 10, padding: [6, 10], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [8, 10], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
         { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' }
       ]},
-      { type: 'spacer' },
-      { type: 'stack', direction: 'row', children: [
-        { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.net },
-        { type: 'spacer' },
-        { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
-      ]},
-      { type: 'stack', direction: 'row', children: [
-        { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText },
-        { type: 'spacer' },
-        { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText }
+      { type: 'stack', direction: 'column', gap: 2, children: [
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
+        ]},
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }
+        ]}
       ]}
     ]
   });
@@ -192,9 +194,13 @@ export default async function (ctx) {
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 6, padding: [0, 4], children: [
       { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
-      { type: 'text', text: d.hostname, font: { size: 15, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
+      { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
       { type: 'spacer' },
-      // 植入带图标的中文倒计时
+      ...(d.temp > 0 ? [
+        { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 },
+        { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
+        { type: 'spacer', length: 6 }
+      ] : []),
       { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
       { type: 'spacer', length: 2 },
       { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 },
@@ -214,17 +220,18 @@ export default async function (ctx) {
     };
   }
 
+  // padding [8, 14, 10, 14]: 顶部 8 (强制标题栏上移)，底部 10 (预留空间)
   if (ctx.widgetFamily === 'systemMedium') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: 12, 
+      type: 'widget', backgroundColor: C.bg, padding: [8, 14, 10, 14], 
       children: [
         header(),
-        { type: 'spacer', length: 4 }, // 头部下方间距微调，给卡片让出空间
+        { type: 'spacer', length: 6 },
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
         ]},
-        // 上下排卡片间距严格锁定为 2 像素
+        // 上下卡片精确留白 2 个像素
         { type: 'spacer', length: 2 }, 
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
@@ -236,7 +243,7 @@ export default async function (ctx) {
 
   if (ctx.widgetFamily === 'systemSmall') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: 10, gap: 6,
+      type: 'widget', backgroundColor: C.bg, padding: [8, 10, 10, 10], gap: 6,
       children: [
         header(),
         statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
