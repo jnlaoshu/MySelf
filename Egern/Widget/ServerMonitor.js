@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 12:05
+ * ⏱️ 更新时间: 2026.03.19 12:15
  * ==========================================
  */
 
@@ -74,7 +74,7 @@ export default async function (ctx) {
       if (h > 0) parts.push(`${h}时`);
       if (m > 0) parts.push(`${m}分`);
       if (s > 0) parts.push(`${s}秒`);
-      uptimeStr = parts.join(''); // 去除空格
+      uptimeStr = parts.join(''); 
     }
 
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
@@ -137,6 +137,7 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
+  // 胶囊化进度条
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 4, borderRadius: 2,
     backgroundColor: C.barBg,
@@ -148,17 +149,18 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
+  // 圆角 8，加入 flex: 1 与两端对齐，彻底撑满垂直空间
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [6, 10], justifyContent: 'space-between',
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
         { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 12, weight: 'heavy', family: 'Menlo' }, textColor: color }
+        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
-      { type: 'stack', direction: 'column', gap: 3, children: [
+      { type: 'stack', direction: 'column', gap: 4, children: [
         bar(pct, color),
         { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
       ]}
@@ -167,7 +169,7 @@ export default async function (ctx) {
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 8, padding: [6, 10], justifyContent: 'space-between',
+    backgroundColor: C.cardBg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
@@ -176,14 +178,14 @@ export default async function (ctx) {
       ]},
       { type: 'stack', direction: 'column', gap: 2, children: [
         { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net },
+          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.net },
           { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
+          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
         ]},
         { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
+          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText },
           { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }
+          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText }
         ]}
       ]}
     ]
@@ -200,7 +202,6 @@ export default async function (ctx) {
         { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
         { type: 'spacer', length: 6 }
       ] : []),
-      // 强制打包时钟和文字，严格控制间距
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
         { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
         { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 }
@@ -221,20 +222,20 @@ export default async function (ctx) {
     };
   }
 
-  // 极限压缩顶部 Padding（从 8 压到 3），强行上移标题对齐组件 1
   if (ctx.widgetFamily === 'systemMedium') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: [3, 14, 10, 14], 
+      type: 'widget', backgroundColor: C.bg, padding: 14, // 使用标准 14px 边距保证对齐
       children: [
         header(),
-        { type: 'spacer', length: 4 }, // 标题下方间距，带动下方卡片整体上移
-        { type: 'stack', direction: 'row', gap: 8, children: [
+        { type: 'spacer', length: 10 }, // 头部与卡片区的安全距离
+        // 为包裹卡片的行添加 flex: 1，自动将高度撑满，进而完美顶起头部
+        { type: 'stack', direction: 'row', flex: 1, gap: 8, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
         ]},
         // 上下卡片精确留白 2 像素
         { type: 'spacer', length: 2 }, 
-        { type: 'stack', direction: 'row', gap: 8, children: [
+        { type: 'stack', direction: 'row', flex: 1, gap: 8, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
           netCard()
         ]}
@@ -244,7 +245,7 @@ export default async function (ctx) {
 
   if (ctx.widgetFamily === 'systemSmall') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: [4, 10, 10, 10], gap: 6,
+      type: 'widget', backgroundColor: C.bg, padding: 12, gap: 6,
       children: [
         header(),
         statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
