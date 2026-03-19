@@ -1,135 +1,271 @@
-# ==========================================
-# 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置自定义倒数日、节假日置顶、动态油价查询地区，及标准化 SSH 远程探针参数；全系支持系统深浅色模式与弹性流式渲染。
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.19 19:15
-# ==========================================
+/**
+ * ==========================================
+ * 📌 模块名称: 服务器监控 (Server Monitor)
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。单节点极简纯净版，支持自定义显示名称，内建静默拦截机制（未配置 IP 时呈纯净空白状态）。
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+ * ⏱️ 更新时间: 2026.03.19 19:20 (单机终极版)
+ * ==========================================
+ */
 
-name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价，及满血版服务器监控。"
+export default async function (ctx) {
+  if (ctx.env) {
+    ctx.env.host = ctx.env.SSH_HOST || ctx.env.host || "";
+    ctx.env.username = ctx.env.SSH_USER || ctx.env.username || "root";
+    ctx.env.password = ctx.env.SSH_PWD || ctx.env.password || "";
+    ctx.env.privateKey = ctx.env.SSH_KEY || ctx.env.privateKey || "";
+    ctx.env.port = ctx.env.SSH_PORT || ctx.env.port || 22;
+  }
+  // 提取自定义名称，无缝联动 YAML 配置
+  const customName = (ctx.env.SSH_NAME || "").trim();
+  const host = ctx.env.host;
 
-# 开启模块自动更新，更新间隔锁定为 12 小时
-auto_update:
-  interval: 43200
+  const C = {
+    bg: { light: '#FFFFFF', dark: '#1C1C1E' },
+    barBg: { light: '#E5E5EA', dark: '#38383A' },
+    text: { light: '#000000', dark: '#FFFFFF' },
+    subText: { light: '#666666', dark: '#999999' }, 
+    muted: { light: '#8E8E93', dark: '#8E8E93' },
+    cpu: { light: '#34C759', dark: '#30D158' },
+    mem: { light: '#007AFF', dark: '#0A84FF' },
+    disk: { light: '#FF9500', dark: '#FF9F0A' },
+    net: { light: '#FF2D55', dark: '#FF375F' },
+    temp: { light: '#FF3B30', dark: '#FF453A' },
+    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
+    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
+    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
+    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
+  };
 
-env_schema:
-  # --- 🎁 专属纪念日配置 ---
-  EXCLUSIVE_NAME_1:
-    name: 🎁 专属纪念日 1
-    description: "设定最重要的纪念日名称（如：我的生日、结婚纪念日）"
-    default_value: "我的生日"
-  EXCLUSIVE_DATE_1:
-    name: 📅 纪念日 1 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
-    default_value: "11/10"
-  EXCLUSIVE_NAME_2:
-    name: 🎁 专属纪念日 2
-    description: "留空则不显示该项"
-  EXCLUSIVE_DATE_2:
-    name: 📅 纪念日 2 日期
-    description: "日期格式必须严格为 MM/DD"
-  EXCLUSIVE_NAME_3:
-    name: 🎁 专属纪念日 3
-    description: "留空则不显示该项"
-  EXCLUSIVE_DATE_3:
-    name: 📅 纪念日 3 日期
-    description: "日期格式必须严格为 MM/DD"
-  EXCLUSIVE_NAME_4:
-    name: 🎁 专属纪念日 4
-    description: "留空则不显示该项"
-  EXCLUSIVE_DATE_4:
-    name: 📅 纪念日 4 日期
-    description: "日期格式必须严格为 MM/DD"
-  EXCLUSIVE_NAME_5:
-    name: 🎁 专属纪念日 5
-    description: "留空则不显示该项"
-  EXCLUSIVE_DATE_5:
-    name: 📅 纪念日 5 日期
-    description: "日期格式必须严格为 MM/DD"
-  EXCLUSIVE_NAME_6:
-    name: 🎁 专属纪念日 6
-    description: "留空则不显示该项"
-  EXCLUSIVE_DATE_6:
-    name: 📅 纪念日 6 日期
-    description: "日期格式必须严格为 MM/DD"
+  // 🛑 静默拦截：如果没有配置 IP，直接返回一个完全没有内容的空白背景块
+  if (!host) {
+    return {
+      type: 'widget', 
+      backgroundColor: C.bg, 
+      children: [] 
+    };
+  }
 
-  # --- ✨ 节假日与油价配置 ---
-  PINNED_HOLIDAY:
-    name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。可根据需要自行修改，留空则关闭置顶。"
-    default_value: "高考"
-  SHOW_SCHOOL_HOLIDAYS:
-    name: 🏫 显示春假和秋假
-    description: "是否在法定节假日列表中显示“春假”和“秋假”的倒数"
-    options:
-      - "true"
-      - "false"
-    default_value: "true"
-  SPRING_BREAK_DATE:
-    name: 🌸 春假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的成都春假推算逻辑"
-    default_value: ""
-  AUTUMN_BREAK_DATE:
-    name: 🍂 秋假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的成都秋假推算逻辑"
-    default_value: ""
-  GAS_REGION:
-    name: 📍 油价查询地区
-    description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
-    default_value: "sichuan/chengdu"
+  const fmtBytes = b => {
+    if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
+    if (b >= 1e9)  return (b / 1e9).toFixed(1) + 'G';
+    if (b >= 1e6)  return (b / 1e6).toFixed(1) + 'M';
+    if (b >= 1e3)  return (b / 1e3).toFixed(0) + 'K';
+    return Math.round(b) + 'B';
+  };
 
-  # --- 🖥️ SSH 服务器探针配置 (标准化全大写变量) ---
-  SSH_NAME:
-    name: 🏷️ 服务器显示名称
-    description: "自定义组件左上角的名称（留空则自动抓取系统 hostname）"
-    default_value: "Oracle"
-  SSH_HOST:
-    name: 🌐 服务器 IP / 域名
-    description: "例如：192.168.1.1（不填 IP 则桌面组件会自动隐身变为空白板）"
-    default_value: ""
-  SSH_PORT:
-    name: 🔌 SSH 端口号
-    description: "默认端口通常为 22，如修改过请填写实际端口"
-    default_value: "22"
-  SSH_USER:
-    name: 👤 SSH 用户名
-    description: "常规机器默认填 root"
-    default_value: "root"
-  SSH_PWD:
-    name: 🔐 SSH 密码
-    description: "使用密码登录时填写（推荐使用下方私钥登录更安全）"
-    default_value: ""
-  SSH_KEY:
-    name: 🔑 SSH 私钥 (Ed25519/RSA)
-    description: "使用密钥登录时填写。请完整粘贴私钥文本 (必须包含 -----BEGIN... 等头尾标识及原样换行)"
-    default_value: ""
+  let d;
+  try {
+    const { username, password, privateKey, port } = ctx.env;
+    const session = await ctx.ssh.connect({
+      host, port: Number(port || 22), username,
+      ...(privateKey ? { privateKey } : { password }),
+      timeout: 8000,
+    });
 
-scriptings:
-  - generic:
-      name: 岁时黄历
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
-  - generic:
-      name: 时光倒数
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
-  - generic:
-      name: 网络信息
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
-  - generic:
-      name: 全国油价
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
-  - generic:
-      name: 服务器监控
-      # 已无缝切换至你私有的极致优化版本
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+    const SEP = '<<SEP>>';
+    const cmds = [
+      'hostname -s 2>/dev/null || hostname',
+      'cat /proc/loadavg',
+      'cat /proc/uptime',
+      'head -1 /proc/stat',
+      'free -b',
+      'df -B1 / | tail -1',
+      'nproc',
+      'uname -r',
+      "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
+      'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
+      "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'"
+    ];
+    const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
+    await session.close();
 
-widgets:
-  - name: 岁时黄历
-    script_name: 岁时黄历
-  - name: 时光倒数
-    script_name: 时光倒数
-  - name: 网络信息
-    script_name: 网络信息
-  - name: 全国油价
-    script_name: 全国油价
-  - name: 服务器监控
-    script_name: 服务器监控
+    const p = stdout.split(SEP).map(s => s.trim());
+    // 如果没有自定义名称，智能回退为系统真实的 hostname
+    const hostname = customName || p[0] || 'server';
+    const la = (p[1] || '0 0 0').split(' ');
+    const load = [la[0], la[1], la[2]];
+    
+    let uptimeStr = "0秒";
+    const upSec = parseFloat((p[2] || '0').split(' ')[0]);
+    if (!isNaN(upSec) && upSec > 0) {
+      const y = Math.floor(upSec / 31536000);
+      const mo = Math.floor((upSec % 31536000) / 2592000);
+      const days = Math.floor((upSec % 2592000) / 86400);
+      const h = Math.floor((upSec % 86400) / 3600);
+      const m = Math.floor((upSec % 3600) / 60);
+      const s = Math.floor(upSec % 60);
+      const parts = [];
+      if (y > 0) parts.push(`${y}年`);
+      if (mo > 0) parts.push(`${mo}月`);
+      if (days > 0) parts.push(`${days}天`);
+      if (h > 0) parts.push(`${h}时`);
+      if (m > 0) parts.push(`${m}分`);
+      if (s > 0) parts.push(`${s}秒`);
+      uptimeStr = parts.join(''); 
+    }
+
+    const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
+    const cpuTotal = cpuNums.reduce((a, b) => a + b, 0);
+    const cpuIdle = cpuNums[3] || 0;
+    const prevCpu = ctx.storage.getJSON('_cpu');
+    let cpuPct = 0;
+    if (prevCpu && cpuTotal > prevCpu.t) {
+      cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
+    }
+    ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
+    cpuPct = Math.max(0, Math.min(100, cpuPct));
+
+    const memLine = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
+    const mm = memLine.split(/\s+/);
+    const memTotal = Number(mm[1]) || 1, memUsed = Number(mm[2]) || 0;
+    const memPct = Math.round((memUsed / memTotal) * 100);
+
+    const df = (p[5] || '').split(/\s+/);
+    const diskTotal = Number(df[1]) || 1, diskUsed = Number(df[2]) || 0;
+    const diskPct = parseInt(df[4]) || 0;
+    const cores = parseInt(p[6]) || 1;
+
+    const nn = (p[8] || '0 0').split(' ');
+    const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
+    const prevNet = ctx.storage.getJSON('_net');
+    const now = Date.now();
+    let rxRate = 0, txRate = 0;
+    if (prevNet && prevNet.ts) {
+      const el = (now - prevNet.ts) / 1000;
+      if (el > 0 && el < 3600) {
+        rxRate = Math.max(0, (netRx - prevNet.rx) / el);
+        txRate = Math.max(0, (netTx - prevNet.tx) / el);
+      }
+    }
+    ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
+
+    const tempRaw = parseInt(p[9]) || 0;
+    const temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
+
+    d = { hostname, load, uptimeStr, cpuPct, cores, memTotal, memUsed, memPct, diskTotal, diskUsed, diskPct, rxRate, txRate, netRx, netTx, temp };
+  } catch (e) {
+    d = { error: String(e.message || e) };
+  }
+
+  const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
+
+  const bar = (pct, color) => ({
+    type: 'stack', direction: 'row', height: 4, borderRadius: 2,
+    backgroundColor: C.barBg,
+    children: pct > 0
+      ? [
+          { type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] },
+          ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : []),
+        ]
+      : [{ type: 'spacer' }],
+  });
+
+  const statCard = (icon, title, value, subtext, pct, color, bg) => ({
+    type: 'stack', direction: 'column', flex: 1,
+    backgroundColor: bg, borderRadius: 8, padding: [8, 12],
+    children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
+        { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
+        { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'spacer' },
+        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
+      ]},
+      { type: 'spacer' }, 
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
+        bar(pct, color),
+        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+      ]}
+    ]
+  });
+
+  const netCard = (bg) => ({
+    type: 'stack', direction: 'column', flex: 1,
+    backgroundColor: bg, borderRadius: 8, padding: [8, 12],
+    children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
+        { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
+        { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'spacer' }
+      ]},
+      { type: 'spacer' }, 
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
+        ]},
+        { type: 'stack', direction: 'row', children: [
+          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
+          { type: 'spacer' },
+          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }
+        ]}
+      ]}
+    ]
+  });
+
+  const header = () => ({
+    type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0, children: [
+      { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
+      { type: 'spacer', length: 6 },
+      { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
+      { type: 'spacer' },
+      ...(d.temp > 0 ? [
+        { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 },
+        { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
+        { type: 'spacer', length: 6 }
+      ] : []),
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+        { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
+        { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 }
+      ]}
+    ],
+  });
+
+  if (d.error) {
+    return {
+      type: 'widget', padding: 16, gap: 8, backgroundColor: C.bg,
+      children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
+          { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 22, height: 22 },
+          { type: 'text', text: '连接断开', font: { size: 16, weight: 'heavy' }, textColor: C.text },
+        ]},
+        { type: 'text', text: d.error, font: { size: 11, family: 'Menlo' }, textColor: C.muted, maxLines: 3 },
+      ],
+    };
+  }
+
+  if (ctx.widgetFamily === 'systemMedium') {
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14], 
+      children: [
+        header(),
+        { type: 'spacer', length: 6 }, 
+        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
+          statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
+          statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
+        ]},
+        { type: 'spacer', length: 4 }, 
+        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
+          statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg),
+          netCard(C.netBg)
+        ]}
+      ],
+    };
+  }
+
+  if (ctx.widgetFamily === 'systemSmall') {
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: 12, gap: 6,
+      children: [
+        header(),
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
+        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem, C.memBg),
+      ],
+    };
+  }
+
+  return {
+    type: 'widget', backgroundColor: C.bg, padding: 16,
+    children: [{ type: 'text', text: '请使用 Medium 或 Small 尺寸组件。', textColor: C.text, font: { size: 14, weight: 'heavy' } }]
+  };
+}
