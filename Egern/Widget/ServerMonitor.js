@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 15:20
+ * ⏱️ 更新时间: 2026.03.19 15:30
  * ==========================================
  */
 
@@ -121,7 +121,6 @@ export default async function (ctx) {
     d = { error: String(e.message || e) };
   }
 
-  // 加深马卡龙背景色，增加对比度，防止与白底融为一体
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
     barBg: { light: '#E5E5EA', dark: '#38383A' },
@@ -133,10 +132,10 @@ export default async function (ctx) {
     disk: { light: '#FF9500', dark: '#FF9F0A' },
     net: { light: '#FF2D55', dark: '#FF375F' },
     temp: { light: '#FF3B30', dark: '#FF453A' },
-    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, // 加深绿
-    memBg: { light: '#EBF4FA', dark: '#1A2433' }, // 加深蓝
-    dskBg: { light: '#FDF1E3', dark: '#33261A' }, // 加深橙
-    netBg: { light: '#FCEAEF', dark: '#331A20' }, // 加深红
+    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
+    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
+    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
+    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
   };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
@@ -162,9 +161,10 @@ export default async function (ctx) {
         { type: 'spacer' },
         { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
-      { type: 'stack', direction: 'column', gap: 4, children: [
+      // 间距从 4 提升到 6，字号从 9 提升到 10
+      { type: 'stack', direction: 'column', gap: 6, children: [
         bar(pct, color),
-        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+        { type: 'text', text: subtext, font: { size: 10, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
       ]}
     ]
   });
@@ -178,16 +178,17 @@ export default async function (ctx) {
         { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' }
       ]},
-      { type: 'stack', direction: 'column', gap: 2, children: [
+      // 间距从 2 提升到 4，字号分别提升到 11 和 10
+      { type: 'stack', direction: 'column', gap: 4, children: [
         { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.net },
+          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.net },
           { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
+          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
         ]},
         { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText },
+          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 10, family: 'Menlo' }, textColor: C.subText },
           { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.subText }
+          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 10, family: 'Menlo' }, textColor: C.subText }
         ]}
       ]}
     ]
@@ -230,12 +231,10 @@ export default async function (ctx) {
       children: [
         header(),
         { type: 'spacer', length: 8 }, 
-        // 间距放大至 4px，彻底划清界限
         { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
         ]},
-        // 上下卡片精确留白 4 像素 (与水平 gap: 4 形成完美十字)
         { type: 'spacer', length: 4 }, 
         { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg),
