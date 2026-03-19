@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：单节点显示四宫格硬核面板，多节点并发抓取并自动无缝变身紧凑列表模式。未配置时呈纯净空白状态。
+ * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：单节点显示四宫格硬核面板，多节点顺序抓取（防 iOS 底层 SSH 并发冲突）并自动无缝变身紧凑列表模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 06:40
+ * ⏱️ 更新时间: 2026.03.20 07:30 (防并发冲突版)
  * ==========================================
  */
 
@@ -46,7 +46,8 @@ export default async function (ctx) {
           port: Number(ctx.env[`SSH${i}_PORT`] || 22),
           username: (ctx.env[`SSH${i}_USER`] || 'root').trim(),
           password: ctx.env[`SSH${i}_PWD`] || '',
-          privateKey: ctx.env[`SSH${i}_KEY`] || '',
+          // 强化私钥换行符解析，防止格式错乱
+          privateKey: (ctx.env[`SSH${i}_KEY`] || '').replace(/\\n/g, '\n'),
           name: (ctx.env[`SSH${i}_NAME`] || '').trim(),
           idx: i
         });
@@ -59,7 +60,7 @@ export default async function (ctx) {
         port: Number(ctx.env.SSH_PORT || ctx.env.port || 22),
         username: (ctx.env.SSH_USER || ctx.env.username || 'root').trim(),
         password: ctx.env.SSH_PWD || ctx.env.password || '',
-        privateKey: ctx.env.SSH_KEY || ctx.env.privateKey || '',
+        privateKey: (ctx.env.SSH_KEY || ctx.env.privateKey || '').replace(/\\n/g, '\n'),
         name: (ctx.env.SSH_NAME || '').trim(),
         idx: 1
       });
@@ -173,8 +174,11 @@ export default async function (ctx) {
     return d;
   };
 
-  // 🚀 多线程并发抓取所有服务器
-  const results = await Promise.all(servers.map(fetchServer));
+  // 🚀 核心修复：将并发抓取 (Promise.all) 改为“顺序排队抓取”，完美避开 iOS 底层 SSH 桥接冲突
+  const results = [];
+  for (const srv of servers) {
+    results.push(await fetchServer(srv));
+  }
 
   // ==========================================
   // 模式 A: 只有 1 台机器 -> 渲染完美的四宫格详情卡片
@@ -294,18 +298,19 @@ export default async function (ctx) {
   };
 
   const listRows = results.map(d => {
+    // 修复离线状态下的排版挤压问题
     if (d.error) {
       return {
         type: 'stack', direction: 'row', alignItems: 'center', height: 22, gap: 6, children: [
-          { type: 'text', text: d.hostname, font: { size: 11, weight: 'bold' }, textColor: C.muted, width: 60, maxLines: 1 },
-          { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 10, height: 10 },
-          { type: 'text', text: '节点离线或超时', font: { size: 10 }, textColor: C.temp, flex: 1, maxLines: 1 }
+          { type: 'text', text: d.hostname, font: { size: 11, weight: 'bold' }, textColor: C.muted, flex: 1, maxLines: 1 },
+          { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 11, height: 11 },
+          { type: 'text', text: '节点离线或超时', font: { size: 10 }, textColor: C.temp, maxLines: 1 }
         ]
       };
     }
     return {
       type: 'stack', direction: 'row', alignItems: 'center', height: 22, gap: 6, children: [
-        { type: 'text', text: d.hostname, font: { size: 11, weight: 'bold' }, textColor: C.text, width: 60, maxLines: 1 },
+        { type: 'text', text: d.hostname, font: { size: 11, weight: 'bold' }, textColor: C.text, width: 65, maxLines: 1 },
         { type: 'stack', direction: 'row', alignItems: 'center', width: 45, gap: 2, children: [
           { type: 'text', text: 'C', font: { size: 9, weight: 'bold' }, textColor: C.subText },
           { type: 'text', text: `${d.cpuPct}%`, font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.cpuPct, 60, 80) }
