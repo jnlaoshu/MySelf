@@ -1,25 +1,23 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。支持最高 6 节点集群监控，内建优雅的“空状态”拦截，未配置参数时自动提示。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。单节点极简版，内建静默拦截机制（未配置 IP 时呈纯净空白状态）。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 17:25
+ * ⏱️ 更新时间: 2026.03.19 18:45
  * ==========================================
  */
 
 export default async function (ctx) {
-  // 读取桌面上长按小组件填写的“参数”(1到6)，不填则默认读取节点 1
-  const nodeId = (ctx.parameter || "1").trim();
+  if (ctx.env) {
+    ctx.env.host = ctx.env.SSH_HOST || ctx.env.host || "";
+    ctx.env.username = ctx.env.SSH_USER || ctx.env.username || "root";
+    ctx.env.password = ctx.env.SSH_PWD || ctx.env.password || "";
+    ctx.env.privateKey = ctx.env.SSH_KEY || ctx.env.privateKey || "";
+    ctx.env.port = ctx.env.SSH_PORT || ctx.env.port || 22;
+  }
+  const customName = (ctx.env.SSH_NAME || "").trim();
+  const host = ctx.env.host;
 
-  // 动态读取环境变量
-  const host = (ctx.env && ctx.env[`SSH${nodeId}_HOST`]) || "";
-  const username = (ctx.env && ctx.env[`SSH${nodeId}_USER`]) || "root";
-  const password = (ctx.env && ctx.env[`SSH${nodeId}_PWD`]) || "";
-  const privateKey = (ctx.env && ctx.env[`SSH${nodeId}_KEY`]) || "";
-  const port = Number((ctx.env && ctx.env[`SSH${nodeId}_PORT`]) || 22);
-  const customName = (ctx.env && ctx.env[`SSH${nodeId}_NAME`]) ? ctx.env[`SSH${nodeId}_NAME`].trim() : `Node ${nodeId}`;
-
-  // 🎨 颜色库提取到最外层，方便所有界面复用
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
     barBg: { light: '#E5E5EA', dark: '#38383A' },
@@ -37,18 +35,12 @@ export default async function (ctx) {
     netBg: { light: '#FCEAEF', dark: '#331A20' }, 
   };
 
-  // 🛑 核心拦截：如果当前节点没有填写 IP，直接返回“空状态”提示界面，终止后续无用连接
+  // 🛑 静默拦截：如果没有配置 IP，直接返回一个完全没有内容的空白背景块
   if (!host) {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: 16,
-      children: [
-        { type: 'stack', direction: 'column', flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, children: [
-          { type: 'image', src: 'sf-symbol:server.rack', color: C.muted, width: 32, height: 32 },
-          { type: 'spacer', length: 2 },
-          { type: 'text', text: `未配置节点 ${nodeId}`, font: { size: 14, weight: 'bold' }, textColor: C.text },
-          { type: 'text', text: '请在 Egern 模块设置中填写服务器 IP 等信息', font: { size: 10 }, textColor: C.muted, maxLines: 2 }
-        ]}
-      ]
+      type: 'widget', 
+      backgroundColor: C.bg, 
+      children: [] 
     };
   }
 
@@ -62,8 +54,9 @@ export default async function (ctx) {
 
   let d;
   try {
+    const { username, password, privateKey, port } = ctx.env;
     const session = await ctx.ssh.connect({
-      host, port, username,
+      host, port: Number(port || 22), username,
       ...(privateKey ? { privateKey } : { password }),
       timeout: 8000,
     });
@@ -112,15 +105,12 @@ export default async function (ctx) {
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0);
     const cpuIdle = cpuNums[3] || 0;
-    
-    // CPU 缓存数据隔离
-    const cpuKey = `_cpu_n${nodeId}`;
-    const prevCpu = ctx.storage.getJSON(cpuKey);
+    const prevCpu = ctx.storage.getJSON('_cpu');
     let cpuPct = 0;
     if (prevCpu && cpuTotal > prevCpu.t) {
       cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
     }
-    ctx.storage.setJSON(cpuKey, { t: cpuTotal, i: cpuIdle });
+    ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
     cpuPct = Math.max(0, Math.min(100, cpuPct));
 
     const memLine = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
@@ -135,10 +125,7 @@ export default async function (ctx) {
 
     const nn = (p[8] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
-    
-    // 网速缓存数据隔离
-    const netKey = `_net_n${nodeId}`;
-    const prevNet = ctx.storage.getJSON(netKey);
+    const prevNet = ctx.storage.getJSON('_net');
     const now = Date.now();
     let rxRate = 0, txRate = 0;
     if (prevNet && prevNet.ts) {
@@ -148,7 +135,7 @@ export default async function (ctx) {
         txRate = Math.max(0, (netTx - prevNet.tx) / el);
       }
     }
-    ctx.storage.setJSON(netKey, { rx: netRx, tx: netTx, ts: now });
+    ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
 
     const tempRaw = parseInt(p[9]) || 0;
     const temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
