@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：多节点并发抓取，内建 2.5s 极限防白屏护盾与底层连接强制回收机制，自动无缝变身紧凑列表模式。
+ * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：多节点并发抓取，采用 5s 黄金超时时间与底层连接强制回收机制，自动无缝变身紧凑列表模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 07:45 (极限防白屏版)
+ * ⏱️ 更新时间: 2026.03.20 08:00 (5s黄金并发版)
  * ==========================================
  */
 
@@ -76,11 +76,11 @@ export default async function (ctx) {
     let d = { host: srv.host, customName: srv.name };
     let session = null;
     try {
-      // 🔥 核心修改 1：极限 2.5秒超时，绝不允许阻塞导致小组件被 iOS 白屏杀掉
+      // 🔥 放宽到 5000 毫秒（5秒）：给 5G/4G 网络充足的握手时间，且并发模式下总耗时仍受控在 5 秒内！
       session = await ctx.ssh.connect({
         host: srv.host, port: srv.port, username: srv.username,
         ...(srv.privateKey ? { privateKey: srv.privateKey } : { password: srv.password }),
-        timeout: 2500, 
+        timeout: 5000, 
       });
 
       const SEP = '<<SEP>>';
@@ -171,7 +171,6 @@ export default async function (ctx) {
       d.error = String(e.message || e);
       d.hostname = srv.name || srv.host;
     } finally {
-      // 🔥 核心修改 2：底层强制连接销毁。无论发生什么报错，保证 session 绝对断开，不堵塞线程
       if (session) {
         try { await session.close(); } catch (err) {}
       }
@@ -179,7 +178,7 @@ export default async function (ctx) {
     return d;
   };
 
-  // 🚀 核心修改 3：恢复并发请求，因为有了 2.5s 护盾和 finally 销毁，并发不会再崩溃了
+  // 🚀 并发请求所有服务器
   const results = await Promise.all(servers.map(fetchServer));
 
   // ==========================================
