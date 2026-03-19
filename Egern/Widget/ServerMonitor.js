@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 12:30
+ * ⏱️ 更新时间: 2026.03.19 14:47
  * ==========================================
  */
 
@@ -231,7 +231,7 @@ export default async function (ctx) {
       children: [
         header(),
         { type: 'spacer', length: 8 }, 
-        // 【核心修改】将原本的 gap: 8 缩小至 gap: 2，让左右列间距与上下行间距一致
+        // 确保左右列间距与上下行间距完全一致，均为 gap: 2
         { type: 'stack', direction: 'row', flex: 1, gap: 2, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
