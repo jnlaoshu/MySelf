@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 11:45
+ * ⏱️ 更新时间: 2026.03.19 11:48
  * ==========================================
  */
 
@@ -38,7 +38,7 @@ export default async function (ctx) {
     const cmds = [
       'hostname -s 2>/dev/null || hostname',
       'cat /proc/loadavg',
-      'cat /proc/uptime', // 替换为抓取精确秒数
+      'cat /proc/uptime',
       'head -1 /proc/stat',
       'free -b',
       'df -B1 / | tail -1',
@@ -57,22 +57,24 @@ export default async function (ctx) {
     const la = (p[1] || '0 0 0').split(' ');
     const load = [la[0], la[1], la[2]];
     
-    // Uptime 中文精确换算 (年 天 时 分 秒)
+    // Uptime 补全“月”的中文精确换算 (年 月 天 时 分 秒)
     let uptimeStr = "0秒";
     const upSec = parseFloat((p[2] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
       const y = Math.floor(upSec / 31536000);
-      const days = Math.floor((upSec % 31536000) / 86400);
+      const mo = Math.floor((upSec % 31536000) / 2592000); // 约30天为一月
+      const days = Math.floor((upSec % 2592000) / 86400);
       const h = Math.floor((upSec % 86400) / 3600);
       const m = Math.floor((upSec % 3600) / 60);
       const s = Math.floor(upSec % 60);
       const parts = [];
       if (y > 0) parts.push(`${y}年`);
+      if (mo > 0) parts.push(`${mo}月`);
       if (days > 0) parts.push(`${days}天`);
       if (h > 0) parts.push(`${h}时`);
       if (m > 0) parts.push(`${m}分`);
       if (s > 0) parts.push(`${s}秒`);
-      uptimeStr = parts.join(' ');
+      uptimeStr = parts.join(''); // 去除空格以防文字超长换行
     }
 
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
@@ -147,9 +149,10 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
+  // 圆角调小为 10，上下 padding 压缩为 6，腾出空间防止被切
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 16, padding: [8, 12], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 10, padding: [6, 10], gap: 4,
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
@@ -165,7 +168,7 @@ export default async function (ctx) {
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1,
-    backgroundColor: C.cardBg, borderRadius: 16, padding: [8, 12], gap: 4,
+    backgroundColor: C.cardBg, borderRadius: 10, padding: [6, 10], gap: 4,
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
@@ -191,11 +194,6 @@ export default async function (ctx) {
       { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
       { type: 'text', text: d.hostname, font: { size: 15, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
       { type: 'spacer' },
-      ...(d.temp > 0 ? [
-        { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 },
-        { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
-        { type: 'spacer', length: 6 }
-      ] : []),
       // 植入带图标的中文倒计时
       { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
       { type: 'spacer', length: 2 },
@@ -221,13 +219,13 @@ export default async function (ctx) {
       type: 'widget', backgroundColor: C.bg, padding: 12, 
       children: [
         header(),
-        { type: 'spacer', length: 6 },
+        { type: 'spacer', length: 4 }, // 头部下方间距微调，给卡片让出空间
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
         ]},
-        // 修改点 1：将上下排卡片的间距从 6 放大到 8，与左右卡片间距保持完美的十字一致。
-        { type: 'spacer', length: 8 }, 
+        // 上下排卡片间距严格锁定为 2 像素
+        { type: 'spacer', length: 2 }, 
         { type: 'stack', direction: 'row', gap: 8, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk),
           netCard()
