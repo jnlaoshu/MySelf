@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 16:01
+ * ⏱️ 更新时间: 2026.03.19 16:35
  * ==========================================
  */
 
@@ -46,8 +46,7 @@ export default async function (ctx) {
       'uname -r',
       "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
       'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
-      "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'",
-      "ls /proc 2>/dev/null | grep -c '^[0-9]' || echo 0",
+      "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'"
     ];
     const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
     await session.close();
@@ -57,7 +56,6 @@ export default async function (ctx) {
     const la = (p[1] || '0 0 0').split(' ');
     const load = [la[0], la[1], la[2]];
     
-    // Uptime 中文精确换算 (年 月 天 时 分 秒)
     let uptimeStr = "0秒";
     const upSec = parseFloat((p[2] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
@@ -114,14 +112,12 @@ export default async function (ctx) {
 
     const tempRaw = parseInt(p[9]) || 0;
     const temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
-    const procs = parseInt(p[11]) || 0;
 
-    d = { hostname, load, uptimeStr, cpuPct, cores, memTotal, memUsed, memPct, diskTotal, diskUsed, diskPct, rxRate, txRate, netRx, netTx, temp, procs };
+    d = { hostname, load, uptimeStr, cpuPct, cores, memTotal, memUsed, memPct, diskTotal, diskUsed, diskPct, rxRate, txRate, netRx, netTx, temp };
   } catch (e) {
     d = { error: String(e.message || e) };
   }
 
-  // 专属淡雅背景色（已加深对比度，确保留白清晰）
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
     barBg: { light: '#E5E5EA', dark: '#38383A' },
@@ -152,20 +148,17 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
-  // 常规数据卡片 (CPU, MEM, DSK) - 物理锁死顶部和底部高度
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1,
     backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
-      // 顶部区域：死锁高度 16px 确保图标水平对齐
       { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
         { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
         { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' },
         { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
       ]},
-      { type: 'spacer' }, // 中间柔性撑开
-      // 底部区域：死锁高度 24px，对齐方式 flex-start，确保进度条绝对起点一致
+      { type: 'spacer' }, 
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
         bar(pct, color),
         { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
@@ -173,26 +166,22 @@ export default async function (ctx) {
     ]
   });
 
-  // 网络专属卡片 (NET) - 与左侧卡片共享相同物理锁死参数
   const netCard = (bg) => ({
     type: 'stack', direction: 'column', flex: 1,
     backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
-      // 顶部区域：死锁高度 16px，与 DSK 图标完美水平对齐
       { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
         { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' }
       ]},
-      { type: 'spacer' }, // 中间柔性撑开，使底部文字块整体下移
-      // 底部区域：死锁高度 24px，对齐方式 flex-start。网速文字最高点在此对齐左侧进度条
+      { type: 'spacer' }, 
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
         { type: 'stack', direction: 'row', children: [
           { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net },
           { type: 'spacer' },
           { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
         ]},
-        // 行距缩至 gap: 1
         { type: 'stack', direction: 'row', children: [
           { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
           { type: 'spacer' },
@@ -239,12 +228,10 @@ export default async function (ctx) {
       children: [
         header(),
         { type: 'spacer', length: 6 }, 
-        // 留白加大至 4px，彻底划清十字界限
         { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
         ]},
-        // 上下卡片精确留白 4 像素 (与水平 gap: 4 形成完美十字)
         { type: 'spacer', length: 4 }, 
         { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
           statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg),
