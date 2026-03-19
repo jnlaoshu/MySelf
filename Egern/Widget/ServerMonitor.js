@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。单节点极简版，内建静默拦截机制（未配置 IP 时呈纯净空白状态）。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 18:45
+ * ⏱️ 更新时间: 2026.03.19 16:35
  * ==========================================
  */
 
@@ -16,33 +16,6 @@ export default async function (ctx) {
     ctx.env.port = ctx.env.SSH_PORT || ctx.env.port || 22;
   }
   const customName = (ctx.env.SSH_NAME || "").trim();
-  const host = ctx.env.host;
-
-  const C = {
-    bg: { light: '#FFFFFF', dark: '#1C1C1E' },
-    barBg: { light: '#E5E5EA', dark: '#38383A' },
-    text: { light: '#000000', dark: '#FFFFFF' },
-    subText: { light: '#666666', dark: '#999999' }, 
-    muted: { light: '#8E8E93', dark: '#8E8E93' },
-    cpu: { light: '#34C759', dark: '#30D158' },
-    mem: { light: '#007AFF', dark: '#0A84FF' },
-    disk: { light: '#FF9500', dark: '#FF9F0A' },
-    net: { light: '#FF2D55', dark: '#FF375F' },
-    temp: { light: '#FF3B30', dark: '#FF453A' },
-    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
-    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
-    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
-    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
-  };
-
-  // 🛑 静默拦截：如果没有配置 IP，直接返回一个完全没有内容的空白背景块
-  if (!host) {
-    return {
-      type: 'widget', 
-      backgroundColor: C.bg, 
-      children: [] 
-    };
-  }
 
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
@@ -54,7 +27,7 @@ export default async function (ctx) {
 
   let d;
   try {
-    const { username, password, privateKey, port } = ctx.env;
+    const { host, username, password, privateKey, port } = ctx.env;
     const session = await ctx.ssh.connect({
       host, port: Number(port || 22), username,
       ...(privateKey ? { privateKey } : { password }),
@@ -144,6 +117,23 @@ export default async function (ctx) {
   } catch (e) {
     d = { error: String(e.message || e) };
   }
+
+  const C = {
+    bg: { light: '#FFFFFF', dark: '#1C1C1E' },
+    barBg: { light: '#E5E5EA', dark: '#38383A' },
+    text: { light: '#000000', dark: '#FFFFFF' },
+    subText: { light: '#666666', dark: '#999999' }, 
+    muted: { light: '#8E8E93', dark: '#8E8E93' },
+    cpu: { light: '#34C759', dark: '#30D158' },
+    mem: { light: '#007AFF', dark: '#0A84FF' },
+    disk: { light: '#FF9500', dark: '#FF9F0A' },
+    net: { light: '#FF2D55', dark: '#FF375F' },
+    temp: { light: '#FF3B30', dark: '#FF453A' },
+    cpuBg: { light: '#EAF6ED', dark: '#1A291E' }, 
+    memBg: { light: '#EBF4FA', dark: '#1A2433' }, 
+    dskBg: { light: '#FDF1E3', dark: '#33261A' }, 
+    netBg: { light: '#FCEAEF', dark: '#331A20' }, 
+  };
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
