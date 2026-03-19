@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 主要功能: 自动提取并按就近时间排序展示未来 3 个法定、民俗与国际节日；支持自定义最多 6 个专属纪念日；内置成都本土化春/秋假动态推算逻辑；包含倒数 ≤200 天触发的智能置顶机制；原生适配系统深浅色模式。
+ * ✨ 主要功能: 自动提取并排序展示未来法定、民俗、国际节日及专属纪念日；内置成都春/秋假动态推算与 ≤200 天高亮置顶机制；节假日当天自动聚合至标题栏展示；原生适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.18 10:30
+ * ⏱️ 更新时间: 2026.03.19 21:45
  * ==========================================
  */
 
@@ -32,7 +32,7 @@ export default async function(ctx) {
   };
 
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
-  const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
+  const Y = now.getFullYear(), M = now.getMonth() + 1, D = now.getDate();
   const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
   const todayMs = Date.UTC(Y, M - 1, D);
 
@@ -83,42 +83,37 @@ export default async function(ctx) {
   const result = { legal: [], folk: [], intl: [], exclusive: [] };
   const todayFests = [];
   let stickyFest = "", minPinnedDiff = Infinity; 
-  const f1 = getFests(Y), f2 = getFests(Y + 1);
-
-  Object.keys(result).forEach(cat => {
-    [...f1[cat], ...f2[cat]].forEach(([name, dateStr, duration]) => {
-      if (!dateStr) return;
-      const [yy, mm, dd] = dateStr.split('/').map(Number);
-      const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
-      
-      if (diff <= 0 && diff > -(duration || 1) && !todayFests.includes(name)) todayFests.push(name);
-      if (diff < 0) return;
-      
-      if (pinnedHoliday && name === pinnedHoliday && diff > 0 && diff <= 200 && diff < minPinnedDiff) { 
-          minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
-      }
-      if (!result[cat].some(i => i.name === name)) result[cat].push({ name, diff });
+  
+  [getFests(Y), getFests(Y + 1)].forEach(f => {
+    Object.keys(result).forEach(cat => {
+      f[cat].forEach(([name, dateStr, duration]) => {
+        if (!dateStr) return;
+        const [yy, mm, dd] = dateStr.split('/').map(Number);
+        const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
+        
+        if (diff <= 0) {
+          if (diff > -(duration || 1) && !todayFests.includes(name)) todayFests.push(name);
+          return;
+        }
+        
+        if (pinnedHoliday && name === pinnedHoliday && diff <= 200 && diff < minPinnedDiff) { 
+            minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
+        }
+        if (!result[cat].some(i => i.name === name)) result[cat].push({ name, diff });
+      });
     });
   });
 
-  const formatItem = (item) => item.diff === 0 ? `🎉${item.name}` : `${item.name} ${item.diff}天`;
-  const formatStr = (cat, limit) => result[cat].sort((a,b) => a.diff - b.diff).slice(0, limit).map(formatItem).join("，");
+  const formatStr = (cat, limit) => result[cat].sort((a,b) => a.diff - b.diff).slice(0, limit).map(i => `${i.name} ${i.diff}天`).join("，");
 
   const getExclusiveLines = (str) => {
     if (!str) return [];
     let firstLine = "", w = 0;
     const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
-
     for (let i = 0; i < tokens.length; i++) {
         const token = tokens[i];
         const tokenW = [...token].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-
-        if (w + tokenW > 45) {
-            return [
-                firstLine.replace(/[，\s]+$/, ''),
-                tokens.slice(i).join("").replace(/^[，\s]+/, '')
-            ];
-        }
+        if (w + tokenW > 45) return [firstLine.replace(/[，\s]+$/, ''), tokens.slice(i).join("").replace(/^[，\s]+/, '')];
         firstLine += token;
         w += tokenW;
     }
@@ -148,18 +143,11 @@ export default async function(ctx) {
   if (tIntl) pushRow("globe.americas.fill", C.blue, "国际", tIntl, true);
 
   const tExc = formatStr("exclusive", 6);
-  if (tExc) {
-      getExclusiveLines(tExc).forEach((line, idx) => {
-          pushRow("gift.fill", C.teal, "专属", line, idx === 0);
-      });
-  }
+  if (tExc) getExclusiveLines(tExc).forEach((line, idx) => pushRow("gift.fill", C.teal, "专属", line, idx === 0));
 
   const visualLines = gridRows.length;
-  const dynamicGap = visualLines <= 4 ? 11 : 8;     
-  const dynamicSpacer = visualLines <= 4 ? 12 : 10; 
-
   const topAddons = [];
-  if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('、')}`);
+  if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('·')}`);
   if (stickyFest) topAddons.push(`🔝 ${stickyFest}`);
 
   return {
@@ -173,8 +161,8 @@ export default async function(ctx) {
           { type: 'spacer' },
           { type: 'text', text: topAddons.join(" | "), font: { size: 12, weight: 'bold' }, textColor: C.red, maxLines: 1, minScale: 0.8 }
       ]},
-      { type: 'spacer', length: dynamicSpacer }, 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: dynamicGap, children: gridRows },
+      { type: 'spacer', length: visualLines <= 4 ? 12 : 10 }, 
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: visualLines <= 4 ? 11 : 8, children: gridRows },
       { type: 'spacer' }
     ]
   };
