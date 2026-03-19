@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。单节点极简纯净版，支持自定义显示名称，内建静默拦截机制（未配置 IP 时呈纯净空白状态）。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。单节点极简纯净版，支持自定义显示名称，NET 面板集成 IP 地址显示，内建静默拦截机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 19:20 (单机终极版)
+ * ⏱️ 更新时间: 2026.03.20 06:36
  * ==========================================
  */
 
@@ -185,7 +185,9 @@ export default async function (ctx) {
       { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
         { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
-        { type: 'spacer' }
+        { type: 'spacer' },
+        // 🎯 在此处右侧优雅地添加了 IP 地址显示
+        { type: 'text', text: host, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
       ]},
       { type: 'spacer' }, 
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
