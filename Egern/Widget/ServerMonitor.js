@@ -3,7 +3,7 @@
  * 📌 模块名称: 服务器监控 (Server Monitor)
  * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 12:15
+ * ⏱️ 更新时间: 2026.03.19 12:20
  * ==========================================
  */
 
@@ -137,7 +137,6 @@ export default async function (ctx) {
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
 
-  // 胶囊化进度条
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 4, borderRadius: 2,
     backgroundColor: C.barBg,
@@ -149,7 +148,6 @@ export default async function (ctx) {
       : [{ type: 'spacer' }],
   });
 
-  // 圆角 8，加入 flex: 1 与两端对齐，彻底撑满垂直空间
   const statCard = (icon, title, value, subtext, pct, color) => ({
     type: 'stack', direction: 'column', flex: 1,
     backgroundColor: C.cardBg, borderRadius: 8, padding: [10, 12], justifyContent: 'space-between',
@@ -224,11 +222,11 @@ export default async function (ctx) {
 
   if (ctx.widgetFamily === 'systemMedium') {
     return {
-      type: 'widget', backgroundColor: C.bg, padding: 14, // 使用标准 14px 边距保证对齐
+      // 极限压榨顶部空间：padding top 设为 10，强制对齐其他组件头部；bottom 14 保证底部不被裁切
+      type: 'widget', backgroundColor: C.bg, padding: [10, 14, 14, 14], 
       children: [
         header(),
-        { type: 'spacer', length: 10 }, // 头部与卡片区的安全距离
-        // 为包裹卡片的行添加 flex: 1，自动将高度撑满，进而完美顶起头部
+        { type: 'spacer', length: 8 }, // 缩减头部与卡片距离，释放高度给卡片
         { type: 'stack', direction: 'row', flex: 1, gap: 8, children: [
           statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu),
           statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem)
