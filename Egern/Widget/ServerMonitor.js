@@ -1,21 +1,23 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取并解析 CPU 负载、物理内存与 Swap 占用、磁盘存储容量、网络上下行速率与吞吐总量、系统运行时长等底层硬件指标，内置网络超时与异常断连防护机制。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。全面适配最高 6 节点集群监控，通过小组件“参数”动态读取模块内的独立配置，各节点网速缓存严格隔离。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.19 16:35
+ * ⏱️ 更新时间: 2026.03.19 17:05
  * ==========================================
  */
 
 export default async function (ctx) {
-  if (ctx.env) {
-    ctx.env.host = ctx.env.SSH_HOST || ctx.env.host || "";
-    ctx.env.username = ctx.env.SSH_USER || ctx.env.username || "root";
-    ctx.env.password = ctx.env.SSH_PWD || ctx.env.password || "";
-    ctx.env.privateKey = ctx.env.SSH_KEY || ctx.env.privateKey || "";
-    ctx.env.port = ctx.env.SSH_PORT || ctx.env.port || 22;
-  }
-  const customName = (ctx.env.SSH_NAME || "").trim();
+  // 核心魔法：读取桌面上长按小组件填写的“参数”(1到6)，不填则默认读取节点 1
+  const nodeId = (ctx.parameter || "1").trim();
+
+  // 动态拼接变量名读取配置，例如节点 1 读取 SSH1_HOST，节点 6 读取 SSH6_HOST
+  const host = (ctx.env && ctx.env[`SSH${nodeId}_HOST`]) || "";
+  const username = (ctx.env && ctx.env[`SSH${nodeId}_USER`]) || "root";
+  const password = (ctx.env && ctx.env[`SSH${nodeId}_PWD`]) || "";
+  const privateKey = (ctx.env && ctx.env[`SSH${nodeId}_KEY`]) || "";
+  const port = Number((ctx.env && ctx.env[`SSH${nodeId}_PORT`]) || 22);
+  const customName = (ctx.env && ctx.env[`SSH${nodeId}_NAME`]) ? ctx.env[`SSH${nodeId}_NAME`].trim() : `Node ${nodeId}`;
 
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
@@ -27,9 +29,8 @@ export default async function (ctx) {
 
   let d;
   try {
-    const { host, username, password, privateKey, port } = ctx.env;
     const session = await ctx.ssh.connect({
-      host, port: Number(port || 22), username,
+      host, port, username,
       ...(privateKey ? { privateKey } : { password }),
       timeout: 8000,
     });
@@ -78,12 +79,15 @@ export default async function (ctx) {
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0);
     const cpuIdle = cpuNums[3] || 0;
-    const prevCpu = ctx.storage.getJSON('_cpu');
+    
+    // CPU 缓存数据隔离
+    const cpuKey = `_cpu_n${nodeId}`;
+    const prevCpu = ctx.storage.getJSON(cpuKey);
     let cpuPct = 0;
     if (prevCpu && cpuTotal > prevCpu.t) {
       cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
     }
-    ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
+    ctx.storage.setJSON(cpuKey, { t: cpuTotal, i: cpuIdle });
     cpuPct = Math.max(0, Math.min(100, cpuPct));
 
     const memLine = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
@@ -98,7 +102,10 @@ export default async function (ctx) {
 
     const nn = (p[8] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
-    const prevNet = ctx.storage.getJSON('_net');
+    
+    // 网速缓存数据严格隔离，防止多服务器叠放时流量跳错
+    const netKey = `_net_n${nodeId}`;
+    const prevNet = ctx.storage.getJSON(netKey);
     const now = Date.now();
     let rxRate = 0, txRate = 0;
     if (prevNet && prevNet.ts) {
@@ -108,7 +115,7 @@ export default async function (ctx) {
         txRate = Math.max(0, (netTx - prevNet.tx) / el);
       }
     }
-    ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
+    ctx.storage.setJSON(netKey, { rx: netRx, tx: netTx, ts: now });
 
     const tempRaw = parseInt(p[9]) || 0;
     const temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
