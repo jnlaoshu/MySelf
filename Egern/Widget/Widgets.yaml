@@ -1,12 +1,12 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置 6 节点集群监控参数，配合 YAML 脚本分身实现彻底独立的无缝挂载。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；回归极致稳定的单机版服务器监控，新增【全局启停开关】控制组件休眠与内容显示。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.20 10:00
+# ⏱️ 更新时间: 2026.03.20 10:50
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价，及智能集群服务器监控。"
+description: "包含：岁时黄历、时光倒数、网络信息、全国油价、服务器监控。"
 
 auto_update:
   interval: 43200
@@ -55,7 +55,7 @@ env_schema:
   # --- ✨ 节假日与油价配置 ---
   PINNED_HOLIDAY:
     name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。可根据需要自行修改，留空则关闭置顶。"
+    description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。留空则关闭置顶。"
     default_value: "高考"
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
@@ -78,130 +78,34 @@ env_schema:
     default_value: "sichuan/chengdu"
 
   # ==================================
-  # 🖥️ 智能集群服务器探针配置
+  # 🖥️ 单机极简服务器探针配置
   # ==================================
-  
-  # --- 节点 1 ---
-  SSH1_NAME:
-    name: 🏷️ [节点1] 显示名称
+  ENABLE_SERVER_MONITOR:
+    name: 🎛️ 启用服务器监控
+    description: "控制该小组件是否在桌面上显示监控内容并抓取数据。关闭后组件将进入静默休眠状态。"
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
+  SSH_NAME:
+    name: 🏷️ 服务器显示名称
     default_value: "Oracle"
-  SSH1_HOST:
-    name: 🌐 [节点1] IP / 域名
+  SSH_HOST:
+    name: 🌐 IP / 域名
     default_value: ""
-  SSH1_PORT:
-    name: 🔌 [节点1] 端口
+  SSH_PORT:
+    name: 🔌 端口
     default_value: "22"
-  SSH1_USER:
-    name: 👤 [节点1] 用户名
+  SSH_USER:
+    name: 👤 用户名
     default_value: "root"
-  SSH1_PWD:
-    name: 🔐 [节点1] 密码
+  SSH_PWD:
+    name: 🔐 密码
     default_value: ""
-  SSH1_KEY:
-    name: 🔑 [节点1] 私钥
+  SSH_KEY:
+    name: 🔑 私钥
     default_value: ""
 
-  # --- 节点 2 ---
-  SSH2_NAME:
-    name: 🏷️ [节点2] 显示名称
-    default_value: "Tencent"
-  SSH2_HOST:
-    name: 🌐 [节点2] IP / 域名
-    default_value: ""
-  SSH2_PORT:
-    name: 🔌 [节点2] 端口
-    default_value: "22"
-  SSH2_USER:
-    name: 👤 [节点2] 用户名
-    default_value: "root"
-  SSH2_PWD:
-    name: 🔐 [节点2] 密码
-    default_value: ""
-  SSH2_KEY:
-    name: 🔑 [节点2] 私钥
-    default_value: ""
-
-  # --- 节点 3 ---
-  SSH3_NAME:
-    name: 🏷️ [节点3] 显示名称
-    default_value: ""
-  SSH3_HOST:
-    name: 🌐 [节点3] IP / 域名
-    default_value: ""
-  SSH3_PORT:
-    name: 🔌 [节点3] 端口
-    default_value: "22"
-  SSH3_USER:
-    name: 👤 [节点3] 用户名
-    default_value: "root"
-  SSH3_PWD:
-    name: 🔐 [节点3] 密码
-    default_value: ""
-  SSH3_KEY:
-    name: 🔑 [节点3] 私钥
-    default_value: ""
-
-  # --- 节点 4 ---
-  SSH4_NAME:
-    name: 🏷️ [节点4] 显示名称
-    default_value: ""
-  SSH4_HOST:
-    name: 🌐 [节点4] IP / 域名
-    default_value: ""
-  SSH4_PORT:
-    name: 🔌 [节点4] 端口
-    default_value: "22"
-  SSH4_USER:
-    name: 👤 [节点4] 用户名
-    default_value: "root"
-  SSH4_PWD:
-    name: 🔐 [节点4] 密码
-    default_value: ""
-  SSH4_KEY:
-    name: 🔑 [节点4] 私钥
-    default_value: ""
-
-  # --- 节点 5 ---
-  SSH5_NAME:
-    name: 🏷️ [节点5] 显示名称
-    default_value: ""
-  SSH5_HOST:
-    name: 🌐 [节点5] IP / 域名
-    default_value: ""
-  SSH5_PORT:
-    name: 🔌 [节点5] 端口
-    default_value: "22"
-  SSH5_USER:
-    name: 👤 [节点5] 用户名
-    default_value: "root"
-  SSH5_PWD:
-    name: 🔐 [节点5] 密码
-    default_value: ""
-  SSH5_KEY:
-    name: 🔑 [节点5] 私钥
-    default_value: ""
-
-  # --- 节点 6 ---
-  SSH6_NAME:
-    name: 🏷️ [节点6] 显示名称
-    default_value: ""
-  SSH6_HOST:
-    name: 🌐 [节点6] IP / 域名
-    default_value: ""
-  SSH6_PORT:
-    name: 🔌 [节点6] 端口
-    default_value: "22"
-  SSH6_USER:
-    name: 👤 [节点6] 用户名
-    default_value: "root"
-  SSH6_PWD:
-    name: 🔐 [节点6] 密码
-    default_value: ""
-  SSH6_KEY:
-    name: 🔑 [节点6] 私钥
-    default_value: ""
-
-# 🎯 核心魔法 1：强行开辟 6 个独立的脚本分身，都指向同一个 URL
 scriptings:
   - generic:
       name: 岁时黄历
@@ -216,25 +120,9 @@ scriptings:
       name: 全国油价
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
   - generic:
-      name: 服务器监控 1
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
-  - generic:
-      name: 服务器监控 2
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
-  - generic:
-      name: 服务器监控 3
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
-  - generic:
-      name: 服务器监控 4
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
-  - generic:
-      name: 服务器监控 5
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
-  - generic:
-      name: 服务器监控 6
+      name: 服务器监控
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
-# 🎯 核心魔法 2：将桌面小组件与对应的脚本分身精准绑定
 widgets:
   - name: 岁时黄历
     script_name: 岁时黄历
@@ -244,15 +132,5 @@ widgets:
     script_name: 网络信息
   - name: 全国油价
     script_name: 全国油价
-  - name: 服务器监控 1
-    script_name: 服务器监控 1
-  - name: 服务器监控 2
-    script_name: 服务器监控 2
-  - name: 服务器监控 3
-    script_name: 服务器监控 3
-  - name: 服务器监控 4
-    script_name: 服务器监控 4
-  - name: 服务器监控 5
-    script_name: 服务器监控 5
-  - name: 服务器监控 6
-    script_name: 服务器监控 6
+  - name: 服务器监控
+    script_name: 服务器监控
