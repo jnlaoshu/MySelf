@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置 6 节点集群监控参数，配合 YAML 分身实现独立无缝挂载。
+# ✨ 主要功能: 聚合岁时黄历、时光倒数、网络信息、全国油价、服务器监控 5 款核心组件；支持可视化配置 6 节点集群监控参数，配合 YAML 脚本分身实现彻底独立的无缝挂载。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.20 09:30
+# ⏱️ 更新时间: 2026.03.20 10:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -201,6 +201,7 @@ env_schema:
     name: 🔑 [节点6] 私钥
     default_value: ""
 
+# 🎯 核心魔法 1：强行开辟 6 个独立的脚本分身，都指向同一个 URL
 scriptings:
   - generic:
       name: 岁时黄历
@@ -215,10 +216,25 @@ scriptings:
       name: 全国油价
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
   - generic:
-      name: 服务器监控
+      name: 服务器监控 1
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+  - generic:
+      name: 服务器监控 2
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+  - generic:
+      name: 服务器监控 3
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+  - generic:
+      name: 服务器监控 4
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+  - generic:
+      name: 服务器监控 5
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+  - generic:
+      name: 服务器监控 6
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
-# 🎯 魔法在这里：显式拆分出 6 个独立的小组件，指向同一个 JS 脚本
+# 🎯 核心魔法 2：将桌面小组件与对应的脚本分身精准绑定
 widgets:
   - name: 岁时黄历
     script_name: 岁时黄历
@@ -229,14 +245,14 @@ widgets:
   - name: 全国油价
     script_name: 全国油价
   - name: 服务器监控 1
-    script_name: 服务器监控
+    script_name: 服务器监控 1
   - name: 服务器监控 2
-    script_name: 服务器监控
+    script_name: 服务器监控 2
   - name: 服务器监控 3
-    script_name: 服务器监控
+    script_name: 服务器监控 3
   - name: 服务器监控 4
-    script_name: 服务器监控
+    script_name: 服务器监控 4
   - name: 服务器监控 5
-    script_name: 服务器监控
+    script_name: 服务器监控 5
   - name: 服务器监控 6
-    script_name: 服务器监控
+    script_name: 服务器监控 6
