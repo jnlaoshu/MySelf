@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供 5 款核心桌面小组件的全局配置入口。支持可视化设定专属纪念日、节假日置顶、油价查询地区，以及单机版服务器监控底层连接参数。
+# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及单机版服务器监控底层连接参数。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.20 17:30
+# ⏱️ 更新时间: 2026.03.21 07:18
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -70,14 +70,18 @@ env_schema:
     name: 🍂 秋假自定义日期
     description: "格式 MM/DD。留空则默认使用系统内置的成都秋假推算逻辑"
     default_value: ""
+  SHOW_FINANCE_DATES:
+    name: 📈 显示金融交割日
+    description: "是否在专属日中自动推算并显示 A 股期指交割日与期权行权日"
+    options:
+      - "true"
+      - "false"
+    default_value: "true"
   GAS_REGION:
     name: 📍 油价查询地区
     description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
     default_value: "sichuan/chengdu"
 
-  # ==================================
-  # 🖥️ 服务器监控配置 (纯净版)
-  # ==================================
   SSH_NAME:
     name: 🏷️ 服务器显示名称
     default_value: "Oracle"
