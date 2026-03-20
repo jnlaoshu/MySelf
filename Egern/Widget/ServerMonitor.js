@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染 CPU、内存、磁盘和网络流量等核心硬件指标。内置全局启停休眠机制以彻底释放系统资源，并搭载高鲁棒性的私钥智能解析器与参数自动补全引擎。
+ * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染核心硬件指标。内置全局启停休眠机制以彻底释放系统资源，并搭载高鲁棒性的私钥智能解析器与参数自动补全引擎。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 17:18
+ * ⏱️ 更新时间: 2026.03.20 17:30
  * ==========================================
  */
 
@@ -56,9 +56,11 @@ export default async function (ctx) {
           { type: 'text', text: 'STANDBY', font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
         ]},
         { type: 'spacer', length: 8 },
-        { type: 'stack', flex: 1, backgroundColor: C.memBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center', direction: 'column', gap: 6, children: [
-          { type: 'image', src: 'sf-symbol:moon.zzz.fill', color: C.mem, width: 22, height: 22 },
-          { type: 'text', text: '探针已休眠 · 资源已释放', font: { size: 11, weight: 'bold' }, textColor: C.mem }
+        { type: 'stack', direction: 'row', flex: 1, children: [
+          { type: 'stack', flex: 1, backgroundColor: C.memBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center', direction: 'column', gap: 6, children: [
+            { type: 'image', src: 'sf-symbol:moon.zzz.fill', color: C.mem, width: 22, height: 22 },
+            { type: 'text', text: '探针已休眠 · 资源已释放', font: { size: 11, weight: 'bold' }, textColor: C.mem }
+          ]}
         ]}
       ]
     };
