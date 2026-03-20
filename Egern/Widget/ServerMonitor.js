@@ -1,22 +1,31 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。极简纯净单机版，新增【全局启停开关】，关闭时小组件将停止抓取并进入静默休眠状态，彻底释放系统资源。
+ * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染 CPU、内存、磁盘和网络流量等核心硬件指标。内置全局启停休眠机制以彻底释放系统资源，并搭载高鲁棒性的私钥智能解析器与参数自动补全引擎。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 10:50
+ * ⏱️ 更新时间: 2026.03.20 17:18
  * ==========================================
  */
 
 export default async function (ctx) {
-  // 🎯 新增：全局启停开关
-  const enableWidget = (ctx.env.ENABLE_SERVER_MONITOR || "true").trim() !== "false";
+  const enableWidget = String(ctx.env.ENABLE_SERVER_MONITOR || "true").trim() !== "false";
   
-  const host = (ctx.env.SSH_HOST || ctx.env.host || "").trim();
-  const port = Number(ctx.env.SSH_PORT || ctx.env.port || 22);
-  const username = (ctx.env.SSH_USER || ctx.env.username || "root").trim();
+  const parsePrivateKey = (key) => {
+    if (!key) return "";
+    let k = String(key).trim().replace(/\\n/g, '\n').replace(/\\r/g, '');
+    if (k.includes("-----BEGIN") && k.split('\n').length <= 2) {
+      const match = k.match(/(-----BEGIN [^-]+-----)(.*?)(-----END [^-]+-----)/);
+      if (match) k = `${match[1]}\n${match[2].trim().replace(/\s+/g, '\n')}\n${match[3]}`;
+    }
+    return k;
+  };
+
+  const host = String(ctx.env.SSH_HOST || ctx.env.host || "").trim();
+  const port = Number(ctx.env.SSH_PORT || ctx.env.port) || 22;
+  const username = String(ctx.env.SSH_USER || ctx.env.username || "").trim() || "root";
   const password = ctx.env.SSH_PWD || ctx.env.password || "";
-  const privateKey = (ctx.env.SSH_KEY || ctx.env.privateKey || "").replace(/\\n/g, '\n');
-  const customName = (ctx.env.SSH_NAME || "").trim();
+  const privateKey = parsePrivateKey(ctx.env.SSH_KEY || ctx.env.privateKey);
+  const customName = String(ctx.env.SSH_NAME || "").trim() || "Oracle";
 
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
@@ -35,23 +44,27 @@ export default async function (ctx) {
     netBg: { light: '#FCEAEF', dark: '#331A20' }, 
   };
 
-  // 🛑 休眠拦截：如果开关被关闭，直接显示休眠界面，不消耗任何资源
   if (!enableWidget) {
     return {
-      type: 'widget', backgroundColor: C.bg,
+      type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14],
       children: [
-        { type: 'stack', flex: 1, direction: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, children: [
-          { type: 'image', src: 'sf-symbol:server.rack', color: C.muted, width: 28, height: 28 },
-          { type: 'text', text: '服务器监控已休眠', font: { size: 13, weight: 'bold' }, textColor: C.subText }
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 0, children: [
+          { type: 'image', src: 'sf-symbol:server.rack', color: C.muted, width: 14, height: 14 },
+          { type: 'spacer', length: 6 },
+          { type: 'text', text: customName || host || 'Server Monitor', font: { size: 14, weight: 'heavy' }, textColor: C.muted, maxLines: 1 },
+          { type: 'spacer' },
+          { type: 'text', text: 'STANDBY', font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
+        ]},
+        { type: 'spacer', length: 8 },
+        { type: 'stack', flex: 1, backgroundColor: C.memBg, borderRadius: 8, alignItems: 'center', justifyContent: 'center', direction: 'column', gap: 6, children: [
+          { type: 'image', src: 'sf-symbol:moon.zzz.fill', color: C.mem, width: 22, height: 22 },
+          { type: 'text', text: '探针已休眠 · 资源已释放', font: { size: 11, weight: 'bold' }, textColor: C.mem }
         ]}
       ]
     };
   }
 
-  // 🛑 静默拦截：如果没有配置 IP，直接返回一个完全没有内容的空白背景块
-  if (!host) {
-    return { type: 'widget', backgroundColor: C.bg, children: [] };
-  }
+  if (!host) return { type: 'widget', backgroundColor: C.bg, children: [] };
 
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
@@ -61,7 +74,7 @@ export default async function (ctx) {
     return Math.round(b) + 'B';
   };
 
-  let d = { host, customName };
+  let d = { host, hostname: customName };
   let session = null;
 
   try {
@@ -73,14 +86,12 @@ export default async function (ctx) {
 
     const SEP = '<<SEP>>';
     const cmds = [
-      'hostname -s 2>/dev/null || hostname',
       'cat /proc/loadavg',
       'cat /proc/uptime',
       'head -1 /proc/stat',
       'free -b',
       'df -B1 / | tail -1',
       'nproc',
-      'uname -r',
       "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
       'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
       "awk '$3~/^(sd[a-z]|vd[a-z]|nvme[0-9]+n[0-9]+|mmcblk[0-9]+)$/{r+=$6;w+=$10}END{print r*512,w*512}' /proc/diskstats 2>/dev/null || echo '0 0'"
@@ -88,12 +99,11 @@ export default async function (ctx) {
     const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
     
     const p = stdout.split(SEP).map(s => s.trim());
-    d.hostname = customName || p[0] || 'server';
-    const la = (p[1] || '0 0 0').split(' ');
+    const la = (p[0] || '0 0 0').split(' ');
     d.load = [la[0], la[1], la[2]];
     
     let uptimeStr = "0秒";
-    const upSec = parseFloat((p[2] || '0').split(' ')[0]);
+    const upSec = parseFloat((p[1] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
       const y = Math.floor(upSec / 31536000), mo = Math.floor((upSec % 31536000) / 2592000), days = Math.floor((upSec % 2592000) / 86400);
       const h = Math.floor((upSec % 86400) / 3600), m = Math.floor((upSec % 3600) / 60), s = Math.floor(upSec % 60);
@@ -104,7 +114,7 @@ export default async function (ctx) {
     }
     d.uptimeStr = uptimeStr;
 
-    const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
+    const cpuNums = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
     const prevCpu = ctx.storage.getJSON('_cpu');
     let cpuPct = 0;
@@ -114,16 +124,16 @@ export default async function (ctx) {
     ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
     d.cpuPct = Math.max(0, Math.min(100, cpuPct));
 
-    const memLine = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
+    const memLine = (p[3] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
     const mm = memLine.split(/\s+/);
     d.memTotal = Number(mm[1]) || 1; d.memUsed = Number(mm[2]) || 0;
     d.memPct = Math.round((d.memUsed / d.memTotal) * 100);
 
-    const df = (p[5] || '').split(/\s+/);
+    const df = (p[4] || '').split(/\s+/);
     d.diskTotal = Number(df[1]) || 1; d.diskUsed = Number(df[2]) || 0;
-    d.diskPct = parseInt(df[4]) || 0; d.cores = parseInt(p[6]) || 1;
+    d.diskPct = parseInt(df[4]) || 0; d.cores = parseInt(p[5]) || 1;
 
-    const nn = (p[8] || '0 0').split(' '), netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
+    const nn = (p[6] || '0 0').split(' '), netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
     const prevNet = ctx.storage.getJSON('_net'), now = Date.now();
     d.rxRate = 0; d.txRate = 0;
     if (prevNet && prevNet.ts) {
@@ -133,7 +143,8 @@ export default async function (ctx) {
     ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
     d.netRx = netRx; d.netTx = netTx;
 
-    const tempRaw = parseInt(p[9]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
+    const tempRaw = parseInt(p[7]) || 0; 
+    d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
 
   } catch (e) {
     const errStr = String(e.message || e);
