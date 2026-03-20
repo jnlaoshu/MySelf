@@ -1,16 +1,17 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 智能索引单机版。配合 YAML 6节点配置，通过 iOS 桌面小组件的“参数(Parameter)”输入 1~6 动态挂载不同服务器。单台独享系统资源，完美规避 iOS 进程超时与并发冲突。
+ * ✨ 主要功能: 智能索引单机版。配合 YAML 6节点配置，直接读取 iOS 桌面小组件的“名称(Name)”提取 1~6 数字动态挂载对应服务器。单台独享系统资源，绝对稳定。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 08:30
+ * ⏱️ 更新时间: 2026.03.20 09:00 (名称智能提取版)
  * ==========================================
  */
 
 export default async function (ctx) {
-  // 🎯 核心魔法：读取桌面填写的 Parameter（不填则默认为 1）
-  let nodeIndex = parseInt(ctx.parameter) || 1;
-  if (nodeIndex < 1 || nodeIndex > 6) nodeIndex = 1;
+  // 🎯 核心魔法：智能读取 Egern 小组件配置里的 "名称(Name)"，只要里面包含 1~6 的数字，就自动挂载对应节点
+  const inputStr = String(ctx.parameter || ctx.name || '');
+  const match = inputStr.match(/[1-6]/);
+  let nodeIndex = match ? parseInt(match[0]) : 1;
 
   let host = '';
   let port = 22;
