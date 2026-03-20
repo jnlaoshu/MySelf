@@ -1,43 +1,22 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 智能索引单机版。配合 YAML 6节点配置，直接读取 iOS 桌面小组件的“名称(Name)”提取 1~6 数字动态挂载对应服务器。单台独享系统资源，绝对稳定。
+ * ✨ 主要功能: 基于 SSH 直连远端服务器，实时抓取底层硬件指标。极简纯净单机版，新增【全局启停开关】，关闭时小组件将停止抓取并进入静默休眠状态，彻底释放系统资源。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 09:00 (名称智能提取版)
+ * ⏱️ 更新时间: 2026.03.20 10:50
  * ==========================================
  */
 
 export default async function (ctx) {
-  // 🎯 核心魔法：智能读取 Egern 小组件配置里的 "名称(Name)"，只要里面包含 1~6 的数字，就自动挂载对应节点
-  const inputStr = String(ctx.parameter || ctx.name || '');
-  const match = inputStr.match(/[1-6]/);
-  let nodeIndex = match ? parseInt(match[0]) : 1;
-
-  let host = '';
-  let port = 22;
-  let username = 'root';
-  let password = '';
-  let privateKey = '';
-  let customName = '';
-
-  if (ctx.env) {
-    host = (ctx.env[`SSH${nodeIndex}_HOST`] || '').trim();
-    port = Number(ctx.env[`SSH${nodeIndex}_PORT`] || 22);
-    username = (ctx.env[`SSH${nodeIndex}_USER`] || 'root').trim();
-    password = ctx.env[`SSH${nodeIndex}_PWD`] || '';
-    privateKey = (ctx.env[`SSH${nodeIndex}_KEY`] || '').replace(/\\n/g, '\n');
-    customName = (ctx.env[`SSH${nodeIndex}_NAME`] || '').trim();
-
-    // 兼容回退逻辑：如果用户连节点 1 都没填，尝试读取旧版无序号环境变量
-    if (nodeIndex === 1 && !host) {
-      host = (ctx.env.SSH_HOST || ctx.env.host || '').trim();
-      port = Number(ctx.env.SSH_PORT || ctx.env.port || 22);
-      username = (ctx.env.SSH_USER || ctx.env.username || 'root').trim();
-      password = ctx.env.SSH_PWD || ctx.env.password || '';
-      privateKey = (ctx.env.SSH_KEY || ctx.env.privateKey || '').replace(/\\n/g, '\n');
-      customName = (ctx.env.SSH_NAME || '').trim();
-    }
-  }
+  // 🎯 新增：全局启停开关
+  const enableWidget = (ctx.env.ENABLE_SERVER_MONITOR || "true").trim() !== "false";
+  
+  const host = (ctx.env.SSH_HOST || ctx.env.host || "").trim();
+  const port = Number(ctx.env.SSH_PORT || ctx.env.port || 22);
+  const username = (ctx.env.SSH_USER || ctx.env.username || "root").trim();
+  const password = ctx.env.SSH_PWD || ctx.env.password || "";
+  const privateKey = (ctx.env.SSH_KEY || ctx.env.privateKey || "").replace(/\\n/g, '\n');
+  const customName = (ctx.env.SSH_NAME || "").trim();
 
   const C = {
     bg: { light: '#FFFFFF', dark: '#1C1C1E' },
@@ -56,7 +35,20 @@ export default async function (ctx) {
     netBg: { light: '#FCEAEF', dark: '#331A20' }, 
   };
 
-  // 🛑 静默拦截：如果没有获取到该节点的 IP，直接显示空板
+  // 🛑 休眠拦截：如果开关被关闭，直接显示休眠界面，不消耗任何资源
+  if (!enableWidget) {
+    return {
+      type: 'widget', backgroundColor: C.bg,
+      children: [
+        { type: 'stack', flex: 1, direction: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, children: [
+          { type: 'image', src: 'sf-symbol:server.rack', color: C.muted, width: 28, height: 28 },
+          { type: 'text', text: '服务器监控已休眠', font: { size: 13, weight: 'bold' }, textColor: C.subText }
+        ]}
+      ]
+    };
+  }
+
+  // 🛑 静默拦截：如果没有配置 IP，直接返回一个完全没有内容的空白背景块
   if (!host) {
     return { type: 'widget', backgroundColor: C.bg, children: [] };
   }
@@ -76,7 +68,7 @@ export default async function (ctx) {
     session = await ctx.ssh.connect({
       host, port, username,
       ...(privateKey ? { privateKey } : { password }),
-      timeout: 8000, 
+      timeout: 8000,
     });
 
     const SEP = '<<SEP>>';
@@ -103,76 +95,53 @@ export default async function (ctx) {
     let uptimeStr = "0秒";
     const upSec = parseFloat((p[2] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
-      const y = Math.floor(upSec / 31536000);
-      const mo = Math.floor((upSec % 31536000) / 2592000);
-      const days = Math.floor((upSec % 2592000) / 86400);
-      const h = Math.floor((upSec % 86400) / 3600);
-      const m = Math.floor((upSec % 3600) / 60);
-      const s = Math.floor(upSec % 60);
+      const y = Math.floor(upSec / 31536000), mo = Math.floor((upSec % 31536000) / 2592000), days = Math.floor((upSec % 2592000) / 86400);
+      const h = Math.floor((upSec % 86400) / 3600), m = Math.floor((upSec % 3600) / 60), s = Math.floor(upSec % 60);
       const parts = [];
-      if (y > 0) parts.push(`${y}年`);
-      if (mo > 0) parts.push(`${mo}月`);
-      if (days > 0) parts.push(`${days}天`);
-      if (h > 0) parts.push(`${h}时`);
-      if (m > 0) parts.push(`${m}分`);
-      if (s > 0) parts.push(`${s}秒`);
+      if (y > 0) parts.push(`${y}年`); if (mo > 0) parts.push(`${mo}月`); if (days > 0) parts.push(`${days}天`);
+      if (h > 0) parts.push(`${h}时`); if (m > 0) parts.push(`${m}分`); if (s > 0) parts.push(`${s}秒`);
       uptimeStr = parts.join(''); 
     }
     d.uptimeStr = uptimeStr;
 
     const cpuNums = (p[3] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
-    const cpuTotal = cpuNums.reduce((a, b) => a + b, 0);
-    const cpuIdle = cpuNums[3] || 0;
-    const cpuKey = `_cpu_n${nodeIndex}`;
-    const prevCpu = ctx.storage.getJSON(cpuKey);
+    const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
+    const prevCpu = ctx.storage.getJSON('_cpu');
     let cpuPct = 0;
     if (prevCpu && cpuTotal > prevCpu.t) {
       cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
     }
-    ctx.storage.setJSON(cpuKey, { t: cpuTotal, i: cpuIdle });
+    ctx.storage.setJSON('_cpu', { t: cpuTotal, i: cpuIdle });
     d.cpuPct = Math.max(0, Math.min(100, cpuPct));
 
     const memLine = (p[4] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
     const mm = memLine.split(/\s+/);
-    d.memTotal = Number(mm[1]) || 1; 
-    d.memUsed = Number(mm[2]) || 0;
+    d.memTotal = Number(mm[1]) || 1; d.memUsed = Number(mm[2]) || 0;
     d.memPct = Math.round((d.memUsed / d.memTotal) * 100);
 
     const df = (p[5] || '').split(/\s+/);
-    d.diskTotal = Number(df[1]) || 1; 
-    d.diskUsed = Number(df[2]) || 0;
-    d.diskPct = parseInt(df[4]) || 0;
-    d.cores = parseInt(p[6]) || 1;
+    d.diskTotal = Number(df[1]) || 1; d.diskUsed = Number(df[2]) || 0;
+    d.diskPct = parseInt(df[4]) || 0; d.cores = parseInt(p[6]) || 1;
 
-    const nn = (p[8] || '0 0').split(' ');
-    const netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
-    const netKey = `_net_n${nodeIndex}`;
-    const prevNet = ctx.storage.getJSON(netKey);
-    const now = Date.now();
+    const nn = (p[8] || '0 0').split(' '), netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
+    const prevNet = ctx.storage.getJSON('_net'), now = Date.now();
     d.rxRate = 0; d.txRate = 0;
     if (prevNet && prevNet.ts) {
       const el = (now - prevNet.ts) / 1000;
-      if (el > 0 && el < 3600) {
-        d.rxRate = Math.max(0, (netRx - prevNet.rx) / el);
-        d.txRate = Math.max(0, (netTx - prevNet.tx) / el);
-      }
+      if (el > 0 && el < 3600) { d.rxRate = Math.max(0, (netRx - prevNet.rx) / el); d.txRate = Math.max(0, (netTx - prevNet.tx) / el); }
     }
-    ctx.storage.setJSON(netKey, { rx: netRx, tx: netTx, ts: now });
+    ctx.storage.setJSON('_net', { rx: netRx, tx: netTx, ts: now });
     d.netRx = netRx; d.netTx = netTx;
 
-    const tempRaw = parseInt(p[9]) || 0;
-    d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
+    const tempRaw = parseInt(p[9]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
 
   } catch (e) {
     const errStr = String(e.message || e);
     d.error = errStr.includes('timed out') ? '请求超时' : 
-              errStr.includes('auth') ? '认证失败' : 
-              errStr.includes('connect') ? '拒绝连接' : '连接异常';
-    d.hostname = customName || host;
+              errStr.includes('auth') ? '认证失败(密/钥错)' : 
+              errStr.includes('connect') ? '拒绝连接/网络不通' : '连接异常';
   } finally {
-    if (session) {
-      try { await session.close(); } catch (err) {}
-    }
+    if (session) { try { await session.close(); } catch (err) {} }
   }
 
   const pctColor = (pct, lo, hi) => pct >= hi ? C.temp : pct >= lo ? C.disk : C.cpu;
@@ -192,25 +161,17 @@ export default async function (ctx) {
 
   const bar = (pct, color) => ({
     type: 'stack', direction: 'row', height: 4, borderRadius: 2, backgroundColor: C.barBg,
-    children: pct > 0
-      ? [ { type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : []), ]
-      : [{ type: 'spacer' }],
+    children: pct > 0 ? [ { type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : []), ] : [{ type: 'spacer' }],
   });
 
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 },
-        { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
-        { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
-      ]},
-      { type: 'spacer' }, 
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
-        bar(pct, color),
-        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
-      ]}
+        { type: 'image', src: `sf-symbol:${icon}`, color: color, width: 12, height: 12 }, { type: 'text', text: title, font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'spacer' }, { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color }
+      ]}, { type: 'spacer' }, 
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [ bar(pct, color), { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 } ]}
     ]
   });
 
@@ -218,42 +179,22 @@ export default async function (ctx) {
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
-        { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
-        { type: 'spacer' },
-        { type: 'text', text: d.host, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
-      ]},
-      { type: 'spacer' }, 
+        { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 }, { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
+        { type: 'spacer' }, { type: 'text', text: host, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 }
+      ]}, { type: 'spacer' }, 
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
-        { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net },
-          { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem }
-        ]},
-        { type: 'stack', direction: 'row', children: [
-          { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText },
-          { type: 'spacer' },
-          { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }
-        ]}
+        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem } ]},
+        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText } ]}
       ]}
     ]
   });
 
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0, children: [
-      { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
-      { type: 'spacer', length: 6 },
-      { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
-      { type: 'spacer' },
-      ...(d.temp > 0 ? [
-        { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 },
-        { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) },
-        { type: 'spacer', length: 6 }
-      ] : []),
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-        { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
-        { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 }
-      ]}
+      { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 }, { type: 'spacer', length: 6 },
+      { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 }, { type: 'spacer' },
+      ...(d.temp > 0 ? [ { type: 'image', src: 'sf-symbol:thermometer.medium', color: pctColor(d.temp, 60, 80), width: 11, height: 11 }, { type: 'text', text: `${d.temp}°`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: pctColor(d.temp, 60, 80) }, { type: 'spacer', length: 6 } ] : []),
+      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [ { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 }, { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 } ]}
     ],
   });
 
@@ -261,17 +202,9 @@ export default async function (ctx) {
     return {
       type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14], 
       children: [
-        header(),
-        { type: 'spacer', length: 6 }, 
-        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
-          statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
-          statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg)
-        ]},
-        { type: 'spacer', length: 4 }, 
-        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [
-          statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg),
-          netCard(C.netBg)
-        ]}
+        header(), { type: 'spacer', length: 6 }, 
+        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) ]}, { type: 'spacer', length: 4 }, 
+        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), netCard(C.netBg) ]}
       ]
     };
   }
@@ -279,13 +212,9 @@ export default async function (ctx) {
   if (ctx.widgetFamily === 'systemSmall') {
     return {
       type: 'widget', backgroundColor: C.bg, padding: 12, gap: 6,
-      children: [
-        header(),
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg),
-        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem, C.memBg),
-      ],
+      children: [ header(), statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem, C.memBg) ],
     };
   }
 
-  return { type: 'widget', backgroundColor: C.bg, padding: 16, children: [{ type: 'text', text: '请使用 Medium 组件。', textColor: C.text }] };
+  return { type: 'widget', backgroundColor: C.bg, padding: 16, children: [{ type: 'text', text: '请使用 Medium 或 Small 组件。', textColor: C.text }] };
 }
