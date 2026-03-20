@@ -1,7 +1,7 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时 (时光倒数)
- * ✨ 主要功能: 智能聚合与排序法定、民俗、国际节日及专属纪念日；内置成都中小学春秋假动态算法与目标事件高亮置顶机制；原生集成 A 股期指交割与期权行权日推算引擎，支持跨月自动接力及交割日当天触发红色警示级别置顶；具备智能屏蔽次年重复倒数功能，深度适配系统深浅色模式。
+ * ✨ 主要功能: 智能聚合与排序法定、民俗、国际节日及专属纪念日；内置成都中小学春秋假动态算法与目标事件高亮置顶机制；原生集成 A 股期指交割与期权行权日推算引擎，支持跨月自动接力及交割日当天触发红色警示级别置顶；新增临近两日高亮警报功能，深度适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
  * ⏱️ 更新时间: 2026.03.21 07:18
  * ==========================================
@@ -31,19 +31,18 @@ export default async function(ctx) {
       const firstDay = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
       let diff = targetDayOfWeek - firstDay;
       if (diff < 0) diff += 7;
-      const targetDate = 1 + diff + (nth - 1) * 7;
-      return Date.UTC(y, monthIndex, targetDate);
+      return Date.UTC(y, monthIndex, 1 + diff + (nth - 1) * 7);
     };
 
     let futuresMs = getFinanceDate(Y, M - 1, 3, 5);
     if (todayMs > futuresMs) futuresMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 3, 5);
     const futuresDate = new Date(futuresMs);
-    customDays.push({ name: "期指交割", date: `${futuresDate.getUTCMonth() + 1}/${futuresDate.getUTCDate()}` });
+    customDays.push({ name: "交割", date: `${futuresDate.getUTCMonth() + 1}/${futuresDate.getUTCDate()}` });
 
     let optionsMs = getFinanceDate(Y, M - 1, 4, 3);
     if (todayMs > optionsMs) optionsMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 4, 3);
     const optionsDate = new Date(optionsMs);
-    customDays.push({ name: "期权行权", date: `${optionsDate.getUTCMonth() + 1}/${optionsDate.getUTCDate()}` });
+    customDays.push({ name: "行权", date: `${optionsDate.getUTCMonth() + 1}/${optionsDate.getUTCDate()}` });
   }
 
   const C = {
@@ -116,7 +115,7 @@ export default async function(ctx) {
         
         if (diff <= 0) {
           if (diff > -(duration || 1)) {
-            if (name === "期指交割" || name === "期权行权") {
+            if (name === "交割" || name === "行权") {
               if (!todayFinance.includes(name)) todayFinance.push(name);
             } else {
               if (!todayFests.includes(name)) todayFests.push(name);
@@ -153,14 +152,14 @@ export default async function(ctx) {
   };
 
   const gridRows = [];
-  const pushRow = (icon, color, title, textStr, isFirst) => {
+  const pushRow = (icon, color, title, textStr, isFirst, txtColor = C.sub) => {
       gridRows.push({
           type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
               { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
                   { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : C.transparent, width: 13, height: 13 },
                   { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : C.transparent }
               ]},
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: C.sub, maxLines: 1, flex: 1 }
+              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: txtColor, maxLines: 1, flex: 1 }
           ]
       });
   };
@@ -175,7 +174,12 @@ export default async function(ctx) {
   if (tIntl) pushRow("globe.americas.fill", C.blue, "国际", tIntl, true);
 
   const tExc = formatStr("exclusive", 6);
-  if (tExc) getExclusiveLines(tExc).forEach((line, idx) => pushRow("gift.fill", C.teal, "专属", line, idx === 0));
+  if (tExc) {
+      getExclusiveLines(tExc).forEach((line, idx) => {
+          const isAlert = /(交割|行权) [1-2]天/.test(line);
+          pushRow("gift.fill", C.teal, "专属", line, idx === 0, isAlert ? C.red : C.sub);
+      });
+  }
 
   const visualLines = gridRows.length;
   
