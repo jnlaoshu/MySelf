@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：多节点并发抓取，采用 5s 黄金超时时间与底层连接强制回收机制，自动无缝变身紧凑列表模式。
+ * ✨ 主要功能: 基于 SSH 直连的智能集群监控探针。支持 1-6 节点自动识别：多节点并发抓取，采用 8s 宽裕超时与底层防崩溃护盾，自动无缝变身紧凑列表模式并直显真实报错。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 08:00 (5s黄金并发版)
+ * ⏱️ 更新时间: 2026.03.20 08:15 (弱网自适应版)
  * ==========================================
  */
 
@@ -52,7 +52,7 @@ export default async function (ctx) {
         });
       }
     }
-    // 兼容旧版单参数格式
+    // 兼容单参数
     if (servers.length === 0 && (ctx.env.SSH_HOST || ctx.env.host)) {
       servers.push({
         host: (ctx.env.SSH_HOST || ctx.env.host).trim(),
@@ -76,11 +76,11 @@ export default async function (ctx) {
     let d = { host: srv.host, customName: srv.name };
     let session = null;
     try {
-      // 🔥 放宽到 5000 毫秒（5秒）：给 5G/4G 网络充足的握手时间，且并发模式下总耗时仍受控在 5 秒内！
+      // 🔥 恢复到 8000 毫秒（8秒）：因为底层的 finally 已经保证了不会白屏，现在可以给 4G 网络充足的时间建立连接
       session = await ctx.ssh.connect({
         host: srv.host, port: srv.port, username: srv.username,
         ...(srv.privateKey ? { privateKey: srv.privateKey } : { password: srv.password }),
-        timeout: 5000, 
+        timeout: 8000, 
       });
 
       const SEP = '<<SEP>>';
@@ -168,7 +168,11 @@ export default async function (ctx) {
       d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
 
     } catch (e) {
-      d.error = String(e.message || e);
+      // 获取真实报错原因，并精简显示
+      const errStr = String(e.message || e);
+      d.error = errStr.includes('timed out') ? '请求超时' : 
+                errStr.includes('auth') ? '认证失败(密/钥误)' : 
+                errStr.includes('connect') ? '拒绝连接/网络不通' : '连接异常';
       d.hostname = srv.name || srv.host;
     } finally {
       if (session) {
@@ -178,11 +182,10 @@ export default async function (ctx) {
     return d;
   };
 
-  // 🚀 并发请求所有服务器
   const results = await Promise.all(servers.map(fetchServer));
 
   // ==========================================
-  // 模式 A: 只有 1 台机器 -> 渲染完美的四宫格详情卡片
+  // 模式 A: 单台详情卡片
   // ==========================================
   if (results.length === 1) {
     const d = results[0];
@@ -193,7 +196,7 @@ export default async function (ctx) {
         children: [
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 8, children: [
             { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 22, height: 22 },
-            { type: 'text', text: '连接断开', font: { size: 16, weight: 'heavy' }, textColor: C.text },
+            { type: 'text', text: '连接失败', font: { size: 16, weight: 'heavy' }, textColor: C.text },
           ]},
           { type: 'text', text: d.error, font: { size: 11, family: 'Menlo' }, textColor: C.muted, maxLines: 3 },
         ],
@@ -286,7 +289,7 @@ export default async function (ctx) {
   }
 
   // ==========================================
-  // 模式 B: 多台机器 -> 无缝渲染集群紧凑列表模式
+  // 模式 B: 集群紧凑列表模式
   // ==========================================
   const headerRow = {
     type: 'stack', direction: 'row', alignItems: 'center', padding: [0, 0, 4, 0], children: [
@@ -299,12 +302,13 @@ export default async function (ctx) {
   };
 
   const listRows = results.map(d => {
+    // 🎯 直显真实报错
     if (d.error) {
       return {
         type: 'stack', direction: 'row', alignItems: 'center', height: 22, gap: 6, children: [
           { type: 'text', text: d.hostname, font: { size: 11, weight: 'bold' }, textColor: C.muted, flex: 1, maxLines: 1 },
           { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 11, height: 11 },
-          { type: 'text', text: '节点离线或超时', font: { size: 10 }, textColor: C.temp, maxLines: 1 }
+          { type: 'text', text: d.error, font: { size: 10 }, textColor: C.temp, maxLines: 1 }
         ]
       };
     }
