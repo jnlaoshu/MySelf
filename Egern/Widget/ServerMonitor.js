@@ -1,19 +1,32 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染 CPU、内存、磁盘和网络流量等核心硬件指标。极简单机版，搭载高鲁棒性的私钥智能解析器与参数自动补全引擎。
+ * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染核心硬件指标。极简单机版，搭载严格 64 字符换行的标准 PEM 私钥重构引擎，及原生透明的底层错误捕获机制。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.20 17:30
+ * ⏱️ 更新时间: 2026.03.20 17:45
  * ==========================================
  */
 
 export default async function (ctx) {
+  // 🎯 终极私钥解析器：严格遵循标准 PEM 格式（每 64 字符换行）重构秘钥
   const parsePrivateKey = (key) => {
     if (!key) return "";
     let k = String(key).trim().replace(/\\n/g, '\n').replace(/\\r/g, '');
-    if (k.includes("-----BEGIN") && k.split('\n').length <= 2) {
-      const match = k.match(/(-----BEGIN [^-]+-----)(.*?)(-----END [^-]+-----)/);
-      if (match) k = `${match[1]}\n${match[2].trim().replace(/\s+/g, '\n')}\n${match[3]}`;
+    
+    // 如果没有换行符，且包含 BEGIN 和 END，说明被 YAML 彻底压扁了
+    if (!k.includes('\n') && k.includes('-----BEGIN') && k.includes('-----END')) {
+      const headerMatch = k.match(/-----BEGIN [A-Z ]+-----/);
+      const footerMatch = k.match(/-----END [A-Z ]+-----/);
+      
+      if (headerMatch && footerMatch) {
+        const header = headerMatch[0];
+        const footer = footerMatch[0];
+        // 提取中间的加密主体，并剔除所有空格
+        let body = k.substring(k.indexOf(header) + header.length, k.indexOf(footer)).replace(/\s+/g, '');
+        // 严格按照 PEM 规范，每 64 个字符切分换行
+        let bodyLines = body.match(/.{1,64}/g)?.join('\n') || body;
+        k = `${header}\n${bodyLines}\n${footer}\n`;
+      }
     }
     return k;
   };
@@ -126,9 +139,10 @@ export default async function (ctx) {
 
   } catch (e) {
     const errStr = String(e.message || e);
-    d.error = errStr.includes('timed out') ? '请求超时' : 
-              errStr.includes('auth') ? '认证失败(密/钥错)' : 
-              errStr.includes('connect') ? '拒绝连接/网络不通' : '连接异常';
+    // 🚀 解除屏蔽：将真实原声系统报错打印在屏幕上
+    if (errStr.includes('timed out')) d.error = '请求超时 (Timed Out)';
+    else if (errStr.toLowerCase().includes('connect')) d.error = '拒绝连接 (Connection Refused)';
+    else d.error = errStr; // 把其他所有错误（包括解析错误、算法不支持等）原样吐出！
   } finally {
     if (session) { try { await session.close(); } catch (err) {} }
   }
@@ -143,7 +157,8 @@ export default async function (ctx) {
           { type: 'image', src: 'sf-symbol:exclamationmark.triangle.fill', color: C.temp, width: 22, height: 22 },
           { type: 'text', text: '连接断开', font: { size: 16, weight: 'heavy' }, textColor: C.text },
         ]},
-        { type: 'text', text: d.error, font: { size: 11, family: 'Menlo' }, textColor: C.muted, maxLines: 3 },
+        // 使用 Menlo 等宽字体完整展示真实报错，支持 4 行显示
+        { type: 'text', text: d.error, font: { size: 10, family: 'Menlo' }, textColor: C.muted, maxLines: 4 },
       ],
     };
   }
