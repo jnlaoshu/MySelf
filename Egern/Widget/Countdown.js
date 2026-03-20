@@ -1,24 +1,50 @@
 /**
  * ==========================================
- * 📌 代码名称: ⏳ 节假日倒计时（时光倒数）
- * ✨ 主要功能: 自动提取并排序展示未来法定、民俗、国际节日及专属纪念日；内置成都春/秋假动态推算与 ≤200 天高亮置顶机制；节假日当天自动聚合至标题栏展示，并智能屏蔽该节日明年的重复倒数；原生适配深浅色模式。
+ * 📌 代码名称: ⏳ 节假日倒计时 (时光倒数)
+ * ✨ 主要功能: 智能聚合与排序法定、民俗、国际节日及专属纪念日；内置成都中小学春秋假动态算法与目标事件高亮置顶机制；原生集成 A 股期指交割与期权行权日推算引擎，支持跨月自动接力及交割日当天触发红色警示级别置顶；具备智能屏蔽次年重复倒数功能，深度适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.19 22:00
+ * ⏱️ 更新时间: 2026.03.21 07:18
  * ==========================================
  */
 
 export default async function(ctx) {
   const env = ctx.env;
   const showSchoolHolidays = (env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
+  const showFinanceDates = (env.SHOW_FINANCE_DATES || "true").trim() !== "false";
   const pinnedHoliday = env.PINNED_HOLIDAY !== undefined ? env.PINNED_HOLIDAY.trim() : "高考";
   const springDateStr = (env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (env.AUTUMN_BREAK_DATE || "").trim();
 
-  const customDays = [1, 2, 3, 4, 5, 6].map(i => {
+  let customDays = [1, 2, 3, 4, 5, 6].map(i => {
     const n = env[i === 1 ? 'EXCLUSIVE_NAME_1' : `EXCLUSIVE_NAME_${i}`] ?? (i === 1 ? env.EXCLUSIVE_NAME ?? "我的生日" : "");
     const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "11/10" : "");
     return { name: n?.trim(), date: d?.trim() };
   }).filter(item => item.name && item.date?.includes('/'));
+
+  const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
+  const Y = now.getFullYear(), M = now.getMonth() + 1, D = now.getDate();
+  const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
+  const todayMs = Date.UTC(Y, M - 1, D);
+
+  if (showFinanceDates) {
+    const getFinanceDate = (y, monthIndex, nth, targetDayOfWeek) => {
+      const firstDay = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
+      let diff = targetDayOfWeek - firstDay;
+      if (diff < 0) diff += 7;
+      const targetDate = 1 + diff + (nth - 1) * 7;
+      return Date.UTC(y, monthIndex, targetDate);
+    };
+
+    let futuresMs = getFinanceDate(Y, M - 1, 3, 5);
+    if (todayMs > futuresMs) futuresMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 3, 5);
+    const futuresDate = new Date(futuresMs);
+    customDays.push({ name: "期指交割", date: `${futuresDate.getUTCMonth() + 1}/${futuresDate.getUTCDate()}` });
+
+    let optionsMs = getFinanceDate(Y, M - 1, 4, 3);
+    if (todayMs > optionsMs) optionsMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 4, 3);
+    const optionsDate = new Date(optionsMs);
+    customDays.push({ name: "期权行权", date: `${optionsDate.getUTCMonth() + 1}/${optionsDate.getUTCDate()}` });
+  }
 
   const C = {
     bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
@@ -30,11 +56,6 @@ export default async function(ctx) {
     teal: { light: '#628C7B', dark: '#73A491' },
     transparent: '#00000000'
   };
-
-  const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
-  const Y = now.getFullYear(), M = now.getMonth() + 1, D = now.getDate();
-  const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
-  const todayMs = Date.UTC(Y, M - 1, D);
 
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
@@ -56,6 +77,7 @@ export default async function(ctx) {
     const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
     
     let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
+    
     if (showSchoolHolidays) {
       legal.push(["春假", getCustomDate(y, springDateStr, () => {
           const qm = Lunar.term(y, 7);
@@ -82,6 +104,7 @@ export default async function(ctx) {
 
   const result = { legal: [], folk: [], intl: [], exclusive: [] };
   const todayFests = [];
+  const todayFinance = [];
   let stickyFest = "", minPinnedDiff = Infinity; 
   
   [getFests(Y), getFests(Y + 1)].forEach(f => {
@@ -92,15 +115,21 @@ export default async function(ctx) {
         const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
         
         if (diff <= 0) {
-          if (diff > -(duration || 1) && !todayFests.includes(name)) todayFests.push(name);
+          if (diff > -(duration || 1)) {
+            if (name === "期指交割" || name === "期权行权") {
+              if (!todayFinance.includes(name)) todayFinance.push(name);
+            } else {
+              if (!todayFests.includes(name)) todayFests.push(name);
+            }
+          }
           return;
         }
         
         if (pinnedHoliday && name === pinnedHoliday && diff <= 200 && diff < minPinnedDiff) { 
             minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
         }
-        // 🛑 核心防重逻辑：如果该节日已在今日列表中，彻底屏蔽其明年的倒数！
-        if (!result[cat].some(i => i.name === name) && !todayFests.includes(name)) {
+        
+        if (!result[cat].some(i => i.name === name) && !todayFests.includes(name) && !todayFinance.includes(name)) {
             result[cat].push({ name, diff });
         }
       });
@@ -149,8 +178,10 @@ export default async function(ctx) {
   if (tExc) getExclusiveLines(tExc).forEach((line, idx) => pushRow("gift.fill", C.teal, "专属", line, idx === 0));
 
   const visualLines = gridRows.length;
+  
   const topAddons = [];
   if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('·')}`);
+  if (todayFinance.length > 0) topAddons.push(`🚨 ${todayFinance.join('·')}`);
   if (stickyFest) topAddons.push(`🔝 ${stickyFest}`);
 
   return {
