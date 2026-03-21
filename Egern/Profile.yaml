@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.03.22 23:45
+# ⏱️ 更新时间: 2026.03.22 07:36
 # ==========================================
 
 ipv6: false
@@ -376,17 +376,6 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
       policy: WeChat
 
-  # 国内音频直连
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/KuGou/KuGou.list
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/KuwoMusic/KuwoMusic.list
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Ximalaya/Ximalaya.list
-      policy: DIRECT
-
   # 国内兜底
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
@@ -410,7 +399,7 @@ mitm:
 
 # 模块配置
 modules:
-  - name: 桌面小组件合集
+  - name: 常用小组件
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
     enabled: true
   - name: Sub-Store
