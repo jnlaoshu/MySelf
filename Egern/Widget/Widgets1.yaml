@@ -12,9 +12,6 @@ auto_update:
   interval: 43200
 
 env_schema:
-  # ══════════════════════════════════════════
-  # 🗓️ 时光倒数
-  # ══════════════════════════════════════════
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称（如：我的生日、结婚纪念日）"
@@ -80,24 +77,16 @@ env_schema:
       - "true"
       - "false"
     default_value: "true"
-
-  # ══════════════════════════════════════════
-  # ⛽ 全国油价
-  # ══════════════════════════════════════════
   GAS_REGION:
     name: 📍 油价查询地区
     description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
     default_value: "sichuan/chengdu"
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 1
-  # ══════════════════════════════════════════
   SSH_NAME_1:
     name: 🏷️ 服务器 1 显示名称
     default_value: "Server-1"
   SSH_HOST_1:
     name: 🌐 服务器 1 IP / 域名
-    description: "必填，留空则跳过该台"
     default_value: ""
   SSH_PORT_1:
     name: 🔌 服务器 1 端口
@@ -107,22 +96,16 @@ env_schema:
     default_value: "root"
   SSH_PWD_1:
     name: 🔐 服务器 1 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_1:
     name: 🔑 服务器 1 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 2
-  # ══════════════════════════════════════════
   SSH_NAME_2:
     name: 🏷️ 服务器 2 显示名称
     default_value: "Server-2"
   SSH_HOST_2:
     name: 🌐 服务器 2 IP / 域名
-    description: "留空则跳过该台"
     default_value: ""
   SSH_PORT_2:
     name: 🔌 服务器 2 端口
@@ -132,22 +115,16 @@ env_schema:
     default_value: "root"
   SSH_PWD_2:
     name: 🔐 服务器 2 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_2:
     name: 🔑 服务器 2 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 3
-  # ══════════════════════════════════════════
   SSH_NAME_3:
     name: 🏷️ 服务器 3 显示名称
     default_value: "Server-3"
   SSH_HOST_3:
     name: 🌐 服务器 3 IP / 域名
-    description: "留空则跳过该台"
     default_value: ""
   SSH_PORT_3:
     name: 🔌 服务器 3 端口
@@ -157,22 +134,16 @@ env_schema:
     default_value: "root"
   SSH_PWD_3:
     name: 🔐 服务器 3 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_3:
     name: 🔑 服务器 3 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 4
-  # ══════════════════════════════════════════
   SSH_NAME_4:
     name: 🏷️ 服务器 4 显示名称
     default_value: "Server-4"
   SSH_HOST_4:
     name: 🌐 服务器 4 IP / 域名
-    description: "留空则跳过该台"
     default_value: ""
   SSH_PORT_4:
     name: 🔌 服务器 4 端口
@@ -182,22 +153,16 @@ env_schema:
     default_value: "root"
   SSH_PWD_4:
     name: 🔐 服务器 4 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_4:
     name: 🔑 服务器 4 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 5
-  # ══════════════════════════════════════════
   SSH_NAME_5:
     name: 🏷️ 服务器 5 显示名称
     default_value: "Server-5"
   SSH_HOST_5:
     name: 🌐 服务器 5 IP / 域名
-    description: "留空则跳过该台"
     default_value: ""
   SSH_PORT_5:
     name: 🔌 服务器 5 端口
@@ -207,22 +172,16 @@ env_schema:
     default_value: "root"
   SSH_PWD_5:
     name: 🔐 服务器 5 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_5:
     name: 🔑 服务器 5 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
-  # ══════════════════════════════════════════
-  # 🖥️ 服务器监控 — 服务器 6
-  # ══════════════════════════════════════════
   SSH_NAME_6:
     name: 🏷️ 服务器 6 显示名称
     default_value: "Server-6"
   SSH_HOST_6:
     name: 🌐 服务器 6 IP / 域名
-    description: "留空则跳过该台"
     default_value: ""
   SSH_PORT_6:
     name: 🔌 服务器 6 端口
@@ -232,11 +191,9 @@ env_schema:
     default_value: "root"
   SSH_PWD_6:
     name: 🔐 服务器 6 密码
-    description: "与私钥二选一，优先使用私钥"
     default_value: ""
   SSH_KEY_6:
     name: 🔑 服务器 6 私钥
-    description: "可压缩为一行粘贴，脚本会自动重构 PEM 格式"
     default_value: ""
 
 scriptings:
@@ -254,7 +211,7 @@ scriptings:
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
   - generic:
       name: 服务器监控
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor1.js
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
 widgets:
   - name: 岁时黄历
@@ -265,9 +222,5 @@ widgets:
     script_name: 网络信息
   - name: 全国油价
     script_name: 全国油价
-  - name: 服务器监控（全部）
-    script_name: 服务器监控
-  - name: 服务器监控（前3台）
-    script_name: 服务器监控
-  - name: 服务器监控（第1台）
+  - name: 服务器监控
     script_name: 服务器监控
