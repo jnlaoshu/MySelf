@@ -267,13 +267,18 @@ rules:
       match: ntp.org
       policy: DIRECT
   - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+      policy: DIRECT
+
+  # 3. AIGC 与 AI 服务代理分流
+  - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
       policy: Bing
 
-  # 3. 国际流媒体代理分流
+  # 4. 国际流媒体代理分流
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Disney/Disney.list
       policy: Disney
@@ -296,7 +301,7 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       policy: YouTube
 
-  # 4. 生产力与社交平台代理分流
+  # 5. 生产力与社交平台代理分流
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
       policy: GitHub
@@ -319,7 +324,7 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
       policy: WeChat
 
-  # 5. 国内音频与播客服务独立直连
+  # 6. 国内音频与播客服务独立直连
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/KuGou/KuGou.list
       policy: DIRECT
@@ -330,7 +335,7 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Ximalaya/Ximalaya.list
       policy: DIRECT
 
-  # 6. 国内宽泛直连兜底 (规避国内流量绕行节点)
+  # 7. 国内宽泛直连兜底 (规避国内流量绕行节点)
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       policy: DIRECT
@@ -342,7 +347,7 @@ rules:
       policy: DIRECT
       no_resolve: true
 
-  # 7. 全局最终兜底
+  # 8. 全局最终兜底
   - default:
       policy: 自选策略
 
