@@ -267,10 +267,7 @@ widgets:
     script_name: 全国油价
   - name: 服务器监控（全部）
     script_name: 服务器监控
-    family: systemLarge
   - name: 服务器监控（前3台）
     script_name: 服务器监控
-    family: systemMedium
   - name: 服务器监控（第1台）
     script_name: 服务器监控
-    family: systemSmall
