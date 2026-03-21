@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测面板
- * ✨ 主要功能: 实时抓取指定省市各标号汽柴油价格及调价趋势；内置历法推算并精准倒数下轮油价调整窗口；基于 Flex 等宽呈现绝对等比例四宫格布局；支持点击唤起哈啰出行 App；原生适配系统深浅色模式。
+ * ✨ 主要功能: 实时抓取指定省市汽柴油价格；内置历法精准倒数下轮油价调整窗口；基于 Flex 呈现等比例四宫格布局；支持点击唤起哈啰出行；深度结合“第8/9个工作日”法则，距调价 ≤4 天智能切换为下轮趋势预测，>4 天则锁定为本轮回顾；原生适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.18 10:30
+ * ⏱️ 更新时间: 2026.03.21 20:48
  * ==========================================
  */
 
@@ -36,16 +36,19 @@ export default async function (ctx) {
 
   const getNextAdjust = () => {
     const nextDate = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59) > now);
-    if (!nextDate) return { dateStr: "待更新", isUrgent: false, hasCountdown: false };
+    if (!nextDate) return { dateStr: "待更新", isUrgent: false, hasCountdown: false, totalDays: 99 };
     
     const target = new Date(Y, nextDate[0] - 1, nextDate[1], 23, 59, 59);
     const totalHours = Math.floor((target - now) / 3600000);
+    const totalDays = Math.floor(totalHours / 24);
+    
     return { 
         dateStr: `${P(nextDate[0])}.${P(nextDate[1])} 24:00`, 
-        days: Math.floor(totalHours / 24), 
+        days: totalDays, 
         hours: totalHours % 24, 
         isUrgent: totalHours < 72, 
-        hasCountdown: true 
+        hasCountdown: true,
+        totalDays: totalDays 
     };
   };
 
@@ -54,6 +57,7 @@ export default async function (ctx) {
 
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "未知";
+  let trendLabel = "调价趋势: ";
   let trendInfo = "暂无数据";
   let trendColor = C.sub; 
 
@@ -79,12 +83,19 @@ export default async function (ctx) {
       
       const isUp = priceText.includes("上调");
       const isDown = priceText.includes("下调");
-      trendColor = isUp ? C.red : (isDown ? C.teal : C.muted);
       
       const amounts = (priceText.match(/[\d\.]+\s*元\/升/g) || []).map(p => p.match(/[\d\.]+/)[0]);
       const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
       
       trendInfo = `${adjustDate}, ${isUp ? "↑" : (isDown ? "↓" : "-")} ${amountStr}`.trim();
+
+      if (nextAdjust.totalDays <= 4) {
+          trendLabel = "下轮预测: ";
+          trendColor = isUp ? C.red : (isDown ? C.teal : C.muted);
+      } else {
+          trendLabel = "本轮调价: ";
+          trendColor = C.muted;
+      }
     }
   } catch (e) {}
 
@@ -140,7 +151,7 @@ export default async function (ctx) {
           ]},
           { type: "spacer" },
           { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
-              { type: "text", text: "本轮调价: ", font: { size: 11, weight: 'medium' }, textColor: C.muted },
+              { type: "text", text: trendLabel, font: { size: 11, weight: 'medium' }, textColor: C.muted },
               { type: "text", text: trendInfo, font: { size: 11, weight: "bold" }, textColor: trendColor, lineLimit: 1, minScale: 0.7 }
           ]}
         ]
