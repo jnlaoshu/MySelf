@@ -1,31 +1,39 @@
 /**
  * ==========================================
  * 📌 代码名称: ⏳ 节假日倒计时 (时光倒数)
- * ✨ 主要功能: 智能聚合与排序法定、民俗、国际节日及专属纪念日；内置成都中小学春秋假动态算法与目标事件高亮置顶机制；原生集成 A 股期指交割与期权行权日推算引擎，支持跨月自动接力及交割日当天触发红色警示级别置顶；新增临近两日高亮警报功能，深度适配系统深浅色模式。
+ * ✨ 主要功能: 智能聚合与排序法定、民俗、国际节日及专属纪念日；内置成都中小学春秋假动态算法；支持逗号分隔多节日同时置顶高亮（倒数 ≤200 天触发）；原生集成 A 股期指交割（每月第3个周五）与期权行权日（每月第4个周三）推算引擎，支持跨月自动接力，当天触发红色警示置顶；今日节日自动切换暖色背景渐变；今日多节日最多展示 2 个并省略；专属日期严格 Number 转换解析；深度适配系统深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.21 07:18
+ * ⏱️ 更新时间: 2026.03.22 10:50
  * ==========================================
  */
 
 export default async function(ctx) {
   const env = ctx.env;
   const showSchoolHolidays = (env.SHOW_SCHOOL_HOLIDAYS || "true").trim() !== "false";
-  const showFinanceDates = (env.SHOW_FINANCE_DATES || "true").trim() !== "false";
-  const pinnedHoliday = env.PINNED_HOLIDAY !== undefined ? env.PINNED_HOLIDAY.trim() : "高考";
+  const showFinanceDates   = (env.SHOW_FINANCE_DATES   || "true").trim() !== "false";
+
+  // 置顶支持多个：逗号分隔，如 "高考,中秋节"
+  const pinnedHolidays = env.PINNED_HOLIDAY !== undefined
+    ? env.PINNED_HOLIDAY.split(',').map(s => s.trim()).filter(Boolean)
+    : ["高考"];
+
   const springDateStr = (env.SPRING_BREAK_DATE || "").trim();
   const autumnDateStr = (env.AUTUMN_BREAK_DATE || "").trim();
 
+  // 专属纪念日读取
   let customDays = [1, 2, 3, 4, 5, 6].map(i => {
     const n = env[i === 1 ? 'EXCLUSIVE_NAME_1' : `EXCLUSIVE_NAME_${i}`] ?? (i === 1 ? env.EXCLUSIVE_NAME ?? "我的生日" : "");
     const d = env[i === 1 ? 'EXCLUSIVE_DATE_1' : `EXCLUSIVE_DATE_${i}`] ?? (i === 1 ? env.EXCLUSIVE_DATE ?? "11/10" : "");
     return { name: n?.trim(), date: d?.trim() };
   }).filter(item => item.name && item.date?.includes('/'));
 
+  // 当前北京时间
   const now = new Date(Date.now() + (new Date().getTimezoneOffset() + 480) * 60000);
   const Y = now.getFullYear(), M = now.getMonth() + 1, D = now.getDate();
   const YMD = (y, m, d) => `${y}/${m < 10 ? '0'+m : m}/${d < 10 ? '0'+d : d}`;
   const todayMs = Date.UTC(Y, M - 1, D);
 
+  // A 股期指交割日（每月第 3 个周五）与期权行权日（每月第 4 个周三）
   if (showFinanceDates) {
     const getFinanceDate = (y, monthIndex, nth, targetDayOfWeek) => {
       const firstDay = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
@@ -34,28 +42,33 @@ export default async function(ctx) {
       return Date.UTC(y, monthIndex, 1 + diff + (nth - 1) * 7);
     };
 
+    // 交割：第 3 个周五（5）
     let futuresMs = getFinanceDate(Y, M - 1, 3, 5);
     if (todayMs > futuresMs) futuresMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 3, 5);
     const futuresDate = new Date(futuresMs);
     customDays.push({ name: "交割", date: `${futuresDate.getUTCMonth() + 1}/${futuresDate.getUTCDate()}` });
 
+    // 行权：第 4 个周三（3）
     let optionsMs = getFinanceDate(Y, M - 1, 4, 3);
     if (todayMs > optionsMs) optionsMs = getFinanceDate(M === 12 ? Y + 1 : Y, M === 12 ? 0 : M, 4, 3);
     const optionsDate = new Date(optionsMs);
     customDays.push({ name: "行权", date: `${optionsDate.getUTCMonth() + 1}/${optionsDate.getUTCDate()}` });
   }
 
+  // 调色板
   const C = {
-    bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
-    main: { light: '#1C1C1E', dark: '#FFFFFF' },
-    sub: { light: '#48484A', dark: '#D1D1D6' },
-    gold: { light: '#B58A28', dark: '#D6A53A' },
-    red: { light: '#CA3B32', dark: '#FF453A' },
-    blue: { light: '#3A5F85', dark: '#5E8EB8' },
-    teal: { light: '#628C7B', dark: '#73A491' },
+    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    bgFest:      [{ light: '#FFF8EC', dark: '#2A1F0E' }, { light: '#FFF3E0', dark: '#1F1608' }], // 节日暖色背景
+    main:        { light: '#1C1C1E', dark: '#FFFFFF' },
+    sub:         { light: '#48484A', dark: '#D1D1D6' },
+    gold:        { light: '#B58A28', dark: '#D6A53A' },
+    red:         { light: '#CA3B32', dark: '#FF453A' },
+    blue:        { light: '#3A5F85', dark: '#5E8EB8' },
+    teal:        { light: '#628C7B', dark: '#73A491' },
     transparent: '#00000000'
   };
 
+  // 农历计算引擎
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     term(y, n) { return new Date((31556925974.7*(y-1900)+[0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n-1]*60000)+Date.UTC(1900,0,6,2,5)) },
@@ -73,46 +86,52 @@ export default async function(ctx) {
   const getFests = (y) => {
     const l2s = (m,d) => { const r=Lunar.l2s(y,m,d); return r ? YMD(r.getUTCFullYear(), r.getUTCMonth()+1, r.getUTCDate()) : ""; };
     const term = (n) => { const d=Lunar.term(y,n); return YMD(d.getUTCFullYear(), d.getUTCMonth()+1, d.getUTCDate()); };
-    const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), d=f.getUTCDay(), x=w-d; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
-    
+    const wDay = (m,n,w) => { const f=new Date(Date.UTC(y,m-1,1)), dd=f.getUTCDay(), x=w-dd; return YMD(y,m,1+(x<0?x+7:x)+(n-1)*7); };
+
     let legal = [ ["元旦",YMD(y,1,1),1], ["春节",l2s(1,1),3], ["清明节",term(7),1], ["劳动节",YMD(y,5,1),1], ["端午节",l2s(5,5),1], ["儿童节",YMD(y,6,1),1], ["中秋节",l2s(8,15),1], ["国庆节",YMD(y,10,1),3] ];
-    
+
     if (showSchoolHolidays) {
       legal.push(["春假", getCustomDate(y, springDateStr, () => {
-          const qm = Lunar.term(y, 7);
-          const sb = new Date(qm.getTime() - 3 * 86400000);
-          return YMD(sb.getUTCFullYear(), sb.getUTCMonth()+1, sb.getUTCDate());
+        const qm = Lunar.term(y, 7);
+        const sb = new Date(qm.getTime() - 3 * 86400000);
+        return YMD(sb.getUTCFullYear(), sb.getUTCMonth()+1, sb.getUTCDate());
       }), 3]);
       legal.push(["秋假", getCustomDate(y, autumnDateStr, () => {
-          const nov1 = new Date(Date.UTC(y, 10, 1));
-          const offset = (3 - nov1.getUTCDay() + 7) % 7;
-          return YMD(y, 11, 1 + offset + 7);
+        const nov1 = new Date(Date.UTC(y, 10, 1));
+        const offset = (3 - nov1.getUTCDay() + 7) % 7;
+        return YMD(y, 11, 1 + offset + 7);
       }), 3]);
     }
-    
-    let exclusive = customDays.map(item => [item.name, YMD(y, item.date.split('/')[0], item.date.split('/')[1]), 1]);
+
+    // 专属日期严格 Number 转换，避免字符串隐式传入 YMD
+    let exclusive = customDays.map(item => {
+      const [em, ed] = item.date.split('/').map(Number);
+      return [item.name, YMD(y, em, ed), 1];
+    });
     exclusive.push(["高考", YMD(y, 6, 7), 2]);
-    
+
     return {
-      legal, 
-      folk: [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
-      intl: [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
+      legal,
+      folk:  [ ["元宵节",l2s(1,15),1], ["龙抬头",l2s(2,2),1], ["七夕节",l2s(7,7),1], ["中元节",l2s(7,15),1], ["重阳节",l2s(9,9),1], ["寒衣节",l2s(10,1),1], ["腊八节",l2s(12,8),1], ["小年",l2s(12,23),1], ["除夕",l2s(12, Lunar.mDays(y,12)),1] ],
+      intl:  [ ["情人节",YMD(y,2,14),1], ["妇女节",YMD(y,3,8),1], ["母亲节",wDay(5,2,0),1], ["父亲节",wDay(6,3,0),1], ["万圣节",YMD(y,10,31),1], ["感恩节",wDay(11,4,4),1], ["平安夜",YMD(y,12,24),1], ["圣诞节",YMD(y,12,25),1] ],
       exclusive
     };
   };
 
   const result = { legal: [], folk: [], intl: [], exclusive: [] };
-  const todayFests = [];
+  const todayFests   = [];
   const todayFinance = [];
-  let stickyFest = "", minPinnedDiff = Infinity; 
-  
+
+  // 多置顶：记录每个置顶节日的最近距离
+  const pinnedMap = {};
+
   [getFests(Y), getFests(Y + 1)].forEach(f => {
     Object.keys(result).forEach(cat => {
       f[cat].forEach(([name, dateStr, duration]) => {
         if (!dateStr) return;
         const [yy, mm, dd] = dateStr.split('/').map(Number);
         const diff = Math.round((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
-        
+
         if (diff <= 0) {
           if (diff > -(duration || 1)) {
             if (name === "交割" || name === "行权") {
@@ -123,13 +142,16 @@ export default async function(ctx) {
           }
           return;
         }
-        
-        if (pinnedHoliday && name === pinnedHoliday && diff <= 200 && diff < minPinnedDiff) { 
-            minPinnedDiff = diff; stickyFest = `${name} ${diff}天`; 
+
+        // 多置顶：每个命中名称独立记录最小 diff
+        if (pinnedHolidays.includes(name) && diff <= 200) {
+          if (pinnedMap[name] === undefined || diff < pinnedMap[name]) {
+            pinnedMap[name] = diff;
+          }
         }
-        
+
         if (!result[cat].some(i => i.name === name) && !todayFests.includes(name) && !todayFinance.includes(name)) {
-            result[cat].push({ name, diff });
+          result[cat].push({ name, diff });
         }
       });
     });
@@ -142,64 +164,77 @@ export default async function(ctx) {
     let firstLine = "", w = 0;
     const tokens = str.match(/[\d\/a-zA-Z\.\-]+|./gu) || [];
     for (let i = 0; i < tokens.length; i++) {
-        const token = tokens[i];
-        const tokenW = [...token].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-        if (w + tokenW > 45) return [firstLine.replace(/[，\s]+$/, ''), tokens.slice(i).join("").replace(/^[，\s]+/, '')];
-        firstLine += token;
-        w += tokenW;
+      const token = tokens[i];
+      const tokenW = [...token].reduce((sum, char) => sum + (char.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+      if (w + tokenW > 45) return [firstLine.replace(/[，\s]+$/, ''), tokens.slice(i).join("").replace(/^[，\s]+/, '')];
+      firstLine += token;
+      w += tokenW;
     }
     return [str];
   };
 
   const gridRows = [];
   const pushRow = (icon, color, title, textStr, isFirst, txtColor = C.sub) => {
-      gridRows.push({
-          type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
-              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
-                  { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : C.transparent, width: 13, height: 13 },
-                  { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : C.transparent }
-              ]},
-              { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: txtColor, maxLines: 1, flex: 1 }
-          ]
-      });
+    gridRows.push({
+      type: 'stack', direction: 'row', alignItems: 'start', gap: 4, children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 50, children: [
+          { type: 'image', src: isFirst ? `sf-symbol:${icon}` : 'sf-symbol:circle', color: isFirst ? color : C.transparent, width: 13, height: 13 },
+          { type: 'text', text: isFirst ? title : " ", font: { size: 12, weight: 'heavy' }, textColor: isFirst ? color : C.transparent }
+        ]},
+        { type: 'text', text: textStr, font: { size: 12, weight: 'medium' }, textColor: txtColor, maxLines: 1, flex: 1 }
+      ]
+    });
   };
 
   const tLegal = formatStr("legal", 3);
-  if (tLegal) pushRow("building.columns.fill", C.red, "法定", tLegal, true);
+  if (tLegal) pushRow("building.columns.fill", C.red,  "法定", tLegal, true);
 
   const tFolk = formatStr("folk", 3);
-  if (tFolk) pushRow("moon.stars.fill", C.gold, "民俗", tFolk, true);
+  if (tFolk)  pushRow("moon.stars.fill",       C.gold, "民俗", tFolk,  true);
 
   const tIntl = formatStr("intl", 3);
-  if (tIntl) pushRow("globe.americas.fill", C.blue, "国际", tIntl, true);
+  if (tIntl)  pushRow("globe.americas.fill",   C.blue, "国际", tIntl,  true);
 
   const tExc = formatStr("exclusive", 6);
   if (tExc) {
-      getExclusiveLines(tExc).forEach((line, idx) => {
-          const isAlert = /(交割|行权) [1-2]天/.test(line);
-          pushRow("gift.fill", C.teal, "专属", line, idx === 0, isAlert ? C.red : C.sub);
-      });
+    getExclusiveLines(tExc).forEach((line, idx) => {
+      const isAlert = /(交割|行权) [1-2]天/.test(line);
+      pushRow("gift.fill", C.teal, "专属", line, idx === 0, isAlert ? C.red : C.sub);
+    });
   }
 
   const visualLines = gridRows.length;
-  
+
+  // 今日节日最多展示 2 个，超出加省略号
   const topAddons = [];
-  if (todayFests.length > 0) topAddons.push(`🎉 ${todayFests.join('·')}`);
+  if (todayFests.length > 0) {
+    const shown  = todayFests.slice(0, 2).join('·');
+    const suffix = todayFests.length > 2 ? '…' : '';
+    topAddons.push(`🎉 ${shown}${suffix}`);
+  }
   if (todayFinance.length > 0) topAddons.push(`🚨 ${todayFinance.join('·')}`);
-  if (stickyFest) topAddons.push(`🔝 ${stickyFest}`);
+
+  // 多置顶：按原始配置顺序输出，用 · 分隔
+  const stickyParts = pinnedHolidays
+    .filter(name => pinnedMap[name] !== undefined)
+    .map(name => `${name} ${pinnedMap[name]}天`);
+  if (stickyParts.length > 0) topAddons.push(`🔝 ${stickyParts.join('·')}`);
+
+  // 今日有节日时切换暖色背景渐变，否则保持默认
+  const bgColors = todayFests.length > 0 ? C.bgFest : C.bg;
 
   return {
-    type: 'widget', 
-    padding: 12, 
-    backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    type: 'widget',
+    padding: 12,
+    backgroundGradient: { type: 'linear', colors: bgColors, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
       { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-          { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: C.main, width: 16, height: 16 },
-          { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: C.main },
-          { type: 'spacer' },
-          { type: 'text', text: topAddons.join(" | "), font: { size: 12, weight: 'bold' }, textColor: C.red, maxLines: 1, minScale: 0.8 }
+        { type: 'image', src: 'sf-symbol:hourglass.circle.fill', color: C.main, width: 16, height: 16 },
+        { type: 'text', text: '时光倒数', font: { size: 15, weight: 'heavy' }, textColor: C.main },
+        { type: 'spacer' },
+        { type: 'text', text: topAddons.join(" | "), font: { size: 12, weight: 'bold' }, textColor: C.red, maxLines: 1, minScale: 0.8 }
       ]},
-      { type: 'spacer', length: visualLines <= 4 ? 12 : 10 }, 
+      { type: 'spacer', length: visualLines <= 4 ? 12 : 10 },
       { type: 'stack', direction: 'column', alignItems: 'start', gap: visualLines <= 4 ? 11 : 8, children: gridRows },
       { type: 'spacer' }
     ]
