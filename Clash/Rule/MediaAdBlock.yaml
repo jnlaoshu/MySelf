@@ -1,0 +1,21 @@
+payload:
+  # === Spotify 域名级拦截 ===
+  - DOMAIN,adeventtracker.spotify.com
+  - DOMAIN,ads-fa.spotify.com
+  - DOMAIN,analytics.spotify.com
+  - DOMAIN,audio2.spotify.com
+  - DOMAIN,b.scorecardresearch.com
+  - DOMAIN-SUFFIX,ads.spotify.com
+
+  # === YouTube 常见数据追踪拦截 ===
+  - DOMAIN,youtubei.googleapis.com
+  - DOMAIN,pagead2.googlesyndication.com
+  - DOMAIN-SUFFIX,doubleclick.net
+
+  # === 国内音频 (酷狗/酷我/喜马拉雅) 开屏与追踪 ===
+  - DOMAIN-SUFFIX,adserv.kugou.com
+  - DOMAIN-SUFFIX,log.kugou.com
+  - DOMAIN-SUFFIX,ad.kuwo.cn
+  - DOMAIN-SUFFIX,log.kuwo.cn
+  - DOMAIN,adbehavior.ximalaya.com
+  - DOMAIN,adse.ximalaya.com
