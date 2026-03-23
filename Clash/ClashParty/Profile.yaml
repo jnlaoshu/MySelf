@@ -1,6 +1,7 @@
-# > Clash Party@laoshu 自用配置
-# > 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
-# > 更新时间: 2026.03.23 16:10
+# > 名称: Clash Party@laoshu 自用配置
+# > 功能: 六地区节点自动优选分流 · 大厂域名专属 DoH · 四层广告拦截 · AIGC/Apple 双轨路由 · TUN 透明代理 · Smart Core 就绪
+# > 引用: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
+# > 更新: 2026.03.23 20:33
 
 # ── 锚点 ─────────────────────────────────────────────────────────────
 p: &p
@@ -18,7 +19,9 @@ pg_auto: &pg_auto
   lazy: true
   url: https://www.gstatic.com/generate_204
   interval: 300
+  timeout: 3000
   tolerance: 50
+  max-failed-times: 3
   include-all: true
 
 c: &c {type: http, behavior: classical, format: yaml, interval: 86400}
@@ -31,10 +34,10 @@ proxy-providers:
 
 # ── 基础参数 ─────────────────────────────────────────────────────────
 mode: rule
+mixed-port: 7893
 port: 7890
 socks-port: 7891
 redir-port: 7892
-mixed-port: 7893
 tproxy-port: 7895
 ipv6: false
 allow-lan: true
@@ -80,6 +83,7 @@ tun:
 dns:
   enable: true
   ipv6: false
+  cache-algorithm: arc
   enhanced-mode: fake-ip
   fake-ip-range: 198.18.0.1/16
   default-nameserver:
@@ -101,8 +105,15 @@ dns:
     - ntp.*.com
     - +.ntp.org
     - router.asus.com
+    - +.miwifi.com
     - +.msftconnecttest.com
     - +.msftncsi.com
+    - time.windows.com
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - localhost.work.weixin.qq.com
+    - +.weixin.qq.com
+    - +.wechat.com
 
 # ── GeoData ──────────────────────────────────────────────────────────
 geo-auto-update: true
@@ -119,32 +130,32 @@ proxy-groups:
 
   - name: 香港节点
     <<: *pg_auto
-    filter: "(?i)🇭🇰|香港|(\b(HK|Hong|HKG)\b)"
+    filter: "(?i)🇭🇰|香港|\bHKG?\b|Hong"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
 
   - name: 美国节点
     <<: *pg_auto
-    filter: "(?i)🇺🇸|美国|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|(\b(US|United States|American|USA|SJC|JFK|LAX|ORD|ATL|DFW|SFO|MIA|SEA|IAD)\b)"
+    filter: "(?i)🇺🇸|美国|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|\b(LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX)\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
 
   - name: 狮城节点
     <<: *pg_auto
-    filter: "(?i)🇸🇬|新加坡|狮|(\b(SG|Singapore|SIN|XSP)\b)"
+    filter: "(?i)🇸🇬|新加坡|\bSGP?\b|Singapore|\bSIN\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 
   - name: 日本节点
     <<: *pg_auto
-    filter: "(?i)🇯🇵|日本|川日|东京|大阪|泉日|埼玉|(\b(JP|Japan|NRT|HND|KIX|CTS|FUK)\b)"
+    filter: "(?i)🇯🇵|日本|东京|大阪|\bJPN?\b|Japan|\b(NRT|HND|KIX|FUK)\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
 
   - name: 台湾节点
     <<: *pg_auto
-    filter: "(?i)🇹🇼|台湾|(\b(TW|Tai|TPE|Taiwan|TSA|KHH)\b)"
+    filter: "(?i)🇹🇼|台湾|\bTW\b|Taiwan|\bTPE\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
 
   - name: 韩国节点
     <<: *pg_auto
-    filter: "(?i)🇰🇷|韩国|韓|首尔|南朝鲜|(\b(KR|KOR|Korea|South)\b)"
+    filter: "(?i)🇰🇷|韩国|韩|首尔|\bKR\b|\bKOR\b|Korea|\bICN\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
   - name: Proxy
@@ -279,16 +290,14 @@ rule-providers:
   CustomReject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml}
   AppAdBlock:   {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/AppAdBlock.yaml}
   MediaAdBlock: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/MediaAdBlock.yaml}
+  Reject:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml}
 
-  Reject:     {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml}
+  AIGC:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml}
+  Anthropic:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Anthropic/Anthropic.yaml}
+  Bing:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml}
 
-  AIGC:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml}
-  Anthropic:  {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Anthropic/Anthropic.yaml}
-
-  Bing:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml}
-
-  AppleCN:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleCN/AppleCN.yaml}
-  AppleProxy: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml}
+  AppleCN:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleCN/AppleCN.yaml}
+  AppleProxy:   {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml}
 
   Disney:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml}
   HBO:          {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml}
@@ -298,30 +307,33 @@ rule-providers:
   YouTube:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml}
   YouTubeMusic: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTubeMusic/YouTubeMusic.yaml}
 
-  Github:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml}
-  Google:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml}
-  Microsoft: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml}
-  OneDrive:  {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml}
-  PayPal:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml}
-  Telegram:  {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml}
-  Twitter:   {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml}
-  WeChat:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml}
+  Github:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml}
+  Google:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml}
+  Microsoft:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml}
+  OneDrive:     {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml}
+  PayPal:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml}
+  Telegram:     {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml}
+  Twitter:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml}
+  WeChat:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml}
 
-  Proxy:  {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}
-  Direct: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
-  Lan:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}
-  China:  {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
+  Proxy:        {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}
+  Direct:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
+  Lan:          {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}
+  China:        {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
 
 # ── 规则 ─────────────────────────────────────────────────────────────
 rules:
+  - RULE-SET,Lan,DIRECT
+
   - RULE-SET,AppAdBlock,REJECT
   - RULE-SET,MediaAdBlock,REJECT
   - RULE-SET,CustomReject,REJECT
   - RULE-SET,Reject,REJECT
 
+  - GEOSITE,douyin,DIRECT
+
   - RULE-SET,AIGC,AIGC
   - RULE-SET,Anthropic,AIGC
-
   - RULE-SET,Bing,Bing
 
   - RULE-SET,AppleCN,DIRECT
@@ -346,9 +358,7 @@ rules:
 
   - RULE-SET,Proxy,Proxy
   - RULE-SET,Direct,DIRECT
-  - RULE-SET,Lan,DIRECT
   - RULE-SET,China,DIRECT
-
   - GEOSITE,CN,DIRECT
   - GEOIP,CN,DIRECT
 
