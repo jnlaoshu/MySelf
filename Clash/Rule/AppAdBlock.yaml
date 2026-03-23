@@ -1,0 +1,36 @@
+payload:
+  # === 高德地图去广告 ===
+  - DOMAIN,amap-aos-info-none.amap.com
+  - DOMAIN,awaken.amap.com
+  - DOMAIN,free-aos-cdn-image.amap.com
+  - DOMAIN-SUFFIX,ad.amap.com
+  - DOMAIN-SUFFIX,ad.autonavi.com
+  - DOMAIN-SUFFIX,aligames.com
+
+  # === 百度地图去广告 ===
+  - DOMAIN,httpdns.baidubce.com
+  - DOMAIN,mtj.baidu.com
+  - DOMAIN,loc.map.baidu.com
+  - DOMAIN-KEYWORD,baidustatic.com/map/
+  - DOMAIN-SUFFIX,pos.baidu.com
+  - DOMAIN-SUFFIX,cpro.baidu.com
+
+  # === 雪球去广告 ===
+  - DOMAIN,ad.xueqiu.com
+  - DOMAIN,log.xueqiu.com
+  - DOMAIN,stat.xueqiu.com
+  - DOMAIN-SUFFIX,open.e.kuaishou.com # 拦截雪球内嵌的快手联盟广告
+
+  # === 一汽奥迪去广告 & 数据追踪拦截 ===
+  - DOMAIN,ad.faw-vw.com
+  - DOMAIN,track.faw-vw.com
+  - DOMAIN,sensorsdata.faw-vw.com
+  - DOMAIN-KEYWORD,audi-ad
+  # 注意：Clash 仅能拦截其广告域名，无法替代 Egern 执行自动签到 JS 脚本
+
+  # === Bilibili 基础去广告 (开屏与追踪) ===
+  - DOMAIN,manga.bilibili.com
+  - DOMAIN,mall.bilibili.com
+  - DOMAIN,show.bilibili.com
+  - DOMAIN,cm.bilibili.com
+  - DOMAIN-SUFFIX,cm.bilibili.com
