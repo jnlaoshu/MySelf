@@ -1,7 +1,7 @@
 # > 名称: Clash Party@laoshu 自用配置
 # > 功能: 六地区节点自动优选分流 · 大厂域名专属 DoH · AIGC/Apple 双轨路由 · TUN 透明代理 · Smart Core 就绪
 # > 引用: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
-# > 更新: 2026.03.24 10:38
+# > 更新: 2026.03.24 11:00
 
 # ── 锚点 ─────────────────────────────────────────────────────────────
 p: &p
@@ -158,10 +158,16 @@ proxy-groups:
     filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
+  - name: 其他节点
+    <<: *pg_auto
+    include-all: true
+    exclude-filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港|🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b|🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b|🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b|🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b|🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b|倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
   - name: Proxy
     type: select
     include-all: true
-    proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, DIRECT]
+    proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, 其他节点, DIRECT]
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png
 
   - name: AIGC
@@ -282,6 +288,7 @@ proxy-groups:
       - 日本节点
       - 台湾节点
       - 韩国节点
+      - 其他节点
       - DIRECT
 
 # ── 规则集 ───────────────────────────────────────────────────────────
