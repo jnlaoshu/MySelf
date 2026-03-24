@@ -1,24 +1,25 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及多机版服务器监控底层连接参数（最多 6 台）。
+# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及**逐一配置的多服务器监控**。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.22
+# ⏱️ 更新时间: 2026.03.24 21:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价、服务器监控（多机版，最多 6 台）。"
+description: "包含：岁时黄历、时光倒数、网络信息、全国油价、服务器监控（已支持最多 5 台服务器逐一配置 + 自动轮播）"
 
 auto_update:
   interval: 43200
 
 env_schema:
+  # ==================== 通用配置 ====================
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
-    description: "设定最重要的纪念日名称（如：我的生日、结婚纪念日）"
+    description: "设定最重要的纪念日名称"
     default_value: "我的生日"
   EXCLUSIVE_DATE_1:
     name: 📅 纪念日 1 日期
-    description: "日期格式必须严格为 MM/DD（如：12/13）"
+    description: "日期格式必须严格为 MM/DD"
     default_value: "11/10"
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
@@ -53,147 +54,135 @@ env_schema:
 
   PINNED_HOLIDAY:
     name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考，倒数 ≤200 天触发）。留空则关闭置顶。"
+    description: "输入你想高亮置顶在顶部的节日名称（默认：高考）"
     default_value: "高考"
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
-    description: "是否在法定节假日列表中显示"春假"和"秋假"的倒数"
-    options:
-      - "true"
-      - "false"
+    description: "是否显示春假和秋假倒数"
+    options: ["true", "false"]
     default_value: "true"
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的成都春假推算逻辑"
+    description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
-    description: "格式 MM/DD。留空则默认使用系统内置的成都秋假推算逻辑"
+    description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
   SHOW_FINANCE_DATES:
     name: 📈 显示金融交割日
-    description: "是否在专属日中自动推算并显示 A 股期指交割日与期权行权日"
-    options:
-      - "true"
-      - "false"
+    description: "是否显示 A 股期指交割日与期权行权日"
+    options: ["true", "false"]
     default_value: "true"
   GAS_REGION:
     name: 📍 油价查询地区
-    description: "直辖市输入拼音(如beijing)；其他省份输入省份/省会拼音(如sichuan/chengdu)。"
+    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
     default_value: "sichuan/chengdu"
 
-  SSH_NAME_1:
+  # ==================== 服务器监控 - 逐一配置（最多 5 台） ====================
+  SSH_CYCLE_EVERY:
+    name: 🔄 轮播间隔（刷新几次切换一次）
+    description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
+    default_value: "1"
+
+  # 服务器 1
+  SSH_SERVER_1_NAME:
     name: 🏷️ 服务器 1 显示名称
-    default_value: "Server-1"
-  SSH_HOST_1:
+    default_value: "Oracle"
+  SSH_SERVER_1_HOST:
     name: 🌐 服务器 1 IP / 域名
     default_value: ""
-  SSH_PORT_1:
+  SSH_SERVER_1_PORT:
     name: 🔌 服务器 1 端口
     default_value: "22"
-  SSH_USER_1:
+  SSH_SERVER_1_USER:
     name: 👤 服务器 1 用户名
     default_value: "root"
-  SSH_PWD_1:
+  SSH_SERVER_1_PWD:
     name: 🔐 服务器 1 密码
     default_value: ""
-  SSH_KEY_1:
+  SSH_SERVER_1_KEY:
     name: 🔑 服务器 1 私钥
     default_value: ""
 
-  SSH_NAME_2:
+  # 服务器 2（留空则不使用）
+  SSH_SERVER_2_NAME:
     name: 🏷️ 服务器 2 显示名称
-    default_value: "Server-2"
-  SSH_HOST_2:
+    default_value: ""
+  SSH_SERVER_2_HOST:
     name: 🌐 服务器 2 IP / 域名
     default_value: ""
-  SSH_PORT_2:
+  SSH_SERVER_2_PORT:
     name: 🔌 服务器 2 端口
     default_value: "22"
-  SSH_USER_2:
+  SSH_SERVER_2_USER:
     name: 👤 服务器 2 用户名
     default_value: "root"
-  SSH_PWD_2:
+  SSH_SERVER_2_PWD:
     name: 🔐 服务器 2 密码
     default_value: ""
-  SSH_KEY_2:
+  SSH_SERVER_2_KEY:
     name: 🔑 服务器 2 私钥
     default_value: ""
 
-  SSH_NAME_3:
+  # 服务器 3
+  SSH_SERVER_3_NAME:
     name: 🏷️ 服务器 3 显示名称
-    default_value: "Server-3"
-  SSH_HOST_3:
+    default_value: ""
+  SSH_SERVER_3_HOST:
     name: 🌐 服务器 3 IP / 域名
     default_value: ""
-  SSH_PORT_3:
+  SSH_SERVER_3_PORT:
     name: 🔌 服务器 3 端口
     default_value: "22"
-  SSH_USER_3:
+  SSH_SERVER_3_USER:
     name: 👤 服务器 3 用户名
     default_value: "root"
-  SSH_PWD_3:
+  SSH_SERVER_3_PWD:
     name: 🔐 服务器 3 密码
     default_value: ""
-  SSH_KEY_3:
+  SSH_SERVER_3_KEY:
     name: 🔑 服务器 3 私钥
     default_value: ""
 
-  SSH_NAME_4:
+  # 服务器 4
+  SSH_SERVER_4_NAME:
     name: 🏷️ 服务器 4 显示名称
-    default_value: "Server-4"
-  SSH_HOST_4:
+    default_value: ""
+  SSH_SERVER_4_HOST:
     name: 🌐 服务器 4 IP / 域名
     default_value: ""
-  SSH_PORT_4:
+  SSH_SERVER_4_PORT:
     name: 🔌 服务器 4 端口
     default_value: "22"
-  SSH_USER_4:
+  SSH_SERVER_4_USER:
     name: 👤 服务器 4 用户名
     default_value: "root"
-  SSH_PWD_4:
+  SSH_SERVER_4_PWD:
     name: 🔐 服务器 4 密码
     default_value: ""
-  SSH_KEY_4:
+  SSH_SERVER_4_KEY:
     name: 🔑 服务器 4 私钥
     default_value: ""
 
-  SSH_NAME_5:
+  # 服务器 5
+  SSH_SERVER_5_NAME:
     name: 🏷️ 服务器 5 显示名称
-    default_value: "Server-5"
-  SSH_HOST_5:
+    default_value: ""
+  SSH_SERVER_5_HOST:
     name: 🌐 服务器 5 IP / 域名
     default_value: ""
-  SSH_PORT_5:
+  SSH_SERVER_5_PORT:
     name: 🔌 服务器 5 端口
     default_value: "22"
-  SSH_USER_5:
+  SSH_SERVER_5_USER:
     name: 👤 服务器 5 用户名
     default_value: "root"
-  SSH_PWD_5:
+  SSH_SERVER_5_PWD:
     name: 🔐 服务器 5 密码
     default_value: ""
-  SSH_KEY_5:
+  SSH_SERVER_5_KEY:
     name: 🔑 服务器 5 私钥
-    default_value: ""
-
-  SSH_NAME_6:
-    name: 🏷️ 服务器 6 显示名称
-    default_value: "Server-6"
-  SSH_HOST_6:
-    name: 🌐 服务器 6 IP / 域名
-    default_value: ""
-  SSH_PORT_6:
-    name: 🔌 服务器 6 端口
-    default_value: "22"
-  SSH_USER_6:
-    name: 👤 服务器 6 用户名
-    default_value: "root"
-  SSH_PWD_6:
-    name: 🔐 服务器 6 密码
-    default_value: ""
-  SSH_KEY_6:
-    name: 🔑 服务器 6 私钥
     default_value: ""
 
 scriptings:
