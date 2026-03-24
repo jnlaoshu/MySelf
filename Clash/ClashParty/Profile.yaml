@@ -1,7 +1,7 @@
 # > 名称: Clash Party@laoshu 自用配置
-# > 功能: 六地区节点自动优选分流 · 大厂域名专属 DoH · 四层广告拦截 · AIGC/Apple 双轨路由 · TUN 透明代理 · Smart Core 就绪
+# > 功能: 六地区节点自动优选分流 · 大厂域名专属 DoH · AIGC/Apple 双轨路由 · TUN 透明代理 · Smart Core 就绪
 # > 引用: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
-# > 更新: 2026.03.23 20:33
+# > 更新: 2026.03.24 10:38
 
 # ── 锚点 ─────────────────────────────────────────────────────────────
 p: &p
@@ -130,32 +130,32 @@ proxy-groups:
 
   - name: 香港节点
     <<: *pg_auto
-    filter: "(?i)🇭🇰|香港|\bHKG?\b|Hong"
+    filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
 
   - name: 美国节点
     <<: *pg_auto
-    filter: "(?i)🇺🇸|美国|\bUSA?\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|\b(LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX)\b"
+    filter: "(?i)🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
 
   - name: 狮城节点
     <<: *pg_auto
-    filter: "(?i)🇸🇬|新加坡|\bSGP?\b|Singapore|\bSIN\b"
+    filter: "(?i)🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 
   - name: 日本节点
     <<: *pg_auto
-    filter: "(?i)🇯🇵|日本|东京|大阪|\bJPN?\b|Japan|\b(NRT|HND|KIX|FUK)\b"
+    filter: "(?i)🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
 
   - name: 台湾节点
     <<: *pg_auto
-    filter: "(?i)🇹🇼|台湾|\bTW\b|Taiwan|\bTPE\b"
+    filter: "(?i)🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
 
   - name: 韩国节点
     <<: *pg_auto
-    filter: "(?i)🇰🇷|韩国|韩|首尔|\bKR\b|\bKOR\b|Korea|\bICN\b"
+    filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
 
   - name: Proxy
@@ -287,11 +287,6 @@ proxy-groups:
 # ── 规则集 ───────────────────────────────────────────────────────────
 rule-providers:
 
-  CustomReject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml}
-  AppAdBlock:   {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/AppAdBlock.yaml}
-  MediaAdBlock: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/MediaAdBlock.yaml}
-  Reject:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml}
-
   AIGC:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml}
   Anthropic:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Anthropic/Anthropic.yaml}
   Bing:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml}
@@ -324,11 +319,6 @@ rule-providers:
 # ── 规则 ─────────────────────────────────────────────────────────────
 rules:
   - RULE-SET,Lan,DIRECT
-
-  - RULE-SET,AppAdBlock,REJECT
-  - RULE-SET,MediaAdBlock,REJECT
-  - RULE-SET,CustomReject,REJECT
-  - RULE-SET,Reject,REJECT
 
   - GEOSITE,douyin,DIRECT
 
