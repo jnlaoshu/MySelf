@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.03.24 10:22
+# ⏱️ 更新时间: 2026.03.24 20:42
 # ==========================================
 
 ipv6: false
@@ -86,6 +86,24 @@ dns:
     - domain_suffix:
         match: 1688.com
         value: AliDNS
+    - domain_suffix:
+        match: youku.com
+        value: AliDNS
+    - domain_suffix:
+        match: uc.cn
+        value: AliDNS
+    - domain_suffix:
+        match: amap.com
+        value: AliDNS
+    - domain_suffix:
+        match: ele.me
+        value: AliDNS
+    - domain_suffix:
+        match: hichina.com
+        value: AliDNS
+    - domain_suffix:
+        match: alibabacloud.com
+        value: AliDNS
     # 腾讯系
     - domain_suffix:
         match: qq.com
@@ -104,6 +122,12 @@ dns:
         value: DNSPod
     - domain_suffix:
         match: gtimg.com
+        value: DNSPod
+    - domain_suffix:
+        match: qcloud.com
+        value: DNSPod
+    - domain_suffix:
+        match: wegame.com
         value: DNSPod
     # 字节跳动系
     - domain_suffix:
@@ -126,6 +150,27 @@ dns:
         value: ByteDance
     - domain_suffix:
         match: bytecdn.cn
+        value: ByteDance
+    - domain_suffix:
+        match: feishu.cn
+        value: ByteDance
+    - domain_suffix:
+        match: larksuite.com
+        value: ByteDance
+    - domain_suffix:
+        match: ixigua.com
+        value: ByteDance
+    - domain_suffix:
+        match: capcut.com
+        value: ByteDance
+    - domain_suffix:
+        match: zjurl.cn
+        value: ByteDance
+    - domain_suffix:
+        match: pstatp.com
+        value: ByteDance
+    - domain_suffix:
+        match: snssdk.com
         value: ByteDance
     # 本地域名直连
     - domain_suffix:
@@ -227,7 +272,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
   - select:
       name: 自选策略
-      policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
+      policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
       icon: 😜
   - select:
       name: AIGC
@@ -241,7 +286,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
   - select:
       name: Disney
-      policies: [狮城节点, 自选策略]
+      policies: [狮城节点, 香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
   - select:
@@ -251,7 +296,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
   - select:
       name: Netflix
-      policies: [狮城节点, 自选策略]
+      policies: [狮城节点, 香港节点, 台湾节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
   - select:
@@ -261,27 +306,27 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
   - select:
       name: TikTok
-      policies: [日本节点, 自选策略]
+      policies: [日本节点, 香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
   - select:
       name: YouTubeMusic
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, 台湾节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
   - select:
       name: YouTube
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, 台湾节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
   - select:
       name: GitHub
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, 美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
   - select:
       name: Google
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, 香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
   - select:
@@ -296,12 +341,12 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
   - select:
       name: Telegram
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, 美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
   - select:
       name: Twitter
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, 美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
   - select:
@@ -328,6 +373,12 @@ rules:
       policy: DIRECT
   - domain_suffix:
       match: ntp.org
+      policy: DIRECT
+  - domain_suffix:
+      match: time.apple.com
+      policy: DIRECT
+  - domain_suffix:
+      match: time.android.com
       policy: DIRECT
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
@@ -391,9 +442,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       policy: DIRECT
-  - domain_suffix:
-      match: cn
-      policy: DIRECT
   - geoip:
       match: CN
       policy: DIRECT
@@ -435,7 +483,7 @@ modules:
     url: https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/Kuwo/kuwo.sgmodule
     enabled: true
   - name: Ximalaya
-    url: "http://script.hub/file/_start_/https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js/_end_/ximalaya.sgmodule?type=qx-rewrite&target=surge-module&del=true&jqEnabled=true"
+    url: "https://script.hub/file/_start_/https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js/_end_/ximalaya.sgmodule?type=qx-rewrite&target=surge-module&del=true&jqEnabled=true"
     enabled: true
   - name: 雪球去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
