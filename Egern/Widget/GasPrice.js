@@ -1,9 +1,9 @@
 /**
  * ==========================================
  * 📌 代码名称: ⛽ 全国油价及调价预测面板
- * ✨ 主要功能: 实时抓取指定省市汽柴油价格；内置历法精准倒数下轮油价调整窗口；基于 Flex 呈现等比例四宫格布局；支持点击唤起哈啰出行；智能判断计价周期并切换趋势/回顾模式；自动识别涨跌趋势符号；原生适配深浅色模式。
+ * ✨ 主要功能: 实时抓取指定省市汽柴油价格；内置历法精准倒数下轮油价调整窗口；基于 Flex 呈现等比例四宫格布局；支持点击唤起哈啰出行；深度结合“第8/9个工作日”法则，距调价 ≤4 天智能切换为下轮趋势预测，>4 天则锁定为本轮回顾；原生适配深浅色模式。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.24 11:45
+ * ⏱️ 更新时间: 2026.03.24 11:50
  * ==========================================
  */
 
@@ -34,40 +34,30 @@ export default async function (ctx) {
   const P = n => String(n).padStart(2, "0");
   const updateTimeStr = `${P(now.getMonth() + 1)}.${P(now.getDate())} ${P(now.getHours())}:${P(now.getMinutes())}`;
 
-  const getAdjustInfo = () => {
-    const nextIdx = CALENDAR_2026.findIndex(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59) > now);
-    if (nextIdx === -1) return { dateStr: "待更新", isUrgent: false, isFresh: false, hasCountdown: false, totalDays: 99 };
-
-    const nextDate = CALENDAR_2026[nextIdx];
-    const lastDate = nextIdx > 0 ? CALENDAR_2026[nextIdx - 1] : null;
+  const getNextAdjust = () => {
+    const nextDate = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59) > now);
+    if (!nextDate) return { dateStr: "待更新", isUrgent: false, hasCountdown: false, totalDays: 99 };
     
     const target = new Date(Y, nextDate[0] - 1, nextDate[1], 23, 59, 59);
     const totalHours = Math.floor((target - now) / 3600000);
     const totalDays = Math.floor(totalHours / 24);
     
-    let isFresh = false;
-    if (lastDate) {
-        const lastTarget = new Date(Y, lastDate[0] - 1, lastDate[1], 23, 59, 59);
-        isFresh = (now - lastTarget) < (48 * 3600000); 
-    }
-
     return { 
         dateStr: `${P(nextDate[0])}.${P(nextDate[1])} 24:00`, 
         days: totalDays, 
         hours: totalHours % 24, 
         isUrgent: totalHours < 72, 
-        isFresh: isFresh,
         hasCountdown: true,
         totalDays: totalDays 
     };
   };
 
-  const adjust = getAdjustInfo();
-  const infoColor = adjust.isUrgent ? C.red : C.gold;
+  const nextAdjust = getNextAdjust();
+  const infoColor = nextAdjust.isUrgent ? C.red : C.gold;
 
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "未知";
-  let trendLabel = "预计变动: ";
+  let trendLabel = "调价趋势: ";
   let trendInfo = "暂无数据";
   let trendColor = C.sub; 
 
@@ -85,28 +75,27 @@ export default async function (ctx) {
       else if (match[1].includes("柴") || match[1].includes("0号")) prices.diesel = val;
     }
     
-    const trendMatch = html.match(/<div class="tishi">([\s\S]*?)<\/div>/);
+    const trendMatch = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
     if (trendMatch) {
-      const content = trendMatch[1];
+      const [, timeText, priceText] = trendMatch;
+      const rawDate = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
+      const adjustDate = rawDate ? `${P(rawDate[1])}.${P(rawDate[2])} ${P(rawDate[3])}:00` : "未知时间";
       
-      const isUp = /上调|上涨|涨/.test(content);
-      const isDown = /下调|下跌|降|跌/.test(content);
+      // ⭐️ 仅在此处进行了修复：扩大关键词识别库，解决单纯“涨”字无法识别导致显示 "-" 的错误
+      const isUp = /上调|上涨|涨/.test(priceText);
+      const isDown = /下调|下跌|降|跌/.test(priceText);
       
-      const amounts = (content.match(/[\d\.]+\s*元\/升/g) || []).map(p => p.match(/[\d\.]+/)[0]);
-      const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "计价中");
+      const amounts = (priceText.match(/[\d\.]+\s*元\/升/g) || []).map(p => p.match(/[\d\.]+/)[0]);
+      const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
       
-      trendInfo = `${isUp ? "↑" : (isDown ? "↓" : "≈")} ${amountStr}`.trim();
+      trendInfo = `${adjustDate}, ${isUp ? "↑" : (isDown ? "↓" : "-")} ${amountStr}`.trim();
 
-      if (adjust.isFresh) {
-          trendLabel = "调价回顾: ";
-          trendColor = C.muted;
-      } else if (adjust.totalDays <= 5) {
+      if (nextAdjust.totalDays <= 4) {
           trendLabel = "下轮预测: ";
-          trendColor = isUp ? C.red : (isDown ? C.teal : C.gold);
+          trendColor = isUp ? C.red : (isDown ? C.teal : C.muted);
       } else {
-          trendLabel = "新计价期: ";
-          trendColor = C.sub;
-          trendInfo = "趋势测算中";
+          trendLabel = "本轮调价: ";
+          trendColor = C.muted;
       }
     }
   } catch (e) {}
@@ -123,16 +112,16 @@ export default async function (ctx) {
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
       { type: "stack", direction: "row", alignItems: "center", children: [
-          { type: "stack", direction: "row", alignItems: 'center', gap: 6, children: [
+          { type: "stack", direction: "row", alignItems: "center", gap: 6, children: [
               { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 16, height: 16, color: C.main },
               { type: "text", text: `${regionName === "未知" ? "全国" : regionName}油价`, font: { size: 15, weight: "heavy" }, textColor: C.main }
           ]},
           { type: "spacer" }, 
           { type: "stack", direction: "row", alignItems: "center", children: [
               { type: "text", text: "下轮调价: ", font: { size: 11, weight: "medium" }, textColor: infoColor },
-              { type: "text", text: adjust.dateStr, font: { size: 11, weight: "bold" }, textColor: infoColor },
-              ...(adjust.hasCountdown ? [
-                  { type: "text", text: ` (${adjust.days}d${adjust.hours}h`, font: { size: 11, weight: "bold" }, textColor: infoColor },
+              { type: "text", text: nextAdjust.dateStr, font: { size: 11, weight: "bold" }, textColor: infoColor },
+              ...(nextAdjust.hasCountdown ? [
+                  { type: "text", text: ` (${nextAdjust.days}d${nextAdjust.hours}h`, font: { size: 11, weight: "bold" }, textColor: infoColor },
                   { type: "text", text: "后)", font: { size: 11, weight: "medium" }, textColor: infoColor }
               ] : [])
           ]}
