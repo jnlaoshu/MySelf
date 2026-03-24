@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.03.22 07:36
+# ⏱️ 更新时间: 2026.03.24 10:22
 # ==========================================
 
 ipv6: false
@@ -164,7 +164,7 @@ policy_groups:
       name: 香港节点
       policies: [全部节点]
       flatten: true
-      filter: "🇭🇰|香港|Hong\\s*Kong|HK"
+      filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
@@ -172,7 +172,7 @@ policy_groups:
       name: 美国节点
       policies: [全部节点]
       flatten: true
-      filter: "🇺🇸|美国|United\\s*States|US|States|American"
+      filter: "(?i)🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
@@ -180,7 +180,7 @@ policy_groups:
       name: 台湾节点
       policies: [全部节点]
       flatten: true
-      filter: "🇹🇼|台湾|Taiwan|TW|Tai"
+      filter: "(?i)🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
@@ -188,7 +188,7 @@ policy_groups:
       name: 日本节点
       policies: [全部节点]
       flatten: true
-      filter: "🇯🇵|日本|Japan|JP"
+      filter: "(?i)🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
@@ -196,7 +196,7 @@ policy_groups:
       name: 狮城节点
       policies: [全部节点]
       flatten: true
-      filter: "🇸🇬|新加坡|狮城|Singapore|SG"
+      filter: "(?i)🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
@@ -204,7 +204,7 @@ policy_groups:
       name: 韩国节点
       policies: [全部节点]
       flatten: true
-      filter: "🇰🇷|韩国|Korea|KR|KOR"
+      filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
       interval: 600
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
@@ -212,7 +212,18 @@ policy_groups:
       name: 其他节点
       policies: [全部节点]
       flatten: true
-      filter: "^(?!.*(🇭🇰|香港|Hong\\s*Kong|HK|🇺🇸|美国|United\\s*States|US|States|American|🇹🇼|台湾|Taiwan|TW|Tai|🇯🇵|日本|Japan|JP|🇸🇬|新加坡|狮城|Singapore|SG|🇰🇷|韩国|Korea|KR|KOR)).*$"
+      filter: >-
+        (?xi) ^ (?! .* (?:
+          🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
+          🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
+          🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
+          🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
+          🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
+          🇺🇸|美国|United\s*States|America|\bUSA?\b|
+          洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
+          \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
+          倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
+        ) ) .+ $
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
   - select:
       name: 自选策略
