@@ -4,7 +4,7 @@
  * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染核心硬件指标。
  * ✨ 新增功能: 多服务器自动轮播 + 轮播指示小图标（右上角显示当前/总数）
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.25 08:00
+ * ⏱️ 更新时间: 2026.03.25
  * ==========================================
  */
 
@@ -12,31 +12,17 @@ export default async function (ctx) {
   /** 🎯 终极私钥解析器 */
   const parsePrivateKey = (key) => {
     if (!key) return "";
-
-    let k = String(key)
-      .trim()
-      .replace(/\\n/g, '\n')
-      .replace(/\\r/g, '')
-      .replace(/\r/g, '');
-
+    let k = String(key).trim().replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\r/g, '');
     const headerMatch = k.match(/-----BEGIN [A-Z0-9 ]+-----/);
     const footerMatch = k.match(/-----END [A-Z0-9 ]+-----/);
-
     if (headerMatch && footerMatch) {
       const header = headerMatch[0];
       const footer = footerMatch[0];
       const headerIdx = k.indexOf(header);
       const footerIdx = k.indexOf(footer);
-
       if (footerIdx > headerIdx) {
-        const body = k
-          .substring(headerIdx + header.length, footerIdx)
-          .replace(/\s+/g, '');
-
-        if (!body) {
-          throw new Error('私钥解析失败：PEM body 为空，请检查 SSH_KEY 配置是否完整');
-        }
-
+        const body = k.substring(headerIdx + header.length, footerIdx).replace(/\s+/g, '');
+        if (!body) throw new Error('私钥解析失败：PEM body 为空，请检查 SSH_KEY 配置是否完整');
         const bodyLines = body.match(/.{1,64}/g)?.join('\n') || body;
         k = `${header}\n${bodyLines}\n${footer}\n`;
       }
@@ -44,35 +30,38 @@ export default async function (ctx) {
     return k;
   };
 
-  // 单服务器后备变量（保持向下兼容）
-  const host       = String(ctx.env.SSH_HOST || ctx.env.host || "").trim();
-  const port       = Number(ctx.env.SSH_PORT || ctx.env.port) || 22;
-  const username   = String(ctx.env.SSH_USER || ctx.env.username || "").trim() || "root";
-  const password   = ctx.env.SSH_PWD || ctx.env.password || "";
-  const customName = String(ctx.env.SSH_NAME || "").trim() || "Oracle";
-
-  // ====================== 多服务器自动轮播核心逻辑 ======================
+  // ====================== 多服务器读取（逐一配置，最多 5 台） ======================
   let servers = [];
 
-  const sshServersStr = String(ctx.env.SSH_SERVERS || "").trim();
-  if (sshServersStr) {
-    try {
-      let parsed = JSON.parse(sshServersStr);
-      servers = Array.isArray(parsed) ? parsed : [parsed];
-    } catch (e) {}
+  for (let i = 1; i <= 5; i++) {
+    const h = String(ctx.env[`SSH_SERVER_${i}_HOST`] || "").trim();
+    if (!h) continue; // HOST 为空则跳过该槽位
+    servers.push({
+      name:       String(ctx.env[`SSH_SERVER_${i}_NAME`] || `Server${i}`).trim(),
+      host:       h,
+      port:       Number(ctx.env[`SSH_SERVER_${i}_PORT`]) || 22,
+      username:   String(ctx.env[`SSH_SERVER_${i}_USER`] || "root").trim(),
+      password:   ctx.env[`SSH_SERVER_${i}_PWD`] || "",
+      privateKey: ctx.env[`SSH_SERVER_${i}_KEY`] || "",
+    });
   }
 
+  // 向下兼容：如果逐一配置一台都没填，回退到旧版单台变量
   if (servers.length === 0) {
+    const host     = String(ctx.env.SSH_HOST || ctx.env.host || "").trim();
+    const port     = Number(ctx.env.SSH_PORT || ctx.env.port) || 22;
+    const username = String(ctx.env.SSH_USER || ctx.env.username || "").trim() || "root";
     servers = [{
-      name: customName,
-      host: host,
-      port: port,
-      username: username,
-      password: password,
-      privateKey: ctx.env.SSH_KEY || ctx.env.privateKey || ""
+      name:       String(ctx.env.SSH_NAME || "Oracle").trim(),
+      host:       host,
+      port:       port,
+      username:   username,
+      password:   ctx.env.SSH_PWD || ctx.env.password || "",
+      privateKey: ctx.env.SSH_KEY || ctx.env.privateKey || "",
     }];
   }
 
+  // ====================== 自动轮播逻辑 ======================
   const cycleEvery = Math.max(1, Number(ctx.env.SSH_CYCLE_EVERY) || 1);
 
   let cycleCounter = ctx.storage.getJSON('cycleCounter') || 0;
@@ -80,6 +69,8 @@ export default async function (ctx) {
   ctx.storage.setJSON('cycleCounter', cycleCounter);
 
   let currentIndex = ctx.storage.getJSON('multiServerIndex') || 0;
+  // 边界保护：若服务器数量减少，防止 index 越界
+  if (currentIndex >= servers.length) currentIndex = 0;
   let displayIndex = currentIndex;
 
   if (servers.length > 1 && cycleCounter % cycleEvery === 0) {
@@ -89,16 +80,15 @@ export default async function (ctx) {
 
   const server = servers[displayIndex];
 
-  const thisName      = String(server.name || server.hostname || customName).trim();
-  const thisHost      = String(server.host || server.SSH_HOST || "").trim();
-  const thisPort      = Number(server.port || server.SSH_PORT) || 22;
-  const thisUsername  = String(server.username || server.SSH_USER || "").trim() || "root";
-  const thisPassword  = server.password || server.SSH_PWD || "";
-  const thisRawKey    = server.privateKey || server.SSH_KEY || "";
+  const thisName     = server.name;
+  const thisHost     = server.host;
+  const thisPort     = server.port;
+  const thisUsername = server.username;
+  const thisPassword = server.password;
 
   let thisPrivateKey = "";
   try {
-    thisPrivateKey = parsePrivateKey(thisRawKey);
+    thisPrivateKey = parsePrivateKey(server.privateKey);
   } catch (e) {
     return {
       type: 'widget', padding: 16, gap: 8,
@@ -145,7 +135,6 @@ export default async function (ctx) {
 
   let d = { host: thisHost, hostname: thisName, serverIndex: displayIndex + 1, totalServers: servers.length };
   let session = null;
-
   const serverKey = thisName.replace(/[^a-zA-Z0-9]/g, '_');
 
   try {
@@ -209,14 +198,14 @@ export default async function (ctx) {
     const memLine = (p[3] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
     const mm = memLine.split(/\s+/);
     d.memTotal = Number(mm[1]) || 1;
-    d.memUsed = Number(mm[2]) || 0;
-    d.memPct = Math.round((d.memUsed / d.memTotal) * 100);
+    d.memUsed  = Number(mm[2]) || 0;
+    d.memPct   = Math.round((d.memUsed / d.memTotal) * 100);
 
     const df = (p[4] || '').split(/\s+/);
     d.diskTotal = Number(df[1]) || 1;
-    d.diskUsed = Number(df[2]) || 0;
-    d.diskPct = parseInt(df[4]) || 0;
-    d.cores = parseInt(p[5]) || 1;
+    d.diskUsed  = Number(df[2]) || 0;
+    d.diskPct   = parseInt(df[4]) || 0;
+    d.cores     = parseInt(p[5]) || 1;
 
     const nn = (p[6] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0;
@@ -239,7 +228,7 @@ export default async function (ctx) {
 
   } catch (e) {
     const errStr = String(e.message || e);
-    if (errStr.includes('timed out')) d.error = '请求超时 (Timed Out)';
+    if (errStr.includes('timed out'))              d.error = '请求超时 (Timed Out)';
     else if (errStr.toLowerCase().includes('connect')) d.error = '拒绝连接 (Connection Refused)';
     else d.error = errStr;
   } finally {
@@ -313,7 +302,6 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 轮播指示小图标（仅多服务器时显示） ─────────────────────────────────────
   const carouselIndicator = () => {
     if (d.totalServers <= 1) return [];
     return [
@@ -328,7 +316,7 @@ export default async function (ctx) {
       { type: 'image', src: 'sf-symbol:server.rack', color: C.text, width: 14, height: 14 },
       { type: 'spacer', length: 6 },
       { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.text, maxLines: 1 },
-      ...carouselIndicator(),   // ← 新增轮播小图标
+      ...carouselIndicator(),
       { type: 'spacer' },
       ...(d.temp > 0 && d.temp < 150
         ? [
