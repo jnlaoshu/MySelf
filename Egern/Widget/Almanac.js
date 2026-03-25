@@ -1,17 +1,20 @@
 /**
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历 (节气流转全览版)
- * ✨ 主要功能: 实时推算公农历、干支生肖、时辰；调用 API 获取宜忌、冲煞与运势；内置历法计算节气倒数；采用弹性布局，适配深浅色模式。
- * ✨ 专属定制: 右上角支持“星座”与“周次”双模式动态切换显示，支持直接读取中文配置。
+ * ✨ 主要功能: 实时推算公农历、干支、时辰及节气倒数；聚合 API 提供宜忌、冲煞与运势评分；右上角支持“星座/周次”模式动态切换，支持外挂教学周显示，自适应深浅色及弹性布局。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.03.25 15:35
+ * ⏱️ 更新时间: 2026.03.25 19:25
  * ==========================================
  */
 
 export default async function(ctx) {
-  // ⚙️ 【配置读取】支持直接识别中文选项
+  // ⚙️ 【配置读取】模式选择
   const envMode = (ctx.env && ctx.env.ASTRO_OR_WEEK) ? String(ctx.env.ASTRO_OR_WEEK).trim() : '';
   const SHOW_MODE = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
+
+  // ⚙️ 【配置读取】教学周 (默认开启)
+  const envShowTW = (ctx.env && ctx.env.SHOW_TEACHING_WEEK) ? String(ctx.env.SHOW_TEACHING_WEEK).trim().toLowerCase() : 'true';
+  const envTWStart = (ctx.env && ctx.env.TEACHING_WEEK_START) ? String(ctx.env.TEACHING_WEEK_START).trim() : '';
 
   const C = {
     bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
@@ -33,6 +36,24 @@ export default async function(ctx) {
   
   const getCharWidth = (char) => char.charCodeAt(0) > 255 ? 2 : 1.1;
 
+  // ⭐️ 教学周计算逻辑
+  let teachingWeekStr = "";
+  if (SHOW_MODE === 'astro' && envShowTW === 'true' && envTWStart) {
+    const tStart = new Date(envTWStart.replace(/-/g, '/'));
+    if (!isNaN(tStart.getTime())) {
+      const startMs = new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate()).getTime();
+      const todayMs = new Date(Y, M - 1, D).getTime();
+      const diffDays = Math.floor((todayMs - startMs) / 86400000);
+      if (diffDays >= 0) {
+        const tw = Math.floor(diffDays / 7) + 1;
+        teachingWeekStr = `教学第${tw}周`;
+      } else {
+        teachingWeekStr = "未开学";
+      }
+    }
+  }
+
+  // ⭐️ 周次计算逻辑 (对齐截图格式)
   const getWeekInfo = (dateObj) => {
     const d = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -45,7 +66,7 @@ export default async function(ctx) {
     const offsetDate = dateObj.getDate() + firstDayWeekday - 1;
     const monthWeekNo = Math.ceil(offsetDate / 7);
 
-    return `本年第${weekNo}周·月第${monthWeekNo}周`;
+    return `本年第${weekNo}周 · 月第${monthWeekNo}周`;
   };
 
   const Lunar = {
@@ -205,8 +226,13 @@ export default async function(ctx) {
           { type: 'text', text: `${Y}年${M}月${D}日 星期${WEEK}`, font: { size: 15, weight: 'heavy' }, textColor: C.main },
           { type: 'spacer' },
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
+              ...(teachingWeekStr ? [
+                { type: 'image', src: 'sf-symbol:book.closed', color: C.muted, width: 12, height: 12 },
+                { type: 'text', text: teachingWeekStr, font: { size: 11, weight: 'bold' }, textColor: C.muted },
+                { type: 'text', text: '·', font: { size: 11, weight: 'bold' }, textColor: C.divider, padding: [0, 2] }
+              ] : []),
               { type: 'image', src: topIcon, color: C.gold, width: 12, height: 12 },
-              { type: 'text', text: topText, font: { size: 11, weight: 'bold' }, textColor: C.muted, maxLines: 1, minScale: 0.6 }
+              { type: 'text', text: topText, font: { size: 11, weight: 'bold' }, textColor: C.muted, maxLines: 1, minScale: 0.5 }
           ]}
       ]},
       { type: 'spacer', length: 6 }, 
