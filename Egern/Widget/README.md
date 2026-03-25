@@ -19,7 +19,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 ### 1\. 📅 岁时黄历 (Almanac)
 
 🔗 **源码链接：** [Almanac.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js)
-🔗 **模块链接：** [Almanac.yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml)
+🔗 **模块链接：** [Almanac.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml)
 
   * **核心功能**：实时推算公农历、干支生肖、时辰及未来 4 个节气倒数。
   * **数据包含**：聚合开放 API 获取每日宜忌、冲煞方位与运势星级评定。
@@ -28,7 +28,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 ### 2\. ⏳ 时光倒数 (Countdown)
 
 🔗 **源码链接：** [Countdown.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js)
-🔗 **模块链接：** [Countdown.yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml)
+🔗 **模块链接：** [Countdown.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml)
 
   * **核心功能**：提取并按就近时间排序展示未来法定、民俗与国际节日。
   * **个性配置**：高度可定制，支持设定最多 6 个专属纪念日，支持一键开关春假/秋假与 A股期指金融交割日显示。
@@ -37,7 +37,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 ### 3\. 🌐 实时网络信息 (Network Info)
 
 🔗 **源码链接：** [NetworkInfo.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js)
-🔗 **模块链接：** [NetworkInfo.yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.yaml)
+🔗 **模块链接：** [NetworkInfo.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.yaml)
 
   * **核心功能**：实时侦测内网、本地与节点 IP 及详尽地理位置，智能映射国旗 Emoji。
   * **深度测速**：解析 ASN 与防欺诈风险评分，动态测算 Ping 延迟并分级警示。
@@ -46,7 +46,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 ### 4\. ⛽ 全国油价 (Gas Price)
 
 🔗 **源码链接：** [GasPrice.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js)
-🔗 **模块链接：** [GasPrice.yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.yaml)
+🔗 **模块链接：** [GasPrice.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.yaml)
 
   * **核心功能**：实时抓取指定省市各标号（92/95/98/0号）最新价格与本轮调价涨跌趋势。
   * **趋势倒数**：内置历法推算，精准倒数下轮油价调整窗口（精确到小时）。
@@ -55,7 +55,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 ### 5\. 🖥️ 服务器监控 (Server Monitor)
 
 🔗 **源码链接：** [ServerMonitor.js](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js)
-🔗 **模块链接：** [ServerMonitor.yaml](https://www.google.com/search?q=https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml)
+🔗 **模块链接：** [ServerMonitor.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml)
 
   * **核心功能**：通过原生 SSH 隧道直连远程 VPS、NAS 或软路由，内置私钥智能解析。
   * **多台轮播**：支持最多配置 5 台服务器，可通过参数自定义轮播切换频率，右上角自带页码指示器。
