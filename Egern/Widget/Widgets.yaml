@@ -162,15 +162,30 @@ env_schema:
 # ─────────────────────────────────────────────────────────────────────────────
 
 scriptings:
-  - generic: { name: 岁时黄历,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js"       }
-  - generic: { name: 时光倒数,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js"     }
-  - generic: { name: 网络信息,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js"   }
-  - generic: { name: 全国油价,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js"      }
-  - generic: { name: 服务器监控, script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js" }
+  - generic:
+      name: 岁时黄历
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
+  - generic:
+      name: 时光倒数
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
+  - generic:
+      name: 网络信息
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+  - generic:
+      name: 全国油价
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+  - generic:
+      name: 服务器监控
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
 
 widgets:
-  - { name: 岁时黄历,   script_name: 岁时黄历   }
-  - { name: 时光倒数,   script_name: 时光倒数   }
-  - { name: 网络信息,   script_name: 网络信息   }
-  - { name: 全国油价,   script_name: 全国油价   }
-  - { name: 服务器监控, script_name: 服务器监控 }
+  - name: 岁时黄历
+    script_name: 岁时黄历
+  - name: 时光倒数
+    script_name: 时光倒数
+  - name: 网络信息
+    script_name: 网络信息
+  - name: 全国油价
+    script_name: 全国油价
+  - name: 服务器监控
+    script_name: 服务器监控
