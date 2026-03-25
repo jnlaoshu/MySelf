@@ -44,7 +44,7 @@ export default async function(ctx) {
     const offsetDate = dateObj.getDate() + firstDayWeekday - 1;
     const monthWeekNo = Math.ceil(offsetDate / 7);
 
-    return `本年第${weekNo}周（本月第${monthWeekNo}周）`;
+    return `本年第${weekNo}周·本月第${monthWeekNo}周`;
   };
 
   const Lunar = {
