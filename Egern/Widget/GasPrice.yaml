@@ -1,0 +1,27 @@
+# ==========================================
+# 📌 模块名称: 全国油价小组件
+# ✨ 主要功能: 实时调用接口获取并展示全国各省市最新的汽柴油价格。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.yaml
+# ⏱️ 更新时间: 2026.03.25 20:00
+# ==========================================
+
+name: "全国油价小组件"
+description: "实时查阅指定省份或直辖市的汽柴油价格。"
+
+auto_update:
+  interval: 43200
+
+env_schema:
+  GAS_REGION:
+    name: 📍 油价查询地区
+    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
+    default_value: "sichuan/chengdu"
+
+scriptings:
+  - generic:
+      name: 全国油价
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+
+widgets:
+  - name: 全国油价
+    script_name: 全国油价
