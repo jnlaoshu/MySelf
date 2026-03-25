@@ -1,0 +1,39 @@
+# ==========================================
+# 📌 模块名称: 岁时黄历小组件
+# ✨ 主要功能: 实时推算公农历、干支、时辰及节气倒数；聚合 API 提供宜忌、冲煞与运势评分；右上角支持“星座/周次”模式动态切换，支持外挂教学周显示。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml
+# ⏱️ 更新时间: 2026.03.25 20:00
+# ==========================================
+
+name: "岁时黄历小组件"
+description: "提供详尽的黄历信息，支持定制右上角角标（星座/周次/教学周）。"
+
+auto_update:
+  interval: 43200
+
+env_schema:
+  ASTRO_OR_WEEK:
+    name: 🔮 黄历右上角显示模式
+    description: "选择黄历面板右上角是显示星座，还是当年/当月周次"
+    options: ["星座", "周次"]
+    default_value: "星座"
+
+  SHOW_TEACHING_WEEK:
+    name: 📚 显示教学周 (仅星座模式有效)
+    description: "开启后会在星座前显示当前教学周次。若上方选了周次模式，则本开关强制失效。"
+    options: ["true", "false"]
+    default_value: "true"
+
+  TEACHING_WEEK_START:
+    name: 🗓️ 教学周起始日期
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/02/23)"
+    default_value: "2026/02/23"
+
+scriptings:
+  - generic:
+      name: 岁时黄历
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
+
+widgets:
+  - name: 岁时黄历
+    script_name: 岁时黄历
