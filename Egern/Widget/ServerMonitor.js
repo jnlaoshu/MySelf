@@ -1,10 +1,9 @@
 /**
  * ==========================================
  * 📌 模块名称: 服务器监控 (Server Monitor)
- * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染核心硬件指标。
- * ✨ 新增功能: 多服务器自动轮播 + 轮播指示小图标（右上角显示当前/总数）
+ * ✨ 主要功能: 通过 SSH 协议直连并可视化渲染远端服务器核心硬件指标 (CPU/内存/磁盘/网络/温度/负载/运行时间)；支持配置最多5台服务器自动轮播显示及右上角指示器；内置私钥智能解析与异常断连预警，完美适配系统深浅色模式及中/小尺寸桌面组件。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.25
+ * ⏱️ 更新时间: 2026.03.25 08:30
  * ==========================================
  */
 
@@ -294,7 +293,8 @@ export default async function (ctx) {
         { type: 'image', src: 'sf-symbol:network', color: C.net, width: 12, height: 12 },
         { type: 'text', text: 'NET', font: { size: 11, weight: 'bold' }, textColor: C.text },
         { type: 'spacer' },
-        { type: 'text', text: d.hostname, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 },
+        // ⭐️ 修改点：将 d.hostname 替换为 d.host，并设置 minScale 以防止长域名被截断
+        { type: 'text', text: d.host, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1, minScale: 0.5 },
       ]},
       { type: 'spacer' },
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
