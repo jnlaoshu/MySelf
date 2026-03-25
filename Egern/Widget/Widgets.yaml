@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、黄历角标模式切换、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及最多5台服务器逐一配置 + 自动轮播的多服务器监控。
+# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与教学周配置、专属纪念日设定、节假日置顶、金融交割日开关，及最多 5 台服务器的轮播监控配置。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.25 15:35
+# ⏱️ 更新时间: 2026.03.25 19:25
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -19,15 +19,28 @@ env_schema:
     options: ["星座", "周次"]
     default_value: "星座"
 
+  SHOW_TEACHING_WEEK:
+    name: 📚 显示教学周 (仅星座模式有效)
+    description: "开启后会在星座前显示当前教学周次。若上方选了周次模式，则本开关强制失效。"
+    options: ["true", "false"]
+    default_value: "true"
+
+  TEACHING_WEEK_START:
+    name: 🗓️ 教学周起始日期
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/02/23)"
+    default_value: "2026/02/23"
+
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
     description: "是否在倒数面板中显示春假和秋假"
     options: ["true", "false"]
     default_value: "true"
+    
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
+    
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
