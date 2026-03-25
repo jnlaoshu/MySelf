@@ -4,7 +4,7 @@
  * ✨ 主要功能: 通过 SSH 协议直连远端服务器，在桌面小组件中可视化渲染核心硬件指标。
  * ✨ 新增功能: 多服务器自动轮播 + 轮播指示小图标（右上角显示当前/总数）
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间: 2026.03.25 07:50
+ * ⏱️ 更新时间: 2026.03.25 08:00
  * ==========================================
  */
 
@@ -378,3 +378,4 @@ export default async function (ctx) {
     type: 'widget', backgroundColor: C.bg, padding: 16,
     children: [{ type: 'text', text: '请使用 Medium 或 Small 组件。', textColor: C.text }]
   };
+}
