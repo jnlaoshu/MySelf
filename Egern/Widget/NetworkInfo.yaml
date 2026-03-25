@@ -1,0 +1,21 @@
+# ==========================================
+# 📌 模块名称: 网络信息小组件
+# ✨ 主要功能: 实时可视化展示当前设备的网络状态，包括 Wi-Fi、蜂窝数据状态以及 IP 地址等详细网络信息。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.yaml
+# ⏱️ 更新时间: 2026.03.25 20:00
+# ==========================================
+
+name: "网络信息小组件"
+description: "实时监控并展示本地设备的网络及 IP 状态。"
+
+auto_update:
+  interval: 43200
+
+scriptings:
+  - generic:
+      name: 网络信息
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+
+widgets:
+  - name: 网络信息
+    script_name: 网络信息
