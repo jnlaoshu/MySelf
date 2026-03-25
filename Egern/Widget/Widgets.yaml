@@ -1,10 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。
-#             支持：专属纪念日、黄历角标模式、节假日置顶高亮、
-#             金融交割日开关、全国油价查询、最多 5 台服务器监控与自动轮播。
+# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持专属纪念日、黄历角标模式、节假日置顶高亮、金融交割日开关、全国油价查询、最多 5 台服务器监控与自动轮播。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.25 13:45
+# ⏱️ 更新时间: 2026.03.25 13:58
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -111,8 +109,6 @@ env_schema:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # §3  服务器监控
-# 注意：密码与私钥均标记 sensitive:true，配置界面将以掩码显示。
-#       建议优先使用私钥认证，避免明文存储密码。
 # ─────────────────────────────────────────────────────────────────────────────
 
   SSH_CYCLE_EVERY:
@@ -165,15 +161,12 @@ env_schema:
 # §4  脚本与组件注册
 # ─────────────────────────────────────────────────────────────────────────────
 
-# 脚本基础 URL（便于统一修改路径前缀）
-_base_url: &base "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget"
-
 scriptings:
-  - generic: { name: 岁时黄历,   script_url: *base/Almanac.js       }
-  - generic: { name: 时光倒数,   script_url: *base/Countdown.js     }
-  - generic: { name: 网络信息,   script_url: *base/NetworkInfo.js   }
-  - generic: { name: 全国油价,   script_url: *base/GasPrice.js      }
-  - generic: { name: 服务器监控, script_url: *base/ServerMonitor.js }
+  - generic: { name: 岁时黄历,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js"       }
+  - generic: { name: 时光倒数,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js"     }
+  - generic: { name: 网络信息,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js"   }
+  - generic: { name: 全国油价,   script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js"      }
+  - generic: { name: 服务器监控, script_url: "https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js" }
 
 widgets:
   - { name: 岁时黄历,   script_name: 岁时黄历   }
