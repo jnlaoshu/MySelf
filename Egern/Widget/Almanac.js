@@ -1,16 +1,17 @@
 /**
  * ==========================================
  * 📌 代码名称: 📅 岁时黄历 (节气流转全览版)
- * ✨ 主要功能: 实时推算公农历、干支生肖、时辰；调用 API 获取宜忌、冲煞与运势；内置历法计算节气倒数；支持“星座”与“周次”双模式动态切换显示；采用弹性布局，适配深浅色模式。
+ * ✨ 主要功能: 实时推算公农历、干支生肖、时辰；调用 API 获取宜忌、冲煞与运势；内置历法计算节气倒数；采用弹性布局，适配深浅色模式。
+ * ✨ 专属定制: 右上角支持“星座”与“周次”双模式动态切换显示，支持直接读取中文配置。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.03.25 15:25
+ * ⏱️ 更新时间: 2026.03.25 15:35
  * ==========================================
  */
 
 export default async function(ctx) {
-  // ⚙️ 【配置读取】优先读取环境变量，默认 'astro'
-  const envMode = (ctx.env && ctx.env.ASTRO_OR_WEEK) ? ctx.env.ASTRO_OR_WEEK.toLowerCase() : '';
-  const SHOW_MODE = (envMode === 'week') ? 'week' : 'astro';
+  // ⚙️ 【配置读取】支持直接识别中文选项
+  const envMode = (ctx.env && ctx.env.ASTRO_OR_WEEK) ? String(ctx.env.ASTRO_OR_WEEK).trim() : '';
+  const SHOW_MODE = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
 
   const C = {
     bg: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
@@ -44,7 +45,7 @@ export default async function(ctx) {
     const offsetDate = dateObj.getDate() + firstDayWeekday - 1;
     const monthWeekNo = Math.ceil(offsetDate / 7);
 
-    return `本年第${weekNo}周·月第${monthWeekNo}周`;
+    return `年第${weekNo}周·月第${monthWeekNo}周）`;
   };
 
   const Lunar = {
