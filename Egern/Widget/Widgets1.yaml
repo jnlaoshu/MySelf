@@ -20,7 +20,7 @@ auto_update:
 
 _anchors:
   bool_options: &bool_options
-    type: boolean   # 👈 核心改动：声明为 boolean 类型，Egern 会自动渲染为左右拨动开关
+    options: ["true", "false"]
 
   # 服务器公共字段
   ssh_name: &ssh_name
@@ -67,7 +67,7 @@ env_schema:
     name: 📚 显示教学周
     description: "开启后在星座前叠加显示当前教学周次。选择「周次」模式时本开关自动失效。"
     <<: *bool_options
-    default_value: true    # 👈 去掉了引号，使用原生布尔值
+    default_value: "true"
 
   TEACHING_WEEK_START:
     name: 🗓️ 教学周起始日期
@@ -83,7 +83,7 @@ env_schema:
     name: 🏫 显示春假 / 秋假
     description: "是否在倒数面板中展示春假和秋假倒计时"
     <<: *bool_options
-    default_value: true
+    default_value: "true"
 
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
@@ -97,7 +97,7 @@ env_schema:
     name: 📈 显示金融交割日
     description: "是否在倒数面板中显示 A 股期指交割日与期权行权日"
     <<: *bool_options
-    default_value: true
+    default_value: "true"
 
   GAS_REGION:
     name: 📍 油价查询地区
