@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及最多5台服务器逐一配置 + 自动轮播的多服务器监控。
+# ✨ 主要功能: 提供多款核心桌面小组件的全局可视化配置入口。支持设定专属纪念日、黄历角标模式切换、节假日置顶高亮、动态屏蔽与金融交割日显示开关，以及最多5台服务器逐一配置 + 自动轮播的多服务器监控。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.25 08:50
+# ⏱️ 更新时间: 2026.03.25 14:55
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -13,6 +13,43 @@ auto_update:
 
 env_schema:
   # ==================== 通用配置 ====================
+  ASTRO_OR_WEEK:
+    name: 🔮 黄历右上角显示模式
+    description: "选择黄历面板右上角是显示星座，还是当年/当月周次"
+    options: ["astro", "week"]
+    default_value: "astro"
+
+  SHOW_SCHOOL_HOLIDAYS:
+    name: 🏫 显示春假和秋假
+    description: "是否在倒数面板中显示春假和秋假"
+    options: ["true", "false"]
+    default_value: "true"
+  SPRING_BREAK_DATE:
+    name: 🌸 春假自定义日期
+    description: "格式 MM/DD，留空使用内置逻辑"
+    default_value: ""
+  AUTUMN_BREAK_DATE:
+    name: 🍂 秋假自定义日期
+    description: "格式 MM/DD，留空使用内置逻辑"
+    default_value: ""
+    
+  SHOW_FINANCE_DATES:
+    name: 📈 显示金融交割日
+    description: "是否显示 A 股期指交割日与期权行权日"
+    options: ["true", "false"]
+    default_value: "true"
+    
+  GAS_REGION:
+    name: 📍 油价查询地区
+    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
+    default_value: "sichuan/chengdu"
+
+  PINNED_HOLIDAY:
+    name: ✨ 始终置顶节假日
+    description: "输入你想高亮置顶在顶部的节日名称（默认：高考）"
+    default_value: "高考"
+
+  # ==================== 纪念日配置 ====================
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称"
@@ -51,33 +88,6 @@ env_schema:
   EXCLUSIVE_DATE_6:
     name: 📅 纪念日 6 日期
     description: "日期格式必须严格为 MM/DD"
-
-  PINNED_HOLIDAY:
-    name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考）"
-    default_value: "高考"
-  SHOW_SCHOOL_HOLIDAYS:
-    name: 🏫 显示春假和秋假
-    description: "是否显示春假和秋假倒数"
-    options: ["true", "false"]
-    default_value: "true"
-  SPRING_BREAK_DATE:
-    name: 🌸 春假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
-    default_value: ""
-  AUTUMN_BREAK_DATE:
-    name: 🍂 秋假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
-    default_value: ""
-  SHOW_FINANCE_DATES:
-    name: 📈 显示金融交割日
-    description: "是否显示 A 股期指交割日与期权行权日"
-    options: ["true", "false"]
-    default_value: "true"
-  GAS_REGION:
-    name: 📍 油价查询地区
-    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
-    default_value: "sichuan/chengdu"
 
   # ==================== 服务器监控 - 逐一配置（最多 5 台） ====================
   SSH_CYCLE_EVERY:
