@@ -30,12 +30,29 @@ export default async function (ctx) {
     return k;
   };
 
+  const C = {
+    bg:     { light: '#FFFFFF', dark: '#1C1C1E' },
+    barBg:  { light: '#E5E5EA', dark: '#38383A' },
+    text:   { light: '#000000', dark: '#FFFFFF' },
+    subText:{ light: '#666666', dark: '#999999' },
+    muted:  { light: '#8E8E93', dark: '#8E8E93' },
+    cpu:    { light: '#34C759', dark: '#30D158' },
+    mem:    { light: '#007AFF', dark: '#0A84FF' },
+    disk:   { light: '#FF9500', dark: '#FF9F0A' },
+    net:    { light: '#FF2D55', dark: '#FF375F' },
+    temp:   { light: '#FF3B30', dark: '#FF453A' },
+    cpuBg:  { light: '#EAF6ED', dark: '#1A291E' },
+    memBg:  { light: '#EBF4FA', dark: '#1A2433' },
+    dskBg:  { light: '#FDF1E3', dark: '#33261A' },
+    netBg:  { light: '#FCEAEF', dark: '#331A20' },
+  };
+
   // ====================== 多服务器读取（逐一配置，最多 5 台） ======================
   let servers = [];
 
   for (let i = 1; i <= 5; i++) {
     const h = String(ctx.env[`SSH_SERVER_${i}_HOST`] || "").trim();
-    if (!h) continue; // HOST 为空则跳过该槽位
+    if (!h) continue;
     servers.push({
       name:       String(ctx.env[`SSH_SERVER_${i}_NAME`] || `Server${i}`).trim(),
       host:       h,
@@ -46,7 +63,7 @@ export default async function (ctx) {
     });
   }
 
-  // 向下兼容：如果逐一配置一台都没填，回退到旧版单台变量
+  // 向下兼容：逐一配置一台都没填，回退到旧版单台变量
   if (servers.length === 0) {
     const host     = String(ctx.env.SSH_HOST || ctx.env.host || "").trim();
     const port     = Number(ctx.env.SSH_PORT || ctx.env.port) || 22;
@@ -69,7 +86,6 @@ export default async function (ctx) {
   ctx.storage.setJSON('cycleCounter', cycleCounter);
 
   let currentIndex = ctx.storage.getJSON('multiServerIndex') || 0;
-  // 边界保护：若服务器数量减少，防止 index 越界
   if (currentIndex >= servers.length) currentIndex = 0;
   let displayIndex = currentIndex;
 
@@ -86,44 +102,38 @@ export default async function (ctx) {
   const thisUsername = server.username;
   const thisPassword = server.password;
 
+  // ── 诊断：HOST 为空时显示调试信息 ──────────────────────────────────────────
+  if (!thisHost) {
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: 16, gap: 8,
+      children: [
+        { type: 'text', text: '⚠️ 未检测到 Host', font: { size: 14, weight: 'bold' }, textColor: C.text },
+        { type: 'text', text: `widgetFamily: ${ctx.widgetFamily || 'unknown'}`, font: { size: 10, family: 'Menlo' }, textColor: C.muted },
+        { type: 'text', text: `SERVER_1_HOST: "${ctx.env.SSH_SERVER_1_HOST || ''}"`, font: { size: 10, family: 'Menlo' }, textColor: C.muted },
+        { type: 'text', text: `SSH_HOST: "${ctx.env.SSH_HOST || ''}"`, font: { size: 10, family: 'Menlo' }, textColor: C.muted },
+        { type: 'text', text: `servers found: ${servers.length}`, font: { size: 10, family: 'Menlo' }, textColor: C.muted },
+      ]
+    };
+  }
+
   let thisPrivateKey = "";
   try {
     thisPrivateKey = parsePrivateKey(server.privateKey);
   } catch (e) {
     return {
-      type: 'widget', padding: 16, gap: 8,
-      backgroundColor: { light: '#FFFFFF', dark: '#1C1C1E' },
+      type: 'widget', padding: 16, gap: 8, backgroundColor: C.bg,
       children: [
         {
           type: 'stack', direction: 'row', alignItems: 'center', gap: 8,
           children: [
-            { type: 'image', src: 'sf-symbol:key.slash', color: { light: '#FF3B30', dark: '#FF453A' }, width: 22, height: 22 },
-            { type: 'text', text: `私钥解析失败 [${thisName}]`, font: { size: 16, weight: 'heavy' }, textColor: { light: '#000000', dark: '#FFFFFF' } },
+            { type: 'image', src: 'sf-symbol:key.slash', color: C.temp, width: 22, height: 22 },
+            { type: 'text', text: `私钥解析失败 [${thisName}]`, font: { size: 16, weight: 'heavy' }, textColor: C.text },
           ]
         },
-        { type: 'text', text: String(e.message || e), font: { size: 10, family: 'Menlo' }, textColor: { light: '#8E8E93', dark: '#8E8E93' }, maxLines: 4 },
+        { type: 'text', text: String(e.message || e), font: { size: 10, family: 'Menlo' }, textColor: C.muted, maxLines: 4 },
       ]
     };
   }
-
-  const C = {
-    bg:     { light: '#FFFFFF', dark: '#1C1C1E' },
-    barBg:  { light: '#E5E5EA', dark: '#38383A' },
-    text:   { light: '#000000', dark: '#FFFFFF' },
-    subText:{ light: '#666666', dark: '#999999' },
-    muted:  { light: '#8E8E93', dark: '#8E8E93' },
-    cpu:    { light: '#34C759', dark: '#30D158' },
-    mem:    { light: '#007AFF', dark: '#0A84FF' },
-    disk:   { light: '#FF9500', dark: '#FF9F0A' },
-    net:    { light: '#FF2D55', dark: '#FF375F' },
-    temp:   { light: '#FF3B30', dark: '#FF453A' },
-    cpuBg:  { light: '#EAF6ED', dark: '#1A291E' },
-    memBg:  { light: '#EBF4FA', dark: '#1A2433' },
-    dskBg:  { light: '#FDF1E3', dark: '#33261A' },
-    netBg:  { light: '#FCEAEF', dark: '#331A20' },
-  };
-
-  if (!thisHost) return { type: 'widget', backgroundColor: C.bg, children: [] };
 
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
@@ -167,27 +177,27 @@ export default async function (ctx) {
     let uptimeStr = "0秒";
     const upSec = parseFloat((p[1] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
-      const y = Math.floor(upSec / 31536000);
-      const mo = Math.floor((upSec % 31536000) / 2592000);
+      const y    = Math.floor(upSec / 31536000);
+      const mo   = Math.floor((upSec % 31536000) / 2592000);
       const days = Math.floor((upSec % 2592000) / 86400);
-      const h = Math.floor((upSec % 86400) / 3600);
-      const m = Math.floor((upSec % 3600) / 60);
-      const s = Math.floor(upSec % 60);
+      const h    = Math.floor((upSec % 86400) / 3600);
+      const m    = Math.floor((upSec % 3600) / 60);
+      const s    = Math.floor(upSec % 60);
       const parts = [];
-      if (y > 0) parts.push(`${y}年`);
-      if (mo > 0) parts.push(`${mo}月`);
+      if (y > 0)    parts.push(`${y}年`);
+      if (mo > 0)   parts.push(`${mo}月`);
       if (days > 0) parts.push(`${days}天`);
-      if (h > 0) parts.push(`${h}时`);
-      if (m > 0) parts.push(`${m}分`);
-      if (s > 0) parts.push(`${s}秒`);
+      if (h > 0)    parts.push(`${h}时`);
+      if (m > 0)    parts.push(`${m}分`);
+      if (s > 0)    parts.push(`${s}秒`);
       uptimeStr = parts.join('');
     }
     d.uptimeStr = uptimeStr;
 
-    const cpuNums = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
+    const cpuNums  = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0);
-    const cpuIdle = cpuNums[3] || 0;
-    const prevCpu = ctx.storage.getJSON(`_cpu_${serverKey}`);
+    const cpuIdle  = cpuNums[3] || 0;
+    const prevCpu  = ctx.storage.getJSON(`_cpu_${serverKey}`);
     let cpuPct = 0;
     if (prevCpu && cpuTotal > prevCpu.t) {
       cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
@@ -195,19 +205,19 @@ export default async function (ctx) {
     ctx.storage.setJSON(`_cpu_${serverKey}`, { t: cpuTotal, i: cpuIdle });
     d.cpuPct = Math.max(0, Math.min(100, cpuPct));
 
-    const memLine = (p[3] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
-    const mm = memLine.split(/\s+/);
-    d.memTotal = Number(mm[1]) || 1;
-    d.memUsed  = Number(mm[2]) || 0;
-    d.memPct   = Math.round((d.memUsed / d.memTotal) * 100);
+    const memLine  = (p[3] || '').split('\n').find(l => /^Mem:/.test(l)) || '';
+    const mm       = memLine.split(/\s+/);
+    d.memTotal     = Number(mm[1]) || 1;
+    d.memUsed      = Number(mm[2]) || 0;
+    d.memPct       = Math.round((d.memUsed / d.memTotal) * 100);
 
-    const df = (p[4] || '').split(/\s+/);
-    d.diskTotal = Number(df[1]) || 1;
-    d.diskUsed  = Number(df[2]) || 0;
-    d.diskPct   = parseInt(df[4]) || 0;
-    d.cores     = parseInt(p[5]) || 1;
+    const df       = (p[4] || '').split(/\s+/);
+    d.diskTotal    = Number(df[1]) || 1;
+    d.diskUsed     = Number(df[2]) || 0;
+    d.diskPct      = parseInt(df[4]) || 0;
+    d.cores        = parseInt(p[5]) || 1;
 
-    const nn = (p[6] || '0 0').split(' ');
+    const nn    = (p[6] || '0 0').split(' ');
     const netRx = Number(nn[0]) || 0;
     const netTx = Number(nn[1]) || 0;
     const prevNet = ctx.storage.getJSON(`_net_${serverKey}`);
@@ -228,7 +238,7 @@ export default async function (ctx) {
 
   } catch (e) {
     const errStr = String(e.message || e);
-    if (errStr.includes('timed out'))              d.error = '请求超时 (Timed Out)';
+    if (errStr.includes('timed out'))                  d.error = '请求超时 (Timed Out)';
     else if (errStr.toLowerCase().includes('connect')) d.error = '拒绝连接 (Connection Refused)';
     else d.error = errStr;
   } finally {
@@ -362,8 +372,13 @@ export default async function (ctx) {
     };
   }
 
+  // ── 兜底：显示调试信息而非空白 ──────────────────────────────────────────────
   return {
-    type: 'widget', backgroundColor: C.bg, padding: 16,
-    children: [{ type: 'text', text: '请使用 Medium 或 Small 组件。', textColor: C.text }]
+    type: 'widget', backgroundColor: C.bg, padding: 16, gap: 8,
+    children: [
+      { type: 'text', text: '⚠️ 组件尺寸不支持', font: { size: 14, weight: 'bold' }, textColor: C.text },
+      { type: 'text', text: `widgetFamily: ${ctx.widgetFamily || 'unknown'}`, font: { size: 10, family: 'Menlo' }, textColor: C.muted },
+      { type: 'text', text: '请使用 Medium 或 Small 组件', font: { size: 11 }, textColor: C.subText },
+    ]
   };
 }
