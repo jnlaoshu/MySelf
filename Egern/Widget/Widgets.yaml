@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与教学周配置、专属纪念日设定、节假日置顶、金融交割日开关，及最多 5 台服务器的轮播监控配置。
+# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与多模式教学周配置、专属纪念日设定、节假日置顶、金融交割日开关，及最多 5 台服务器的轮播监控配置。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.25 19:25
+# ⏱️ 更新时间: 2026.03.26 08:30
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -20,8 +20,14 @@ env_schema:
     default_value: "星座"
 
   SHOW_TEACHING_WEEK:
-    name: 📚 显示教学周 (仅星座模式有效)
-    description: "开启后会在星座前显示当前教学周次。若上方选了周次模式，则本开关强制失效。"
+    name: 📚 全局启用教学周
+    description: "总开关。开启后，可根据下方设定在星座或周次模式旁展示教学周进度。"
+    options: ["true", "false"]
+    default_value: "true"
+
+  SHOW_TEACHING_WEEK_IN_WEEK:
+    name: 🔄 在周次模式下显示教学周
+    description: "开启后，即使上方选择了[周次]，也会在周次文本前强制显示教学周进度。"
     options: ["true", "false"]
     default_value: "true"
 
