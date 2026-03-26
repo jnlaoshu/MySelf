@@ -1,13 +1,18 @@
 /**
  * ==========================================
- * 📌 模块名称: 🌐 实时网络信息面板 (Pro Max 融合终极版)
- * ✨ 主要功能: 内网/本地/节点精准 IP 与原生住宅防欺诈侦测；独家双轨测速胶囊底座；双向实时网速测试（Cloudflare 节点）含颜色智能警示（失败降级灰色）；防假死右下角时间戳水印；动态捕捉底层代理协议（VLESS/Trojan 等）并在节点行后缀展示；智能 DNS 泄漏侦测（仅代理生效时触发）触发红色高亮预警；内网/外网 IPv6 支持状态独立识别，分行精准标注 [v6]；代理状态绿色盾牌图标；全角/半角括号双兼容 ISP 过滤；适配系统深浅色模式。
+ * 📌 模块名称: 🌐 实时网络信息面板
+ * ✨ 主要功能: 内网/本地/节点精准 IP 与原生住宅防欺诈侦测；独家双轨测速胶囊底座；双向实时网速测试；防假死时间戳水印；动态捕捉底层代理协议；智能 DNS 泄漏侦测；内网/外网 IPv6 支持状态独立识别。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
- * ⏱️ 更新时间: 2026.03.22 09:45
+ * ⏱️ 更新时间: 2026.03.26 09:25
  * ==========================================
  */
 
 export default async function(ctx) {
+
+  // ── 全局防崩溃时间基准 ──────────────────────────────────────────
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
   // ── 调色板（支持深浅色自适应）────────────────────────────────────
   const C = {
@@ -191,23 +196,22 @@ export default async function(ctx) {
     const riskTxt = risk === undefined ? "未知风险" : (risk >= 80 ? `极高危(${risk})` : risk >= 70 ? `高危(${risk})` : risk >= 40 ? `中危(${risk})` : `低危(${risk})`);
     const r4Content = `${pure.isResidential === true ? "原生住宅" : (pure.isResidential === false ? "商业机房" : "未知属性")} / ${riskTxt}`;
 
-    // ── 时间戳水印（防假死，显示最后刷新时间）───────────────────
-    const now = new Date();
-    const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
     // ── 通用行渲染器（图标 + 标签 + 内容，支持传入内容颜色）────
     const buildRow = (icon, color, label, content, contentColor = C.sub) => ({
       type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 45, children: [
-          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-          { type: 'text', text: label, font: { size: 12, weight: 'heavy' }, textColor: color }
-        ]},
+        {
+          // ⭐️ 精确到像素的调优：width 设为 52
+          type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+            { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
+            { type: 'text', text: label, font: { size: 12, weight: 'heavy' }, textColor: color }
+          ]
+        },
         { type: 'text', text: content, font: { size: 12, weight: 'medium' }, textColor: contentColor, maxLines: 1, minScale: 0.5, flex: 1 }
       ]
     });
 
     // ── 组件渲染 ──────────────────────────────────────────────────
-    const widgetConfig = {
+    let widgetConfig = {
       type: 'widget', padding: 12,
       backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
@@ -266,9 +270,14 @@ export default async function(ctx) {
       type: 'widget', padding: 12,
       backgroundGradient: { type: 'linear', colors: [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }], startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
-        { type: 'text', text: '小组件崩溃 ⚠️', font: { size: 14, weight: 'heavy' }, textColor: '#FF453A' },
+        { type: 'text', text: '网络面板崩溃 ⚠️', font: { size: 14, weight: 'heavy' }, textColor: '#FF453A' },
         { type: 'spacer', length: 4 },
-        { type: 'text', text: String(err.message || err), font: { size: 11 }, textColor: '#8E8E93', maxLines: 5 }
+        { type: 'text', text: String(err.message || err), font: { size: 11 }, textColor: '#8E8E93', maxLines: 5 },
+        { type: 'spacer' },
+        { type: 'stack', direction: 'row', children: [
+          { type: 'spacer' },
+          { type: 'text', text: `重试于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: '#8E8E93' }
+        ]}
       ]
     };
   }
