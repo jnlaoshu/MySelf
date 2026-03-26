@@ -1,9 +1,9 @@
 /**
  * ==========================================
- * 📌 代码名称: ⛽ 全国油价及调价预测面板 (融合版)
- * ✨ 主要功能: 实时省市油价；四宫格卡片布局简化展示；右上角与底栏保持经典详尽的调价倒数与预测格式；修复涨跌关键字解析；对齐其他组件头部间距；深浅色适配。
+ * 📌 代码名称: ⛽ 全国油价及调价预测面板 (融合终极版)
+ * ✨ 主要功能: 实时省市油价；四宫格卡片布局简化展示；右上角保持经典详尽的调价倒数格式；底栏引入智能趋势引擎(≤4天预测高亮，>4天本轮回顾置灰)；修复涨跌关键字解析；对齐其他组件头部间距；深浅色适配。
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 更新时间: 2026.03.26 08:15
+ * ⏱️ 更新时间: 2026.03.26 17:40
  * ==========================================
  */
 
@@ -58,10 +58,12 @@ export default async function (ctx) {
   const nextAdjust = getNextAdjust();
   const infoColor  = nextAdjust.isUrgent ? C.red : C.gold;
 
-  // ==================== 油价数据抓取 ====================
+  // ==================== 油价数据抓取与智能趋势引擎 ====================
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "全国";
-  let trendLabel = "本轮调价: ";
+  
+  // ⭐️ 默认初始状态
+  let trendLabel = "调价趋势: ";
   let trendInfo  = "暂无数据";
   let trendColor = C.muted;
 
@@ -90,6 +92,7 @@ export default async function (ctx) {
       const rd = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
       const adjustDate = rd ? `${P(rd[1])}.${P(rd[2])} ${P(rd[3])}:00` : "未知时间";
 
+      // ⭐️ 融入强大的关键词识别库
       const isUp   = /上调|上涨|涨/.test(priceText);
       const isDown = /下调|下跌|降|跌/.test(priceText);
       const amounts = (priceText.match(/[\d.]+\s*元\/升/g) || []).map(p => p.match(/[\d.]+/)[0]);
@@ -99,9 +102,13 @@ export default async function (ctx) {
 
       trendInfo = `${adjustDate}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
 
+      // ⭐️ 融入第8/9个工作日法则的智能切换逻辑
       if (nextAdjust.daysLeft <= 4) {
         trendLabel = "下轮预测: ";
         trendColor = isUp ? C.red : isDown ? C.teal : C.muted;
+      } else {
+        trendLabel = "本轮调价: ";
+        trendColor = C.muted; // >4天锁定为灰色回顾
       }
     }
   } catch (_) {}
@@ -173,9 +180,12 @@ export default async function (ctx) {
           mkText(updateTimeStr, 11, "bold", C.muted)
         ], 4),
         mkSpacer(),
-        mkText(trendLabel, 11, "medium", C.muted),
-        mkText(trendInfo, 11, "bold", trendColor, { lineLimit: 1, minScale: 0.7 })
-      ], 2)
+        // ⭐️ 采用下面版本中的右下角排版结构
+        { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
+            mkText(trendLabel, 11, "medium", C.muted),
+            mkText(trendInfo, 11, "bold", trendColor, { lineLimit: 1, minScale: 0.7 })
+        ]}
+      ], 0)
 
     ]
   };
