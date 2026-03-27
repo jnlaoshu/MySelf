@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.03.24 20:42
+# ⏱️ 更新时间: 2026.03.27 09:20
 # ==========================================
 
 ipv6: false
@@ -199,13 +199,6 @@ policy_groups:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
   - auto_test:
-      name: 自动优选
-      policies: [全部节点]
-      flatten: true
-      interval: 600
-      tolerance: 50
-      icon: ⚡️
-  - auto_test:
       name: 香港节点
       policies: [全部节点]
       flatten: true
@@ -272,7 +265,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
   - select:
       name: 自选策略
-      policies: [自动优选, 香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
+      policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, DIRECT]
       icon: 😜
   - select:
       name: AIGC
@@ -286,7 +279,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
   - select:
       name: Disney
-      policies: [狮城节点, 香港节点, 自选策略]
+      policies: [狮城节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
   - select:
@@ -296,7 +289,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
   - select:
       name: Netflix
-      policies: [狮城节点, 香港节点, 台湾节点, 自选策略]
+      policies: [狮城节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
   - select:
@@ -306,27 +299,27 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
   - select:
       name: TikTok
-      policies: [日本节点, 香港节点, 自选策略]
+      policies: [日本节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
   - select:
       name: YouTubeMusic
-      policies: [香港节点, 台湾节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
   - select:
       name: YouTube
-      policies: [香港节点, 台湾节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
   - select:
       name: GitHub
-      policies: [香港节点, 美国节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
   - select:
       name: Google
-      policies: [美国节点, 香港节点, 自选策略]
+      policies: [美国节点,自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
   - select:
@@ -341,12 +334,12 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
   - select:
       name: Telegram
-      policies: [香港节点, 美国节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
   - select:
       name: Twitter
-      policies: [香港节点, 美国节点, 自选策略]
+      policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
   - select:
