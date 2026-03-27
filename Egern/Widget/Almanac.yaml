@@ -2,7 +2,7 @@
 # 📌 模块名称: 岁时黄历小组件
 # ✨ 主要功能: 实时推算公农历、干支、时辰及节气倒数；聚合 API 提供宜忌、冲煞与运势评分；右上角支持“星座/周次”模式动态切换，支持多模式下外挂教学周显示。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml
-# ⏱️ 更新时间: 2026.03.26 08:30
+# ⏱️ 更新时间: 2026.03.28 07:25
 # ==========================================
 
 name: "岁时黄历小组件"
@@ -32,8 +32,8 @@ env_schema:
 
   TEACHING_WEEK_START:
     name: 🗓️ 教学周起始日期
-    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/02/23)"
-    default_value: "2026/02/23"
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/03/02)"
+    default_value: "2026/03/02"
 
 scriptings:
   - generic:
