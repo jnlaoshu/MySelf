@@ -1,20 +1,22 @@
 # ==========================================
 # 📌 模块名称: 时光倒数小组件
-# ✨ 主要功能: 高度可定制的倒数日历。支持设定最多 6 个专属纪念日、节假日置顶高亮，以及动态开关春假/秋假与金融交割日显示。
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml
-# ⏱️ 更新时间: 2026.03.25 20:00
+# ✨ 主要功能: 高度可定制的倒数日历。支持三尺寸自适应、优先级排序、周末主题、最多 6 个专属纪念日、节假日置顶，以及动态开关春假/秋假与金融交割日显示。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml
+# ⏱️ 2026.03.28 07:35
 # ==========================================
 
 name: "时光倒数小组件"
-description: "倒数日历面板，支持自定义纪念日、假期开关与节日置顶。"
+description: "倒数日历面板，支持自定义纪念日、假期开关、优先级排序与节日置顶。"
 
 auto_update:
   interval: 43200
 
 env_schema:
+
+  # ── 节日控制 ──────────────────────────────────────────────────────────────
   PINNED_HOLIDAY:
     name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考）"
+    description: "高亮置顶的节日名称，多个用英文逗号分隔（默认：高考）"
     default_value: "高考"
 
   SHOW_SCHOOL_HOLIDAYS:
@@ -22,23 +24,49 @@ env_schema:
     description: "是否在倒数面板中显示春假和秋假"
     options: ["true", "false"]
     default_value: "true"
-    
+
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
-    
+
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
-    
+
   SHOW_FINANCE_DATES:
     name: 📈 显示金融交割日
     description: "是否显示 A 股期指交割日与期权行权日"
     options: ["true", "false"]
     default_value: "true"
 
+  # ── 排序与主题 ────────────────────────────────────────────────────────────
+  ENABLE_PRIORITY_SORT:
+    name: 🔢 启用优先级排序
+    description: "开启后，重点节日（春节、国庆等）自动前置显示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  ENABLE_EXCLUSIVE_WEIGHT:
+    name: ⬆️ 提高专属纪念日权重
+    description: "开启后，专属纪念日在同日期竞争时优先展示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  ENABLE_WEEKEND_THEME:
+    name: 🎨 周末蓝调背景
+    description: "开启后，周六/周日自动切换为蓝调背景风格"
+    options: ["true", "false"]
+    default_value: "true"
+
+  SMALL_FORCE_FOUR_ROWS:
+    name: 📐 小号补足四行
+    description: "开启后，小号尺寸会从各类别补位，尽量保持四行展示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  # ── 专属纪念日 ────────────────────────────────────────────────────────────
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称"
@@ -47,30 +75,35 @@ env_schema:
     name: 📅 纪念日 1 日期
     description: "日期格式必须严格为 MM/DD"
     default_value: "11/10"
+
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
     name: 📅 纪念日 2 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_3:
     name: 🎁 专属纪念日 3
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_3:
     name: 📅 纪念日 3 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_4:
     name: 🎁 专属纪念日 4
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_4:
     name: 📅 纪念日 4 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_5:
     name: 🎁 专属纪念日 5
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_5:
     name: 📅 纪念日 5 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_6:
     name: 🎁 专属纪念日 6
     description: "留空则不显示该项"
