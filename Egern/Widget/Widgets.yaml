@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与多模式教学周配置、专属纪念日设定、节假日置顶、金融交割日开关，及最多 5 台服务器的轮播监控配置。
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.28 07:25
+# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与多模式教学周配置、专属纪念日设定、节假日置顶、优先级排序、金融交割日开关，及最多 5 台服务器的轮播监控配置。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
+# ⏱️ 2026.03.28 11:25
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -12,7 +12,8 @@ auto_update:
   interval: 43200
 
 env_schema:
-  # ==================== 通用配置 ====================
+
+  # ── 岁时黄历 ──────────────────────────────────────────────────────────────
   ASTRO_OR_WEEK:
     name: 🔮 黄历右上角显示模式
     description: "选择黄历面板右上角是显示星座，还是当年/当月周次"
@@ -21,54 +22,81 @@ env_schema:
 
   SHOW_TEACHING_WEEK:
     name: 📚 全局启用教学周
-    description: "总开关。开启后，可根据下方设定在星座或周次模式旁展示教学周进度。"
+    description: "总开关。开启后，可在星座或周次模式旁展示教学周进度。"
     options: ["true", "false"]
     default_value: "true"
 
   SHOW_TEACHING_WEEK_IN_WEEK:
     name: 🔄 在周次模式下显示教学周
-    description: "开启后，即使上方选择了[周次]，也会在周次文本前强制显示教学周进度。"
+    description: "开启后，即使选择了「周次」，也会在周次文本前强制显示教学周进度。"
     options: ["true", "false"]
     default_value: "true"
 
   TEACHING_WEEK_START:
     name: 🗓️ 教学周起始日期
-    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/03/02)"
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD（例如 2026/03/02）"
     default_value: "2026/03/02"
+
+  # ── 时光倒数 · 节日控制 ───────────────────────────────────────────────────
+  PINNED_HOLIDAY:
+    name: ✨ 始终置顶节假日
+    description: "高亮置顶的节日名称，多个用英文逗号分隔（默认：高考）"
+    default_value: "高考"
 
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
     description: "是否在倒数面板中显示春假和秋假"
     options: ["true", "false"]
     default_value: "true"
-    
+
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
-    
+
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
     description: "格式 MM/DD，留空使用内置逻辑"
     default_value: ""
-    
+
   SHOW_FINANCE_DATES:
     name: 📈 显示金融交割日
     description: "是否显示 A 股期指交割日与期权行权日"
     options: ["true", "false"]
     default_value: "true"
-    
+
+  # ── 时光倒数 · 排序与主题 ─────────────────────────────────────────────────
+  ENABLE_PRIORITY_SORT:
+    name: 🔢 启用优先级排序
+    description: "开启后，重点节日（春节、国庆等）自动前置显示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  ENABLE_EXCLUSIVE_WEIGHT:
+    name: ⬆️ 提高专属纪念日权重
+    description: "开启后，专属纪念日在同日期竞争时优先展示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  ENABLE_WEEKEND_THEME:
+    name: 🎨 周末蓝调背景
+    description: "开启后，周六/周日自动切换为蓝调背景风格"
+    options: ["true", "false"]
+    default_value: "true"
+
+  SMALL_FORCE_FOUR_ROWS:
+    name: 📐 小号补足四行
+    description: "开启后，小号尺寸会从各类别补位，尽量保持四行展示"
+    options: ["true", "false"]
+    default_value: "true"
+
+  # ── 全国油价 ──────────────────────────────────────────────────────────────
   GAS_REGION:
     name: 📍 油价查询地区
     description: "直辖市输入拼音，其他省份输入省份/省会拼音"
     default_value: "sichuan/chengdu"
 
-  PINNED_HOLIDAY:
-    name: ✨ 始终置顶节假日
-    description: "输入你想高亮置顶在顶部的节日名称（默认：高考）"
-    default_value: "高考"
-
-  # ==================== 纪念日配置 ====================
+  # ── 专属纪念日 ────────────────────────────────────────────────────────────
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称"
@@ -77,30 +105,35 @@ env_schema:
     name: 📅 纪念日 1 日期
     description: "日期格式必须严格为 MM/DD"
     default_value: "11/10"
+
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
     name: 📅 纪念日 2 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_3:
     name: 🎁 专属纪念日 3
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_3:
     name: 📅 纪念日 3 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_4:
     name: 🎁 专属纪念日 4
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_4:
     name: 📅 纪念日 4 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_5:
     name: 🎁 专属纪念日 5
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_5:
     name: 📅 纪念日 5 日期
     description: "日期格式必须严格为 MM/DD"
+
   EXCLUSIVE_NAME_6:
     name: 🎁 专属纪念日 6
     description: "留空则不显示该项"
@@ -108,7 +141,7 @@ env_schema:
     name: 📅 纪念日 6 日期
     description: "日期格式必须严格为 MM/DD"
 
-  # ==================== 服务器监控 - 逐一配置（最多 5 台） ====================
+  # ── 服务器监控 ────────────────────────────────────────────────────────────
   SSH_CYCLE_EVERY:
     name: 🔄 轮播间隔（刷新几次切换一次）
     description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
