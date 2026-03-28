@@ -6,7 +6,7 @@
  * • 三尺寸自适应布局：
  * - 小号：日历风，农历信息全量展示(含生肖与时辰)，紧凑美观。
  * - 中号：经典黄历风，保留原生原版经典布局结构与缩进。
- * - 大号：铺满换行风，字号图标等比放大，采用单一列表容器保证每一行间距绝对均等。
+ * - 大号：对标倒计时排版，节气展示扩充至 6 个，统一行距逐行铺满自动换行。
  * • 农历引擎：干支、生肖、农历日期、二十四节气，全部本地计算。
  * • 宜忌数据：远程 API 获取，多字段 key 兼容，断网自动降级。
  *
@@ -16,7 +16,7 @@
  * TEACHING_WEEK_START   — 教学周起始日期，格式 YYYY-MM-DD
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.03.28 21:40
+ * ⏱️ 更新时间: 2026.03.28 21:55
  * ==========================================
  */
 
@@ -136,20 +136,22 @@ export default async function(ctx) {
     }
   };
 
-  // ── 未来节气（取前 4 条）─────────────────────────────────────────────────
+  // ── 未来节气（按需提取 4 条或 6 条）──────────────────────────────────────
   const todayMs  = new Date(Y, M - 1, D).getTime();
   const allTerms = [];
   [-1, 0, 1].forEach(offset => {
     for (let i = 1; i <= 24; i++)
       allTerms.push({ name: Lunar.termNames[i - 1], date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i)) });
   });
+  
   let upcomingTerms = [];
+  let upcomingTermsLarge = [];
   for (let i = 0; i < allTerms.length; i++) {
     const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
     if (diff >= 0) {
       const startIdx = diff === 0 ? i + 1 : i;
-      upcomingTerms  = allTerms.slice(startIdx, startIdx + 4)
-        .map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`);
+      upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`);
+      upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`);
       break;
     }
   }
@@ -211,7 +213,7 @@ export default async function(ctx) {
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 小号布局渲染 ──────────────────────────────────────────────────────────
+  // ── 小号布局渲染 (严格保留原样全字段) ──────────────────────────────────
   if (isSmall) {
     return {
       type: 'widget', padding: 12, url: 'calshow://',
@@ -240,14 +242,14 @@ export default async function(ctx) {
     };
   }
 
-  // ── 大号布局渲染 ──────────────────────────────────────────────────────────
+  // ── 大号专属布局渲染 (完美均等行距 + 自动折行) ───────────────────────────
   if (isLarge) {
     const fz      = 14;
     const icz     = 15;
     const lw      = 60;
-    const maxW    = 36;
+    const maxW    = 38;
     
-    // 强制使用单一列表堆叠引擎，保证所有行间距绝对等高
+    // maxLines: 1 是防止原生折断导致间距不均的关键修复
     const buildLargeRow = (icon, color, label, content, isFirst = true, contentColor = C.sub) => ({
       type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
       children: [
@@ -255,14 +257,15 @@ export default async function(ctx) {
           mkIcon(isFirst ? icon : 'circle.fill', isFirst ? color : C.transparent, icz),
           mkText(isFirst ? label : " ", fz, "heavy", isFirst ? color : C.transparent)
         ]},
-        mkText(content, fz, "medium", contentColor, { flex: 1 })
+        mkText(content, fz, "medium", contentColor, { maxLines: 1, flex: 1 })
       ]
     });
 
     const splitTextLarge = (str) => {
-      if (!str) return [];
+      const text = String(str || "");
+      if (!text) return [];
       let lines = [], currentLine = "", w = 0;
-      const tokens = str.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
+      const tokens = text.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
       for (const token of tokens) {
         const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
         if (w + tokenW > maxW) {
@@ -278,15 +281,20 @@ export default async function(ctx) {
       return lines;
     };
 
-    const buildLargeMultiRows = (raw, icon, color, label, contentColor = C.sub) => {
-      if (!raw) return [];
+    const largeRows = [];
+    const pushLargeRows = (raw, icon, color, label, contentColor = C.sub) => {
+      if (!raw) return;
       const lines = splitTextLarge(raw);
-      const rows = [];
       lines.forEach((line, idx) => {
-        rows.push(buildLargeRow(icon, color, label, line, idx === 0, contentColor));
+        largeRows.push(buildLargeRow(icon, color, label, line, idx === 0, contentColor));
       });
-      return rows;
     };
+
+    // 将所有内容逐行拆解推入单一数组，节气使用 6 条数据的 upcomingTermsLarge
+    pushLargeRows(rawYi, 'checkmark.circle.fill', C.yi, '宜');
+    pushLargeRows(rawJi, 'xmark.circle.fill', C.ji, '忌');
+    pushLargeRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞');
+    pushLargeRows(upcomingTermsLarge.join("，"), 'leaf.arrow.circlepath', C.term, '节气', C.term);
 
     return {
       type: 'widget', padding: 16, url: 'calshow://',
@@ -309,16 +317,10 @@ export default async function(ctx) {
 
         mkSpacer(12),
 
-        // 单一 Stack 引擎，gap: 8 保证所有内容垂直间距等高
+        // 单一 Stack 引擎，gap: 8 保证农历、宜、忌、冲煞、节气之间所有垂直间距绝对等高
         { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, children: [
-          mkText(
-            `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`,
-            15, "bold", C.gold
-          ),
-          ...buildLargeMultiRows(rawYi, 'checkmark.circle.fill', C.yi, '宜'),
-          ...buildLargeMultiRows(rawJi, 'xmark.circle.fill', C.ji, '忌'),
-          ...buildLargeMultiRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞'),
-          ...buildLargeMultiRows(`未来节气：${upcomingTerms.join("，")}`, 'leaf.arrow.circlepath', C.term, '节气', C.term)
+          mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, 14, "bold", C.gold),
+          ...largeRows
         ]},
 
         mkSpacer()
