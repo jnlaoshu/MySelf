@@ -147,6 +147,33 @@ export default async function (ctx) {
     const la = (p[0] || '0 0 0').split(' ');
     d.load = [la[0], la[1], la[2]];
 
+    // 换算服务器运行时间：支持 年/月/日/时/分/秒
+    const upSec = parseFloat((p[1] || '0').split(' ')[0]);
+    if (!isNaN(upSec) && upSec > 0) {
+      const y = Math.floor(upSec / 31536000); // 365天为1年
+      let rem = upSec % 31536000;
+      const mo = Math.floor(rem / 2592000);   // 30天为1月
+      rem = rem % 2592000;
+      const d_val = Math.floor(rem / 86400);
+      rem = rem % 86400;
+      const h = Math.floor(rem / 3600);
+      rem = rem % 3600;
+      const m_val = Math.floor(rem / 60);
+      const s_val = Math.floor(rem % 60);
+
+      let uStr = "";
+      if (y > 0) uStr += y + '年';
+      if (mo > 0) uStr += mo + '月';
+      if (d_val > 0) uStr += d_val + '日';
+      if (h > 0) uStr += h + '时';
+      if (m_val > 0) uStr += m_val + '分';
+      uStr += s_val + '秒';
+      
+      d.uptimeStr = uStr;
+    } else {
+      d.uptimeStr = "0秒";
+    }
+
     const cpuNums  = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
     const prevCpu  = ctx.storage.getJSON(`_cpu_${serverKey}`);
@@ -191,12 +218,7 @@ export default async function (ctx) {
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // 构建 x年x月x日 x时x分x秒 更新时间
-  const nowTimeObj = new Date();
-  const padT = n => String(n).padStart(2, "0");
-  const fullTimeStr = `${nowTimeObj.getFullYear()}年${nowTimeObj.getMonth() + 1}月${nowTimeObj.getDate()}日 ${padT(nowTimeObj.getHours())}时${padT(nowTimeObj.getMinutes())}分${padT(nowTimeObj.getSeconds())}秒`;
-
-  // 动态生成的 Header：小号不显示时间；大号放大字号与图标
+  // 动态生成的 Header：小号不显示 Uptime；大号放大 Uptime 字号与图标
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
     children: [
@@ -208,7 +230,7 @@ export default async function (ctx) {
       ...(!isSmall ? [{
         type: 'stack', direction: 'row', alignItems: 'center', gap: isLarge ? 4 : 2, children: [
           { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: isLarge ? 13 : 11, height: isLarge ? 13 : 11 },
-          { type: 'text', text: fullTimeStr, font: { size: isLarge ? 11 : 10, weight: 'bold', family: 'Menlo' }, textColor: C.disk, maxLines: 1 },
+          { type: 'text', text: d.uptimeStr, font: { size: isLarge ? 12 : 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 },
         ]
       }] : [])
     ]
