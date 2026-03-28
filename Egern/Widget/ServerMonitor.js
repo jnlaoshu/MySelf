@@ -1,13 +1,13 @@
 /**
  * ==========================================
- * 📌 服务器监控 Widget (三尺寸 Pro Max 版)
+ * 📌 服务器监控 Widget
  * * ✨ 【主要功能】
  * • 三端尺寸完美适配：
- * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡。
+ * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡，移除顶部多余时间。
  * - 中号 (Medium)：经典双行双列卡片布局，紧凑高效，经典莫兰迪配色。
- * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号扩容，完美填满垂直空间。
+ * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号与图标大幅扩容，完美填满垂直空间。
  * • 硬件直连监控：通过 SSH 实时获取 CPU、内存、磁盘、网络、温度及负载。
- * • UI 视觉对齐：全局锁定左侧标签宽度 52，精细化对齐 13px 状态图标。
+ * • UI 视觉对齐：全局锁定左侧标签宽度，精细化对齐状态图标。
  * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
  * • 多端智能轮播：支持配置最多 5 台服务器进行周期性自动轮播展示。
  * * 🔗 【脚本引用】
@@ -147,12 +147,6 @@ export default async function (ctx) {
     const la = (p[0] || '0 0 0').split(' ');
     d.load = [la[0], la[1], la[2]];
 
-    const upSec = parseFloat((p[1] || '0').split(' ')[0]);
-    if (!isNaN(upSec) && upSec > 0) {
-      const days = Math.floor(upSec / 86400), h = Math.floor((upSec % 86400) / 3600), m = Math.floor((upSec % 3600) / 60);
-      d.uptimeStr = `${days > 0 ? days + '天' : ''}${h > 0 ? h + '时' : ''}${m}分`;
-    } else d.uptimeStr = "0分";
-
     const cpuNums  = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
     const prevCpu  = ctx.storage.getJSON(`_cpu_${serverKey}`);
@@ -169,13 +163,13 @@ export default async function (ctx) {
     d.cores = parseInt(p[5]) || 1;
 
     const nn = (p[6] || '0 0').split(' '), netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
-    const prevNet = ctx.storage.getJSON(`_net_${serverKey}`), now = Date.now();
+    const prevNet = ctx.storage.getJSON(`_net_${serverKey}`), nowTime = Date.now();
     d.rxRate = 0; d.txRate = 0;
     if (prevNet && prevNet.ts) {
-      const el = (now - prevNet.ts) / 1000;
+      const el = (nowTime - prevNet.ts) / 1000;
       if (el > 0 && el < 3600) { d.rxRate = Math.max(0, (netRx - prevNet.rx) / el); d.txRate = Math.max(0, (netTx - prevNet.tx) / el); }
     }
-    ctx.storage.setJSON(`_net_${serverKey}`, { rx: netRx, tx: netTx, ts: now });
+    ctx.storage.setJSON(`_net_${serverKey}`, { rx: netRx, tx: netTx, ts: nowTime });
     d.netRx = netRx; d.netTx = netTx;
 
     const tempRaw = parseInt(p[7]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
@@ -193,25 +187,35 @@ export default async function (ctx) {
     children: pct > 0 ? [{ type: 'stack', flex: Math.max(1, pct), height: h, borderRadius: h / 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : [])] : [{ type: 'spacer' }],
   });
 
+  const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
+  const isSmall = family.includes('small');
+  const isLarge = family.includes('large');
+
+  // 构建 x年x月x日 x时x分x秒 更新时间
+  const nowTimeObj = new Date();
+  const padT = n => String(n).padStart(2, "0");
+  const fullTimeStr = `${nowTimeObj.getFullYear()}年${nowTimeObj.getMonth() + 1}月${nowTimeObj.getDate()}日 ${padT(nowTimeObj.getHours())}时${padT(nowTimeObj.getMinutes())}分${padT(nowTimeObj.getSeconds())}秒`;
+
+  // 动态生成的 Header：小号不显示时间；大号放大字号与图标
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
     children: [
-      { type: 'image', src: 'sf-symbol:server.rack', color: C.main, width: 14, height: 14 },
+      { type: 'image', src: 'sf-symbol:server.rack', color: C.main, width: isLarge ? 18 : 14, height: isLarge ? 18 : 14 },
       { type: 'spacer', length: 6 },
-      { type: 'text', text: d.hostname, font: { size: 14, weight: 'heavy' }, textColor: C.main, maxLines: 1 },
-      ...(d.totalServers > 1 ? [{ type: 'spacer', length: 6 }, { type: 'text', text: `${d.serverIndex}/${d.totalServers}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }] : []),
+      { type: 'text', text: d.hostname, font: { size: isLarge ? 18 : 14, weight: 'heavy' }, textColor: C.main, maxLines: 1 },
+      ...(d.totalServers > 1 ? [{ type: 'spacer', length: 6 }, { type: 'text', text: `${d.serverIndex}/${d.totalServers}`, font: { size: isLarge ? 11 : 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }] : []),
       { type: 'spacer' },
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-        { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: 11, height: 11 },
-        { type: 'text', text: d.uptimeStr, font: { size: 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 },
-      ]}
+      ...(!isSmall ? [{
+        type: 'stack', direction: 'row', alignItems: 'center', gap: isLarge ? 4 : 2, children: [
+          { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: isLarge ? 13 : 11, height: isLarge ? 13 : 11 },
+          { type: 'text', text: fullTimeStr, font: { size: isLarge ? 11 : 10, weight: 'bold', family: 'Menlo' }, textColor: C.disk, maxLines: 1 },
+        ]
+      }] : [])
     ]
   });
 
-  const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
-
   // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
-  if (family.includes('small')) {
+  if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => ({
       type: 'stack', direction: 'row', alignItems: 'center', backgroundColor: bg, borderRadius: 8, padding: [4, 10],
       children: [
@@ -238,23 +242,23 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
-  if (family.includes('large')) {
+  // ── 视图渲染 (大号尺寸 - 扩容优化版) ──────────────────────────────────────
+  if (isLarge) {
     const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 24, gap: 4, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-            { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-            { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
+            { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
+            { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color }
           ]},
           { type: 'spacer' },
-          { type: 'text', text: value, font: { size: 22, weight: 'heavy', family: 'Menlo' }, textColor: color },
+          { type: 'text', text: value, font: { size: 32, weight: 'heavy', family: 'Menlo' }, textColor: color },
         ]},
         { type: 'spacer' },
-        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
-          bar(pct, color, 6),
-          { type: 'text', text: subtext, font: { size: 11, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [
+          bar(pct, color, 8),
+          { type: 'text', text: subtext, font: { size: 13, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
         ]}
       ]
     });
@@ -262,25 +266,25 @@ export default async function (ctx) {
     const netCardLarge = (bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 24, gap: 4, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-            { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
-            { type: 'text', text: 'NET', font: { size: 12, weight: 'heavy' }, textColor: C.net }
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
+            { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
+            { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net }
           ]},
           { type: 'spacer' },
-          { type: 'text', text: d.host, font: { size: 11, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
+          { type: 'text', text: d.host, font: { size: 13, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
         ]},
         { type: 'spacer' },
-        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 6, children: [
+        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
           { type: 'stack', direction: 'row', children: [ 
-            { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.net }, 
+            { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 14, weight: 'bold', family: 'Menlo' }, textColor: C.net }, 
             { type: 'spacer' }, 
-            { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.mem } 
+            { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 14, weight: 'bold', family: 'Menlo' }, textColor: C.mem } 
           ]},
           { type: 'stack', direction: 'row', children: [ 
-            { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.sub }, 
+            { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 11, family: 'Menlo' }, textColor: C.sub }, 
             { type: 'spacer' }, 
-            { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.sub } 
+            { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 11, family: 'Menlo' }, textColor: C.sub } 
           ]}
         ]}
       ]
@@ -305,7 +309,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (中号尺寸) ──────────────────────────────────────────────────
+  // ── 视图渲染 (中号尺寸 - 原版锁定不变) ───────────────────────────────────
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
