@@ -1,23 +1,39 @@
 /**
  * ==========================================
- * 📌 全国油价 Widget
- * ✨ 功能概览:
- * • 实时省市油价获取，支持全拼音自定义城市
- * • 四宫格卡片布局，等比分配空间，展示直观
- * • 内置油价日历倒数，基于“第8/9个工作日”法则智能切换趋势
- * • 距调价 ≤4 天：预测高亮；>4 天：本轮回顾置灰
- * 🔧 环境变量:
- * GAS_REGION  — 城市全拼音 (默认: sichuan/chengdu)
- * 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * ⏱️ 2026.03.28 15:30
+ * 📌 全国油价 Widget (三尺寸自适应版)
+ * * ✨ 【主要功能】
+ * • 三端尺寸完美适配：
+ * - 小号 (Small) ：极简 2x2 四宫格，告别拥挤遮挡，纯净留白。
+ * - 中号 (Medium)：经典 1x4 横排卡片布局，等比分配，信息直观。
+ * - 大号 (Large) ：沉浸式 2x2 放大四宫格，字号与间距完美扩容。
+ * • 实时油价精准拉取：支持 92/95/98/柴油，全拼音自定义省市参数。
+ * • 智能调价倒数引擎：内置 2026 年法定调价日历，自动计算倒数时间。
+ * • 视觉预警机制：距调价 ≤4 天预测高亮变色；>4 天本轮回顾置灰。
+ * * 🔧 【环境变量】
+ * GAS_REGION — 城市全拼音 (默认: sichuan/chengdu)
+ * * 🔗 【脚本引用】
+ * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+ * * ⏱️ 【更新时间】
+ * 2026.03.29 07:00
  * ==========================================
  */
 
 export default async function (ctx) {
+  
+  // ── 基础环境与配置 ──────────────────────────────────────────────────────
   const env = ctx.env || {};
   const regionParam = env.GAS_REGION || env.region || "sichuan/chengdu";
 
-  // ── 色彩令牌 ──────────────────────────────────────────────────────────────
+  const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
+  const isSmall = family.includes('small');
+  const isLarge = family.includes('large');
+
+  const now = new Date();
+  const Y   = now.getFullYear();
+  const P   = n => String(n).padStart(2, "0");
+  const updateTimeStr = `${P(now.getMonth()+1)}.${P(now.getDate())} ${P(now.getHours())}:${P(now.getMinutes())}`;
+
+  // ── 色彩令牌与日历 ──────────────────────────────────────────────────────
   const C = {
     bg:      [{ light: '#FAFAFA', dark: '#1C1C1E' }, { light: '#EFEFF4', dark: '#111113' }],
     card:    { light: '#FFFFFF', dark: '#2C2C2E' },
@@ -36,12 +52,12 @@ export default async function (ctx) {
     [10,14],[10,28],[11,11],[11,25],[12,9],[12,23]
   ];
 
-  const now = new Date();
-  const Y   = now.getFullYear();
-  const P   = n => String(n).padStart(2, "0");
-  const updateTimeStr = `${P(now.getMonth()+1)}.${P(now.getDate())} ${P(now.getHours())}:${P(now.getMinutes())}`;
+  // ── UI 渲染辅助构建器 ───────────────────────────────────────────────────
+  const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
+  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
-  // ── 调价计算引擎 ──────────────────────────────────────────────────────────
+  // ── 调价计算引擎 ────────────────────────────────────────────────────────
   const getNextAdjust = () => {
     const next = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59).getTime() > now.getTime());
     if (!next) return { dateStr: "待更新", countdown: "", isUrgent: false, daysLeft: 99 };
@@ -62,7 +78,7 @@ export default async function (ctx) {
   const nextAdjust = getNextAdjust();
   const infoColor  = nextAdjust.isUrgent ? C.red : C.gold;
 
-  // ── 数据获取 ──────────────────────────────────────────────────────────────
+  // ── 网络数据获取与解析 ──────────────────────────────────────────────────
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = "全国";
   let trendLabel = "调价趋势: ";
@@ -107,7 +123,7 @@ export default async function (ctx) {
     }
   } catch (_) {}
 
-  // ── 渲染器 ──────────────────────────────────────────────────────────────
+  // 格式化价格数据源
   const PRICE_ITEMS = [
     { label: "92号", key: "p92",    color: C.gold },
     { label: "95号", key: "p95",    color: C.red  },
@@ -115,10 +131,101 @@ export default async function (ctx) {
     { label: "柴油", key: "diesel", color: C.teal }
   ].map(i => ({ ...i, val: prices[i.key] })).filter(i => i.val !== null);
 
-  const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
-  const mkRow    = (children, gap = 4) => ({ type: "stack", direction: "row", alignItems: "center", gap, children });
-  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
+  // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
+  if (isSmall) {
+    const priceCardSmall = ({ label, val, color }) => ({
+      type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 10, padding: [6, 2, 6, 2],
+      children: [
+        mkSpacer(),
+        mkText(label, 10, "bold", color),
+        mkSpacer(3),
+        mkText(val.toFixed(2), 15, "heavy", C.main),
+        mkSpacer()
+      ]
+    });
+
+    return {
+      type: "widget", padding: 12, url: "hellobike://",
+      backgroundGradient: { type: "linear", colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [
+        mkRow([
+          { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 13, height: 13, color: C.main },
+          mkSpacer(4),
+          mkText(`${regionName}油价`, 13, "heavy", C.main, { maxLines: 1, minScale: 0.8 }),
+          mkSpacer()
+        ], 0),
+        mkSpacer(10),
+        
+        { type: "stack", direction: "column", gap: 8, flex: 1, children: [
+          { type: "stack", direction: "row", gap: 8, flex: 1, children: PRICE_ITEMS.slice(0, 2).map(priceCardSmall) },
+          { type: "stack", direction: "row", gap: 8, flex: 1, children: PRICE_ITEMS.slice(2, 4).map(priceCardSmall) }
+        ]},
+        
+        mkSpacer(10),
+        mkRow([
+          mkSpacer(),
+          { type: "image", src: "sf-symbol:clock.fill", width: 9, height: 9, color: nextAdjust.isUrgent ? C.red : C.muted },
+          mkSpacer(3),
+          mkText(`调价: ${nextAdjust.dateStr}`, 9, "bold", nextAdjust.isUrgent ? C.red : C.muted)
+        ], 0)
+      ]
+    };
+  }
+
+  // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
+  if (isLarge) {
+    const priceCardLarge = ({ label, val, color }) => ({
+      type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 16,
+      children: [
+        mkSpacer(),
+        mkText(label, 16, "heavy", color),
+        mkSpacer(10),
+        mkText(val.toFixed(2), 28, "heavy", C.main),
+        mkSpacer()
+      ]
+    });
+
+    return {
+      type: "widget", padding: 16, url: "hellobike://",
+      backgroundGradient: { type: "linear", colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [
+        mkRow([
+          { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 18, height: 18, color: C.main },
+          mkSpacer(4),
+          mkText(`${regionName}油价`, 17, "heavy", C.main),
+          mkSpacer(),
+          mkText("下轮调价: ", 12, "medium", infoColor, { minScale: 0.8 }),
+          mkText(nextAdjust.dateStr, 12, "bold", infoColor, { minScale: 0.8 }),
+          mkText(` ${nextAdjust.countdown}`, 12, "bold", infoColor, { minScale: 0.8 })
+        ], 0),
+
+        mkSpacer(16),
+        { type: "stack", direction: "column", gap: 12, flex: 1, children: [
+          { type: "stack", direction: "row", gap: 12, flex: 1, children: PRICE_ITEMS.slice(0, 2).map(priceCardLarge) },
+          { type: "stack", direction: "row", gap: 12, flex: 1, children: PRICE_ITEMS.slice(2, 4).map(priceCardLarge) }
+        ]},
+        mkSpacer(16),
+        { type: "stack", height: 0.5, backgroundColor: C.divider, borderRadius: 1, children: [] },
+        mkSpacer(12),
+
+        mkRow([
+          mkRow([
+            { type: "image", src: "sf-symbol:arrow.triangle.2.circlepath", width: 13, height: 13, color: C.muted },
+            mkSpacer(4),
+            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" })
+          ], 0),
+          mkSpacer(),
+          { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
+              mkText(trendLabel, 12, "medium", C.muted),
+              mkText(trendInfo, 12, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
+          ]}
+        ], 0)
+      ]
+    };
+  }
+
+  // ── 视图渲染 (中号默认尺寸) ──────────────────────────────────────────────
   const priceCard = ({ label, val, color }) => ({
     type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 13, padding: [12, 6, 12, 6],
     children: [
@@ -135,7 +242,7 @@ export default async function (ctx) {
       mkRow([
         { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 16, height: 16, color: C.main },
         mkSpacer(2),
-        mkText(`${regionName}油价`, 14, "heavy", C.main),
+        mkText(`${regionName}油价`, 15, "heavy", C.main),
         mkSpacer(),
         mkText("下轮调价: ", 11, "medium", infoColor),
         mkText(nextAdjust.dateStr, 11, "bold", infoColor),
@@ -151,12 +258,12 @@ export default async function (ctx) {
       mkRow([
         mkRow([
           { type: "image", src: "sf-symbol:arrow.triangle.2.circlepath", width: 11, height: 11, color: C.muted },
-          mkText(updateTimeStr, 11, "bold", C.muted)
+          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" })
         ], 4),
         mkSpacer(),
         { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
             mkText(trendLabel, 11, "medium", C.muted),
-            mkText(trendInfo, 11, "bold", trendColor, { lineLimit: 1, minScale: 0.7 })
+            mkText(trendInfo, 11, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
         ]}
       ], 0)
     ]
