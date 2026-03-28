@@ -1,12 +1,12 @@
 # ==========================================
-# 📌 模块名称: 服务器监控小组件
-# ✨ 主要功能: 通过 SSH 协议直连并可视化渲染远端服务器核心硬件指标；支持最多 5 台服务器自动轮播展示，自带网络延迟诊断。
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml
-# ⏱️ 更新时间: 2026.03.25 20:00
+# 📌 模块名称: 服务器监控 Widget
+# ✨ 主要功能: SSH 直连监控核心硬件指标，支持最多 5 台服务器自动轮播，内置动态告警色。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml
+# ⏱️ 2026.03.28 15:30
 # ==========================================
 
-name: "服务器监控小组件"
-description: "直连查看服务器 CPU/内存/磁盘/网络使用率，支持多台轮播。"
+name: "服务器监控 Widget"
+description: "通过 SSH 协议实时可视化远端服务器指标(CPU/内存/网络等)，支持最多 5 台多服务器自动轮播。"
 
 auto_update:
   interval: 43200
@@ -23,7 +23,6 @@ env_schema:
     default_value: "Oracle"
   SSH_SERVER_1_HOST:
     name: 🌐 服务器 1 IP / 域名
-    default_value: ""
   SSH_SERVER_1_PORT:
     name: 🔌 服务器 1 端口
     default_value: "22"
@@ -32,18 +31,14 @@ env_schema:
     default_value: "root"
   SSH_SERVER_1_PWD:
     name: 🔐 服务器 1 密码
-    default_value: ""
   SSH_SERVER_1_KEY:
     name: 🔑 服务器 1 私钥
-    default_value: ""
 
-  # 服务器 2
+  # 服务器 2（留空则不使用）
   SSH_SERVER_2_NAME:
     name: 🏷️ 服务器 2 显示名称
-    default_value: ""
   SSH_SERVER_2_HOST:
     name: 🌐 服务器 2 IP / 域名
-    default_value: ""
   SSH_SERVER_2_PORT:
     name: 🔌 服务器 2 端口
     default_value: "22"
@@ -52,18 +47,14 @@ env_schema:
     default_value: "root"
   SSH_SERVER_2_PWD:
     name: 🔐 服务器 2 密码
-    default_value: ""
   SSH_SERVER_2_KEY:
     name: 🔑 服务器 2 私钥
-    default_value: ""
 
   # 服务器 3
   SSH_SERVER_3_NAME:
     name: 🏷️ 服务器 3 显示名称
-    default_value: ""
   SSH_SERVER_3_HOST:
     name: 🌐 服务器 3 IP / 域名
-    default_value: ""
   SSH_SERVER_3_PORT:
     name: 🔌 服务器 3 端口
     default_value: "22"
@@ -72,18 +63,14 @@ env_schema:
     default_value: "root"
   SSH_SERVER_3_PWD:
     name: 🔐 服务器 3 密码
-    default_value: ""
   SSH_SERVER_3_KEY:
     name: 🔑 服务器 3 私钥
-    default_value: ""
 
   # 服务器 4
   SSH_SERVER_4_NAME:
     name: 🏷️ 服务器 4 显示名称
-    default_value: ""
   SSH_SERVER_4_HOST:
     name: 🌐 服务器 4 IP / 域名
-    default_value: ""
   SSH_SERVER_4_PORT:
     name: 🔌 服务器 4 端口
     default_value: "22"
@@ -92,18 +79,14 @@ env_schema:
     default_value: "root"
   SSH_SERVER_4_PWD:
     name: 🔐 服务器 4 密码
-    default_value: ""
   SSH_SERVER_4_KEY:
     name: 🔑 服务器 4 私钥
-    default_value: ""
 
   # 服务器 5
   SSH_SERVER_5_NAME:
     name: 🏷️ 服务器 5 显示名称
-    default_value: ""
   SSH_SERVER_5_HOST:
     name: 🌐 服务器 5 IP / 域名
-    default_value: ""
   SSH_SERVER_5_PORT:
     name: 🔌 服务器 5 端口
     default_value: "22"
@@ -112,10 +95,8 @@ env_schema:
     default_value: "root"
   SSH_SERVER_5_PWD:
     name: 🔐 服务器 5 密码
-    default_value: ""
   SSH_SERVER_5_KEY:
     name: 🔑 服务器 5 私钥
-    default_value: ""
 
 scriptings:
   - generic:
