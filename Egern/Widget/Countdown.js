@@ -1,39 +1,43 @@
 /**
  * ==========================================
  * 📌 时光倒数 Widget
- * ✨ 功能概览:
- * • 三尺寸自适应：小号提供4类节假日微缩无标签视图；中大号经典多行分类列表
- * • 数据重构优化：节日数据按年份缓存，一次性排序，环境变量解析更稳健
- * • 小号智能去重：已被置顶的高亮节日自动从小号列表中隐藏顺延
- * • 全局规范对齐：小号图标严格对标黄历大小(13px)，中大号左侧标签严格锁定 52 宽度
- * • 独家推算引擎：内置春秋假动态推算；A股期指交割日与期权行权日智能推算
- * • 优先级排序引擎：引入排序权重，支持单独提高专属纪念日权重
- * • 视觉增强矩阵：多节日置顶高亮；今日节日触发暖色背景；周末触发独立背景
- * 🔧 环境变量:
- * SHOW_SCHOOL_HOLIDAYS    — 是否显示春秋假 (默认: true)
- * SPRING_BREAK_DATE       — 春假自定义日期，格式 MM/DD
- * AUTUMN_BREAK_DATE       — 秋假自定义日期，格式 MM/DD
- * SHOW_FINANCE_DATES      — 是否显示金融交割日与行权日 (默认: true)
- * PINNED_HOLIDAY          — 需要置顶的节日名称，逗号分隔 (默认: 高考)
- * EXCLUSIVE_NAME_1~6      — 专属纪念日名称
- * EXCLUSIVE_DATE_1~6      — 专属纪念日日期，格式 MM/DD
- * ENABLE_PRIORITY_SORT    — 是否启用优先级排序 (默认: true)
+ *
+ * ✨ 【功能概览】
+ * 1. 三尺寸自适应：小号提供微缩无标签视图，中大号提供经典多行分类列表。
+ * 2. 多维度数据源：支持法定、民俗、国际、专属四类节假日倒计时。
+ * 3. 智能推算引擎：内置春秋假动态推算；A 股期指交割日与期权行权日智能推算。
+ * 4. 优先级排序引擎：引入排序权重，支持单独提高专属纪念日权重。
+ * 5. 视觉增强矩阵：多节日置顶高亮；今日节日触发暖色背景；周末触发独立背景。
+ * 6. 小号智能布局：已被置顶的高亮节日自动去重顺延；智能池补位，尽量保持 4 行饱满展示。
+ * 7. 全局规范对齐：小号图标严格对标黄历大小(13px)，天数两端对齐；中大号左侧标签严格锁定 52 宽度。
+ *
+ * 🔧 【环境变量】(需在 Egern 模块/YAML 中设定)
+ * SHOW_SCHOOL_HOLIDAYS  — 是否显示春秋假 (默认: true)
+ * SPRING_BREAK_DATE     — 春假自定义日期，格式 MM/DD
+ * AUTUMN_BREAK_DATE     — 秋假自定义日期，格式 MM/DD
+ * SHOW_FINANCE_DATES    — 是否显示金融交割日与行权日 (默认: true)
+ * PINNED_HOLIDAY        — 需要置顶的节日名称，逗号分隔 (默认: 高考)
+ * EXCLUSIVE_NAME_1~6    — 专属纪念日名称
+ * EXCLUSIVE_DATE_1~6    — 专属纪念日日期，格式 MM/DD
+ * ENABLE_PRIORITY_SORT  — 是否启用优先级排序 (默认: true)
  * ENABLE_EXCLUSIVE_WEIGHT — 是否提高专属纪念日权重 (默认: true)
- * ENABLE_WEEKEND_THEME    — 是否启用周末独立背景 (默认: true)
- * SMALL_FORCE_FOUR_ROWS   — 小号是否尽量补足四行 (默认: true)
- * 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 2026.03.28 15:30
+ * ENABLE_WEEKEND_THEME  — 是否启用周末独立背景 (默认: true)
+ * SMALL_FORCE_FOUR_ROWS — 小号是否尽量补足四行 (默认: true)
+ *
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
+ * @version 2026.03.29 13:00
  * ==========================================
  */
 
 export default async function (ctx) {
   const env = ctx.env ?? {};
 
-  // ── 环境变量解析 ──────────────────────────────────────────────────────────
+  // ── 1. 健壮的环境变量解析器 ────────────────────────────────────────────────
   const toBool = (value, defaultValue = true) => {
     if (value === undefined || value === null || String(value).trim() === "") return defaultValue;
     return String(value).trim().toLowerCase() !== "false";
   };
+
   const toStr = (value, defaultValue = "") => {
     if (value === undefined || value === null) return defaultValue;
     return String(value).trim();
@@ -54,6 +58,7 @@ export default async function (ctx) {
     .map(s => s.trim())
     .filter(Boolean);
 
+  // 专属纪念日（最大支持 6 条配置）
   const customDays = [1, 2, 3, 4, 5, 6]
     .map(i => {
       const name = toStr(env[`EXCLUSIVE_NAME_${i}`], i === 1 ? toStr(env.EXCLUSIVE_NAME, "我的生日") : "");
@@ -62,11 +67,11 @@ export default async function (ctx) {
     })
     .filter(item => item.name && /^\d{1,2}\/\d{1,2}$/.test(item.date));
 
-  // ── 尺寸检测 ──────────────────────────────────────────────────────────────
+  // ── 2. Widget 尺寸侦测 ────────────────────────────────────────────────────
   const family  = toStr(ctx.widgetFamily, "systemMedium").toLowerCase();
   const isSmall = family.includes("small");
 
-  // ── 色彩令牌 ──────────────────────────────────────────────────────────────
+  // ── 3. 全局色彩令牌 (支持深浅色与周末主题自适应) ─────────────────────────────
   const C = {
     bg:          [{ light: "#FFFFFF", dark: "#1C1C1E" }, { light: "#F5F5F9", dark: "#0C0C0E" }],
     bgWeekend:   [{ light: "#F4F8FF", dark: "#111827" }, { light: "#EAF1FF", dark: "#0B1220" }],
@@ -78,33 +83,45 @@ export default async function (ctx) {
     red:         { light: "#CA3B32", dark: "#FF453A"  },
     blue:        { light: "#3A5F85", dark: "#5E8EB8"  },
     teal:        { light: "#628C7B", dark: "#73A491"  },
+    divider:     { light: "#E5E5EA", dark: '#38383A'  },
     transparent: "#00000000"
   };
 
-  // ── UI 基础构建器 ─────────────────────────────────────────────────────────
+  // ── 4. UI 渲染辅助函数 ─────────────────────────────────────────────────────
   const mkText = (text, size, weight, color, opts = {}) => ({
     type: "text", text: String(text ?? ""), font: { size, weight }, textColor: color, ...opts
   });
+
   const mkRow = (children, gap = 4, opts = {}) => ({
     type: "stack", direction: "row", alignItems: "center", gap, children, ...opts
   });
+
   const mkSpacer = length => length != null ? { type: "spacer", length } : { type: "spacer" };
+
   const mkIcon = (src, color, size = 13) => ({
     type: "image", src: `sf-symbol:${src}`, color, width: size, height: size
   });
 
-  // ── 时间基准（强制 UTC+8）─────────────────────────────────────────────────
+  // ── 5. 时间基准初始化（强制采用 UTC+8 北京时间）──────────────────────────────
   const tzOffset    = new Date().getTimezoneOffset();
   const now         = new Date(Date.now() + (tzOffset + 480) * 60000);
   const Y           = now.getFullYear();
   const M           = now.getMonth() + 1;
-  const D           = now.getDate();
   const currentHour = now.getHours();
   const currentDay  = now.getDay();
-  const todayMs     = Date.UTC(Y, M - 1, D);
+  const todayMs     = Date.UTC(Y, M - 1, now.getDate());
+
   const YMD = (y, m, d) => `${y}/${m < 10 ? "0" + m : m}/${d < 10 ? "0" + d : d}`;
 
-  // ── 农历引擎 ──────────────────────────────────────────────────────────────
+  // ── 6. A 股金融交割日推算引擎 ──────────────────────────────────────────────
+  const getFinanceDate = (y, monthIndex, nth, targetDow) => {
+    const firstDow = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
+    let diff = targetDow - firstDow;
+    if (diff < 0) diff += 7;
+    return Date.UTC(y, monthIndex, 1 + diff + (nth - 1) * 7);
+  };
+
+  // ── 7. 本地农历与节气推算引擎 ──────────────────────────────────────────────
   const Lunar = {
     info: [
       0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,
@@ -141,7 +158,9 @@ export default async function (ctx) {
       for (let i = 0x8000; i > 0x8; i >>= 1) s += (this.info[y - 1900] & i) ? 1 : 0;
       return s + ((this.info[y - 1900] & 0xf) ? ((this.info[y - 1900] & 0x10000) ? 30 : 29) : 0);
     },
-    mDays(y, m) { return (this.info[y - 1900] & (0x10000 >> m)) ? 30 : 29; },
+    mDays(y, m) {
+      return (this.info[y - 1900] & (0x10000 >> m)) ? 30 : 29;
+    },
     l2s(y, m, d) {
       try {
         if (y < 1900 || y > 2100) return null;
@@ -153,51 +172,70 @@ export default async function (ctx) {
           if (lp > 0 && i === lp) off += (this.info[y - 1900] & 0x10000) ? 30 : 29;
         }
         return new Date(Date.UTC(1900, 0, 31) + (off + d - 1) * 86400000);
-      } catch (_) { return null; }
+      } catch (_) {
+        return null;
+      }
     }
   };
 
-  // ── A 股交割日计算 ────────────────────────────────────────────────────────
-  const getFinanceDate = (y, monthIndex, nth, targetDow) => {
-    const firstDow = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
-    let diff = targetDow - firstDow;
-    if (diff < 0) diff += 7;
-    return Date.UTC(y, monthIndex, 1 + diff + (nth - 1) * 7);
-  };
-
-  // ── 节日聚合引擎 ──────────────────────────────────────────────────────────
+  // ── 8. 节日聚合数据生成与按年份缓存 ─────────────────────────────────────────
   const getCustomDate = (y, dateStr, defaultCalc) => {
     const parts = toStr(dateStr, "").split("/");
     if (parts.length !== 2) return defaultCalc();
-    const m = Number(parts[0]), d = Number(parts[1]);
+    const m = Number(parts[0]);
+    const d = Number(parts[1]);
     if (!m || !d) return defaultCalc();
     return YMD(y, m, d);
   };
 
   const getFests = (y) => {
-    const l2s = (m, d) => { const r = Lunar.l2s(y, m, d); return r ? YMD(r.getUTCFullYear(), r.getUTCMonth() + 1, r.getUTCDate()) : ""; };
-    const term = n => { const t = Lunar.term(y, n); return YMD(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate()); };
-    const wDay = (m, n, w) => { const f = new Date(Date.UTC(y, m - 1, 1)), dd = f.getUTCDay(), x = w - dd; return YMD(y, m, 1 + (x < 0 ? x + 7 : x) + (n - 1) * 7); };
+    const l2s = (m, d) => {
+      const r = Lunar.l2s(y, m, d);
+      return r ? YMD(r.getUTCFullYear(), r.getUTCMonth() + 1, r.getUTCDate()) : "";
+    };
+
+    const term = n => {
+      const t = Lunar.term(y, n);
+      return YMD(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+    };
+
+    const wDay = (m, n, w) => {
+      const f = new Date(Date.UTC(y, m - 1, 1));
+      const dd = f.getUTCDay();
+      const x = w - dd;
+      return YMD(y, m, 1 + (x < 0 ? x + 7 : x) + (n - 1) * 7);
+    };
 
     const legal = [
-      ["元旦", YMD(y, 1, 1), 1], ["春节", l2s(1, 1), 3], ["清明节", term(7), 1],
-      ["劳动节", YMD(y, 5, 1), 1], ["端午节", l2s(5, 5), 1], ["儿童节", YMD(y, 6, 1), 1],
-      ["中秋节", l2s(8, 15), 1], ["国庆节", YMD(y, 10, 1), 3]
+      ["元旦", YMD(y, 1, 1), 1],
+      ["春节", l2s(1, 1), 3],
+      ["清明节", term(7), 1],
+      ["劳动节", YMD(y, 5, 1), 1],
+      ["端午节", l2s(5, 5), 1],
+      ["儿童节", YMD(y, 6, 1), 1],
+      ["中秋节", l2s(8, 15), 1],
+      ["国庆节", YMD(y, 10, 1), 3]
     ];
 
     if (showSchoolHolidays) {
       legal.push(["春假", getCustomDate(y, springDateStr, () => {
-        const qm = Lunar.term(y, 7), sb = new Date(qm.getTime() - 3 * 86400000);
+        const qm = Lunar.term(y, 7);
+        const sb = new Date(qm.getTime() - 3 * 86400000);
         return YMD(sb.getUTCFullYear(), sb.getUTCMonth() + 1, sb.getUTCDate());
       }), 3]);
+
       legal.push(["秋假", getCustomDate(y, autumnDateStr, () => {
-        const nov1 = new Date(Date.UTC(y, 10, 1)), offset = (3 - nov1.getUTCDay() + 7) % 7;
+        const nov1 = new Date(Date.UTC(y, 10, 1));
+        const offset = (3 - nov1.getUTCDay() + 7) % 7;
         return YMD(y, 11, 1 + offset + 7);
       }), 3]);
     }
 
     const exclusive = [
-      ...customDays.map(item => [item.name, YMD(y, ...item.date.split("/").map(Number)), 1, "custom"]),
+      ...customDays.map(item => {
+        const [em, ed] = item.date.split("/").map(Number);
+        return [item.name, YMD(y, em, ed), 1, "custom"];
+      }),
       ["高考", YMD(y, 6, 7), 2, "fixed"]
     ];
 
@@ -208,25 +246,37 @@ export default async function (ctx) {
       let futuresMs = getFinanceDate(y, M - 1, 3, 5);
       if (todayMs > futuresMs) futuresMs = getFinanceDate(nextYear, nextMonth, 3, 5);
       const fd = new Date(futuresMs);
-      exclusive.push(["交割", `${fd.getUTCMonth() + 1}/${fd.getUTCDate()}`, 1]);
+      // ⭐️ 补全了之前漏掉的年份，使用严格的 YYYY/MM/DD 格式
+      exclusive.push(["交割", YMD(fd.getUTCFullYear(), fd.getUTCMonth() + 1, fd.getUTCDate()), 1]);
 
       let optionsMs = getFinanceDate(y, M - 1, 4, 3);
       if (todayMs > optionsMs) optionsMs = getFinanceDate(nextYear, nextMonth, 4, 3);
       const od = new Date(optionsMs);
-      exclusive.push(["行权", `${od.getUTCMonth() + 1}/${od.getUTCDate()}`, 1]);
+      exclusive.push(["行权", YMD(od.getUTCFullYear(), od.getUTCMonth() + 1, od.getUTCDate()), 1]);
     }
 
     return {
       legal,
       folk: [
-        ["元宵节", l2s(1, 15), 1], ["龙抬头", l2s(2, 2), 1], ["七夕节", l2s(7, 7), 1],
-        ["中元节", l2s(7, 15), 1], ["重阳节", l2s(9, 9), 1], ["寒衣节", l2s(10, 1), 1],
-        ["腊八节", l2s(12, 8), 1], ["小年", l2s(12, 23), 1], ["除夕", l2s(12, Lunar.mDays(y, 12)), 1]
+        ["元宵节", l2s(1, 15), 1],
+        ["龙抬头", l2s(2, 2), 1],
+        ["七夕节", l2s(7, 7), 1],
+        ["中元节", l2s(7, 15), 1],
+        ["重阳节", l2s(9, 9), 1],
+        ["寒衣节", l2s(10, 1), 1],
+        ["腊八节", l2s(12, 8), 1],
+        ["小年", l2s(12, 23), 1],
+        ["除夕", l2s(12, Lunar.mDays(y, 12)), 1]
       ],
       intl: [
-        ["情人节", YMD(y, 2, 14), 1], ["妇女节", YMD(y, 3, 8), 1], ["母亲节", wDay(5, 2, 0), 1],
-        ["父亲节", wDay(6, 3, 0), 1], ["万圣节", YMD(y, 10, 31), 1], ["感恩节", wDay(11, 4, 4), 1],
-        ["平安夜", YMD(y, 12, 24), 1], ["圣诞节", YMD(y, 12, 25), 1]
+        ["情人节", YMD(y, 2, 14), 1],
+        ["妇女节", YMD(y, 3, 8), 1],
+        ["母亲节", wDay(5, 2, 0), 1],
+        ["父亲节", wDay(6, 3, 0), 1],
+        ["万圣节", YMD(y, 10, 31), 1],
+        ["感恩节", wDay(11, 4, 4), 1],
+        ["平安夜", YMD(y, 12, 24), 1],
+        ["圣诞节", YMD(y, 12, 25), 1]
       ],
       exclusive
     };
@@ -238,9 +288,28 @@ export default async function (ctx) {
     return festCache[y];
   };
 
-  // ── 优先级表 ──────────────────────────────────────────────────────────────
-  const basePriority    = { legal: 3, folk: 2, intl: 1, exclusive: 2 };
-  const specialPriority = { 春节: 10, 国庆节: 9, 高考: 9, 交割: 8, 行权: 8, 元旦: 7, 清明节: 7, 端午节: 7, 中秋节: 7, 春假: 6, 秋假: 6, 除夕: 6 };
+  // ── 9. 优先级引擎与排序配置 ───────────────────────────────────────────────
+  const basePriority = {
+    legal: 3,
+    folk: 2,
+    intl: 1,
+    exclusive: 2
+  };
+
+  const specialPriority = {
+    春节: 10,
+    国庆节: 9,
+    高考: 9,
+    交割: 8,
+    行权: 8,
+    元旦: 7,
+    清明节: 7,
+    端午节: 7,
+    中秋节: 7,
+    春假: 6,
+    秋假: 6,
+    除夕: 6
+  };
 
   const getPriority = (name, cat, sourceKind) => {
     if (!enablePrioritySort) return 1;
@@ -249,21 +318,32 @@ export default async function (ctx) {
     return basePriority[cat] ?? 1;
   };
 
-  // ── 核心数据处理 ──────────────────────────────────────────────────────────
-  const result       = { legal: [], folk: [], intl: [], exclusive: [] };
-  const todayFests   = [];
+  // ── 10. 核心数据运算与一次性排序机制 ───────────────────────────────────────
+  const result = { legal: [], folk: [], intl: [], exclusive: [] };
+  const todayFests = [];
   const todayFinance = [];
-  const pinnedMap    = {};
+  const pinnedMap = {};
 
-  for (const y of [Y, Y + 1]) {
+  const yearsToScan = [Y, Y + 1];
+  for (const y of yearsToScan) {
     const f = getFestsCached(y);
+
     for (const cat of Object.keys(result)) {
-      for (const [name, dateStr, duration, sourceKind = ""] of f[cat]) {
+      for (const item of f[cat]) {
+        const name = item[0];
+        const dateStr = item[1];
+        const duration = item[2];
+        const sourceKind = item[3] || "";
+
         if (!dateStr) continue;
+
+        // 因为之前我们添加了严格的 3 段式验证，所以 8 步骤必须提供 YYYY/MM/DD 
         const parts = dateStr.split("/").map(Number);
         if (parts.length !== 3 || parts.some(n => !Number.isFinite(n))) continue;
 
-        const yy = parts[0], mm = parts[1], dd = parts[2];
+        const yy = parts[0];
+        const mm = parts[1];
+        const dd = parts[2];
         const diff = Math.floor((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
 
         if (diff <= 0) {
@@ -283,12 +363,18 @@ export default async function (ctx) {
         }
 
         if (!result[cat].some(i => i.name === name) && !todayFests.includes(name) && !todayFinance.includes(name)) {
-          result[cat].push({ name, diff, priority: getPriority(name, cat, sourceKind), cat });
+          result[cat].push({
+            name,
+            diff,
+            priority: getPriority(name, cat, sourceKind),
+            cat
+          });
         }
       }
     }
   }
 
+  // 统一执行排序，优先按时间升序，相同时间按权重降序
   Object.keys(result).forEach(cat => {
     result[cat].sort((a, b) => {
       if (a.diff !== b.diff) return a.diff - b.diff;
@@ -297,39 +383,77 @@ export default async function (ctx) {
     });
   });
 
-  const formatStr = (cat, limit) => result[cat].slice(0, limit).map(i => `${i.name} ${i.diff}天`).join("，");
+  const formatStr = (cat, limit) => {
+    return result[cat]
+      .slice(0, limit)
+      .map(i => `${i.name} ${i.diff}天`)
+      .join("，");
+  };
 
-  // 专属防截断换行（阈值 45）
+  // 中/大号专属条目超长防截断切行算法 (阈值 45)
   const getExclusiveLines = (str) => {
     const text = toStr(str, "");
     if (!text) return [];
-    let firstLine = "", w = 0;
+
+    let firstLine = "";
+    let w = 0;
     const tokens = text.match(/[\d\/a-zA-Z.]+|./gu) || [];
+
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
       const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tokenW > 45) return [firstLine.replace(/[，\s]+$/, ""), tokens.slice(i).join("").replace(/^[，\s]+/, "")].filter(Boolean);
+      if (w + tokenW > 45) {
+        return [
+          firstLine.replace(/[，\s]+$/, ""),
+          tokens.slice(i).join("").replace(/^[，\s]+/, "")
+        ].filter(Boolean);
+      }
       firstLine += token;
       w += tokenW;
     }
+
     return [text];
   };
 
-  // ── 标题与主题 ────────────────────────────────────────────────────────────
+  // ── 11. 高亮通知信息提取 ──────────────────────────────────────────────────
   const todayNoticeParts = [];
-  if (todayFests.length > 0)   todayNoticeParts.push(`今日 🎉 ${todayFests.slice(0, 2).join("·")}${todayFests.length > 2 ? "…" : ""}`);
-  if (todayFinance.length > 0) todayNoticeParts.push(`今日 🚨 ${todayFinance.join("·")}`);
+  if (todayFests.length > 0) {
+    todayNoticeParts.push(`今日 🎉 ${todayFests.slice(0, 2).join("·")}${todayFests.length > 2 ? "…" : ""}`);
+  }
+  if (todayFinance.length > 0) {
+    todayNoticeParts.push(`今日 🚨 ${todayFinance.join("·")}`);
+  }
   const todayNoticeText = todayNoticeParts.join(" ｜ ");
 
-  const stickyParts = pinnedHolidays.filter(n => pinnedMap[n] !== undefined).map(n => `${n} ${pinnedMap[n]}天`);
-  const stickyText  = stickyParts.length > 0 ? `🔝 ${stickyParts.join("·")}` : "";
+  const stickyParts = pinnedHolidays
+    .filter(n => pinnedMap[n] !== undefined)
+    .map(n => `${n} ${pinnedMap[n]}天`);
+  const stickyText = stickyParts.length > 0 ? `🔝 ${stickyParts.join("·")}` : "";
 
-  const themeKey = (todayFests.length > 0 || todayFinance.length > 0) ? "fest" : (enableWeekendTheme && (currentDay === 0 || currentDay === 6) ? "weekend" : "workday");
-  const bgColors = themeKey === "fest" ? C.bgFest : themeKey === "weekend" ? C.bgWeekend : C.bg;
-  const bgGradient = { type: "linear", colors: bgColors, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
+  // ── 12. 智能主题渲染引擎 (节日/周末/工作日) ───────────────────────────────
+  const selectTheme = () => {
+    if (todayFests.length > 0 || todayFinance.length > 0) return "fest";
+    if (enableWeekendTheme && (currentDay === 0 || currentDay === 6)) return "weekend";
+    return "workday";
+  };
 
+  const themeKey = selectTheme();
+  const bgColors = themeKey === "fest"
+    ? C.bgFest
+    : themeKey === "weekend"
+      ? C.bgWeekend
+      : C.bg;
+
+  const bgGradient = {
+    type: "linear",
+    colors: bgColors,
+    startPoint: { x: 0, y: 0 },
+    endPoint: { x: 1, y: 1 }
+  };
+
+  // ── 13. 分类基础配置表 ────────────────────────────────────────────────────
   const CATEGORY_CONFIG = [
-    { key: "legal",     label: "法定", icon: "building.columns.fill", color: C.red  },
+    { key: "legal",     label: "法定", icon: "building.columns.fill", color: C.red },
     { key: "folk",      label: "民俗", icon: "moon.stars.fill",       color: C.gold },
     { key: "intl",      label: "国际", icon: "globe.americas.fill",   color: C.blue },
     { key: "exclusive", label: "专属", icon: "gift.fill",             color: C.teal }
@@ -350,44 +474,64 @@ export default async function (ctx) {
     ], 4);
   };
 
-  // ── 小号布局 ──────────────────────────────────────────────────────────────
+  // ── 14. UI 渲染分流：小号 (Small) 动态补位模式 ────────────────────────────
   if (isSmall) {
-    const pinnedNames   = pinnedHolidays.filter(n => pinnedMap[n] !== undefined);
-    const selected      = [];
+    const pinnedNames = pinnedHolidays.filter(n => pinnedMap[n] !== undefined);
+    const selected = [];
     const selectedNames = new Set();
 
+    // 优先提取各分类下最近的一个未置顶项
     for (const cfg of CATEGORY_CONFIG) {
       const item = result[cfg.key].find(i => !pinnedNames.includes(i.name));
-      if (item) { selected.push({ ...item, ...cfg }); selectedNames.add(item.name); }
-    }
-
-    if (forceFourSmallRows && selected.length < 4) {
-      const pool = CATEGORY_CONFIG.flatMap(cfg =>
-        result[cfg.key].filter(i => !pinnedNames.includes(i.name) && !selectedNames.has(i.name)).map(i => ({ ...i, ...cfg }))
-      ).sort((a, b) => a.diff !== b.diff ? a.diff - b.diff : b.priority - a.priority);
-
-      for (const item of pool) {
-        if (selected.length >= 4) break;
-        if (!selectedNames.has(item.name)) { selected.push(item); selectedNames.add(item.name); }
+      if (item) {
+        selected.push({ ...item, ...cfg });
+        selectedNames.add(item.name);
       }
     }
 
+    // 智能池补位：如果不足 4 行，从所有未置顶项中按优先级提取补足
+    if (forceFourSmallRows && selected.length < 4) {
+      const pool = CATEGORY_CONFIG.flatMap(cfg =>
+        result[cfg.key]
+          .filter(i => !pinnedNames.includes(i.name) && !selectedNames.has(i.name))
+          .map(i => ({ ...i, ...cfg }))
+      ).sort((a, b) => {
+        if (a.diff !== b.diff) return a.diff - b.diff;
+        if (!enablePrioritySort) return 0;
+        return b.priority - a.priority;
+      });
+
+      for (const item of pool) {
+        if (selected.length >= 4) break;
+        if (!selectedNames.has(item.name)) {
+          selected.push(item);
+          selectedNames.add(item.name);
+        }
+      }
+    }
+
+    // 强制锁定图标容器宽度 18，确保所有首字完美垂直对齐
     const buildSmallRow = (item) => {
       if (!item) return null;
       return mkRow([
-        { type: "stack", direction: "row", alignItems: "center", width: 18, children: [mkIcon(item.icon, item.color, 13)] },
+        {
+          type: "stack", direction: "row", alignItems: "center", width: 18,
+          children: [mkIcon(item.icon, item.color, 13)]
+        },
         mkText(item.name, 12, "medium", C.sub, { maxLines: 1 }),
         mkSpacer(),
         mkText(`${item.diff}天`, 12, "bold", C.muted)
       ], 4);
     };
 
-    const smallRows    = selected.slice(0, 4).map(buildSmallRow).filter(Boolean);
+    const smallRows = selected.slice(0, 4).map(buildSmallRow).filter(Boolean);
     const smallTopText = buildAddonText([todayNoticeText, stickyText], 30);
-    const smallGap     = smallRows.length <= 3 ? 10 : 8;
+    const smallGap = smallRows.length <= 3 ? 10 : 8;
 
     return {
-      type: "widget", padding: 12, backgroundGradient: bgGradient,
+      type: "widget",
+      padding: 12,
+      backgroundGradient: bgGradient,
       children: [
         mkRow([
           mkIcon("hourglass.circle.fill", C.main, 14),
@@ -395,23 +539,33 @@ export default async function (ctx) {
           mkSpacer(),
           ...(smallTopText ? [mkText(smallTopText, 10, "bold", C.red, { maxLines: 1, minScale: 0.6 })] : [])
         ], 4),
+
         mkSpacer(smallRows.length <= 3 ? 14 : 12),
+
         ...(smallRows.length > 0
-          ? [{ type: "stack", direction: "column", alignItems: "stretch", gap: smallGap, children: smallRows }]
+          ? [{
+              type: "stack", direction: "column", alignItems: "stretch", gap: smallGap,
+              children: smallRows
+            }]
           : [mkText("近期暂无节日", 12, "medium", C.muted)]),
+
         mkSpacer()
       ]
     };
   }
 
-  // ── 中/大号布局 ───────────────────────────────────────────────────────────
+  // ── 15. UI 渲染分流：中号/大号 (Medium/Large) 经典模式 ────────────────────
+  // 左侧标签列宽度严格锁定为 52，确保与黄历等组件桌面基准线绝对对齐
   const buildRow = (icon, color, label, content, isFirst, contentColor = C.sub) => ({
     type: "stack", direction: "row", alignItems: "start", gap: 4,
     children: [
-      { type: "stack", direction: "row", alignItems: "center", gap: 2, width: 52, children: [
+      {
+        type: "stack", direction: "row", alignItems: "center", gap: 2, width: 52,
+        children: [
           mkIcon(isFirst ? icon : "circle.fill", isFirst ? color : C.transparent, 13),
           mkText(isFirst ? label : " ", 12, "heavy", isFirst ? color : C.transparent)
-      ]},
+        ]
+      },
       mkText(content, 12, "medium", contentColor, { maxLines: 1, flex: 1 })
     ]
   });
@@ -434,10 +588,13 @@ export default async function (ctx) {
   }
 
   const dynamicGap = gridRows.length <= 4 ? 11 : 8;
-  const topText    = buildAddonText([stickyText], 36);
+  const topText = buildAddonText([stickyText], 36);
 
+  // ── 16. 主布局构建 ────────────────────────────────────────────────────────
   return {
-    type: "widget", padding: 12, backgroundGradient: bgGradient,
+    type: "widget",
+    padding: 12,
+    backgroundGradient: bgGradient,
     children: [
       mkRow([
         mkIcon("hourglass.circle.fill", C.main, 16),
@@ -445,11 +602,21 @@ export default async function (ctx) {
         mkSpacer(),
         ...(topText ? [mkText(topText, 11.5, "bold", C.red, { maxLines: 1, minScale: 0.75 })] : [])
       ], 5),
+
       mkSpacer(todayNoticeText ? 8 : (gridRows.length <= 4 ? 12 : 10)),
+
       ...(todayNoticeText ? [buildTodayLine(), mkSpacer(8)] : []),
+
       ...(gridRows.length > 0
-        ? [{ type: "stack", direction: "column", alignItems: "start", gap: dynamicGap, children: gridRows }]
+        ? [{
+            type: "stack",
+            direction: "column",
+            alignItems: "start",
+            gap: dynamicGap,
+            children: gridRows
+          }]
         : [mkText("近期暂无倒计时", 12, "medium", C.muted)]),
+
       mkSpacer()
     ]
   };
