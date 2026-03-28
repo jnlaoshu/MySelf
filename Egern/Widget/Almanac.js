@@ -1,18 +1,22 @@
 /**
  * ==========================================
  * 📌 岁时黄历 Widget
- * ✨ 功能概览:
- * • 三尺寸自适应：小号日历风，中/大号经典黄历风
- * • 农历引擎：干支、生肖、农历日期、二十四节气，全部本地计算
- * • 宜忌数据：远程 API 获取，多字段 key 兼容，断网自动降级
- * • 中/大号宜忌：splitText 多节点行渲染，规避 iOS 长文截断
- * • 小号：精简单行模式，右上角显示星座或周次
- * 🔧 环境变量:
+ *
+ * ✨ 【功能概览】
+ * • 三尺寸自适应布局：
+ * - 小号：日历风，农历信息全量展示(含生肖与时辰)，紧凑美观。
+ * - 中号：经典黄历风，保留原生原版经典布局结构与缩进。
+ * - 大号：铺满换行风，字号图标等比放大，采用单一列表容器保证每一行间距绝对均等。
+ * • 农历引擎：干支、生肖、农历日期、二十四节气，全部本地计算。
+ * • 宜忌数据：远程 API 获取，多字段 key 兼容，断网自动降级。
+ *
+ * 🔧 【环境变量】
  * ASTRO_OR_WEEK         — 右上角显示「星座」或「周次」(默认: 星座)
  * SHOW_TEACHING_WEEK    — 是否显示教学周 (默认: true)
  * TEACHING_WEEK_START   — 教学周起始日期，格式 YYYY-MM-DD
- * 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 2026.03.28 15:30
+ *
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
+ * ⏱️ 更新时间: 2026.03.28 21:40
  * ==========================================
  */
 
@@ -27,6 +31,7 @@ export default async function(ctx) {
   // ── 尺寸检测 ──────────────────────────────────────────────────────────────
   const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
   const isSmall = family.includes('small');
+  const isLarge = family.includes('large');
 
   // ── 色彩令牌 ──────────────────────────────────────────────────────────────
   const C = {
@@ -153,7 +158,7 @@ export default async function(ctx) {
   const obj        = Lunar.parse(Y, M, D);
   const shichenStr = "子丑寅卯辰巳午未申酉戌亥"[Math.floor((now.getHours() + 1) % 24 / 2)] + "时";
 
-  // ── 远程黄历数据（断网自动降级为空对象）─────────────────────────────────
+  // ── 远程黄历数据 ─────────────────────────────────────────────────────────
   let apiData = {};
   try {
     const resp = await ctx.http.get(
@@ -166,7 +171,6 @@ export default async function(ctx) {
       `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`,
       `${Y}${P(M)}${P(D)}`
     ];
-    // 递归查找匹配当日的数据节点，兼容多种 JSON 结构
     const findDateData = (data) => {
       if (!data || typeof data !== 'object') return null;
       for (const key in data) {
@@ -197,7 +201,6 @@ export default async function(ctx) {
 
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
-    // API 无数据时按干支日序推算冲煞
     const cycle = (Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000) + 40) % 60;
     chongshaInfo = `冲${"鼠牛虎兔龙蛇马羊猴鸡狗猪"[(cycle % 12 + 6) % 12]}` +
       `(${"甲乙丙丁戊己庚辛壬癸"[(cycle + 6) % 10]}${"子丑寅卯辰巳午未申酉戌亥"[(cycle + 6) % 12]})` +
@@ -205,23 +208,10 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  // ── 宜忌分行（maxW=52 保证中/大号换行位置一致）────────────────────────
-  const splitText = (str, maxW = 52) => {
-    if (!str) return [];
-    let lines = [], line = "", w = 0;
-    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
-      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tw > maxW) { lines.push(line); line = token; w = tw; }
-      else               { line += token;    w += tw; }
-    }
-    if (line) lines.push(line);
-    return lines.map(l => l.replace(/^[\s，。、]+|[\s，。、]+$/g, ''));
-  };
-
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 小号布局 ──────────────────────────────────────────────────────────────
+  // ── 小号布局渲染 ──────────────────────────────────────────────────────────
   if (isSmall) {
     return {
       type: 'widget', padding: 12, url: 'calshow://',
@@ -237,7 +227,7 @@ export default async function(ctx) {
           mkRow([ mkIcon(topIcon, C.gold, 11), mkText(topText, 10, "bold", C.muted, { maxLines: 1 }) ], 3)
         ], 6),
         mkSpacer(8),
-        mkText(`${obj.gz}年 ${obj.cn}${obj.term ? ` 今日${obj.term}` : ""}`, 11, "bold", C.gold),
+        mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, 11, "bold", C.gold, { maxLines: 1, minScale: 0.8 }),
         mkSpacer(8),
         ...(rawYi ? [mkRow([ mkIcon('checkmark.circle.fill', C.yi, 11), mkText(rawYi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1 }) ], 6)] : []),
         mkSpacer(6),
@@ -250,8 +240,105 @@ export default async function(ctx) {
     };
   }
 
-  // ── 中/大号公共组件 ───────────────────────────────────────────────────────
-  // 标签列固定宽度 52，内容区 flex 自适应
+  // ── 大号布局渲染 ──────────────────────────────────────────────────────────
+  if (isLarge) {
+    const fz      = 14;
+    const icz     = 15;
+    const lw      = 60;
+    const maxW    = 36;
+    
+    // 强制使用单一列表堆叠引擎，保证所有行间距绝对等高
+    const buildLargeRow = (icon, color, label, content, isFirst = true, contentColor = C.sub) => ({
+      type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
+      children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: lw, children: [
+          mkIcon(isFirst ? icon : 'circle.fill', isFirst ? color : C.transparent, icz),
+          mkText(isFirst ? label : " ", fz, "heavy", isFirst ? color : C.transparent)
+        ]},
+        mkText(content, fz, "medium", contentColor, { flex: 1 })
+      ]
+    });
+
+    const splitTextLarge = (str) => {
+      if (!str) return [];
+      let lines = [], currentLine = "", w = 0;
+      const tokens = str.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
+      for (const token of tokens) {
+        const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+        if (w + tokenW > maxW) {
+          lines.push(currentLine.replace(/[，\s]+$/, ""));
+          currentLine = token.replace(/^[，\s]+/, "");
+          w = tokenW;
+        } else {
+          currentLine += token;
+          w += tokenW;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      return lines;
+    };
+
+    const buildLargeMultiRows = (raw, icon, color, label, contentColor = C.sub) => {
+      if (!raw) return [];
+      const lines = splitTextLarge(raw);
+      const rows = [];
+      lines.forEach((line, idx) => {
+        rows.push(buildLargeRow(icon, color, label, line, idx === 0, contentColor));
+      });
+      return rows;
+    };
+
+    return {
+      type: 'widget', padding: 16, url: 'calshow://',
+      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [
+        mkRow([
+          mkIcon('calendar', C.main, 18),
+          mkText(`${Y}年${M}月${D}日 星期${WEEK}`, 17, "heavy", C.main, { maxLines: 1, minScale: 0.65 }),
+          mkSpacer(),
+          mkRow([
+            ...(teachingWeekStr ? [
+              mkIcon('book.closed', C.muted, 12),
+              mkText(teachingWeekStr, 12, "bold", C.muted),
+              mkText('·', 12, "bold", C.divider, { padding: [0, 2] })
+            ] : []),
+            mkIcon(topIcon, C.gold, 13),
+            mkText(topText, 12, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
+          ], 4)
+        ], 6),
+
+        mkSpacer(12),
+
+        // 单一 Stack 引擎，gap: 8 保证所有内容垂直间距等高
+        { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, children: [
+          mkText(
+            `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`,
+            15, "bold", C.gold
+          ),
+          ...buildLargeMultiRows(rawYi, 'checkmark.circle.fill', C.yi, '宜'),
+          ...buildLargeMultiRows(rawJi, 'xmark.circle.fill', C.ji, '忌'),
+          ...buildLargeMultiRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞'),
+          ...buildLargeMultiRows(`未来节气：${upcomingTerms.join("，")}`, 'leaf.arrow.circlepath', C.term, '节气', C.term)
+        ]},
+
+        mkSpacer()
+      ]
+    };
+  }
+
+  // ── 中号布局渲染（严格恢复原生经典版本）────────────────────────────────────
+  const splitText = (str, maxW = 52) => {
+    if (!str) return [];
+    let lines = [], line = "", w = 0;
+    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
+      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+      if (w + tw > maxW) { lines.push(line); line = token; w = tw; }
+      else               { line += token;    w += tw; }
+    }
+    if (line) lines.push(line);
+    return lines.map(l => l.replace(/^[\s，。、]+|[\s，。、]+$/g, ''));
+  };
+
   const buildRow = (icon, color, label, content, isFirst = true, contentColor = C.sub) => ({
     type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
     children: [
@@ -263,7 +350,6 @@ export default async function(ctx) {
     ]
   });
 
-  // 第一行带标签，溢出内容折至无标签的第二行继续渲染
   const buildYiJiRows = (raw, icon, color, label) => {
     if (!raw) return [];
     const [l0, ...rest] = splitText(raw);
@@ -273,7 +359,6 @@ export default async function(ctx) {
     return rows;
   };
 
-  // ── 中/大号布局 ───────────────────────────────────────────────────────────
   return {
     type: 'widget', padding: 12, url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
