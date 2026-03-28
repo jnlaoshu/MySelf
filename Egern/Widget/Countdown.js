@@ -4,13 +4,11 @@
  *
  * ✨ 【功能概览】
  * • 三尺寸自适应布局：
- * - 小号：标题两行显示 + 节假日双列网格，充分利用空间。
- * - 中号：经典分类列表，每分类展示 3 个，左侧标签定宽对齐。
- * - 大号：扩容展示最近 7 个节日，首行铺满自动换行，字号等比放大。
- * • 数据重构优化：节日数据按年份缓存，合并排序，环境变量解析稳健。
- * • 智能去重补位：置顶节日自动从小号列表中排除以节省空间。
- * • 内置推算引擎：支持春秋假动态推算；A股期指交割与行权日推算。
- * • 视觉状态区分：节日置顶高亮；今日节日触发暖色背景；周末触发蓝调背景。
+ * - 小号：左侧标题双行排版，右侧列表紧凑展示 8 个节日（4行2列纯净网格，无分类文字）。
+ * - 中号：经典单列分类列表，每个分类展示 3 个，左侧标签定宽对齐。
+ * - 大号：经典单列分类列表放大版，单行承载更多数据，字号等比放大填满屏幕。
+ * • 数据引擎：节日按年缓存，智能去重补位，内置春秋假与 A 股交割推算。
+ * • 视觉交互：多节日置顶高亮；今日节日触发暖色背景；周末触发蓝调背景。
  *
  * 🔧 【环境变量】
  * SHOW_SCHOOL_HOLIDAYS    — 是否显示春秋假 (默认: true)
@@ -25,7 +23,7 @@
  * ENABLE_WEEKEND_THEME    — 是否启用周末独立背景 (默认: true)
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.28 20:10
+ * ⏱️ 更新时间: 2026.03.28 21:00
  * ==========================================
  */
 
@@ -173,7 +171,7 @@ export default async function (ctx) {
     }
   };
 
-  // ── 节日聚合与缓存 ────────────────────────────────────────────────────────
+  // ── 节日聚合数据生成 ────────────────────────────────────────────────────────
   const getCustomDate = (y, dateStr, defaultCalc) => {
     const parts = toStr(dateStr, "").split("/");
     if (parts.length !== 2) return defaultCalc();
@@ -228,6 +226,9 @@ export default async function (ctx) {
       }),
       ["高考", YMD(y, 6, 7), 2, "fixed"]
     ];
+
+    // 添加儿童节到法定假日
+    legal.push(["儿童节", YMD(y, 6, 1), 1]);
 
     if (showFinanceDates) {
       const nextMonth = y === Y && M === 12 ? 0 : (y === Y ? M : 0);
@@ -285,7 +286,7 @@ export default async function (ctx) {
     return basePriority[cat] ?? 1;
   };
 
-  // ── 数据运算与排序 ────────────────────────────────────────────────────────
+  // ── 核心数据运算 ──────────────────────────────────────────────────────────
   const result = { legal: [], folk: [], intl: [], exclusive: [] };
   const todayFests = [];
   const todayFinance = [];
@@ -347,27 +348,7 @@ export default async function (ctx) {
     return result[cat].slice(0, limit).map(i => `${i.name} ${i.diff}天`).join("，");
   };
 
-  const splitText = (str, maxW) => {
-    const text = toStr(str, "");
-    if (!text) return [];
-    let lines = [], currentLine = "", w = 0;
-    const tokens = text.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
-    for (const token of tokens) {
-      const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tokenW > maxW) {
-        lines.push(currentLine.replace(/[，\s]+$/, ""));
-        currentLine = token.replace(/^[，\s]+/, "");
-        w = tokenW;
-      } else {
-        currentLine += token;
-        w += tokenW;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-    return lines;
-  };
-
-  // ── 高亮通知提取 ──────────────────────────────────────────────────────────
+  // ── 高亮通知信息提取 ──────────────────────────────────────────────────────
   const todayNoticeParts = [];
   if (todayFests.length > 0) {
     todayNoticeParts.push(`今日 🎉 ${todayFests.slice(0, 2).join("·")}${todayFests.length > 2 ? "…" : ""}`);
@@ -393,7 +374,7 @@ export default async function (ctx) {
   const bgColors = themeKey === "fest" ? C.bgFest : themeKey === "weekend" ? C.bgWeekend : C.bg;
   const bgGradient = { type: "linear", colors: bgColors, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
-  // ── 分类基础配置 ──────────────────────────────────────────────────────────
+  // ── 分类基础配置表 ────────────────────────────────────────────────────────
   const CATEGORY_CONFIG = [
     { key: "legal",     label: "法定", icon: "building.columns.fill", color: C.red },
     { key: "folk",      label: "民俗", icon: "moon.stars.fill",       color: C.gold },
@@ -416,42 +397,59 @@ export default async function (ctx) {
     ], 4);
   };
 
-  // ── 小号布局渲染 ──────────────────────────────────────────────────────────
+  // ── 小号布局渲染：左侧两行标题 + 右侧 4 行直排 ──────────────────────────────
   if (isSmall) {
     const pinnedNames = pinnedHolidays.filter(n => pinnedMap[n] !== undefined);
-    const selected = [];
-
+    
+    // 我们需要收集 8 个未置顶的节日（4行，每行2个）
+    const allAvailableFests = [];
+    
+    // 遍历所有分类，将未置顶的节日加入备选池，并打上分类的图标和颜色烙印
     for (const cfg of CATEGORY_CONFIG) {
-      const item = result[cfg.key].find(i => !pinnedNames.includes(i.name));
-      if (item) {
-        selected.push({ ...item, ...cfg });
-      }
+      result[cfg.key].forEach(i => {
+        if (!pinnedNames.includes(i.name)) {
+          allAvailableFests.push({ ...i, ...cfg });
+        }
+      });
     }
 
-    const buildSmallGridCell = (item) => {
-      if (!item) return { type: "spacer" };
-      return {
-        type: "stack", direction: "column", alignItems: "start", gap: 2, flex: 1,
-        children: [
-          mkRow([
-            mkIcon(item.icon, item.color, 11),
-            mkText(item.name, 11, "bold", C.sub, { maxLines: 1, minScale: 0.8 })
-          ], 4),
-          mkRow([
-            mkText(String(item.diff), 15, "heavy", C.main),
-            mkText("天", 9, "bold", C.muted, { padding: [4, 0, 0, 2] })
-          ], 0)
-        ]
-      };
+    // 重新排序：按照时间升序，权重降序
+    allAvailableFests.sort((a, b) => {
+        if (a.diff !== b.diff) return a.diff - b.diff;
+        if (!enablePrioritySort) return 0;
+        return b.priority - a.priority;
+    });
+
+    // 截取前 8 个节日
+    const selectedFests = allAvailableFests.slice(0, 8);
+
+    // 小号列表行构建：每行包含 2 个节日项
+    // 结构：[图标 名字 天数] [间距] [图标 名字 天数]
+    const buildSmallRow = (item1, item2) => {
+        
+        const buildCell = (item) => {
+            if (!item) return { type: "stack", flex: 1, children: [] }; // 占位保持对齐
+            return {
+                type: "stack", direction: "row", alignItems: "center", flex: 1, gap: 2,
+                children: [
+                    mkIcon(item.icon, item.color, 11),
+                    mkText(item.name, 11, "medium", C.sub, { maxLines: 1, minScale: 0.8, flex: 1 }), // 弹性收缩名字
+                    mkText(`${item.diff}天`, 11, "bold", C.muted)
+                ]
+            };
+        };
+
+        return mkRow([
+            buildCell(item1),
+            mkSpacer(4), // 两个项目之间的列距
+            buildCell(item2)
+        ], 0);
     };
 
-    const smallGridRows = [];
-    for (let i = 0; i < selected.length && i < 4; i += 2) {
-      smallGridRows.push(mkRow([
-        buildSmallGridCell(selected[i]),
-        mkSpacer(6),
-        buildSmallGridCell(selected[i + 1] || null)
-      ], 0));
+    // 组装 4 行数据
+    const smallRows = [];
+    for (let i = 0; i < 8; i += 2) {
+        smallRows.push(buildSmallRow(selectedFests[i], selectedFests[i+1]));
     }
 
     const smallTopText = buildAddonText([todayNoticeText, stickyText], 20);
@@ -459,6 +457,7 @@ export default async function (ctx) {
     return {
       type: "widget", padding: 14, backgroundGradient: bgGradient,
       children: [
+        // 顶部区域：沙漏 + 置顶信息
         mkRow([
           mkIcon("hourglass.circle.fill", C.main, 14),
           mkSpacer(),
@@ -467,18 +466,20 @@ export default async function (ctx) {
 
         mkSpacer(8),
 
+        // 左侧两行标题 + 右侧 4 行数据
         mkRow([
           {
-            type: "stack", direction: "column", alignItems: "start", width: 44,
+            type: "stack", direction: "column", alignItems: "start", width: 36, // 缩小宽度留给右边
             children: [
-              mkText("时光", 16, "heavy", C.main),
-              mkText("倒数", 16, "heavy", C.main)
+              mkText("时光", 15, "heavy", C.main),
+              mkSpacer(4),
+              mkText("倒数", 15, "heavy", C.main)
             ]
           },
-          mkSpacer(8),
+          mkSpacer(4),
           {
-            type: "stack", direction: "column", alignItems: "stretch", flex: 1, gap: 10,
-            children: smallGridRows
+            type: "stack", direction: "column", alignItems: "stretch", flex: 1, gap: 6, // 调整行距
+            children: smallRows
           }
         ], 0),
 
@@ -487,81 +488,14 @@ export default async function (ctx) {
     };
   }
 
-  // ── 大号布局渲染 ──────────────────────────────────────────────────────────
-  if (isLarge) {
-    const pinnedNames = pinnedHolidays.filter(n => pinnedMap[n] !== undefined);
-    let allUpcoming = [];
-    
-    for (const cfg of CATEGORY_CONFIG) {
-      result[cfg.key].forEach(i => {
-        if (!pinnedNames.includes(i.name)) allUpcoming.push({ ...i, ...cfg });
-      });
-    }
-    
-    allUpcoming.sort((a, b) => {
-      if (a.diff !== b.diff) return a.diff - b.diff;
-      if (!enablePrioritySort) return 0;
-      return b.priority - a.priority;
-    });
-
-    const topItems = allUpcoming.slice(0, 7);
-
-    const buildGridCell = (item) => {
-      if (!item) return { type: "stack", flex: 1, children: [] };
-      return {
-        type: "stack", direction: "row", alignItems: "center", flex: 1, gap: 4,
-        children: [
-          mkIcon(item.icon, item.color, 15),
-          mkText(item.name, 14, "bold", C.main, { maxLines: 1 }),
-          mkSpacer(),
-          mkText(`${item.diff}天`, 14, "heavy", item.diff <= 3 ? C.red : C.muted)
-        ]
-      };
-    };
-
-    const largeGridRows = [];
-    for (let i = 0; i < topItems.length; i += 2) {
-      largeGridRows.push(mkRow([
-        buildGridCell(topItems[i]),
-        mkSpacer(16),
-        buildGridCell(topItems[i + 1])
-      ], 0));
-    }
-
-    const topText = buildAddonText([stickyText], 45);
-
-    return {
-      type: "widget", padding: 16, backgroundGradient: bgGradient,
-      children: [
-        mkRow([
-          mkIcon("hourglass.circle.fill", C.main, 18),
-          mkText("时光倒数", 17, "heavy", C.main),
-          mkSpacer(),
-          ...(topText ? [mkText(topText, 12, "bold", C.red, { maxLines: 1, minScale: 0.8 })] : [])
-        ], 6),
-        
-        mkSpacer(todayNoticeText ? 10 : 16),
-        
-        ...(todayNoticeText ? [
-          mkRow([mkIcon("sparkles", C.red, 15), mkText(todayNoticeText, 14, "bold", C.red, { maxLines: 1, minScale: 0.8 })], 4), 
-          mkSpacer(10)
-        ] : []),
-
-        ...(largeGridRows.length > 0
-          ? [{ type: "stack", direction: "column", alignItems: "stretch", gap: 14, children: largeGridRows }]
-          : [mkText("近期暂无倒计时", 14, "medium", C.muted)]),
-          
-        mkSpacer()
-      ]
-    };
-  }
-
-  // ── 中号布局渲染 ──────────────────────────────────────────────────────────
-  const fz      = 12;
-  const icz     = 13;
-  const lw      = 52;
-  const rowGap  = 4;
-  const maxW    = 45;
+  // ── 中/大号通用行渲染器 ────────────────────────────────────────────────
+  const fz      = isLarge ? 14 : 12;
+  const icz     = isLarge ? 15 : 13;
+  const lw      = isLarge ? 60 : 52;
+  const rowGap  = isLarge ? 6 : 4;
+  const titleFz = isLarge ? 17 : 15;
+  const titleIcz= isLarge ? 18 : 16;
+  const topFz   = isLarge ? 12 : 11.5;
 
   const buildRow = (icon, color, label, content, isFirst, contentColor = C.sub) => ({
     type: "stack", direction: "row", alignItems: "start", gap: rowGap,
@@ -573,52 +507,76 @@ export default async function (ctx) {
           mkText(isFirst ? label : " ", fz, "heavy", isFirst ? color : C.transparent)
         ]
       },
-      mkText(content, fz, "medium", contentColor, { maxLines: 1, flex: 1 })
+      mkText(content, fz, "medium", contentColor, { flex: 1 })
     ]
   });
 
+  // ── 中/大号切行引擎 ──────────────────────────────────────────────────────
+  const splitText = (str, maxW) => {
+    const text = toStr(str, "");
+    if (!text) return [];
+    let lines = [], currentLine = "", w = 0;
+    const tokens = text.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
+    for (const token of tokens) {
+      const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+      if (w + tokenW > maxW) {
+        lines.push(currentLine.replace(/[，\s]+$/, ""));
+        currentLine = token.replace(/^[，\s]+/, "");
+        w = tokenW;
+      } else {
+        currentLine += token;
+        w += tokenW;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    return lines;
+  };
+
+  // ── 中/大号布局列表组装 ──────────────────────────────────────────────────
   const gridRows = [];
+  const maxW = isLarge ? 36 : 45;
 
   for (const cfg of CATEGORY_CONFIG) {
     const isExc = cfg.key === "exclusive";
-    const limit = isExc ? 6 : 3;
+    // 大号全部分类提取 7 个；中号专属提取 6 个，普通提取 3 个
+    const limit = isLarge ? 7 : (isExc ? 6 : 3);
     const rawText = formatStr(cfg.key, limit);
     if (!rawText) continue;
 
-    if (isExc) {
+    if (isLarge || isExc) {
+      // 触发多行铺满折断逻辑：大号因为数据多必然折行；中号专属长数据也折行
       const lines = splitText(rawText, maxW);
       lines.forEach((line, idx) => {
         const isAlert = isExc && /(交割|行权) [1-3]天/.test(line);
         gridRows.push(buildRow(cfg.icon, cfg.color, cfg.label, line, idx === 0, isAlert ? C.red : C.sub));
       });
     } else {
+      // 中号普通分类直接单行显示
       gridRows.push(buildRow(cfg.icon, cfg.color, cfg.label, rawText, true, C.sub));
     }
   }
 
-  const dynamicGap = gridRows.length <= 4 ? 11 : 8;
-  const topText = buildAddonText([stickyText], 36);
+  const topText = buildAddonText([stickyText], 45);
+  const dynamicGap = gridRows.length <= 4 ? (isLarge ? 14 : 11) : (isLarge ? 10 : 8);
 
+  // ── 渲染输出 ────────────────────────────────────────────────────────────
   return {
-    type: "widget", padding: 12, backgroundGradient: bgGradient,
+    type: "widget", padding: isLarge ? 16 : 12, backgroundGradient: bgGradient,
     children: [
       mkRow([
-        mkIcon("hourglass.circle.fill", C.main, 16),
-        mkText("时光倒数", 15, "heavy", C.main),
+        mkIcon("hourglass.circle.fill", C.main, titleIcz),
+        mkText("时光倒数", titleFz, "heavy", C.main),
         mkSpacer(),
-        ...(topText ? [mkText(topText, 11.5, "bold", C.red, { maxLines: 1, minScale: 0.75 })] : [])
-      ], 5),
+        ...(topText ? [mkText(topText, topFz, "bold", C.red, { maxLines: 1, minScale: 0.8 })] : [])
+      ], 6),
 
-      mkSpacer(todayNoticeText ? 8 : (gridRows.length <= 4 ? 12 : 10)),
+      mkSpacer(todayNoticeText ? (isLarge ? 10 : 8) : (gridRows.length <= 4 ? 12 : 10)),
 
-      ...(todayNoticeText ? [buildTodayLine(), mkSpacer(8)] : []),
+      ...(todayNoticeText ? [buildTodayLine(), mkSpacer(isLarge ? 10 : 8)] : []),
 
       ...(gridRows.length > 0
         ? [{
-            type: "stack",
-            direction: "column",
-            alignItems: "start",
-            gap: dynamicGap,
+            type: "stack", direction: "column", alignItems: "start", gap: dynamicGap,
             children: gridRows
           }]
         : [mkText("近期暂无倒计时", fz, "medium", C.muted)]),
