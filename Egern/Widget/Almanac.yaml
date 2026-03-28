@@ -1,38 +1,32 @@
 # ==========================================
-# 📌 模块名称: 岁时黄历小组件
-# ✨ 主要功能: 实时推算公农历、干支、时辰及节气倒数；聚合 API 提供宜忌、冲煞与运势评分；右上角支持“星座/周次”模式动态切换，支持多模式下外挂教学周显示。
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml
-# ⏱️ 更新时间: 2026.03.28 07:25
+# 📌 模块名称: 岁时黄历 Widget
+# ✨ 主要功能: 三尺寸自适应，农历双引擎，支持黄历角标切换与教学周配置。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml
+# ⏱️ 2026.03.28 15:30
 # ==========================================
 
-name: "岁时黄历小组件"
-description: "提供详尽的黄历信息，支持定制右上角角标（星座/周次/教学周）。"
+name: "岁时黄历 Widget"
+description: "三尺寸自适应：小号日历风，中/大号经典黄历风。自带农历引擎与宜忌数据。"
 
 auto_update:
   interval: 43200
 
 env_schema:
   ASTRO_OR_WEEK:
-    name: 🔮 黄历右上角显示模式
+    name: 🔮 右上角显示模式
     description: "选择黄历面板右上角是显示星座，还是当年/当月周次"
     options: ["星座", "周次"]
     default_value: "星座"
 
   SHOW_TEACHING_WEEK:
     name: 📚 全局启用教学周
-    description: "总开关。开启后，可根据下方设定在星座或周次模式旁展示教学周进度。"
-    options: ["true", "false"]
-    default_value: "true"
-
-  SHOW_TEACHING_WEEK_IN_WEEK:
-    name: 🔄 在周次模式下显示教学周
-    description: "开启后，即使上方选择了[周次]，也会在周次文本前强制显示教学周进度。"
+    description: "开启后，可在面板展示教学周进度。"
     options: ["true", "false"]
     default_value: "true"
 
   TEACHING_WEEK_START:
     name: 🗓️ 教学周起始日期
-    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD (例如 2026/03/02)"
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD"
     default_value: "2026/03/02"
 
 scriptings:
