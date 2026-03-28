@@ -1,17 +1,25 @@
 /**
  * ==========================================
- * 📌 服务器监控 Widget
- * ✨ 功能概览:
- * • 通过 SSH 直连监控远端硬件 (CPU/内存/磁盘/网络/温度/负载/时间)
- * • Pro Max UI 对齐：左侧标签锁定 52，图标统一 13px，全系莫兰迪色牌
- * • 轮播机制：支持配置最多 5 台服务器自动轮播
- * • 告警色：根据负载动态调整指标颜色 (绿 → 黄 → 红)
- * 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 2026.03.28 15:30
+ * 📌 服务器监控 Widget (三尺寸 Pro Max 版)
+ * * ✨ 【主要功能】
+ * • 三端尺寸完美适配：
+ * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡。
+ * - 中号 (Medium)：经典双行双列卡片布局，紧凑高效，经典莫兰迪配色。
+ * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号扩容，完美填满垂直空间。
+ * • 硬件直连监控：通过 SSH 实时获取 CPU、内存、磁盘、网络、温度及负载。
+ * • UI 视觉对齐：全局锁定左侧标签宽度 52，精细化对齐 13px 状态图标。
+ * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
+ * • 多端智能轮播：支持配置最多 5 台服务器进行周期性自动轮播展示。
+ * * 🔗 【脚本引用】
+ * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+ * * ⏱️ 【更新时间】
+ * 2026.03.29 07:00
  * ==========================================
  */
 
 export default async function (ctx) {
+  
+  // ── 私钥解析与格式化 ──────────────────────────────────────────────────────
   const parsePrivateKey = (key) => {
     if (!key) return "";
     let k = String(key).trim().replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\r/g, '');
@@ -32,7 +40,7 @@ export default async function (ctx) {
     return k;
   };
 
-  // ── 统一莫兰迪色系 ──────────────────────────────────────────────────────────
+  // ── 莫兰迪色彩令牌 ────────────────────────────────────────────────────────
   const C = {
     bg:      { light: '#FFFFFF', dark: '#1C1C1E' },
     main:    { light: '#1C1C1E', dark: '#FFFFFF' },
@@ -50,7 +58,7 @@ export default async function (ctx) {
     netBg:   { light: '#FCEAEF', dark: '#331A20' },
   };
 
-  // ── 服务器配置读取 ────────────────────────────────────────────────────────
+  // ── 服务器配置读取与轮播逻辑 ──────────────────────────────────────────────
   let servers = [];
   for (let i = 1; i <= 5; i++) {
     const h = String(ctx.env[`SSH_SERVER_${i}_HOST`] || "").trim();
@@ -92,6 +100,7 @@ export default async function (ctx) {
 
   const server = servers[displayIndex];
 
+  // ── 异常拦截与提示 ────────────────────────────────────────────────────────
   if (!server.host) {
     return {
       type: 'widget', backgroundColor: C.bg, padding: 16, gap: 8,
@@ -113,6 +122,7 @@ export default async function (ctx) {
     return Math.round(b) + 'B';
   };
 
+  // ── SSH 数据获取与状态解析 ────────────────────────────────────────────────
   let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length };
   let session = null;
   const serverKey = server.name.replace(/[^a-zA-Z0-9]/g, '_');
@@ -174,48 +184,13 @@ export default async function (ctx) {
 
   if (d.error) return { type: 'widget', padding: 16, backgroundColor: C.bg, children: [{ type: 'text', text: `连接失败 [${server.name}]`, font: { size: 14, weight: 'bold' }, textColor: C.temp }, { type: 'spacer', length: 4 }, { type: 'text', text: d.error, font: { size: 10, family: 'Menlo' }, textColor: C.muted }] };
 
-  const bar = (pct, color) => ({
-    type: 'stack', direction: 'row', height: 4, borderRadius: 2, backgroundColor: C.barBg,
-    children: pct > 0 ? [{ type: 'stack', flex: Math.max(1, pct), height: 4, borderRadius: 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : [])] : [{ type: 'spacer' }],
-  });
+  // ── 动态告警色与通用 UI 组件 ──────────────────────────────────────────────
+  const cpuColor = d.cpuPct > 85 ? C.temp : (d.cpuPct > 60 ? C.disk : C.cpu);
+  const cpuBgColor = d.cpuPct > 85 ? C.netBg : (d.cpuPct > 60 ? C.dskBg : C.cpuBg);
 
-  // UI 组件：标签强对齐 width: 52
-  const statCard = (icon, title, value, subtext, pct, color, bg) => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
-    children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-          { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
-        ]},
-        { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color },
-      ]},
-      { type: 'spacer' },
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
-        bar(pct, color),
-        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1 },
-      ]}
-    ]
-  });
-
-  const netCard = (bg) => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
-    children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-          { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
-          { type: 'text', text: 'NET', font: { size: 12, weight: 'heavy' }, textColor: C.net }
-        ]},
-        { type: 'spacer' },
-        { type: 'text', text: d.host, font: { size: 9, family: 'Menlo' }, textColor: C.subText, maxLines: 1, minScale: 0.5 },
-      ]},
-      { type: 'spacer' },
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
-        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem } ]},
-        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.subText } ]}
-      ]}
-    ]
+  const bar = (pct, color, h = 4) => ({
+    type: 'stack', direction: 'row', height: h, borderRadius: h / 2, backgroundColor: C.barBg,
+    children: pct > 0 ? [{ type: 'stack', flex: Math.max(1, pct), height: h, borderRadius: h / 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : [])] : [{ type: 'spacer' }],
   });
 
   const header = () => ({
@@ -233,20 +208,155 @@ export default async function (ctx) {
     ]
   });
 
-  if (ctx.widgetFamily === 'systemMedium') {
-    return {
-      type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14],
+  const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
+
+  // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
+  if (family.includes('small')) {
+    const miniCard = (icon, title, value, color, bg) => ({
+      type: 'stack', direction: 'row', alignItems: 'center', backgroundColor: bg, borderRadius: 8, padding: [4, 10],
       children: [
-        header(), { type: 'spacer', length: 6 },
-        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) ]},
-        { type: 'spacer', length: 4 },
-        { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), netCard(C.netBg) ]}
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
+          { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
+        ]},
+        { type: 'spacer' },
+        { type: 'text', text: value, font: { size: 12, weight: 'heavy', family: 'Menlo' }, textColor: color }
+      ]
+    });
+
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: 10, gap: 4,
+      children: [
+        header(),
+        { type: 'spacer', length: 2 },
+        miniCard('cpu', 'CPU', `${d.cpuPct}%`, cpuColor, cpuBgColor),
+        miniCard('memorychip', 'MEM', `${d.memPct}%`, C.mem, C.memBg),
+        miniCard('internaldrive', 'DSK', `${d.diskPct}%`, C.disk, C.dskBg),
+        miniCard('network', 'NET', `↓${fmtBytes(d.rxRate)}/s`, C.net, C.netBg),
+        { type: 'spacer' }
       ]
     };
   }
 
+  // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
+  if (family.includes('large')) {
+    const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
+      type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
+      children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 24, gap: 4, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+            { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
+            { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
+          ]},
+          { type: 'spacer' },
+          { type: 'text', text: value, font: { size: 22, weight: 'heavy', family: 'Menlo' }, textColor: color },
+        ]},
+        { type: 'spacer' },
+        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
+          bar(pct, color, 6),
+          { type: 'text', text: subtext, font: { size: 11, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+        ]}
+      ]
+    });
+
+    const netCardLarge = (bg) => ({
+      type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
+      children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 24, gap: 4, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+            { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
+            { type: 'text', text: 'NET', font: { size: 12, weight: 'heavy' }, textColor: C.net }
+          ]},
+          { type: 'spacer' },
+          { type: 'text', text: d.host, font: { size: 11, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
+        ]},
+        { type: 'spacer' },
+        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 6, children: [
+          { type: 'stack', direction: 'row', children: [ 
+            { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.net }, 
+            { type: 'spacer' }, 
+            { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.mem } 
+          ]},
+          { type: 'stack', direction: 'row', children: [ 
+            { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.sub }, 
+            { type: 'spacer' }, 
+            { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 9, family: 'Menlo' }, textColor: C.sub } 
+          ]}
+        ]}
+      ]
+    });
+
+    return {
+      type: 'widget', backgroundColor: C.bg, padding: 16,
+      children: [
+        header(),
+        { type: 'spacer', length: 12 },
+        { type: 'stack', direction: 'column', flex: 1, gap: 12, children: [
+          { type: 'stack', direction: 'row', flex: 1, gap: 12, children: [ 
+            statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, cpuColor, cpuBgColor), 
+            statCardLarge('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
+          ]},
+          { type: 'stack', direction: 'row', flex: 1, gap: 12, children: [ 
+            statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
+            netCardLarge(C.netBg) 
+          ]}
+        ]}
+      ]
+    };
+  }
+
+  // ── 视图渲染 (中号尺寸) ──────────────────────────────────────────────────
+  const statCard = (icon, title, value, subtext, pct, color, bg) => ({
+    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
+    children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
+          { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
+        ]},
+        { type: 'spacer' },
+        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color },
+      ]},
+      { type: 'spacer' },
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
+        bar(pct, color),
+        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+      ]}
+    ]
+  });
+
+  const netCard = (bg) => ({
+    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
+    children: [
+      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+          { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
+          { type: 'text', text: 'NET', font: { size: 12, weight: 'heavy' }, textColor: C.net }
+        ]},
+        { type: 'spacer' },
+        { type: 'text', text: d.host, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
+      ]},
+      { type: 'spacer' },
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
+        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem } ]},
+        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.sub }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.sub } ]}
+      ]}
+    ]
+  });
+
   return {
-    type: 'widget', backgroundColor: C.bg, padding: 12, gap: 6,
-    children: [ header(), statCard('cpu', 'CPU', `${d.cpuPct}%`, `Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)}`, d.memPct, C.mem, C.memBg) ]
+    type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14],
+    children: [
+      header(), { type: 'spacer', length: 6 },
+      { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, cpuColor, cpuBgColor), 
+        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
+      ]},
+      { type: 'spacer', length: 4 },
+      { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
+        statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
+        netCard(C.netBg) 
+      ]}
+    ]
   };
 }
