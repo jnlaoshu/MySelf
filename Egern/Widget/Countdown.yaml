@@ -41,6 +41,12 @@ env_schema:
     options: ["true", "false"]
     default_value: "true"
 
+  ENABLE_EXCLUSIVE_WEIGHT:
+    name: ⬆️ 提高专属纪念日权重
+    description: "开启后，专属纪念日在同日期竞争时优先展示"
+    options: ["true", "false"]
+    default_value: "true"
+
   ENABLE_WEEKEND_THEME:
     name: 🎨 周末蓝调背景
     options: ["true", "false"]
@@ -48,20 +54,53 @@ env_schema:
 
   SMALL_FORCE_FOUR_ROWS:
     name: 📐 小号补足四行
-    description: "小号尺寸自动从各类别补位，保持饱满展示"
+    description: "小号尺寸自动从各类别补位，尽量保持四行展示"
     options: ["true", "false"]
     default_value: "true"
 
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
+    description: "设定最重要的纪念日名称"
     default_value: "我的生日"
   EXCLUSIVE_DATE_1:
     name: 📅 纪念日 1 日期
+    description: "日期格式必须严格为 MM/DD"
     default_value: "11/10"
+
   EXCLUSIVE_NAME_2:
     name: 🎁 专属纪念日 2
+    description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
     name: 📅 纪念日 2 日期
+    description: "日期格式必须严格为 MM/DD"
+
+  EXCLUSIVE_NAME_3:
+    name: 🎁 专属纪念日 3
+    description: "留空则不显示该项"
+  EXCLUSIVE_DATE_3:
+    name: 📅 纪念日 3 日期
+    description: "日期格式必须严格为 MM/DD"
+
+  EXCLUSIVE_NAME_4:
+    name: 🎁 专属纪念日 4
+    description: "留空则不显示该项"
+  EXCLUSIVE_DATE_4:
+    name: 📅 纪念日 4 日期
+    description: "日期格式必须严格为 MM/DD"
+
+  EXCLUSIVE_NAME_5:
+    name: 🎁 专属纪念日 5
+    description: "留空则不显示该项"
+  EXCLUSIVE_DATE_5:
+    name: 📅 纪念日 5 日期
+    description: "日期格式必须严格为 MM/DD"
+
+  EXCLUSIVE_NAME_6:
+    name: 🎁 专属纪念日 6
+    description: "留空则不显示该项"
+  EXCLUSIVE_DATE_6:
+    name: 📅 纪念日 6 日期
+    description: "日期格式必须严格为 MM/DD"
 
 scriptings:
   - generic:
