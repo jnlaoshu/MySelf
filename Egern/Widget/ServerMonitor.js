@@ -10,10 +10,10 @@
  * • UI 视觉对齐：全局锁定左侧标签宽度，精细化对齐状态图标。
  * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
  * • 多端智能轮播：支持配置最多 5 台服务器进行周期性自动轮播展示。
- * * 🔗 【脚本引用】
+ * * 🔗 【脚本引用}
  * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
  * * ⏱️ 【更新时间】
- * 2026.03.29 07:00
+ * 2026.03.29 11:00
  * ==========================================
  */
 
@@ -218,7 +218,7 @@ export default async function (ctx) {
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // 动态生成的 Header：小号不显示 Uptime；大号放大 Uptime 字号与图标
+  // 动态生成的 Header：小号不显示 Uptime；大号放大 Uptime 图标与字号
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
     children: [
@@ -346,7 +346,10 @@ export default async function (ctx) {
       { type: 'spacer' },
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
         bar(pct, color),
-        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+        // 磁盘卡片特定字号微调：仅针对 DSK 卡片，副标题中不带小数的数值和“/”符号切换为系统字体，收缩 1px 宽度。
+        title === 'DSK'
+          ? mkRow([ mkText(`${fmtBytes(d.diskUsed)}`, 9, "bold", C.sub, { family: "Menlo" }), mkText(` / `, 9, "bold", C.sub, { weight: "regular" }), mkText(`${fmtBytes(d.diskTotal)}`, 9, "bold", C.sub, { weight: "regular" }) ], 0, { alignment: "start" })
+          : mkText(subtext, 9, "bold", C.sub, { family: "Menlo", maxLines: 1 })
       ]}
     ]
   });
@@ -375,7 +378,7 @@ export default async function (ctx) {
     children: [
       header(), { type: 'spacer', length: 6 },
       { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, cpuColor, cpuBgColor), 
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), 
         statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
       ]},
       { type: 'spacer', length: 4 },
