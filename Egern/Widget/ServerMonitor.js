@@ -3,9 +3,9 @@
  * 📌 服务器监控 Widget
  * * ✨ 【主要功能】
  * • 三端尺寸完美适配：
- * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡，移除顶部多余时间。
- * - 中号 (Medium)：经典双行双列卡片布局，紧凑高效，经典莫兰迪配色。
- * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号与图标大幅扩容，完美填满垂直空间。
+ * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡。
+ * - 中号 (Medium)：经典双行双列卡片布局，彻底恢复原版完美排版。
+ * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号与图标大幅扩容，排版严丝合缝。
  * • 硬件直连监控：通过 SSH 实时获取 CPU、内存、磁盘、网络、温度及负载。
  * • UI 视觉对齐：全局锁定左侧标签宽度，精细化对齐状态图标。
  * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
@@ -13,7 +13,7 @@
  * * 🔗 【脚本引用】
  * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
  * * ⏱️ 【更新时间】
- * 2026.03.29 11:30
+ * 2026.03.29 12:45
  * ==========================================
  */
 
@@ -150,9 +150,9 @@ export default async function (ctx) {
     // 换算服务器运行时间：支持 年/月/日/时/分/秒
     const upSec = parseFloat((p[1] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
-      const y = Math.floor(upSec / 31536000); // 365天为1年
+      const y = Math.floor(upSec / 31536000); 
       let rem = upSec % 31536000;
-      const mo = Math.floor(rem / 2592000);   // 30天为1月
+      const mo = Math.floor(rem / 2592000);   
       rem = rem % 2592000;
       const d_val = Math.floor(rem / 86400);
       rem = rem % 86400;
@@ -218,7 +218,7 @@ export default async function (ctx) {
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // 动态生成的 Header
+  // 动态生成的 Header：小号不显示时间；大号放大时间图标与字号
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
     children: [
@@ -236,7 +236,7 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 视图渲染 (小号尺寸 - 原版锁定不变) ──────────────────────────────────
+  // ── 视图渲染 (小号尺寸 - 保持稳定无报错) ──────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => ({
       type: 'stack', direction: 'row', alignItems: 'center', backgroundColor: bg, borderRadius: 8, padding: [4, 10],
@@ -264,19 +264,17 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (大号尺寸 - 靶向极简修复，彻底解决拥挤和排版错位) ───────────────
+  // ── 视图渲染 (大号尺寸 - 保持优化不乱码) ──────────────────────────────
   if (isLarge) {
     const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        // 修复1：去除标题栏限制，利用原生流式排版让图标自然紧贴左缘，和下方进度条完美对齐
         { type: 'stack', direction: 'row', alignItems: 'center', height: 28, children: [
           { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
           { type: 'spacer', length: 6 },
           { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color },
           { type: 'spacer' },
-          // 修复2：百分比字号降为 22，不再被截断为省略号
-          { type: 'text', text: value, font: { size: 22, weight: 'heavy', family: 'Menlo' }, textColor: color },
+          { type: 'text', text: value, font: { size: 24, weight: 'heavy', family: 'Menlo' }, textColor: color },
         ]},
         { type: 'spacer' },
         { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [
@@ -289,7 +287,6 @@ export default async function (ctx) {
     const netCardLarge = (bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        // 修复3：去掉右侧 IP 占位，让 NET 图标完美左侧贴边
         { type: 'stack', direction: 'row', alignItems: 'center', height: 20, children: [
           { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
           { type: 'spacer', length: 6 },
@@ -297,7 +294,6 @@ export default async function (ctx) {
           { type: 'spacer' }
         ]},
         { type: 'spacer', length: 8 },
-        // 修复4：IP 独占一行，绝对居中，字号 15
         { type: 'stack', direction: 'row', alignItems: 'center', children: [
           { type: 'spacer' },
           { type: 'text', text: d.host, font: { size: 15, weight: 'bold', family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
@@ -338,7 +334,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (中号尺寸 - 原版锁定不变) ───────────────────────────────────
+  // ── 视图渲染 (中号尺寸 - 彻底恢复原版代码) ────────────────────────────────
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
@@ -353,9 +349,7 @@ export default async function (ctx) {
       { type: 'spacer' },
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
         bar(pct, color),
-        title === 'DSK'
-          ? mkRow([ mkText(`${fmtBytes(d.diskUsed)}`, 9, "bold", C.sub, { family: "Menlo" }), mkText(` / `, 9, "bold", C.sub, { weight: "regular" }), mkText(`${fmtBytes(d.diskTotal)}`, 9, "bold", C.sub, { weight: "regular" }) ], 0, { alignment: "start" })
-          : mkText(subtext, 9, "bold", C.sub, { family: "Menlo", maxLines: 1 })
+        { type: 'text', text: subtext, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
       ]}
     ]
   });
