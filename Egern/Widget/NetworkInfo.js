@@ -1,391 +1,362 @@
 /**
  * ==========================================
- * 📌 服务器监控 Widget
- * * ✨ 【主要功能】
- * • 三端尺寸完美适配：
- * - 小号 (Small) ：极简独立色牌，直排四大核心数据，直观且杜绝遮挡，移除顶部多余时间。
- * - 中号 (Medium)：经典双行双列卡片布局，紧凑高效，经典莫兰迪配色。
- * - 大号 (Large) ：沉浸式 2x2 巨幕矩阵，字号与图标大幅扩容，完美填满垂直空间。
- * • 硬件直连监控：通过 SSH 实时获取 CPU、内存、磁盘、网络、温度及负载。
- * • UI 视觉对齐：全局锁定左侧标签宽度，精细化对齐状态图标。
- * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
- * • 多端智能轮播：支持配置最多 5 台服务器进行周期性自动轮播展示。
- * * 🔗 【脚本引用}
- * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * * ⏱️ 【更新时间】
- * 2026.03.29 07:00
+ * � 网络信息 Widget
+ * * ✨ 【功能概览】
+ * • 三尺寸自适应统一规范：
+ * - 小号：无测速极简版，正文11px、标题12px对标黄历小号。标题左对齐，优化并拉大行间距。
+ * - 中号：经典双列展示，左侧标签定宽 52，经典黄历风格。
+ * - 大号：沉浸式放大排版，左宽 60，字号 14，等高行距，测速角标放大。
+ * • 核心引擎：内网/本地/节点精准 IP 与原生住宅防欺诈侦测。
+ * • 测速模块：双向实时网速测试；双轨测速胶囊底座 (仅中/大号启用)。
+ * • 稳健防护：3.5秒全局超时熔断机制，杜绝假死白屏。
+ *
+ * � 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+ * ⏱️ 更新时间: 2026.03.29 00:40
  * ==========================================
  */
 
-export default async function (ctx) {
-  
-  // ── 私钥解析与格式化 ──────────────────────────────────────────────────────
-  const parsePrivateKey = (key) => {
-    if (!key) return "";
-    let k = String(key).trim().replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\r/g, '');
-    const headerMatch = k.match(/-----BEGIN [A-Z0-9 ]+-----/);
-    const footerMatch = k.match(/-----END [A-Z0-9 ]+-----/);
-    if (headerMatch && footerMatch) {
-      const header = headerMatch[0];
-      const footer = footerMatch[0];
-      const headerIdx = k.indexOf(header);
-      const footerIdx = k.indexOf(footer);
-      if (footerIdx > headerIdx) {
-        const body = k.substring(headerIdx + header.length, footerIdx).replace(/\s+/g, '');
-        if (!body) throw new Error('私钥解析失败');
-        const bodyLines = body.match(/.{1,64}/g)?.join('\n') || body;
-        k = `${header}\n${bodyLines}\n${footer}\n`;
-      }
-    }
-    return k;
-  };
+export default async function(ctx) {
 
-  // ── 莫兰迪色彩令牌 ────────────────────────────────────────────────────────
-  const C = {
-    bg:      { light: '#FFFFFF', dark: '#1C1C1E' },
-    main:    { light: '#1C1C1E', dark: '#FFFFFF' },
-    sub:     { light: '#48484A', dark: '#D1D1D6' },
-    muted:   { light: '#8E8E93', dark: '#8E8E93' },
-    barBg:   { light: '#E5E5EA', dark: '#38383A' },
-    cpu:     { light: '#34C759', dark: '#30D158' },
-    mem:     { light: '#007AFF', dark: '#0A84FF' },
-    disk:    { light: '#FF9500', dark: '#FF9F0A' },
-    net:     { light: '#FF2D55', dark: '#FF375F' },
-    temp:    { light: '#FF3B30', dark: '#FF453A' },
-    cpuBg:   { light: '#EAF6ED', dark: '#1A291E' },
-    memBg:   { light: '#EBF4FA', dark: '#1A2433' },
-    dskBg:   { light: '#FDF1E3', dark: '#33261A' },
-    netBg:   { light: '#FCEAEF', dark: '#331A20' },
-  };
-
-  // ── 服务器配置读取与轮播逻辑 ──────────────────────────────────────────────
-  let servers = [];
-  for (let i = 1; i <= 5; i++) {
-    const h = String(ctx.env[`SSH_SERVER_${i}_HOST`] || "").trim();
-    if (!h) continue;
-    servers.push({
-      name:       String(ctx.env[`SSH_SERVER_${i}_NAME`] || `Server${i}`).trim(),
-      host:       h,
-      port:       Number(ctx.env[`SSH_SERVER_${i}_PORT`]) || 22,
-      username:   String(ctx.env[`SSH_SERVER_${i}_USER`] || "root").trim(),
-      password:   ctx.env[`SSH_SERVER_${i}_PWD`] || "",
-      privateKey: ctx.env[`SSH_SERVER_${i}_KEY`] || "",
-    });
-  }
-
-  if (servers.length === 0) {
-    servers = [{
-      name:       String(ctx.env.SSH_NAME || "Server").trim(),
-      host:       String(ctx.env.SSH_HOST || ctx.env.host || "").trim(),
-      port:       Number(ctx.env.SSH_PORT || ctx.env.port) || 22,
-      username:   String(ctx.env.SSH_USER || ctx.env.username || "root").trim(),
-      password:   ctx.env.SSH_PWD || ctx.env.password || "",
-      privateKey: ctx.env.SSH_KEY || ctx.env.privateKey || "",
-    }];
-  }
-
-  const cycleEvery = Math.max(1, Number(ctx.env.SSH_CYCLE_EVERY) || 1);
-  let cycleCounter = ctx.storage.getJSON('cycleCounter') || 0;
-  cycleCounter = (cycleCounter + 1) % 999999;
-  ctx.storage.setJSON('cycleCounter', cycleCounter);
-
-  let currentIndex = ctx.storage.getJSON('multiServerIndex') || 0;
-  if (currentIndex >= servers.length) currentIndex = 0;
-  let displayIndex = currentIndex;
-
-  if (servers.length > 1 && cycleCounter % cycleEvery === 0) {
-    displayIndex = (currentIndex + 1) % servers.length;
-    ctx.storage.setJSON('multiServerIndex', displayIndex);
-  }
-
-  const server = servers[displayIndex];
-
-  // ── 异常拦截与提示 ────────────────────────────────────────────────────────
-  if (!server.host) {
-    return {
-      type: 'widget', backgroundColor: C.bg, padding: 16, gap: 8,
-      children: [
-        { type: 'text', text: '⚠️ 监控未配置', font: { size: 14, weight: 'bold' }, textColor: C.main },
-        { type: 'text', text: '请在模块参数中填入 SSH 配置', font: { size: 11 }, textColor: C.muted },
-      ]
-    };
-  }
-
-  let thisPrivateKey = "";
-  try { thisPrivateKey = parsePrivateKey(server.privateKey); } catch (e) {}
-
-  const fmtBytes = b => {
-    if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
-    if (b >= 1e9)  return (b / 1e9).toFixed(1) + 'G';
-    if (b >= 1e6)  return (b / 1e6).toFixed(1) + 'M';
-    if (b >= 1e3)  return (b / 1e3).toFixed(0) + 'K';
-    return Math.round(b) + 'B';
-  };
-
-  // ── SSH 数据获取与状态解析 ────────────────────────────────────────────────
-  let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length };
-  let session = null;
-  const serverKey = server.name.replace(/[^a-zA-Z0-9]/g, '_');
-
-  try {
-    session = await ctx.ssh.connect({
-      host: server.host, port: server.port, username: server.username,
-      ...(thisPrivateKey ? { privateKey: thisPrivateKey } : { password: server.password }),
-      timeout: 8000,
-    });
-
-    const SEP = '<<SEP>>';
-    const cmds = [
-      'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
-      "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
-      'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
-    ];
-
-    const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
-    const p = stdout.split(SEP).map(s => s.trim());
-
-    const la = (p[0] || '0 0 0').split(' ');
-    d.load = [la[0], la[1], la[2]];
-
-    // 换算服务器运行时间：支持 年/月/日/时/分/秒
-    const upSec = parseFloat((p[1] || '0').split(' ')[0]);
-    if (!isNaN(upSec) && upSec > 0) {
-      const y = Math.floor(upSec / 31536000); // 365天为1年
-      let rem = upSec % 31536000;
-      const mo = Math.floor(rem / 2592000);   // 30天为1月
-      rem = rem % 2592000;
-      const d_val = Math.floor(rem / 86400);
-      rem = rem % 86400;
-      const h = Math.floor(rem / 3600);
-      rem = rem % 3600;
-      const m_val = Math.floor(rem / 60);
-      const s_val = Math.floor(rem % 60);
-
-      let uStr = "";
-      if (y > 0) uStr += y + '年';
-      if (mo > 0) uStr += mo + '月';
-      if (d_val > 0) uStr += d_val + '日';
-      if (h > 0) uStr += h + '时';
-      if (m_val > 0) uStr += m_val + '分';
-      uStr += s_val + '秒';
-      
-      d.uptimeStr = uStr;
-    } else {
-      d.uptimeStr = "0秒";
-    }
-
-    const cpuNums  = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
-    const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
-    const prevCpu  = ctx.storage.getJSON(`_cpu_${serverKey}`);
-    let cpuPct = 0;
-    if (prevCpu && cpuTotal > prevCpu.t) cpuPct = Math.round(((cpuTotal - prevCpu.t - (cpuIdle - prevCpu.i)) / (cpuTotal - prevCpu.t)) * 100);
-    ctx.storage.setJSON(`_cpu_${serverKey}`, { t: cpuTotal, i: cpuIdle });
-    d.cpuPct = Math.max(0, Math.min(100, cpuPct));
-
-    const mm = ((p[3] || '').split('\n').find(l => /^Mem:/.test(l)) || '').split(/\s+/);
-    d.memTotal = Number(mm[1]) || 1; d.memUsed = Number(mm[2]) || 0; d.memPct = Math.round((d.memUsed / d.memTotal) * 100);
-
-    const df = (p[4] || '').split(/\s+/);
-    d.diskTotal = Number(df[1]) || 1; d.diskUsed = Number(df[2]) || 0; d.diskPct = parseInt(df[4]) || 0;
-    d.cores = parseInt(p[5]) || 1;
-
-    const nn = (p[6] || '0 0').split(' '), netRx = Number(nn[0]) || 0, netTx = Number(nn[1]) || 0;
-    const prevNet = ctx.storage.getJSON(`_net_${serverKey}`), nowTime = Date.now();
-    d.rxRate = 0; d.txRate = 0;
-    if (prevNet && prevNet.ts) {
-      const el = (nowTime - prevNet.ts) / 1000;
-      if (el > 0 && el < 3600) { d.rxRate = Math.max(0, (netRx - prevNet.rx) / el); d.txRate = Math.max(0, (netTx - prevNet.tx) / el); }
-    }
-    ctx.storage.setJSON(`_net_${serverKey}`, { rx: netRx, tx: netTx, ts: nowTime });
-    d.netRx = netRx; d.netTx = netTx;
-
-    const tempRaw = parseInt(p[7]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
-
-  } catch (e) { d.error = String(e.message || e); } finally { if (session) try { await session.close(); } catch (_) {} }
-
-  if (d.error) return { type: 'widget', padding: 16, backgroundColor: C.bg, children: [{ type: 'text', text: `连接失败 [${server.name}]`, font: { size: 14, weight: 'bold' }, textColor: C.temp }, { type: 'spacer', length: 4 }, { type: 'text', text: d.error, font: { size: 10, family: 'Menlo' }, textColor: C.muted }] };
-
-  // ── 动态告警色与通用 UI 组件 ──────────────────────────────────────────────
-  const cpuColor = d.cpuPct > 85 ? C.temp : (d.cpuPct > 60 ? C.disk : C.cpu);
-  const cpuBgColor = d.cpuPct > 85 ? C.netBg : (d.cpuPct > 60 ? C.dskBg : C.cpuBg);
-
-  const bar = (pct, color, h = 4) => ({
-    type: 'stack', direction: 'row', height: h, borderRadius: h / 2, backgroundColor: C.barBg,
-    children: pct > 0 ? [{ type: 'stack', flex: Math.max(1, pct), height: h, borderRadius: h / 2, backgroundColor: color, children: [] }, ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : [])] : [{ type: 'spacer' }],
-  });
+  // ── 时间基准与环境变量侦测 ────────────────────────────────────────────────
+  const now = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
   const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // 动态生成的 Header：小号不显示 Uptime；大号放大 Uptime 图标与字号
-  const header = () => ({
-    type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
-    children: [
-      { type: 'image', src: 'sf-symbol:server.rack', color: C.main, width: isLarge ? 18 : 14, height: isLarge ? 18 : 14 },
-      { type: 'spacer', length: 6 },
-      { type: 'text', text: d.hostname, font: { size: isLarge ? 18 : 14, weight: 'heavy' }, textColor: C.main, maxLines: 1 },
-      ...(d.totalServers > 1 ? [{ type: 'spacer', length: 6 }, { type: 'text', text: `${d.serverIndex}/${d.totalServers}`, font: { size: isLarge ? 11 : 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }] : []),
-      { type: 'spacer' },
-      ...(!isSmall ? [{
-        type: 'stack', direction: 'row', alignItems: 'center', gap: isLarge ? 4 : 2, children: [
-          { type: 'image', src: 'sf-symbol:clock', color: C.disk, width: isLarge ? 13 : 11, height: isLarge ? 13 : 11 },
-          { type: 'text', text: d.uptimeStr, font: { size: isLarge ? 12 : 10, weight: 'bold' }, textColor: C.disk, maxLines: 1 },
-        ]
-      }] : [])
-    ]
-  });
-
-  // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
-  if (isSmall) {
-    const miniCard = (icon, title, value, color, bg) => ({
-      type: 'stack', direction: 'row', alignItems: 'center', backgroundColor: bg, borderRadius: 8, padding: [4, 10],
-      children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-          { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
-        ]},
-        { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 12, weight: 'heavy', family: 'Menlo' }, textColor: color }
-      ]
-    });
-
-    return {
-      type: 'widget', backgroundColor: C.bg, padding: 10, gap: 4,
-      children: [
-        header(),
-        { type: 'spacer', length: 2 },
-        miniCard('cpu', 'CPU', `${d.cpuPct}%`, cpuColor, cpuBgColor),
-        miniCard('memorychip', 'MEM', `${d.memPct}%`, C.mem, C.memBg),
-        miniCard('internaldrive', 'DSK', `${d.diskPct}%`, C.disk, C.dskBg),
-        miniCard('network', 'NET', `↓${fmtBytes(d.rxRate)}/s`, C.net, C.netBg),
-        { type: 'spacer' }
-      ]
-    };
-  }
-
-  // ── 视图渲染 (大号尺寸 - 扩容优化版) ──────────────────────────────────────
-  if (isLarge) {
-    const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
-      type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
-      children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
-            { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
-            { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color }
-          ]},
-          { type: 'spacer' },
-          { type: 'text', text: value, font: { size: 32, weight: 'heavy', family: 'Menlo' }, textColor: color },
-        ]},
-        { type: 'spacer' },
-        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [
-          bar(pct, color, 8),
-          { type: 'text', text: subtext, font: { size: 13, family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
-        ]}
-      ]
-    });
-
-    const netCardLarge = (bg) => ({
-      type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
-      children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
-            { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
-            { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net }
-          ]},
-          { type: 'spacer' },
-          { type: 'text', text: d.host, font: { size: 13, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
-        ]},
-        { type: 'spacer' },
-        { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
-          { type: 'stack', direction: 'row', children: [ 
-            { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 14, weight: 'bold', family: 'Menlo' }, textColor: C.net }, 
-            { type: 'spacer' }, 
-            { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 14, weight: 'bold', family: 'Menlo' }, textColor: C.mem } 
-          ]},
-          { type: 'stack', direction: 'row', children: [ 
-            { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 11, family: 'Menlo' }, textColor: C.sub }, 
-            { type: 'spacer' }, 
-            { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 11, family: 'Menlo' }, textColor: C.sub } 
-          ]}
-        ]}
-      ]
-    });
-
-    return {
-      type: 'widget', backgroundColor: C.bg, padding: 16,
-      children: [
-        header(),
-        { type: 'spacer', length: 12 },
-        { type: 'stack', direction: 'column', flex: 1, gap: 12, children: [
-          { type: 'stack', direction: 'row', flex: 1, gap: 12, children: [ 
-            statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, cpuColor, cpuBgColor), 
-            statCardLarge('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
-          ]},
-          { type: 'stack', direction: 'row', flex: 1, gap: 12, children: [ 
-            statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
-            netCardLarge(C.netBg) 
-          ]}
-        ]}
-      ]
-    };
-  }
-
-  // ── 视图渲染 (中号尺寸 - 原版锁定不变) ───────────────────────────────────
-  const statCard = (icon, title, value, subtext, pct, color, bg) => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
-    children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-          { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-          { type: 'text', text: title, font: { size: 12, weight: 'heavy' }, textColor: color }
-        ]},
-        { type: 'spacer' },
-        { type: 'text', text: value, font: { size: 13, weight: 'heavy', family: 'Menlo' }, textColor: color },
-      ]},
-      { type: 'spacer' },
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
-        bar(pct, color),
-        // 磁盘卡片特定字号微调：仅针对 DSK 卡片，副标题中不带小数的数值和“/”符号切换为系统字体，收缩 1px 宽度。
-        title === 'DSK'
-          ? mkRow([ mkText(`${fmtBytes(d.diskUsed)}`, 9, "bold", C.sub, { family: "Menlo" }), mkText(` / `, 9, "bold", C.sub, { weight: "regular" }), mkText(`${fmtBytes(d.diskTotal)}`, 9, "bold", C.sub, { weight: "regular" }) ], 0, { alignment: "start" })
-          : mkText(subtext, 9, "bold", C.sub, { family: "Menlo", maxLines: 1 })
-      ]}
-    ]
-  });
-
-  const netCard = (bg) => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
-    children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', height: 16, gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-          { type: 'image', src: 'sf-symbol:network', color: C.net, width: 13, height: 13 },
-          { type: 'text', text: 'NET', font: { size: 12, weight: 'heavy' }, textColor: C.net }
-        ]},
-        { type: 'spacer' },
-        { type: 'text', text: d.host, font: { size: 9, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
-      ]},
-      { type: 'spacer' },
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
-        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.rxRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.net }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.txRate)}/s`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.mem } ]},
-        { type: 'stack', direction: 'row', children: [ { type: 'text', text: `↓${fmtBytes(d.netRx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.sub }, { type: 'spacer' }, { type: 'text', text: `↑${fmtBytes(d.netTx)}`, font: { size: 8, family: 'Menlo' }, textColor: C.sub } ]}
-      ]}
-    ]
-  });
-
-  return {
-    type: 'widget', backgroundColor: C.bg, padding: [10, 14, 12, 14],
-    children: [
-      header(), { type: 'spacer', length: 6 },
-      { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), 
-        statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
-      ]},
-      { type: 'spacer', length: 4 },
-      { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
-        statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
-        netCard(C.netBg) 
-      ]}
-    ]
+  // ── 色彩令牌 ──────────────────────────────────────────────────────────────
+  const C = {
+    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    main:        { light: '#1C1C1E', dark: '#FFFFFF' },
+    sub:         { light: '#48484A', dark: '#D1D1D6' },
+    muted:       { light: '#8E8E93', dark: '#8E8E93' },
+    gold:        { light: '#B58A28', dark: '#D6A53A' },
+    red:         { light: '#CA3B32', dark: '#FF453A' },
+    teal:        { light: '#2E8045', dark: '#32D74B' },
+    blue:        { light: '#3A5F85', dark: '#5E8EB8' },
+    purple:      { light: '#6B4C9A', dark: '#8B6AA8' },
+    cyan:        { light: '#628C7B', dark: '#73A491' },
+    pingBg:      { light: '#F2F2F7', dark: '#2C2C2E' },
+    proxyGreen:  { light: '#2E8045', dark: '#32D74B' },
+    divider:     { light: '#E5E5EA', dark: '#38383A' },
+    transparent: '#00000000'
   };
+
+  // ── 严格超时熔断请求包装 (3500ms) ─────────────────────────────────────────
+  const TIMEOUT_MS = 3500;
+
+  const httpGet = async (url) => {
+    try {
+      const start = Date.now();
+      const resp = await ctx.http.get(url, { headers: { "User-Agent": "Mozilla/5.0" }, timeout: TIMEOUT_MS });
+      const text = await resp.text();
+      const json = JSON.parse(text);
+      return { data: json.data || json, ping: Date.now() - start };
+    } catch (e) { return { data: {}, ping: 0 }; }
+  };
+
+  // 小号模式直接跳过测速以提升性能和省电
+  const speedDownload = async () => {
+    if (isSmall) return 0;
+    try {
+      const start = Date.now();
+      const resp = await ctx.http.get('https://speed.cloudflare.com/__down?bytes=102400', {
+        headers: { "User-Agent": "Mozilla/5.0" }, timeout: TIMEOUT_MS
+      });
+      await resp.text();
+      const timeMs = Date.now() - start;
+      return timeMs > 0 ? Math.round((102400 / timeMs) * 1000 / 1024) : 0;
+    } catch (e) { return 0; }
+  };
+
+  const speedUpload = async () => {
+    if (isSmall) return 0;
+    try {
+      const payload = 'x'.repeat(102400);
+      const start = Date.now();
+      const resp = await ctx.http.post('https://speed.cloudflare.com/__up', {
+        headers: { "User-Agent": "Mozilla/5.0", "Content-Type": "application/octet-stream" },
+        body: payload, timeout: TIMEOUT_MS
+      });
+      await resp.text();
+      const timeMs = Date.now() - start;
+      return timeMs > 0 ? Math.round((102400 / timeMs) * 1000 / 1024) : 0;
+    } catch (e) { return 0; }
+  };
+
+  // ── 格式化辅助 ────────────────────────────────────────────────────────────
+  const getFlagEmoji = (cc) => {
+    if (!cc) return "";
+    const str = String(cc).toUpperCase();
+    if (!/^[A-Z]{2}$/.test(str)) return "";
+    return String.fromCodePoint(...[...str].map(c => 127397 + c.charCodeAt(0)));
+  };
+
+  const fmtISP = (isp) => {
+    if (!isp) return "未知";
+    const s = String(isp).toLowerCase();
+    const raw = String(isp).replace(/\s*[\(\（]中国[\)\）]\s*/, "").replace(/\s+/g, " ").trim();
+    if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
+    if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
+    if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
+    if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
+    return raw || "未知";
+  };
+
+  const getProxyProtocol = () => {
+    try {
+      const p = ctx.proxy;
+      if (!p) return "";
+      const proto = p.protocol || p.type || p.proxyType || "";
+      if (!proto) return "";
+      const map = {
+        "shadowsocks": "SS", "ss": "SS", "vmess": "VMess", "vless": "VLESS",
+        "trojan": "Trojan", "hysteria": "Hysteria", "hysteria2": "Hysteria2",
+        "tuic": "TUIC", "wireguard": "WireGuard", "http": "HTTP",
+        "https": "HTTPS", "socks5": "SOCKS5", "anytls": "AnyTLS"
+      };
+      return map[String(proto).toLowerCase()] || String(proto).toUpperCase();
+    } catch (e) { return ""; }
+  };
+
+  try {
+    const d = ctx.device || {};
+    const [internalIP, internalIPv6, gatewayIP, wifiSsid, cellularRadio] = [
+      d.ipv4?.address, d.ipv6?.address, d.ipv4?.gateway, d.wifi?.ssid, d.cellular?.radio
+    ];
+
+    // 并发请求数据，如果小号则后两个测速方法直接返回 0
+    const [localResp, nodeResp, pureResp, ipv6Resp, downloadSpeed, uploadSpeed] = await Promise.all([
+      httpGet('https://myip.ipip.net/json'),
+      httpGet('http://ip-api.com/json/?lang=zh-CN'),
+      httpGet('https://my.ippure.com/v1/info'),
+      httpGet('https://api64.ipify.org?format=json'),
+      speedDownload(),
+      speedUpload()
+    ]);
+
+    const { data: local, ping: localPing } = localResp;
+    const { data: node, ping: nodePing }   = nodeResp;
+    const pure = pureResp.data || {};
+
+    const publicIPv6Raw = ipv6Resp.data?.ip || '';
+    const publicIPv6 = publicIPv6Raw.includes(':') ? publicIPv6Raw : '';
+
+    const fmtSpeed = (kb) => kb > 0 ? (kb >= 1024 ? `${(kb / 1024).toFixed(1)}MB/s` : `${kb}KB/s`) : '--';
+    const speedStr = `↓ ${fmtSpeed(downloadSpeed)}  ↑ ${fmtSpeed(uploadSpeed)}`;
+
+    const avgMB = ((downloadSpeed + uploadSpeed) / 2) / 1024;
+    const speedColor = (downloadSpeed === 0 && uploadSpeed === 0) ? C.muted : (avgMB >= 10 ? C.teal : (avgMB >= 2 ? C.gold : C.red));
+
+    const proxyProtocol = getProxyProtocol();
+    const hasProxy = !!proxyProtocol;
+
+    const locColor = localPing === 0 ? C.muted : (localPing < 60 ? C.teal : (localPing < 150 ? C.gold : C.red));
+    const nodColor = nodePing === 0 ? C.muted : (nodePing < 150 ? C.teal : (nodePing < 300 ? C.gold : C.red));
+
+    const rawISP = (Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node?.isp || node?.org;
+    const currentISP = fmtISP(rawISP);
+
+    const rawRadio = cellularRadio ? String(cellularRadio).toUpperCase().trim() : "";
+    const radioType = { "GPRS": "2.5G", "EDGE": "2.75G", "WCDMA": "3G", "LTE": "4G", "NR": "5G", "NRNSA": "5G" }[rawRadio] || rawRadio;
+    const jumpUrl = { "中国移动": "leadeon://", "中国电信": "ctclient://", "中国联通": "chinaunicom://" }[currentISP] || "";
+
+    const localCountryRaw = Array.isArray(local.location) ? (local.location[0] || "") : "";
+    const nodeCountryCode = (node.countryCode || "").toUpperCase();
+    const isDnsLeak = hasProxy && (localCountryRaw.includes("中国") || localCountryRaw.includes("China")) && nodeCountryCode === "CN";
+    const leakLabel = isDnsLeak ? "⚠️ 泄漏" : "";
+
+    // ── 数据拼装 ──────────────────────────────────────────────────────────────
+    const r1Parts = [internalIP || "未连接", gatewayIP !== internalIP ? gatewayIP : null].filter(Boolean);
+    if (internalIPv6) r1Parts.push("[v6]");
+    const r1Content = r1Parts.join(" / ");
+
+    const locStr = Array.isArray(local.location) ? local.location.slice(0, 3).join('').trim() : '';
+    const r2Base = [local.ip || "获取中...", locStr].filter(Boolean).join(" / ");
+    const r2Content = publicIPv6 ? `${r2Base} / [v6]` : r2Base;
+
+    const nodeLoc = [getFlagEmoji(nodeCountryCode), node.country, node.city].filter(Boolean).join(" ");
+    const asnStr = node.as ? String(node.as).split(' ')[0] : "";
+    const r3Content = [node.query || node.ip || "获取中...", nodeLoc, asnStr, proxyProtocol].filter(Boolean).join(" / ");
+
+    const risk = pure.fraudScore;
+    const riskTxt = risk === undefined ? "未知风险" : (risk >= 80 ? `极高危(${risk})` : risk >= 70 ? `高危(${risk})` : risk >= 40 ? `中危(${risk})` : `低危(${risk})`);
+    const r4Content = `${pure.isResidential === true ? "原生住宅" : (pure.isResidential === false ? "商业机房" : "未知属性")} / ${riskTxt}`;
+
+    // ── 小号专属布局渲染 (完全解耦，对标黄历小号字号，拉大行间距) ─────────────────────────
+    if (isSmall) {
+      // 组装小号专用精简数据
+      const r1Line1 = internalIP || "未连接";
+      const r1Line2 = [gatewayIP !== internalIP ? gatewayIP : null, internalIPv6 ? "[v6]" : null].filter(Boolean).join(" ");
+      
+      const r2SmallContent = [local.ip || "获取中...", publicIPv6 ? "[v6]" : null].filter(Boolean).join(" / ");
+      const r3SmallContent = [node.query || node.ip || "获取中...", proxyProtocol].filter(Boolean).join(" / ");
+      
+      const smallRows = [];
+      const buildSmallRow = (icon, color, content) => ({
+        // gap 设置为 6 保证图标与文字间的横向间距协调
+        type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+          icon ? { type: 'image', src: `sf-symbol:${icon}`, color, width: 11, height: 11 } : { type: 'spacer', length: 11 },
+          { type: 'text', text: content, font: { size: 11, weight: 'medium' }, textColor: C.sub, maxLines: 1, flex: 1 }
+        ]
+      });
+
+      smallRows.push(buildSmallRow('house.fill', C.teal, r1Line1));
+      if (r1Line2) smallRows.push(buildSmallRow(null, null, r1Line2));
+      smallRows.push(buildSmallRow('location.circle.fill', C.blue, r2SmallContent)); 
+      smallRows.push(buildSmallRow('network', C.purple, r3SmallContent)); 
+      smallRows.push(buildSmallRow('shield.lefthalf.filled', C.cyan, `风险: ${pure.fraudScore || "-"}`));
+
+      return {
+        type: 'widget', padding: 12, url: jumpUrl || undefined,
+        backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+        children: [
+          // 标题栏：左对齐两行，字号 12
+          { type: 'stack', direction: 'row', alignItems: 'start', gap: 6, children: [
+            { type: 'stack', direction: 'column', padding: [2, 0, 0, 0], children: [
+               { type: 'image', src: `sf-symbol:${wifiSsid ? 'wifi' : 'antenna.radiowaves.left.and.right'}`, color: C.main, width: 12, height: 12 }
+            ]},
+            { type: 'stack', direction: 'column', alignItems: 'start', children: [
+               { type: 'text', text: currentISP, font: { size: 12, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.6, align: 'left' },
+               { type: 'text', text: wifiSsid || radioType || "未连接", font: { size: 12, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.6, align: 'left' }
+            ]},
+            { type: 'spacer' }, 
+            ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 11, height: 11 }] : [])
+          ]},
+          { type: 'spacer', length: 10 },
+          // 优化修复：统一行纵向间距 (gap: 8)，不加 flex: 1，强制高度自然撑开防止被压缩
+          { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, children: smallRows },
+          { type: 'spacer' }, 
+          { type: 'stack', direction: 'row', alignItems: 'center', children: [
+            { type: 'spacer' },
+            { type: 'text', text: `更新于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
+          ]}
+        ]
+      };
+    }
+
+    // ── 通用带测速胶囊顶栏模块 (供中大号使用) ─────────────────────────────────
+    const buildHeader = (titleFz, titleIcz) => ({
+      type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+        { type: 'image', src: wifiSsid ? 'sf-symbol:wifi' : (cellularRadio ? 'sf-symbol:antenna.radiowaves.left.and.right' : 'sf-symbol:wifi.slash'), color: C.main, width: titleIcz, height: titleIcz },
+        { type: 'text', text: `${currentISP} · ${wifiSsid || radioType || "未连接"}`, font: { size: titleFz, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.7, flex: 1 },
+        ...(leakLabel ? [{ type: 'text', text: leakLabel, font: { size: 10, weight: 'bold' }, textColor: C.red }] : []),
+        ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 14, height: 14 }] : []),
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+            { type: 'image', src: 'sf-symbol:mappin.circle.fill', color: locColor, width: 10, height: 10 },
+            { type: 'text', text: localPing > 0 ? `${localPing}` : "-", font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: locColor }
+          ]},
+          { type: 'text', text: '|', font: { size: 10, weight: 'light' }, textColor: C.muted },
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+            { type: 'image', src: 'sf-symbol:globe.fill', color: nodColor, width: 10, height: 10 },
+            { type: 'text', text: nodePing > 0 ? `${nodePing}` : "-", font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: nodColor }
+          ]}
+        ]}
+      ]
+    });
+
+    // ── 大号专属布局渲染 (完全还原，不动分毫) ─────────────────────────────────
+    if (isLarge) {
+      const fz  = 14;
+      const icz = 15;
+      const lw  = 60;
+      
+      const buildLargeRow = (icon, color, label, content, contentColor = C.sub) => ({
+        type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: lw, children: [
+              { type: 'image', src: `sf-symbol:${icon}`, color, width: icz, height: icz },
+              { type: 'text', text: label, font: { size: fz, weight: 'heavy' }, textColor: color }
+          ]},
+          { type: 'text', text: content, font: { size: fz, weight: 'medium' }, textColor: contentColor, maxLines: 1, minScale: 0.5, flex: 1 }
+        ]
+      });
+
+      return {
+        type: 'widget', padding: 16, url: jumpUrl || undefined,
+        backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+        children: [
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
+            { type: 'image', src: wifiSsid ? 'sf-symbol:wifi' : (cellularRadio ? 'sf-symbol:antenna.radiowaves.left.and.right' : 'sf-symbol:wifi.slash'), color: C.main, width: 18, height: 18 },
+            { type: 'text', text: `${currentISP} · ${wifiSsid || radioType || "未连接"}`, font: { size: 17, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.7, flex: 1 },
+            ...(leakLabel ? [{ type: 'text', text: leakLabel, font: { size: 11, weight: 'bold' }, textColor: C.red }] : []),
+            ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 15, height: 15 }] : []),
+            { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg, children: [
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+                { type: 'image', src: 'sf-symbol:mappin.circle.fill', color: locColor, width: 11, height: 11 },
+                { type: 'text', text: localPing > 0 ? `${localPing}` : "-", font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: locColor }
+              ]},
+              { type: 'text', text: '|', font: { size: 11, weight: 'light' }, textColor: C.muted },
+              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
+                { type: 'image', src: 'sf-symbol:globe.fill', color: nodColor, width: 11, height: 11 },
+                { type: 'text', text: nodePing > 0 ? `${nodePing}` : "-", font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: nodColor }
+              ]}
+            ]}
+          ]},
+          { type: 'spacer', length: 12 },
+          { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, flex: 1, children: [
+            buildLargeRow('house.fill', C.teal, '内网', r1Content),
+            buildLargeRow('location.circle.fill', C.blue, '本地', r2Content),
+            buildLargeRow('network', C.purple, '节点', r3Content, isDnsLeak ? C.red : C.sub),
+            buildLargeRow('arrow.up.and.down.circle.fill', speedColor, '网速', speedStr, speedColor),
+            buildLargeRow('shield.lefthalf.filled', C.cyan, '属性', r4Content)
+          ]},
+          { type: 'stack', direction: 'row', alignItems: 'center', children: [
+            { type: 'spacer' },
+            { type: 'text', text: `更新于 ${timeStr}`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
+          ]}
+        ]
+      };
+    }
+
+    // ── 中号经典布局 (完全保留原生版结构) ──────────────────────────────────────
+    const buildMedRow = (icon, color, label, content, contentColor = C.sub) => ({
+      type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
+            { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
+            { type: 'text', text: label, font: { size: 12, weight: 'heavy' }, textColor: color }
+        ]},
+        { type: 'text', text: content, font: { size: 12, weight: 'medium' }, textColor: contentColor, maxLines: 1, minScale: 0.5, flex: 1 }
+      ]
+    });
+
+    return {
+      type: 'widget', padding: 12, url: jumpUrl || undefined,
+      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [
+        buildHeader(15, 16),
+        { type: 'spacer', length: 8 },
+        { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, flex: 1, children: [
+          buildMedRow('house.fill', C.teal, '内网', r1Content),
+          buildMedRow('location.circle.fill', C.blue, '本地', r2Content),
+          buildMedRow('network', C.purple, '节点', r3Content, isDnsLeak ? C.red : C.sub),
+          buildMedRow('arrow.up.and.down.circle.fill', speedColor, '网速', speedStr, speedColor),
+          buildMedRow('shield.lefthalf.filled', C.cyan, '属性', r4Content)
+        ]},
+        { type: 'stack', direction: 'row', alignItems: 'center', children: [
+          { type: 'spacer' },
+          { type: 'text', text: `更新于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
+        ]}
+      ]
+    };
+
+  } catch (err) {
+    // ── 错误与超时降级处理 ────────────────────────────────────────────────────
+    return {
+      type: 'widget', padding: 12,
+      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      children: [
+        { type: 'text', text: '网络面板崩溃或超时 ⚠️', font: { size: 14, weight: 'heavy' }, textColor: C.red.light },
+        { type: 'spacer', length: 4 },
+        { type: 'text', text: String(err.message || err), font: { size: 11 }, textColor: C.muted.light, maxLines: 5 },
+        { type: 'spacer' },
+        { type: 'stack', direction: 'row', children: [
+          { type: 'spacer' },
+          { type: 'text', text: `重试于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted.light }
+        ]}
+      ]
+    };
+  }
 }
