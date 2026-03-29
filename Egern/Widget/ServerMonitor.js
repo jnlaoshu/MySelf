@@ -13,7 +13,7 @@
  * * 🔗 【脚本引用】
  * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
  * * ⏱️ 【更新时间】
- * 2026.03.29 11:20
+ * 2026.03.29 11:30
  * ==========================================
  */
 
@@ -218,7 +218,7 @@ export default async function (ctx) {
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // 动态生成的 Header：小号不显示 Uptime；大号放大 Uptime 图标与字号
+  // 动态生成的 Header
   const header = () => ({
     type: 'stack', direction: 'row', alignItems: 'center', gap: 0, padding: 0,
     children: [
@@ -264,20 +264,19 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (大号尺寸 - 靶向优化排版与字号) ──────────────────────────────
+  // ── 视图渲染 (大号尺寸 - 靶向极简修复，彻底解决拥挤和排版错位) ───────────────
   if (isLarge) {
     const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
-            { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
-            { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color },
-            { type: 'spacer' } // 核心修复：强制标题栏内元素左对齐，与下方进度条严丝合缝
-          ]},
+        // 修复1：去除标题栏限制，利用原生流式排版让图标自然紧贴左缘，和下方进度条完美对齐
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, children: [
+          { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
+          { type: 'spacer', length: 6 },
+          { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color },
           { type: 'spacer' },
-          // 核心修复：大幅缩小数值字号（从 32 降至 24），杜绝数据被截断变省略号
-          { type: 'text', text: value, font: { size: 24, weight: 'heavy', family: 'Menlo' }, textColor: color },
+          // 修复2：百分比字号降为 22，不再被截断为省略号
+          { type: 'text', text: value, font: { size: 22, weight: 'heavy', family: 'Menlo' }, textColor: color },
         ]},
         { type: 'spacer' },
         { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [
@@ -290,20 +289,19 @@ export default async function (ctx) {
     const netCardLarge = (bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
       children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
-            { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
-            { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net },
-            { type: 'spacer' } // 核心修复：强制左对齐
-          ]},
-          { type: 'spacer' } // 将右侧原来的 IP 位置彻底留白
+        // 修复3：去掉右侧 IP 占位，让 NET 图标完美左侧贴边
+        { type: 'stack', direction: 'row', alignItems: 'center', height: 20, children: [
+          { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
+          { type: 'spacer', length: 6 },
+          { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net },
+          { type: 'spacer' }
         ]},
-        { type: 'spacer' },
-        // 核心修复：将服务器 IP 换行移至下方，采用居中显示且字号放大至 15，极其舒展
+        { type: 'spacer', length: 8 },
+        // 修复4：IP 独占一行，绝对居中，字号 15
         { type: 'stack', direction: 'row', alignItems: 'center', children: [
-            { type: 'spacer' },
-            { type: 'text', text: d.host, font: { size: 15, weight: 'bold', family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
-            { type: 'spacer' }
+          { type: 'spacer' },
+          { type: 'text', text: d.host, font: { size: 15, weight: 'bold', family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+          { type: 'spacer' }
         ]},
         { type: 'spacer' },
         { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
