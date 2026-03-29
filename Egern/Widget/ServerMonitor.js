@@ -13,7 +13,7 @@
  * * 🔗 【脚本引用】
  * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
  * * ⏱️ 【更新时间】
- * 2026.03.29 11:10
+ * 2026.03.29 11:20
  * ==========================================
  */
 
@@ -236,7 +236,7 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
+  // ── 视图渲染 (小号尺寸 - 原版锁定不变) ──────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => ({
       type: 'stack', direction: 'row', alignItems: 'center', backgroundColor: bg, borderRadius: 8, padding: [4, 10],
@@ -264,7 +264,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 视图渲染 (大号尺寸 - 扩容优化版) ──────────────────────────────────────
+  // ── 视图渲染 (大号尺寸 - 靶向优化排版与字号) ──────────────────────────────
   if (isLarge) {
     const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
       type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
@@ -272,10 +272,12 @@ export default async function (ctx) {
         { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
             { type: 'image', src: `sf-symbol:${icon}`, color, width: 16, height: 16 },
-            { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color }
+            { type: 'text', text: title, font: { size: 15, weight: 'heavy' }, textColor: color },
+            { type: 'spacer' } // 核心修复：强制标题栏内元素左对齐，与下方进度条严丝合缝
           ]},
           { type: 'spacer' },
-          { type: 'text', text: value, font: { size: 32, weight: 'heavy', family: 'Menlo' }, textColor: color },
+          // 核心修复：大幅缩小数值字号（从 32 降至 24），杜绝数据被截断变省略号
+          { type: 'text', text: value, font: { size: 24, weight: 'heavy', family: 'Menlo' }, textColor: color },
         ]},
         { type: 'spacer' },
         { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [
@@ -291,10 +293,17 @@ export default async function (ctx) {
         { type: 'stack', direction: 'row', alignItems: 'center', height: 28, gap: 6, children: [
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, width: 68, children: [
             { type: 'image', src: 'sf-symbol:network', color: C.net, width: 16, height: 16 },
-            { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net }
+            { type: 'text', text: 'NET', font: { size: 15, weight: 'heavy' }, textColor: C.net },
+            { type: 'spacer' } // 核心修复：强制左对齐
           ]},
-          { type: 'spacer' },
-          { type: 'text', text: d.host, font: { size: 13, family: 'Menlo' }, textColor: C.sub, maxLines: 1, minScale: 0.5 },
+          { type: 'spacer' } // 将右侧原来的 IP 位置彻底留白
+        ]},
+        { type: 'spacer' },
+        // 核心修复：将服务器 IP 换行移至下方，采用居中显示且字号放大至 15，极其舒展
+        { type: 'stack', direction: 'row', alignItems: 'center', children: [
+            { type: 'spacer' },
+            { type: 'text', text: d.host, font: { size: 15, weight: 'bold', family: 'Menlo' }, textColor: C.sub, maxLines: 1 },
+            { type: 'spacer' }
         ]},
         { type: 'spacer' },
         { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
@@ -346,7 +355,6 @@ export default async function (ctx) {
       { type: 'spacer' },
       { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [
         bar(pct, color),
-        // 磁盘卡片特定字号微调：仅针对 DSK 卡片，副标题中不带小数的数值和“/”符号切换为系统字体，收缩 1px 宽度。
         title === 'DSK'
           ? mkRow([ mkText(`${fmtBytes(d.diskUsed)}`, 9, "bold", C.sub, { family: "Menlo" }), mkText(` / `, 9, "bold", C.sub, { weight: "regular" }), mkText(`${fmtBytes(d.diskTotal)}`, 9, "bold", C.sub, { weight: "regular" }) ], 0, { alignment: "start" })
           : mkText(subtext, 9, "bold", C.sub, { family: "Menlo", maxLines: 1 })
