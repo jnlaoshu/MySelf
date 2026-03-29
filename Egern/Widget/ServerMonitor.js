@@ -10,10 +10,10 @@
  * • UI 视觉对齐：全局锁定左侧标签宽度，精细化对齐状态图标。
  * • 智能告警色：根据 CPU 负载动态调整运行指标颜色 (绿 → 黄 → 红)。
  * • 多端智能轮播：支持配置最多 5 台服务器进行周期性自动轮播展示。
- * * 🔗 【脚本引用}
+ * * 🔗 【脚本引用】
  * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
  * * ⏱️ 【更新时间】
- * 2026.03.29 11:00
+ * 2026.03.29 11:10
  * ==========================================
  */
 
@@ -378,7 +378,7 @@ export default async function (ctx) {
     children: [
       header(), { type: 'spacer', length: 6 },
       { type: 'stack', direction: 'row', flex: 1, gap: 4, children: [ 
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, C.cpu, C.cpuBg), 
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}C | Ld: ${d.load[0]}`, d.cpuPct, cpuColor, cpuBgColor), 
         statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
       ]},
       { type: 'spacer', length: 4 },
