@@ -7,9 +7,9 @@
  * • 动态颜色：CPU 与温度指标支持基于数值阈值的警示色切换。
  * • 节点配置：支持配置最多 5 台服务器，提供自动轮播机制及禁用开关。
  * • 异常处理：内置连接失败重试机制（2次指数退避 + 抖动）。
- * • 标题状态：中号尺寸显示刷新与运行时间；大/小号隐藏时间信息以留白。
+ * • 标题状态：中大号尺寸显示运行时间与刷新时间；小号隐藏以留白。
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 22:30
+ * ⏱️ 更新时间：2026.03.30 22:40
  * ==========================================
  */
 
@@ -180,7 +180,6 @@ export default async function (ctx) {
           ...(thisPrivateKey 
             ? { 
                 privateKey: thisPrivateKey,
-                // 支持带密码保护的私钥（官方常见字段）
                 passphrase: ctx.env[`SSH_SERVER_${displayIndex+1}_KEY_PASSPHRASE`] || "" 
               } 
             : { password: server.password })
@@ -304,10 +303,11 @@ export default async function (ctx) {
     mkText(d.hostname, isLarge ? 18 : 14, "heavy", C.main, { maxLines: 1 }),
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
-    ...(!isSmall && !isLarge ? [
-      mkRow([ mkIcon('clock', C.disk, 11), mkText(d.uptimeStr, 10, "bold", C.disk, { maxLines: 1 }) ], 2),
+    // 中号和大号均显示右侧运行时间及刷新时间，并支持字号自适应；仅小号隐藏留白
+    ...(!isSmall ? [
+      mkRow([ mkIcon('clock', C.disk, isLarge ? 13 : 11), mkText(d.uptimeStr, isLarge ? 12 : 10, "bold", C.disk, { maxLines: 1 }) ], 2),
       mkSpacer(8),
-      mkRow([ mkIcon('arrow.triangle.2.circlepath', C.muted, 9), mkText(exactTimeStr, 9, "medium", C.muted, {}, { family: 'Menlo' }) ], 3)
+      mkRow([ mkIcon('arrow.triangle.2.circlepath', C.muted, isLarge ? 11 : 9), mkText(exactTimeStr, isLarge ? 11 : 9, "medium", C.muted, {}, { family: 'Menlo' }) ], 3)
     ] : [])
   ], 0, { padding: 0 });
 
