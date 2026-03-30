@@ -2,7 +2,7 @@
 # 📌 模块名称: 岁时黄历 Widget
 # ✨ 主要功能: 三尺寸自适应，农历双引擎，支持黄历角标切换与教学周配置。
 # 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.yaml
-# ⏱️ 2026.03.28 15:30
+# ⏱️ 2026.03.30 10:00
 # ==========================================
 
 name: "岁时黄历 Widget"
@@ -21,6 +21,12 @@ env_schema:
   SHOW_TEACHING_WEEK:
     name: 📚 全局启用教学周
     description: "开启后，可在面板展示教学周进度。"
+    options: ["true", "false"]
+    default_value: "true"
+
+  SHOW_TEACHING_WEEK_IN_WEEK:
+    name: 🔄 在周次模式下显示教学周
+    description: "开启后，即使选择了「周次」，也会在周次文本前强制显示教学周进度。"
     options: ["true", "false"]
     default_value: "true"
 
