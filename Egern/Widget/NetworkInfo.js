@@ -1,6 +1,6 @@
 /**
  * ==========================================
- * � 网络信息 Widget
+ * 🌐 网络信息 (Network Info) 小组件
  * * ✨ 【功能概览】
  * • 三尺寸自适应统一规范：
  * - 小号：无测速极简版，正文11px、标题12px对标黄历小号。标题左对齐，优化并拉大行间距。
@@ -10,14 +10,13 @@
  * • 测速模块：双向实时网速测试；双轨测速胶囊底座 (仅中/大号启用)。
  * • 稳健防护：3.5秒全局超时熔断机制，杜绝假死白屏。
  *
- * � 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
- * ⏱️ 更新时间: 2026.03.29 00:40
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+ * ⏱️ 更新时间: 2026.03.30 10:00
  * ==========================================
  */
 
 export default async function(ctx) {
-
-  // ── 时间基准与环境变量侦测 ────────────────────────────────────────────────
+  // ── 时间基准与尺寸侦测 ────────────────────────────────────────────────
   const now = new Date();
   const pad = n => String(n).padStart(2, "0");
   const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
@@ -26,9 +25,9 @@ export default async function(ctx) {
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // ── 色彩令牌 ──────────────────────────────────────────────────────────────
+  // ── 统一色彩令牌系统 ──────────────────────────────────────────────────
   const C = {
-    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
     main:        { light: '#1C1C1E', dark: '#FFFFFF' },
     sub:         { light: '#48484A', dark: '#D1D1D6' },
     muted:       { light: '#8E8E93', dark: '#8E8E93' },
@@ -44,7 +43,23 @@ export default async function(ctx) {
     transparent: '#00000000'
   };
 
-  // ── 严格超时熔断请求包装 (3500ms) ─────────────────────────────────────────
+  // ── UI 统一构建器 ─────────────────────────────────────────────────────
+  const mkText = (text, size, weight, color, opts = {}) => {
+    const { family: fontFamily, ...restOpts } = opts;
+    return {
+      type: "text",
+      text: String(text ?? ""),
+      font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
+      textColor: color,
+      ...restOpts
+    };
+  };
+  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
+  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
+  const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
+
+  // ── 严格超时熔断请求包装 (3500ms) ─────────────────────────────────────
   const TIMEOUT_MS = 3500;
 
   const httpGet = async (url) => {
@@ -57,14 +72,12 @@ export default async function(ctx) {
     } catch (e) { return { data: {}, ping: 0 }; }
   };
 
-  // 小号模式直接跳过测速以提升性能和省电
+  // 小号模式跳过测速以提升性能
   const speedDownload = async () => {
     if (isSmall) return 0;
     try {
       const start = Date.now();
-      const resp = await ctx.http.get('https://speed.cloudflare.com/__down?bytes=102400', {
-        headers: { "User-Agent": "Mozilla/5.0" }, timeout: TIMEOUT_MS
-      });
+      const resp = await ctx.http.get('https://speed.cloudflare.com/__down?bytes=102400', { headers: { "User-Agent": "Mozilla/5.0" }, timeout: TIMEOUT_MS });
       await resp.text();
       const timeMs = Date.now() - start;
       return timeMs > 0 ? Math.round((102400 / timeMs) * 1000 / 1024) : 0;
@@ -77,8 +90,7 @@ export default async function(ctx) {
       const payload = 'x'.repeat(102400);
       const start = Date.now();
       const resp = await ctx.http.post('https://speed.cloudflare.com/__up', {
-        headers: { "User-Agent": "Mozilla/5.0", "Content-Type": "application/octet-stream" },
-        body: payload, timeout: TIMEOUT_MS
+        headers: { "User-Agent": "Mozilla/5.0", "Content-Type": "application/octet-stream" }, body: payload, timeout: TIMEOUT_MS
       });
       await resp.text();
       const timeMs = Date.now() - start;
@@ -86,7 +98,7 @@ export default async function(ctx) {
     } catch (e) { return 0; }
   };
 
-  // ── 格式化辅助 ────────────────────────────────────────────────────────────
+  // ── 格式化辅助 ────────────────────────────────────────────────────────
   const getFlagEmoji = (cc) => {
     if (!cc) return "";
     const str = String(cc).toUpperCase();
@@ -99,12 +111,13 @@ export default async function(ctx) {
     const s = String(isp).toLowerCase();
     const raw = String(isp).replace(/\s*[\(\（]中国[\)\）]\s*/, "").replace(/\s+/g, " ").trim();
     if (/(^|[\s-])(cmcc|cmnet|cmi|mobile)\b|移动/.test(s)) return "中国移动";
-    if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s)) return "中国电信";
+    if (/(^|[\s-])(chinanet|telecom|ctcc|ct)\b|电信/.test(s))  return "中国电信";
     if (/(^|[\s-])(unicom|cncgroup|netcom|link)\b|联通/.test(s)) return "中国联通";
-    if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s)) return "中国广电";
+    if (/(^|[\s-])(cbn|broadcast)\b|广电/.test(s))             return "中国广电";
     return raw || "未知";
   };
 
+  // 【说明】ctx.proxy 为非官方 API，不在官方文档列举范围内，以 try/catch 兜底
   const getProxyProtocol = () => {
     try {
       const p = ctx.proxy;
@@ -112,10 +125,11 @@ export default async function(ctx) {
       const proto = p.protocol || p.type || p.proxyType || "";
       if (!proto) return "";
       const map = {
-        "shadowsocks": "SS", "ss": "SS", "vmess": "VMess", "vless": "VLESS",
-        "trojan": "Trojan", "hysteria": "Hysteria", "hysteria2": "Hysteria2",
-        "tuic": "TUIC", "wireguard": "WireGuard", "http": "HTTP",
-        "https": "HTTPS", "socks5": "SOCKS5", "anytls": "AnyTLS"
+        "shadowsocks": "SS",    "ss": "SS",         "vmess": "VMess",
+        "vless": "VLESS",       "trojan": "Trojan",  "hysteria": "Hysteria",
+        "hysteria2": "Hysteria2","tuic": "TUIC",     "wireguard": "WireGuard",
+        "http": "HTTP",          "https": "HTTPS",   "socks5": "SOCKS5",
+        "anytls": "AnyTLS"
       };
       return map[String(proto).toLowerCase()] || String(proto).toUpperCase();
     } catch (e) { return ""; }
@@ -127,7 +141,7 @@ export default async function(ctx) {
       d.ipv4?.address, d.ipv6?.address, d.ipv4?.gateway, d.wifi?.ssid, d.cellular?.radio
     ];
 
-    // 并发请求数据，如果小号则后两个测速方法直接返回 0
+    // 并发请求数据
     const [localResp, nodeResp, pureResp, ipv6Resp, downloadSpeed, uploadSpeed] = await Promise.all([
       httpGet('https://myip.ipip.net/json'),
       httpGet('http://ip-api.com/json/?lang=zh-CN'),
@@ -138,224 +152,153 @@ export default async function(ctx) {
     ]);
 
     const { data: local, ping: localPing } = localResp;
-    const { data: node, ping: nodePing }   = nodeResp;
+    const { data: node,  ping: nodePing  } = nodeResp;
     const pure = pureResp.data || {};
 
     const publicIPv6Raw = ipv6Resp.data?.ip || '';
-    const publicIPv6 = publicIPv6Raw.includes(':') ? publicIPv6Raw : '';
+    const publicIPv6    = publicIPv6Raw.includes(':') ? publicIPv6Raw : '';
 
-    const fmtSpeed = (kb) => kb > 0 ? (kb >= 1024 ? `${(kb / 1024).toFixed(1)}MB/s` : `${kb}KB/s`) : '--';
-    const speedStr = `↓ ${fmtSpeed(downloadSpeed)}  ↑ ${fmtSpeed(uploadSpeed)}`;
-
-    const avgMB = ((downloadSpeed + uploadSpeed) / 2) / 1024;
-    const speedColor = (downloadSpeed === 0 && uploadSpeed === 0) ? C.muted : (avgMB >= 10 ? C.teal : (avgMB >= 2 ? C.gold : C.red));
+    const fmtSpeed   = (kb) => kb > 0 ? (kb >= 1024 ? `${(kb / 1024).toFixed(1)}MB/s` : `${kb}KB/s`) : '--';
+    const speedStr   = `↓ ${fmtSpeed(downloadSpeed)}  ↑ ${fmtSpeed(uploadSpeed)}`;
+    const avgMB      = ((downloadSpeed + uploadSpeed) / 2) / 1024;
+    const speedColor = (downloadSpeed === 0 && uploadSpeed === 0) ? C.muted
+      : (avgMB >= 10 ? C.teal : avgMB >= 2 ? C.gold : C.red);
 
     const proxyProtocol = getProxyProtocol();
-    const hasProxy = !!proxyProtocol;
+    const hasProxy      = !!proxyProtocol;
 
-    const locColor = localPing === 0 ? C.muted : (localPing < 60 ? C.teal : (localPing < 150 ? C.gold : C.red));
-    const nodColor = nodePing === 0 ? C.muted : (nodePing < 150 ? C.teal : (nodePing < 300 ? C.gold : C.red));
+    const locColor = localPing === 0 ? C.muted : (localPing < 60  ? C.teal : localPing < 150 ? C.gold : C.red);
+    const nodColor = nodePing  === 0 ? C.muted : (nodePing  < 150 ? C.teal : nodePing  < 300 ? C.gold : C.red);
 
-    const rawISP = (Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node?.isp || node?.org;
+    const rawISP     = (Array.isArray(local.location) ? local.location[local.location.length - 1] : "") || node?.isp || node?.org;
     const currentISP = fmtISP(rawISP);
 
-    const rawRadio = cellularRadio ? String(cellularRadio).toUpperCase().trim() : "";
+    const rawRadio  = cellularRadio ? String(cellularRadio).toUpperCase().trim() : "";
     const radioType = { "GPRS": "2.5G", "EDGE": "2.75G", "WCDMA": "3G", "LTE": "4G", "NR": "5G", "NRNSA": "5G" }[rawRadio] || rawRadio;
-    const jumpUrl = { "中国移动": "leadeon://", "中国电信": "ctclient://", "中国联通": "chinaunicom://" }[currentISP] || "";
+    const jumpUrl   = { "中国移动": "leadeon://", "中国电信": "ctclient://", "中国联通": "chinaunicom://" }[currentISP] || "";
 
     const localCountryRaw = Array.isArray(local.location) ? (local.location[0] || "") : "";
     const nodeCountryCode = (node.countryCode || "").toUpperCase();
-    const isDnsLeak = hasProxy && (localCountryRaw.includes("中国") || localCountryRaw.includes("China")) && nodeCountryCode === "CN";
-    const leakLabel = isDnsLeak ? "⚠️ 泄漏" : "";
+    const isDnsLeak  = hasProxy && (localCountryRaw.includes("中国") || localCountryRaw.includes("China")) && nodeCountryCode === "CN";
+    const leakLabel  = isDnsLeak ? "⚠️ 泄漏" : "";
 
-    // ── 数据拼装 ──────────────────────────────────────────────────────────────
+    // ── 数据拼装 ──────────────────────────────────────────────────────────
     const r1Parts = [internalIP || "未连接", gatewayIP !== internalIP ? gatewayIP : null].filter(Boolean);
     if (internalIPv6) r1Parts.push("[v6]");
     const r1Content = r1Parts.join(" / ");
 
-    const locStr = Array.isArray(local.location) ? local.location.slice(0, 3).join('').trim() : '';
-    const r2Base = [local.ip || "获取中...", locStr].filter(Boolean).join(" / ");
+    const locStr    = Array.isArray(local.location) ? local.location.slice(0, 3).join('').trim() : '';
+    const r2Base    = [local.ip || "获取中...", locStr].filter(Boolean).join(" / ");
     const r2Content = publicIPv6 ? `${r2Base} / [v6]` : r2Base;
 
-    const nodeLoc = [getFlagEmoji(nodeCountryCode), node.country, node.city].filter(Boolean).join(" ");
-    const asnStr = node.as ? String(node.as).split(' ')[0] : "";
+    const nodeLoc   = [getFlagEmoji(nodeCountryCode), node.country, node.city].filter(Boolean).join(" ");
+    const asnStr    = node.as ? String(node.as).split(' ')[0] : "";
     const r3Content = [node.query || node.ip || "获取中...", nodeLoc, asnStr, proxyProtocol].filter(Boolean).join(" / ");
 
-    const risk = pure.fraudScore;
-    const riskTxt = risk === undefined ? "未知风险" : (risk >= 80 ? `极高危(${risk})` : risk >= 70 ? `高危(${risk})` : risk >= 40 ? `中危(${risk})` : `低危(${risk})`);
-    const r4Content = `${pure.isResidential === true ? "原生住宅" : (pure.isResidential === false ? "商业机房" : "未知属性")} / ${riskTxt}`;
+    const risk      = pure.fraudScore;
+    const riskTxt   = risk === undefined ? "未知风险"
+      : risk >= 80 ? `极高危(${risk})` : risk >= 70 ? `高危(${risk})` : risk >= 40 ? `中危(${risk})` : `低危(${risk})`;
+    const r4Content = `${pure.isResidential === true ? "原生住宅" : pure.isResidential === false ? "商业机房" : "未知属性"} / ${riskTxt}`;
 
-    // ── 小号专属布局渲染 (完全解耦，对标黄历小号字号，拉大行间距) ─────────────────────────
+    // ── 小号专属布局渲染 ──────────────────────────────────────────────────
     if (isSmall) {
-      // 组装小号专用精简数据
-      const r1Line1 = internalIP || "未连接";
-      const r1Line2 = [gatewayIP !== internalIP ? gatewayIP : null, internalIPv6 ? "[v6]" : null].filter(Boolean).join(" ");
-      
+      const r1Line2       = [gatewayIP !== internalIP ? gatewayIP : null, internalIPv6 ? "[v6]" : null].filter(Boolean).join(" ");
       const r2SmallContent = [local.ip || "获取中...", publicIPv6 ? "[v6]" : null].filter(Boolean).join(" / ");
       const r3SmallContent = [node.query || node.ip || "获取中...", proxyProtocol].filter(Boolean).join(" / ");
-      
-      const smallRows = [];
-      const buildSmallRow = (icon, color, content) => ({
-        // gap 设置为 6 保证图标与文字间的横向间距协调
-        type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-          icon ? { type: 'image', src: `sf-symbol:${icon}`, color, width: 11, height: 11 } : { type: 'spacer', length: 11 },
-          { type: 'text', text: content, font: { size: 11, weight: 'medium' }, textColor: C.sub, maxLines: 1, flex: 1 }
-        ]
-      });
 
-      smallRows.push(buildSmallRow('house.fill', C.teal, r1Line1));
-      if (r1Line2) smallRows.push(buildSmallRow(null, null, r1Line2));
-      smallRows.push(buildSmallRow('location.circle.fill', C.blue, r2SmallContent)); 
-      smallRows.push(buildSmallRow('network', C.purple, r3SmallContent)); 
-      smallRows.push(buildSmallRow('shield.lefthalf.filled', C.cyan, `风险: ${pure.fraudScore || "-"}`));
+      const smallRows = [];
+      const pushSmallRow = (icon, color, content) => smallRows.push(
+        mkRow([
+          icon ? mkIcon(icon, color, 11) : mkSpacer(11),
+          mkText(content, 11, "medium", C.sub, { maxLines: 1, flex: 1 })
+        ], 6)
+      );
+
+      pushSmallRow('house.fill',             C.teal,   internalIP || "未连接");
+      if (r1Line2) pushSmallRow(null, null, r1Line2);
+      pushSmallRow('location.circle.fill',   C.blue,   r2SmallContent);
+      pushSmallRow('network',                C.purple,  r3SmallContent);
+      pushSmallRow('shield.lefthalf.filled', C.cyan,   `风险: ${pure.fraudScore || "-"}`);
 
       return {
-        type: 'widget', padding: 12, url: jumpUrl || undefined,
-        backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+        type: 'widget', padding: 12, url: jumpUrl || undefined, backgroundGradient,
         children: [
-          // 标题栏：左对齐两行，字号 12
-          { type: 'stack', direction: 'row', alignItems: 'start', gap: 6, children: [
+          mkRow([
             { type: 'stack', direction: 'column', padding: [2, 0, 0, 0], children: [
-               { type: 'image', src: `sf-symbol:${wifiSsid ? 'wifi' : 'antenna.radiowaves.left.and.right'}`, color: C.main, width: 12, height: 12 }
+              mkIcon(wifiSsid ? 'wifi' : 'antenna.radiowaves.left.and.right', C.main, 12)
             ]},
             { type: 'stack', direction: 'column', alignItems: 'start', children: [
-               { type: 'text', text: currentISP, font: { size: 12, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.6, align: 'left' },
-               { type: 'text', text: wifiSsid || radioType || "未连接", font: { size: 12, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.6, align: 'left' }
+              mkText(currentISP,                  12, "heavy", C.main, { maxLines: 1, minScale: 0.6 }),
+              mkText(wifiSsid || radioType || "未连接", 12, "heavy", C.main, { maxLines: 1, minScale: 0.6 })
             ]},
-            { type: 'spacer' }, 
-            ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 11, height: 11 }] : [])
-          ]},
-          { type: 'spacer', length: 10 },
-          // 优化修复：统一行纵向间距 (gap: 8)，不加 flex: 1，强制高度自然撑开防止被压缩
+            mkSpacer(),
+            ...(hasProxy ? [mkIcon('shield.lefthalf.filled', C.proxyGreen, 11)] : [])
+          ], 6, { alignItems: 'start' }),
+          mkSpacer(10),
           { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, children: smallRows },
-          { type: 'spacer' }, 
-          { type: 'stack', direction: 'row', alignItems: 'center', children: [
-            { type: 'spacer' },
-            { type: 'text', text: `更新于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
-          ]}
+          mkSpacer(),
+          mkRow([ mkSpacer(), mkText(`更新于 ${timeStr}`, 9, "bold", C.muted, { family: 'Menlo' }) ])
         ]
       };
     }
 
-    // ── 通用带测速胶囊顶栏模块 (供中大号使用) ─────────────────────────────────
-    const buildHeader = (titleFz, titleIcz) => ({
-      type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-        { type: 'image', src: wifiSsid ? 'sf-symbol:wifi' : (cellularRadio ? 'sf-symbol:antenna.radiowaves.left.and.right' : 'sf-symbol:wifi.slash'), color: C.main, width: titleIcz, height: titleIcz },
-        { type: 'text', text: `${currentISP} · ${wifiSsid || radioType || "未连接"}`, font: { size: titleFz, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.7, flex: 1 },
-        ...(leakLabel ? [{ type: 'text', text: leakLabel, font: { size: 10, weight: 'bold' }, textColor: C.red }] : []),
-        ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 14, height: 14 }] : []),
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-            { type: 'image', src: 'sf-symbol:mappin.circle.fill', color: locColor, width: 10, height: 10 },
-            { type: 'text', text: localPing > 0 ? `${localPing}` : "-", font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: locColor }
-          ]},
-          { type: 'text', text: '|', font: { size: 10, weight: 'light' }, textColor: C.muted },
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-            { type: 'image', src: 'sf-symbol:globe.fill', color: nodColor, width: 10, height: 10 },
-            { type: 'text', text: nodePing > 0 ? `${nodePing}` : "-", font: { size: 10, weight: 'bold', family: 'Menlo' }, textColor: nodColor }
-          ]}
-        ]}
-      ]
-    });
+    // ── 中大号参数及组件统一构造 ──────────────────────────────────────────
+    const layout = {
+      fz:        isLarge ? 14 : 12,
+      icz:       isLarge ? 15 : 13,
+      lw:        isLarge ? 60 : 52,
+      titleFz:   isLarge ? 17 : 15,
+      titleIcz:  isLarge ? 18 : 16,
+      pingFz:    isLarge ? 11 : 10,
+      gap:       8,
+      padding:   isLarge ? 16 : 12,
+      spacerTop: isLarge ? 12 : 8,
+      timeFz:    isLarge ? 11 : 9
+    };
 
-    // ── 大号专属布局渲染 (完全还原，不动分毫) ─────────────────────────────────
-    if (isLarge) {
-      const fz  = 14;
-      const icz = 15;
-      const lw  = 60;
-      
-      const buildLargeRow = (icon, color, label, content, contentColor = C.sub) => ({
-        type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: lw, children: [
-              { type: 'image', src: `sf-symbol:${icon}`, color, width: icz, height: icz },
-              { type: 'text', text: label, font: { size: fz, weight: 'heavy' }, textColor: color }
-          ]},
-          { type: 'text', text: content, font: { size: fz, weight: 'medium' }, textColor: contentColor, maxLines: 1, minScale: 0.5, flex: 1 }
-        ]
-      });
+    const buildHeader = () => mkRow([
+      mkIcon(wifiSsid ? 'wifi' : (cellularRadio ? 'antenna.radiowaves.left.and.right' : 'wifi.slash'), C.main, layout.titleIcz),
+      mkText(`${currentISP} · ${wifiSsid || radioType || "未连接"}`, layout.titleFz, "heavy", C.main, { maxLines: 1, minScale: 0.7, flex: 1 }),
+      ...(leakLabel ? [mkText(leakLabel, layout.pingFz, "bold", C.red)] : []),
+      ...(hasProxy  ? [mkIcon('shield.lefthalf.filled', C.proxyGreen, layout.titleIcz - 3)] : []),
+      mkRow([
+        mkRow([ mkIcon('mappin.circle.fill', locColor, layout.pingFz), mkText(localPing > 0 ? `${localPing}` : "-", layout.pingFz, "bold", locColor, { family: 'Menlo' }) ], 2),
+        mkText('|', layout.pingFz, "light", C.muted),
+        mkRow([ mkIcon('globe.fill', nodColor, layout.pingFz), mkText(nodePing > 0 ? `${nodePing}` : "-", layout.pingFz, "bold", nodColor, { family: 'Menlo' }) ], 2)
+      ], 4, { padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg })
+    ], 6);
 
-      return {
-        type: 'widget', padding: 16, url: jumpUrl || undefined,
-        backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
-        children: [
-          { type: 'stack', direction: 'row', alignItems: 'center', gap: 6, children: [
-            { type: 'image', src: wifiSsid ? 'sf-symbol:wifi' : (cellularRadio ? 'sf-symbol:antenna.radiowaves.left.and.right' : 'sf-symbol:wifi.slash'), color: C.main, width: 18, height: 18 },
-            { type: 'text', text: `${currentISP} · ${wifiSsid || radioType || "未连接"}`, font: { size: 17, weight: 'heavy' }, textColor: C.main, maxLines: 1, minScale: 0.7, flex: 1 },
-            ...(leakLabel ? [{ type: 'text', text: leakLabel, font: { size: 11, weight: 'bold' }, textColor: C.red }] : []),
-            ...(hasProxy ? [{ type: 'image', src: 'sf-symbol:shield.lefthalf.filled', color: C.proxyGreen, width: 15, height: 15 }] : []),
-            { type: 'stack', direction: 'row', alignItems: 'center', gap: 4, padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg, children: [
-              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-                { type: 'image', src: 'sf-symbol:mappin.circle.fill', color: locColor, width: 11, height: 11 },
-                { type: 'text', text: localPing > 0 ? `${localPing}` : "-", font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: locColor }
-              ]},
-              { type: 'text', text: '|', font: { size: 11, weight: 'light' }, textColor: C.muted },
-              { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, children: [
-                { type: 'image', src: 'sf-symbol:globe.fill', color: nodColor, width: 11, height: 11 },
-                { type: 'text', text: nodePing > 0 ? `${nodePing}` : "-", font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: nodColor }
-              ]}
-            ]}
-          ]},
-          { type: 'spacer', length: 12 },
-          { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, flex: 1, children: [
-            buildLargeRow('house.fill', C.teal, '内网', r1Content),
-            buildLargeRow('location.circle.fill', C.blue, '本地', r2Content),
-            buildLargeRow('network', C.purple, '节点', r3Content, isDnsLeak ? C.red : C.sub),
-            buildLargeRow('arrow.up.and.down.circle.fill', speedColor, '网速', speedStr, speedColor),
-            buildLargeRow('shield.lefthalf.filled', C.cyan, '属性', r4Content)
-          ]},
-          { type: 'stack', direction: 'row', alignItems: 'center', children: [
-            { type: 'spacer' },
-            { type: 'text', text: `更新于 ${timeStr}`, font: { size: 11, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
-          ]}
-        ]
-      };
-    }
-
-    // ── 中号经典布局 (完全保留原生版结构) ──────────────────────────────────────
-    const buildMedRow = (icon, color, label, content, contentColor = C.sub) => ({
-      type: 'stack', direction: 'row', alignItems: 'center', gap: 4, children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-            { type: 'image', src: `sf-symbol:${icon}`, color, width: 13, height: 13 },
-            { type: 'text', text: label, font: { size: 12, weight: 'heavy' }, textColor: color }
-        ]},
-        { type: 'text', text: content, font: { size: 12, weight: 'medium' }, textColor: contentColor, maxLines: 1, minScale: 0.5, flex: 1 }
-      ]
-    });
+    const buildContentRow = (icon, color, label, content, contentColor = C.sub) => mkRow([
+      mkRow([ mkIcon(icon, color, layout.icz), mkText(label, layout.fz, "heavy", color) ], 2, { width: layout.lw }),
+      mkText(content, layout.fz, "medium", contentColor, { maxLines: 1, minScale: 0.5, flex: 1 })
+    ], 4);
 
     return {
-      type: 'widget', padding: 12, url: jumpUrl || undefined,
-      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      type: 'widget', padding: layout.padding, url: jumpUrl || undefined, backgroundGradient,
       children: [
-        buildHeader(15, 16),
-        { type: 'spacer', length: 8 },
-        { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, flex: 1, children: [
-          buildMedRow('house.fill', C.teal, '内网', r1Content),
-          buildMedRow('location.circle.fill', C.blue, '本地', r2Content),
-          buildMedRow('network', C.purple, '节点', r3Content, isDnsLeak ? C.red : C.sub),
-          buildMedRow('arrow.up.and.down.circle.fill', speedColor, '网速', speedStr, speedColor),
-          buildMedRow('shield.lefthalf.filled', C.cyan, '属性', r4Content)
+        buildHeader(),
+        mkSpacer(layout.spacerTop),
+        { type: 'stack', direction: 'column', alignItems: 'start', gap: layout.gap, flex: 1, children: [
+          buildContentRow('house.fill',                    C.teal,     '内网', r1Content),
+          buildContentRow('location.circle.fill',          C.blue,     '本地', r2Content),
+          buildContentRow('network',                       C.purple,   '节点', r3Content, isDnsLeak ? C.red : C.sub),
+          buildContentRow('arrow.up.and.down.circle.fill', speedColor, '网速', speedStr, speedColor),
+          buildContentRow('shield.lefthalf.filled',        C.cyan,     '属性', r4Content)
         ]},
-        { type: 'stack', direction: 'row', alignItems: 'center', children: [
-          { type: 'spacer' },
-          { type: 'text', text: `更新于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted }
-        ]}
+        mkRow([ mkSpacer(), mkText(`更新于 ${timeStr}`, layout.timeFz, "bold", C.muted, { family: 'Menlo' }) ])
       ]
     };
 
   } catch (err) {
-    // ── 错误与超时降级处理 ────────────────────────────────────────────────────
+    // ── 错误降级处理 ──────────────────────────────────────────────────────
     return {
-      type: 'widget', padding: 12,
-      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      type: 'widget', padding: 12, backgroundGradient,
       children: [
-        { type: 'text', text: '网络面板崩溃或超时 ⚠️', font: { size: 14, weight: 'heavy' }, textColor: C.red.light },
-        { type: 'spacer', length: 4 },
-        { type: 'text', text: String(err.message || err), font: { size: 11 }, textColor: C.muted.light, maxLines: 5 },
-        { type: 'spacer' },
-        { type: 'stack', direction: 'row', children: [
-          { type: 'spacer' },
-          { type: 'text', text: `重试于 ${timeStr}`, font: { size: 9, weight: 'bold', family: 'Menlo' }, textColor: C.muted.light }
-        ]}
+        mkText('网络面板崩溃或超时 ⚠️', 14, "heavy", C.red),
+        mkSpacer(4),
+        mkText(String(err.message || err), 11, "medium", C.muted, { maxLines: 5 }),
+        mkSpacer(),
+        mkRow([ mkSpacer(), mkText(`重试于 ${timeStr}`, 9, "bold", C.muted, { family: 'Menlo' }) ])
       ]
     };
   }
