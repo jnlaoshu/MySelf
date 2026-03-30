@@ -163,6 +163,7 @@ export default async function (ctx) {
   // ── SSH 数据获取 ───────────────────────────────────────────────────────
   let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0, gpuUtil: 0, gpuMemPct: 0, gpuTemp: 0 };
   let session = null;
+  const SEP = '<<SEP>>';
 
   const sshWithRetry = async (maxRetries = 2) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -173,7 +174,6 @@ export default async function (ctx) {
           timeout: 8000,
         });
 
-        const SEP = '<<SEP>>';
         const cmds = [
           'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
