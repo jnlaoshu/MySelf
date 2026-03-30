@@ -2,7 +2,7 @@
 # 📌 模块名称: Egern 桌面小组件合集
 # ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与多模式教学周配置、专属纪念日设定、节假日置顶、优先级排序、金融交割日开关，及最多 5 台服务器的轮播监控配置。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.28 15:30
+# ⏱️ 更新时间: 2026.03.30 11:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -51,12 +51,12 @@ env_schema:
 
   SPRING_BREAK_DATE:
     name: 🌸 春假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
+    description: "格式 MM/DD，留空使用内置成都春假逻辑"
     default_value: ""
 
   AUTUMN_BREAK_DATE:
     name: 🍂 秋假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
+    description: "格式 MM/DD，留空使用内置成都秋假逻辑"
     default_value: ""
 
   SHOW_FINANCE_DATES:
@@ -142,8 +142,14 @@ env_schema:
     description: "日期格式必须严格为 MM/DD"
 
   # ── 服务器监控 ────────────────────────────────────────────────────────────
+  SSH_CYCLE_DISABLED:
+    name: ⏸️ 禁用多服务器轮播
+    description: "开启后，将锁定只显示第一台在线的服务器"
+    options: ["false", "true"]
+    default_value: "false"
+
   SSH_CYCLE_EVERY:
-    name: 🔄 轮播间隔（刷新几次切换一次）
+    name: 🔄 轮播间隔（刷新次数）
     description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
     default_value: "1"
 
@@ -263,6 +269,7 @@ scriptings:
   - generic:
       name: 服务器监控
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+      timeout: 10
 
 widgets:
   - name: 岁时黄历
