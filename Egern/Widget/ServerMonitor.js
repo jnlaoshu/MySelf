@@ -7,9 +7,9 @@
  * • 动态颜色：CPU 与温度指标支持基于数值阈值的警示色切换。
  * • 节点配置：支持配置最多 5 台服务器，提供自动轮播机制及禁用开关。
  * • 异常处理：内置连接失败重试机制（2次指数退避 + 抖动）。
- * • 标题状态：中大号尺寸显示运行时间与刷新时间；小号隐藏以留白。
+ * • 标题状态：中大号尺寸显示运行时间（精确到分）与刷新时间；小号隐藏以留白。
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 22:40
+ * ⏱️ 更新时间：2026.03.30 22:45
  * ==========================================
  */
 
@@ -223,18 +223,24 @@ export default async function (ctx) {
     const la = (p[0] || '0 0 0').split(' ');
     d.load = [parseFloat(la[0]) || 0, parseFloat(la[1]) || 0, parseFloat(la[2]) || 0];
 
+    // 运行时间精确到分，丢弃秒的显示
     const upSec = parseFloat((p[1] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
       const y = Math.floor(upSec / 31536000); let rem = upSec % 31536000;
       const mo = Math.floor(rem / 2592000);   rem %= 2592000;
       const days = Math.floor(rem / 86400);   rem %= 86400;
       const h = Math.floor(rem / 3600);       rem %= 3600;
-      const m = Math.floor(rem / 60);         const s = Math.floor(rem % 60);
+      const m = Math.floor(rem / 60);         
       let uStr = "";
-      if (y > 0) uStr += y + '年'; if (mo > 0) uStr += mo + '月'; if (days > 0) uStr += days + '日';
-      if (h > 0) uStr += h + '时'; if (m > 0) uStr += m + '分'; uStr += s + '秒';
+      if (y > 0) uStr += y + '年'; 
+      if (mo > 0) uStr += mo + '月'; 
+      if (days > 0) uStr += days + '日';
+      if (h > 0) uStr += h + '时'; 
+      uStr += m + '分'; // 最小单位固定为分
       d.uptimeStr = uStr;
-    } else { d.uptimeStr = "0秒"; }
+    } else { 
+      d.uptimeStr = "0分"; 
+    }
 
     const cpuNums = (p[2] || '').replace(/^cpu\s+/, '').split(/\s+/).map(Number);
     const cpuTotal = cpuNums.reduce((a, b) => a + b, 0), cpuIdle = cpuNums[3] || 0;
@@ -303,7 +309,6 @@ export default async function (ctx) {
     mkText(d.hostname, isLarge ? 18 : 14, "heavy", C.main, { maxLines: 1 }),
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
-    // 中号和大号均显示右侧运行时间及刷新时间，并支持字号自适应；仅小号隐藏留白
     ...(!isSmall ? [
       mkRow([ mkIcon('clock', C.disk, isLarge ? 13 : 11), mkText(d.uptimeStr, isLarge ? 12 : 10, "bold", C.disk, { maxLines: 1 }) ], 2),
       mkSpacer(8),
