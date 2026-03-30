@@ -6,10 +6,10 @@
  * • 监控指标：通过 SSH 实时获取 CPU、内存、磁盘、网络速率/总量、温度、负载及 Docker 容器数。
  * • 动态颜色：CPU 与温度指标支持基于数值阈值的警示色切换。
  * • 节点配置：支持配置最多 5 台服务器，提供自动轮播机制及禁用开关。
- * • 异常处理：内置连接失败重试机制（2次指数退避）。
+ * • 异常处理：内置连接失败重试机制（2次指数退避 + 抖动）。
  * • 标题状态：中号尺寸显示刷新与运行时间；大/小号隐藏时间信息以留白。
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 22:00
+ * ⏱️ 更新时间：2026.03.30 22:30
  * ==========================================
  */
 
@@ -115,7 +115,6 @@ export default async function (ctx) {
   const cycleEvery = Math.max(1, Number(ctx.env.SSH_CYCLE_EVERY) || 1);
   const cycleDisabled = String(ctx.env.SSH_CYCLE_DISABLED || ctx.env.SSH_NO_CYCLE || "").toLowerCase() === 'true' || ctx.env.SSH_NO_CYCLE === '1';
 
-  // 【修复】严谨的周期重置逻辑，防止整除错位
   const maxCycle = cycleEvery * Math.max(1, servers.length);
   let cycleCounter = ctx.storage.getJSON('cycleCounter') || 0;
   cycleCounter = (cycleCounter + 1) % maxCycle;
@@ -151,27 +150,51 @@ export default async function (ctx) {
     return Math.round(b) + 'B';
   };
 
-  // ── 时间处理（精确时间） ──────────────────────────────────────
   const updateTime = new Date();
   const pad = n => String(n).padStart(2, "0");
   const exactTimeStr = `${pad(updateTime.getHours())}:${pad(updateTime.getMinutes())}`;
 
   // ── SSH 数据获取 ───────────────────────────────────────────────────────
-  let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0 };
+  let d = { 
+    host: server.host, 
+    hostname: server.name, 
+    serverIndex: displayIndex + 1, 
+    totalServers: servers.length, 
+    temp: 0, 
+    docker: 0 
+  };
+  
   let session = null;
   const SEP = '<<SEP>>'; 
 
-  const sshWithRetry = async (maxRetries = 2) => {
+  const maxRetries = Number(ctx.env.SSH_RETRY_TIMES) || 2;
+
+  const sshWithRetry = async () => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        session = await ctx.ssh.connect({
-          host: server.host, port: server.port, username: server.username,
-          ...(thisPrivateKey ? { privateKey: thisPrivateKey } : { password: server.password }),
-          timeout: 8000,
-        });
+        const connectOpts = {
+          host: server.host,
+          port: server.port,
+          username: server.username,
+          timeout: 6000,
+          ...(thisPrivateKey 
+            ? { 
+                privateKey: thisPrivateKey,
+                // 支持带密码保护的私钥（官方常见字段）
+                passphrase: ctx.env[`SSH_SERVER_${displayIndex+1}_KEY_PASSPHRASE`] || "" 
+              } 
+            : { password: server.password })
+        };
+
+        session = await ctx.ssh.connect(connectOpts);
 
         const cmds = [
-          'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
+          'cat /proc/loadavg',
+          'cat /proc/uptime',
+          'head -1 /proc/stat',
+          'free -b',
+          'df -B1 / | tail -1',
+          'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
           'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
           'docker ps -q 2>/dev/null | wc -l || echo 0'
@@ -179,10 +202,17 @@ export default async function (ctx) {
 
         const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
         return stdout;
+
       } catch (e) {
-        if (session) try { await session.close(); } catch (_) {}
+        if (session) {
+          try { await session.close(); } catch (_) {}
+          session = null;
+        }
+        
         if (attempt === maxRetries) throw e;
-        await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+        
+        const delay = 500 * Math.pow(2, attempt) + Math.random() * 300;
+        await new Promise(r => setTimeout(r, delay));
       }
     }
   };
@@ -238,7 +268,9 @@ export default async function (ctx) {
   } catch (e) {
     d.error = String(e.message || e);
   } finally {
-    if (session) try { await session.close(); } catch (_) {}
+    if (session) {
+      try { await session.close(); } catch (_) {}
+    }
   }
 
   if (d.error) {
@@ -258,7 +290,6 @@ export default async function (ctx) {
   const tempColor = getTempColor(d.temp);
   const tempBgColor = C.tempBg;
 
-  // 【修复】spacer 节点不可使用 flex 属性，统一使用空的 stack 占位
   const buildBar = (pct, color, h = 4) => ({
     type: 'stack', direction: 'row', height: h, borderRadius: h / 2, backgroundColor: C.barBg,
     children: pct > 0 ? [
@@ -273,8 +304,6 @@ export default async function (ctx) {
     mkText(d.hostname, isLarge ? 18 : 14, "heavy", C.main, { maxLines: 1 }),
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
-    
-    // 中号显示运行时间及刷新时间，大号、小号隐藏留白
     ...(!isSmall && !isLarge ? [
       mkRow([ mkIcon('clock', C.disk, 11), mkText(d.uptimeStr, 10, "bold", C.disk, { maxLines: 1 }) ], 2),
       mkSpacer(8),
@@ -302,8 +331,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 大号专属组件 (安全的高度对齐机制) ──────────────────────────────────
-  // 【修复】移除了 justifyContent 依赖，通过在结尾强行注入 mkSpacer() 将内容顶到上方
+  // ── 大号专属组件 ─────────────────────────────────────────────────────
   const statCardLarge = (icon, title, value, subtextLines, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
     children: [
@@ -314,7 +342,7 @@ export default async function (ctx) {
         mkSpacer(6),
         { type: 'stack', direction: 'column', height: 34, gap: 4, children: [
           ...subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' })),
-          mkSpacer() // 强力顶部对齐推手
+          mkSpacer()
         ]}
       ]}
     ]
@@ -326,19 +354,17 @@ export default async function (ctx) {
       mkRow([ mkIcon('network', C.net, 16), mkSpacer(6), mkText('NET', 15, "heavy", C.net), mkSpacer() ], 0, { height: 28 }),
       mkSpacer(),
       { type: 'stack', direction: 'column', children: [
-        // 去除了 host 的 minScale，依赖 maxLines
         mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 14 }),
         mkSpacer(6),
         { type: 'stack', direction: 'column', height: 34, gap: 4, children: [
           mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 13, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 13, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
           mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0),
-          mkSpacer() // 强力顶部对齐推手
+          mkSpacer()
         ]}
       ]}
     ]
   });
 
-  // ── 大号布局 ─────────────────────────────────────────────────────────
   if (isLarge) {
     return {
       type: 'widget', backgroundGradient, padding: 16,
@@ -346,18 +372,11 @@ export default async function (ctx) {
         header(), mkSpacer(12),
         { type: 'stack', direction: 'column', flex: 1, gap: 12, children: [
           mkRow([ 
-            statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, [
-              `${d.cores}核 | 🐳${d.docker} | ${d.temp}°C`, 
-              `Ld: ${d.load.join('/')}`
-            ], d.cpuPct, cpuColor, cpuBgColor), 
-            statCardLarge('memorychip', 'MEM', `${d.memPct}%`, [
-              `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`
-            ], d.memPct, C.mem, C.memBg) 
+            statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, [`${d.cores}核 | 🐳${d.docker} | ${d.temp}°C`, `Ld: ${d.load.join('/')}`], d.cpuPct, cpuColor, cpuBgColor), 
+            statCardLarge('memorychip', 'MEM', `${d.memPct}%`, [`${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`], d.memPct, C.mem, C.memBg) 
           ], 12, { flex: 1 }),
           mkRow([ 
-            statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, [
-              `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`
-            ], d.diskPct, C.disk, C.dskBg), 
+            statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, [`${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`], d.diskPct, C.disk, C.dskBg), 
             netCardLarge()
           ], 12, { flex: 1 })
         ]}
@@ -384,7 +403,6 @@ export default async function (ctx) {
     children: [
       mkRow([ mkRow([ mkIcon('network', C.net, 13), mkText('NET', 12, "heavy", C.net) ], 2, { width: 52 }), mkSpacer(), mkText(d.host, 9, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }) ], 4, { height: 16 }),
       mkSpacer(),
-      // 【修复】恢复 gap: 4 保证与 statCard 一致，使底部 spacer 弹性伸展正常
       { type: 'stack', direction: 'column', height: 24, gap: 4, children: [
         mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 9, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 9, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
         mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }) ], 0),
@@ -393,7 +411,6 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 中号布局 ───────────────────────────────────────────────────────────
   return {
     type: 'widget', backgroundGradient, padding: [10, 14, 12, 14],
     children: [
