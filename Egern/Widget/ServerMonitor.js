@@ -2,14 +2,14 @@
  * ==========================================
  * 📌 服务器监控 (Server Monitor) 小组件
  * ✨ 【主要功能】
- * • 三端完美适配：Small（5列直排）、Medium（经典2×2）、Large（巨幕2×2）
+ * • 三端完美适配：Small（4列直排）、Medium（经典2×2）、Large（巨幕2×2）
  * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker
- * • 智能标题栏：所有尺寸（小/中/大号）均直接显示精确刷新时间
+ * • 智能标题栏：小号显示刷新时间；中大号显示运行时间 + 带图标的刷新时间
  * • 智能动态颜色：CPU + 温度 独立告警色（绿→黄→红）
  * • 完整负载 1/5/15 + 多服务器轮播（支持强制关闭）
  * • 错误重试机制（2次指数退避） + 自定义颜色/背景
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 14:00
+ * ⏱️ 更新时间：2026.03.30 15:00
  * ==========================================
  */
 
@@ -168,7 +168,6 @@ export default async function (ctx) {
           timeout: 8000,
         });
 
-        // 移除了 nvidia-smi GPU 查询指令
         const cmds = [
           'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
@@ -272,19 +271,24 @@ export default async function (ctx) {
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
     
-    // 中号/大号显示 运行时间 + 温度
+    // 中号/大号仅显示 运行时间
     ...(!isSmall ? [
       mkRow([ mkIcon('clock', C.disk, isLarge ? 13 : 11), mkText(d.uptimeStr, isLarge ? 12 : 10, "bold", C.disk, { maxLines: 1 }) ], isLarge ? 4 : 2),
-      mkSpacer(8),
-      mkRow([ mkIcon('thermometer', tempColor, isLarge ? 15 : 12), mkText(`${d.temp}°C`, isLarge ? 13 : 11, "heavy", tempColor, {}, { family: 'Menlo' }) ], 3),
-      mkSpacer(6)
+      mkSpacer(8)
     ] : []),
 
-    // 所有尺寸（小/中/大）均显示精确刷新时间(如：12:43)
-    mkText(exactTimeStr, isLarge ? 11 : 9, "medium", C.muted, {}, { family: 'Menlo' })
+    // 刷新时间：中大号加刷新图标，小号极简显示
+    ...(isSmall ? [
+      mkText(exactTimeStr, 9, "medium", C.muted, {}, { family: 'Menlo' })
+    ] : [
+      mkRow([
+        mkIcon('arrow.triangle.2.circlepath', C.muted, isLarge ? 11 : 9),
+        mkText(exactTimeStr, isLarge ? 11 : 9, "medium", C.muted, {}, { family: 'Menlo' })
+      ], 3)
+    ])
   ], 0, { padding: 0 });
 
-  // ── 小号尺寸 (5卡排版，无温度/运行时间) ─────────────────────────────────
+  // ── 小号尺寸 (4卡排版，无网络/运行时间/温度栏) ─────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => mkRow([
       mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }),
@@ -298,7 +302,6 @@ export default async function (ctx) {
         miniCard('cpu', 'CPU', `${d.cpuPct}%`, cpuColor, cpuBgColor),
         miniCard('memorychip', 'MEM', `${d.memPct}%`, C.mem, C.memBg),
         miniCard('internaldrive', 'DSK', `${d.diskPct}%`, C.disk, C.dskBg),
-        miniCard('network', 'NET', `↓${fmtBytes(d.rxRate)}/s`, C.net, C.netBg),
         miniCard('thermometer', 'TEMP', `${d.temp}°C`, tempColor, tempBgColor),
         mkSpacer()
       ]
@@ -329,7 +332,7 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 大号布局 (2×2 排版逻辑) ─────────────────────────────────────
+  // ── 大号布局 (2×2 回归中号排版逻辑) ─────────────────────────────────────
   if (isLarge) {
     return {
       type: 'widget', backgroundGradient, padding: 16,
