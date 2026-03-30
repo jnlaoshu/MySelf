@@ -48,7 +48,7 @@ https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.ya
 🔗 **模块链接：** [ServerMonitor.yaml](https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml)
 * **核心探针**：通过原生 SSH 隧道直连远程 VPS、NAS 或软路由，内置私钥智能解析。
 * **多台轮播**：支持最多配置 5 台服务器，可通过参数自定义轮播切换频率，面板自带页码指示器。
-* **数据面板**：并发抓取并解析 CPU、内存、磁盘占用、温度、系统负载及实时网络上下行速率（NET 面板动态展示对应 IP/域名）。
+* **全景面板**：并发抓取并解析 CPU、内存、磁盘占用、温度、系统负载及实时网络上下行速率，**硬核支持 GPU 状态（利用率/显存/温度）及 Docker 容器数量实时侦测**。
 
 ---
 
