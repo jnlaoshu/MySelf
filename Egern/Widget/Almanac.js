@@ -1,6 +1,6 @@
 /**
  * ==========================================
- * 📌 岁时黄历 Widget
+ * 📌 岁时黄历 (Almanac) 小组件
  *
  * ✨ 【功能概览】
  * • 三尺寸自适应布局：
@@ -16,12 +16,11 @@
  * TEACHING_WEEK_START   — 教学周起始日期，格式 YYYY-MM-DD
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.03.28 21:55
+ * ⏱️ 更新时间: 2026.03.30 10:00
  * ==========================================
  */
 
 export default async function(ctx) {
-
   // ── 环境变量 ──────────────────────────────────────────────────────────────
   const envMode    = String(ctx.env?.ASTRO_OR_WEEK       ?? '').trim();
   const SHOW_MODE  = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
@@ -35,7 +34,7 @@ export default async function(ctx) {
 
   // ── 色彩令牌 ──────────────────────────────────────────────────────────────
   const C = {
-    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F5F5F9', dark: '#0C0C0E' }],
+    bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
     main:        { light: '#1C1C1E', dark: '#FFFFFF'  },
     sub:         { light: '#48484A', dark: '#D1D1D6'  },
     muted:       { light: '#8E8E93', dark: '#8E8E93'  },
@@ -48,12 +47,9 @@ export default async function(ctx) {
   };
 
   // ── UI 基础构建器 ─────────────────────────────────────────────────────────
-  const mkText   = (text, size, weight, color, opts = {}) =>
-    ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
-  const mkRow    = (children, gap = 4, opts = {}) =>
-    ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
-  const mkIcon   = (src, color, size = 13) =>
-    ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
+  const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
+  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
   const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
   // ── 时间基准（强制 UTC+8）─────────────────────────────────────────────────
@@ -68,9 +64,7 @@ export default async function(ctx) {
   if (SHOW_MODE === 'astro' && envShowTW === 'true' && envTWStart) {
     const tStart = new Date(envTWStart.replace(/-/g, '/'));
     if (!isNaN(tStart.getTime())) {
-      const diffDays = Math.floor(
-        (new Date(Y, M - 1, D).getTime() - new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate()).getTime()) / 86400000
-      );
+      const diffDays = Math.floor((new Date(Y, M - 1, D).getTime() - new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate()).getTime()) / 86400000);
       teachingWeekStr = diffDays >= 0 ? `教学第${Math.floor(diffDays / 7) + 1}周` : "未开学";
     }
   }
@@ -88,7 +82,7 @@ export default async function(ctx) {
 
   // ── 农历引擎 ──────────────────────────────────────────────────────────────
   const Lunar = {
-    info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
+    info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
     getTerm(y, n) {
       return new Date(
@@ -130,13 +124,12 @@ export default async function(ctx) {
       const cnMonth = `${isLeap ? "闰" : ""}${"正二三四五六七八九十冬腊"[i - 1]}月`;
       const cnDay   = lD === 10 ? "初十" : lD === 20 ? "二十" : lD === 30 ? "三十"
         : ["初","十","廿","卅"][Math.floor(lD / 10)] + ["日","一","二","三","四","五","六","七","八","九","十"][lD % 10];
-      const astro   = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯"
-        .substr(m * 2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m - 1] ? 2 : 0), 2) + "座";
+      const astro   = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m * 2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m - 1] ? 2 : 0), 2) + "座";
       return { gz, ani, cn: `${cnMonth}${cnDay}`, term: this.getTerm(y, tId + 1) === d ? this.termNames[tId] : "", astro };
     }
   };
 
-  // ── 未来节气（按需提取 4 条或 6 条）──────────────────────────────────────
+  // ── 未来节气 ────────────────────────────────────────────────────────────
   const todayMs  = new Date(Y, M - 1, D).getTime();
   const allTerms = [];
   [-1, 0, 1].forEach(offset => {
@@ -144,14 +137,14 @@ export default async function(ctx) {
       allTerms.push({ name: Lunar.termNames[i - 1], date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i)) });
   });
   
-  let upcomingTerms = [];
-  let upcomingTermsLarge = [];
+  let upcomingTerms = [], upcomingTermsLarge = [];
   for (let i = 0; i < allTerms.length; i++) {
     const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
     if (diff >= 0) {
       const startIdx = diff === 0 ? i + 1 : i;
-      upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`);
-      upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`);
+      const mapFn = t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`;
+      upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
+      upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(mapFn);
       break;
     }
   }
@@ -163,16 +156,10 @@ export default async function(ctx) {
   // ── 远程黄历数据 ─────────────────────────────────────────────────────────
   let apiData = {};
   try {
-    const resp = await ctx.http.get(
-      `https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`,
-      { timeout: 10000 }
-    );
+    const resp = await ctx.http.get(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, { timeout: 10000 });
     const json     = JSON.parse(await resp.text());
-    const patterns = [
-      `${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`,
-      `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`,
-      `${Y}${P(M)}${P(D)}`
-    ];
+    const patterns = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}`];
+    
     const findDateData = (data) => {
       if (!data || typeof data !== 'object') return null;
       for (const key in data) {
@@ -194,8 +181,7 @@ export default async function(ctx) {
 
   // ── 宜忌 & 冲煞 & 运势 ───────────────────────────────────────────────────
   const getVal = (...keys) => {
-    for (const k of keys)
-      if (apiData[k] != null && apiData[k] !== '') return String(apiData[k]);
+    for (const k of keys) if (apiData[k] != null && apiData[k] !== '') return String(apiData[k]);
     return "";
   };
   const rawYi = getVal("yi", "Yi", "suit", "appropriate").replace(/[.。]/g, " ").trim();
@@ -204,194 +190,126 @@ export default async function(ctx) {
   let chongshaInfo = getVal("chongsha", "ChongSha", "chong");
   if (!chongshaInfo || chongshaInfo === "无") {
     const cycle = (Math.round((Date.UTC(Y, M - 1, D) - Date.UTC(1900, 0, 31)) / 86400000) + 40) % 60;
-    chongshaInfo = `冲${"鼠牛虎兔龙蛇马羊猴鸡狗猪"[(cycle % 12 + 6) % 12]}` +
-      `(${"甲乙丙丁戊己庚辛壬癸"[(cycle + 6) % 10]}${"子丑寅卯辰巳午未申酉戌亥"[(cycle + 6) % 12]})` +
-      `煞${"南东北西"[cycle % 12 % 4]}`;
+    chongshaInfo = `冲${"鼠牛虎兔龙蛇马羊猴鸡狗猪"[(cycle % 12 + 6) % 12]}(${"甲乙丙丁戊己庚辛壬癸"[(cycle + 6) % 10]}${"子丑寅卯辰巳午未申酉戌亥"[(cycle + 6) % 12]})煞${"南东北西"[cycle % 12 % 4]}`;
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 小号布局渲染 (严格保留原样全字段) ──────────────────────────────────
+  // ── 渲染核心逻辑合并去重 ────────────────────────────────────────────────
+  // 统一文本折行引擎
+  const splitTextToLines = (str, maxW) => {
+    if (!str) return [];
+    let lines = [], line = "", w = 0;
+    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
+      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+      if (w + tw > maxW) {
+        lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+        line = token;
+        w = tw;
+      } else {
+        line += token;
+        w += tw;
+      }
+    }
+    if (line) lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+    return lines;
+  };
+
+  // 统一行级渲染工厂
+  const createRowFactory = (config) => (raw, icon, color, label, contentColor = C.sub) => {
+    if (!raw) return [];
+    const lines = splitTextToLines(raw, config.maxW);
+    return lines.map((lineStr, idx) => ({
+      type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
+      children: [
+        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: config.lw, children: [
+          mkIcon(idx === 0 ? icon : 'circle.fill', idx === 0 ? color : C.transparent, config.icz),
+          mkText(idx === 0 ? label : " ", config.fz, "heavy", idx === 0 ? color : C.transparent)
+        ]},
+        mkText(lineStr, config.fz, "medium", contentColor, { flex: 1, maxLines: 1 })
+      ]
+    }));
+  };
+
+  // ── 小号布局 ─────────────────────
   if (isSmall) {
     return {
       type: 'widget', padding: 12, url: 'calshow://',
       backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
       children: [
         mkRow([
-          mkText(D, 36, "heavy", C.main),
+          mkText(D, 32, "heavy", C.main, { maxLines: 1, minScale: 0.5 }),
           { type: 'stack', direction: 'column', alignItems: 'start', padding: [4, 0, 0, 0], children: [
             mkText(`${M}月`, 12, "heavy", C.muted),
             mkText(`周${WEEK}`, 12, "heavy", C.muted)
           ]},
           mkSpacer(),
-          mkRow([ mkIcon(topIcon, C.gold, 11), mkText(topText, 10, "bold", C.muted, { maxLines: 1 }) ], 3)
+          // 右上角角标限制，防止侵占过多行内空间
+          { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
+             mkIcon(topIcon, C.gold, 11),
+             mkText(topText, 10, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
+          ]}
         ], 6),
         mkSpacer(8),
         mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, 11, "bold", C.gold, { maxLines: 1, minScale: 0.8 }),
         mkSpacer(8),
-        ...(rawYi ? [mkRow([ mkIcon('checkmark.circle.fill', C.yi, 11), mkText(rawYi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1 }) ], 6)] : []),
+        ...(rawYi ? [mkRow([ mkIcon('checkmark.circle.fill', C.yi, 11), mkText(rawYi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1, minScale: 0.8 }) ], 6)] : []),
         mkSpacer(6),
-        ...(rawJi ? [mkRow([ mkIcon('xmark.circle.fill',     C.ji, 11), mkText(rawJi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1 }) ], 6)] : []),
+        ...(rawJi ? [mkRow([ mkIcon('xmark.circle.fill',     C.ji, 11), mkText(rawJi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1, minScale: 0.8 }) ], 6)] : []),
         mkSpacer(8),
-        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo,           10, "medium", C.muted, { maxLines: 1 }) ], 6),
+        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo,           10, "medium", C.muted, { maxLines: 1, minScale: 0.8 }) ], 6),
         mkSpacer(6),
-        mkRow([ mkIcon('leaf.arrow.circlepath',  C.term, 11), mkText(upcomingTerms[0] || "", 10, "medium", C.term,  { maxLines: 1 }) ], 6)
+        mkRow([ mkIcon('leaf.arrow.circlepath',  C.term, 11), mkText(upcomingTerms[0] || "", 10, "medium", C.term,  { maxLines: 1, minScale: 0.8 }) ], 6)
       ]
     };
   }
 
-  // ── 大号专属布局渲染 (完美均等行距 + 自动折行) ───────────────────────────
-  if (isLarge) {
-    const fz      = 14;
-    const icz     = 15;
-    const lw      = 60;
-    const maxW    = 38;
-    
-    // maxLines: 1 是防止原生折断导致间距不均的关键修复
-    const buildLargeRow = (icon, color, label, content, isFirst = true, contentColor = C.sub) => ({
-      type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
-      children: [
-        { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: lw, children: [
-          mkIcon(isFirst ? icon : 'circle.fill', isFirst ? color : C.transparent, icz),
-          mkText(isFirst ? label : " ", fz, "heavy", isFirst ? color : C.transparent)
-        ]},
-        mkText(content, fz, "medium", contentColor, { maxLines: 1, flex: 1 })
-      ]
-    });
-
-    const splitTextLarge = (str) => {
-      const text = String(str || "");
-      if (!text) return [];
-      let lines = [], currentLine = "", w = 0;
-      const tokens = text.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
-      for (const token of tokens) {
-        const tokenW = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-        if (w + tokenW > maxW) {
-          lines.push(currentLine.replace(/[，\s]+$/, ""));
-          currentLine = token.replace(/^[，\s]+/, "");
-          w = tokenW;
-        } else {
-          currentLine += token;
-          w += tokenW;
-        }
-      }
-      if (currentLine) lines.push(currentLine);
-      return lines;
-    };
-
-    const largeRows = [];
-    const pushLargeRows = (raw, icon, color, label, contentColor = C.sub) => {
-      if (!raw) return;
-      const lines = splitTextLarge(raw);
-      lines.forEach((line, idx) => {
-        largeRows.push(buildLargeRow(icon, color, label, line, idx === 0, contentColor));
-      });
-    };
-
-    // 将所有内容逐行拆解推入单一数组，节气使用 6 条数据的 upcomingTermsLarge
-    pushLargeRows(rawYi, 'checkmark.circle.fill', C.yi, '宜');
-    pushLargeRows(rawJi, 'xmark.circle.fill', C.ji, '忌');
-    pushLargeRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞');
-    pushLargeRows(upcomingTermsLarge.join("，"), 'leaf.arrow.circlepath', C.term, '节气', C.term);
-
-    return {
-      type: 'widget', padding: 16, url: 'calshow://',
-      backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
-      children: [
-        mkRow([
-          mkIcon('calendar', C.main, 18),
-          mkText(`${Y}年${M}月${D}日 星期${WEEK}`, 17, "heavy", C.main, { maxLines: 1, minScale: 0.65 }),
-          mkSpacer(),
-          mkRow([
-            ...(teachingWeekStr ? [
-              mkIcon('book.closed', C.muted, 12),
-              mkText(teachingWeekStr, 12, "bold", C.muted),
-              mkText('·', 12, "bold", C.divider, { padding: [0, 2] })
-            ] : []),
-            mkIcon(topIcon, C.gold, 13),
-            mkText(topText, 12, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
-          ], 4)
-        ], 6),
-
-        mkSpacer(12),
-
-        // 单一 Stack 引擎，gap: 8 保证农历、宜、忌、冲煞、节气之间所有垂直间距绝对等高
-        { type: 'stack', direction: 'column', alignItems: 'start', gap: 8, children: [
-          mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, 14, "bold", C.gold),
-          ...largeRows
-        ]},
-
-        mkSpacer()
-      ]
-    };
-  }
-
-  // ── 中号布局渲染（严格恢复原生经典版本）────────────────────────────────────
-  const splitText = (str, maxW = 52) => {
-    if (!str) return [];
-    let lines = [], line = "", w = 0;
-    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
-      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tw > maxW) { lines.push(line); line = token; w = tw; }
-      else               { line += token;    w += tw; }
-    }
-    if (line) lines.push(line);
-    return lines.map(l => l.replace(/^[\s，。、]+|[\s，。、]+$/g, ''));
+  // ── 中大号公用布局参数调度 ──────────────────────────────────────────────
+  const isLg = isLarge;
+  const layoutConfig = {
+    fz: isLg ? 14 : 12,
+    icz: isLg ? 15 : 13,
+    lw: isLg ? 60 : 52,
+    maxW: isLg ? 38 : 52,
+    headerFz: isLg ? 17 : 15,
+    topIconFz: isLg ? 12 : 11,
+    gap: isLg ? 8 : 6
   };
-
-  const buildRow = (icon, color, label, content, isFirst = true, contentColor = C.sub) => ({
-    type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
-    children: [
-      { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: 52, children: [
-        mkIcon(isFirst ? icon : 'circle.fill', isFirst ? color : C.transparent, 13),
-        mkText(isFirst ? label : " ", 12, "heavy", isFirst ? color : C.transparent)
-      ]},
-      mkText(content, 12, "medium", contentColor, { flex: 1 })
-    ]
-  });
-
-  const buildYiJiRows = (raw, icon, color, label) => {
-    if (!raw) return [];
-    const [l0, ...rest] = splitText(raw);
-    const rows = [];
-    if (l0)          rows.push(buildRow(icon, color, label, l0,             true));
-    if (rest.length) rows.push(buildRow(icon, color, label, rest.join(" "), false));
-    return rows;
-  };
+  
+  const buildRows = createRowFactory(layoutConfig);
+  const yiJiRows = [
+    ...buildRows(rawYi, 'checkmark.circle.fill', C.yi, '宜'),
+    ...buildRows(rawJi, 'xmark.circle.fill', C.ji, '忌'),
+    ...buildRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞'),
+    ...buildRows((isLg ? upcomingTermsLarge : upcomingTerms).join("，"), 'leaf.arrow.circlepath', C.term, '节气', C.term)
+  ];
 
   return {
-    type: 'widget', padding: 12, url: 'calshow://',
+    type: 'widget', padding: isLg ? 16 : 12, url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
-
       mkRow([
-        mkIcon('calendar', C.main, 16),
-        mkText(`${Y}年${M}月${D}日 星期${WEEK}`, 15, "heavy", C.main),
+        mkIcon('calendar', C.main, isLg ? 18 : 16),
+        mkText(`${Y}年${M}月${D}日 星期${WEEK}`, layoutConfig.headerFz, "heavy", C.main, { maxLines: 1, minScale: 0.65 }),
         mkSpacer(),
         mkRow([
           ...(teachingWeekStr ? [
-            mkIcon('book.closed', C.muted, 12),
-            mkText(teachingWeekStr, 11, "bold", C.muted),
-            mkText('·', 11, "bold", C.divider, { padding: [0, 2] })
+            mkIcon('book.closed', C.muted, layoutConfig.topIconFz),
+            mkText(teachingWeekStr, layoutConfig.topIconFz, "bold", C.muted),
+            mkText('·', layoutConfig.topIconFz, "bold", C.divider, { padding: [0, 2] })
           ] : []),
-          mkIcon(topIcon, C.gold, 12),
-          mkText(topText, 11, "bold", C.muted, { maxLines: 1, minScale: 0.5 })
-        ], 3)
+          mkIcon(topIcon, C.gold, layoutConfig.topIconFz + 1),
+          mkText(topText, layoutConfig.topIconFz, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
+        ], isLg ? 4 : 3)
       ], 6),
 
-      mkSpacer(6),
+      mkSpacer(isLg ? 12 : 6),
 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: 6, children: [
-        mkText(
-          `${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`,
-          13, "bold", C.gold
-        ),
-        ...buildYiJiRows(rawYi, 'checkmark.circle.fill', C.yi,  '宜'),
-        ...buildYiJiRows(rawJi, 'xmark.circle.fill',     C.ji,  '忌'),
-        buildRow('shield.lefthalf.filled', C.gold, '冲煞', `${chongshaInfo}  |  运势: ${starStr}`),
-        buildRow('leaf.arrow.circlepath',  C.term, '节气', upcomingTerms.join(", "), true, C.term)
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: layoutConfig.gap, children: [
+        mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, isLg ? 14 : 13, "bold", C.gold),
+        ...yiJiRows
       ]},
 
       mkSpacer()
