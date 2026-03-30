@@ -2,14 +2,14 @@
  * ==========================================
  * 📌 服务器监控 (Server Monitor) 小组件
  * ✨ 【主要功能】
- * • 三端完美适配：Small（6列直排）、Medium（经典2×2）、Large（2×2巨幕统一风格）
+ * • 三端完美适配：Small（6列直排）、Medium（经典2×2）、Large（2×2巨幕 + 第二行三卡）
  * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker / GPU（NVIDIA）
  * • GPU监控：利用率% + 显存占用% + GPU温度（nvidia-smi）
  * • 智能动态颜色：CPU + 温度 + GPU 独立告警色（绿→黄→红）
  * • 完整负载 1/5/15 + 最后更新时间 + 多服务器轮播（支持强制关闭）
  * • 错误重试机制（2次指数退避） + 自定义颜色/背景
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 11:00
+ * ⏱️ 更新时间：2026.03.30 12:15
  * ==========================================
  */
 
@@ -163,7 +163,6 @@ export default async function (ctx) {
   // ── SSH 数据获取 ───────────────────────────────────────────────────────
   let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0, gpuUtil: 0, gpuMemPct: 0, gpuTemp: 0 };
   let session = null;
-  const SEP = '<<SEP>>';
 
   const sshWithRetry = async (maxRetries = 2) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -174,6 +173,7 @@ export default async function (ctx) {
           timeout: 8000,
         });
 
+        const SEP = '<<SEP>>';
         const cmds = [
           'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
@@ -240,7 +240,6 @@ export default async function (ctx) {
     const tempRaw = parseInt(p[7]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
     d.docker = parseInt(p[8]) || 0;
 
-    // GPU 数据（MiB → Byte 转换）
     const gpuRaw = (p[9] || '0,0,0,0').split(',');
     d.gpuUtil = parseFloat(gpuRaw[0]) || 0;
     d.gpuMemUsed = (parseFloat(gpuRaw[1]) || 0) * 1048576;
@@ -324,6 +323,20 @@ export default async function (ctx) {
     ]
   });
 
+  const netCardLarge = () => ({
+    type: 'stack', direction: 'column', flex: 1, backgroundColor: C.netBg, borderRadius: 14, padding: [16, 16],
+    children: [
+      mkRow([ mkIcon('network', C.net, 16), mkSpacer(6), mkText('NET', 15, "heavy", C.net), mkSpacer() ], 0, { height: 28 }),
+      mkSpacer(),
+      mkRow([ mkSpacer(), mkText(d.host, 15, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0),
+      mkSpacer(),
+      { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 8, children: [
+        mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 14, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 14, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
+        mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
+      ]}
+    ]
+  });
+
   const gpuCardLarge = () => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: gpuBgColor, borderRadius: 14, padding: [16, 16],
     children: [
@@ -345,6 +358,7 @@ export default async function (ctx) {
           ], 12, { flex: 1 }),
           mkRow([ 
             statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
+            netCardLarge(),
             gpuCardLarge()
           ], 12, { flex: 1 })
         ]}
@@ -352,7 +366,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 中号组件 ───────────────────────────────────────────────────────────
+  // ── 中号组件（默认 DSK + NET） ───────────────────────────────────────────
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
@@ -362,12 +376,15 @@ export default async function (ctx) {
     ]
   });
 
-  const gpuCard = () => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: gpuBgColor, borderRadius: 8, padding: [8, 12],
+  const netCard = () => ({
+    type: 'stack', direction: 'column', flex: 1, backgroundColor: C.netBg, borderRadius: 8, padding: [8, 12],
     children: [
-      mkRow([ mkRow([ mkIcon('cpu.fill', gpuColor, 13), mkText('GPU', 12, "heavy", gpuColor) ], 2, { width: 52 }), mkSpacer(), mkText(`${d.gpuUtil}%`, 13, "heavy", gpuColor, {}, { family: 'Menlo' }) ], 4, { height: 16 }),
+      mkRow([ mkRow([ mkIcon('network', C.net, 13), mkText('NET', 12, "heavy", C.net) ], 2, { width: 52 }), mkSpacer(), mkText(d.host, 9, "medium", C.sub, { maxLines: 1, minScale: 0.5 }, { family: 'Menlo' }) ], 4, { height: 16 }),
       mkSpacer(),
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [ buildBar(d.gpuMemPct, gpuColor), mkText(`${fmtBytes(d.gpuMemUsed)} / ${fmtBytes(d.gpuMemTotal)} | ${d.gpuTemp}°C`, 9, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }) ]}
+      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
+        mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 9, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 9, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
+        mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
+      ]}
     ]
   });
 
@@ -382,7 +399,7 @@ export default async function (ctx) {
       mkSpacer(4),
       mkRow([ 
         statCard('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
-        gpuCard()
+        netCard()
       ], 4, { flex: 1 })
     ]
   };
