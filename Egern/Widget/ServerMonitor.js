@@ -2,14 +2,14 @@
  * ==========================================
  * 📌 服务器监控 (Server Monitor) 小组件
  * ✨ 【主要功能】
- * • 三端完美适配：Small（4列直排）、Medium（经典2×2）、Large（巨幕2×2）
- * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker
- * • 智能标题栏：小号、大号极简留白；仅中号显示带图标的刷新时间和运行时间
- * • 强迫症排版：大号尺寸进度条与 IP 地址完美水平居中对齐，网络数据字号提升
- * • 完整负载 1/5/15 + 多服务器轮播（支持强制关闭）
- * • 错误重试机制（2次指数退避） + 自定义颜色/背景
+ * • 尺寸支持：适配小号（4列）、中号（2×2）、大号（2×2）尺寸。
+ * • 监控指标：通过 SSH 实时获取 CPU、内存、磁盘、网络速率/总量、温度、负载及 Docker 容器数。
+ * • 动态颜色：CPU 与温度指标支持基于数值阈值的警示色切换。
+ * • 节点配置：支持配置最多 5 台服务器，提供自动轮播机制及禁用开关。
+ * • 异常处理：内置连接失败重试机制（2次指数退避）。
+ * • 标题状态：中号尺寸显示刷新与运行时间；大/小号隐藏时间信息以留白。
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 21:43
+ * ⏱️ 更新时间：2026.03.30 21:53
  * ==========================================
  */
 
@@ -271,18 +271,15 @@ export default async function (ctx) {
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
     
-    // 仅中号显示标题栏右侧的运行时间及刷新时间，大号和小号彻底隐藏留白
+    // 中号显示运行时间及刷新时间，大号、小号隐藏留白
     ...(!isSmall && !isLarge ? [
       mkRow([ mkIcon('clock', C.disk, 11), mkText(d.uptimeStr, 10, "bold", C.disk, { maxLines: 1 }) ], 2),
       mkSpacer(8),
-      mkRow([
-        mkIcon('arrow.triangle.2.circlepath', C.muted, 9),
-        mkText(exactTimeStr, 9, "medium", C.muted, {}, { family: 'Menlo' })
-      ], 3)
+      mkRow([ mkIcon('arrow.triangle.2.circlepath', C.muted, 9), mkText(exactTimeStr, 9, "medium", C.muted, {}, { family: 'Menlo' }) ], 3)
     ] : [])
   ], 0, { padding: 0 });
 
-  // ── 小号尺寸 (4卡排版) ─────────────────────────────────────────────────
+  // ── 小号尺寸 ──────────────────────────────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => mkRow([
       mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }),
@@ -302,16 +299,20 @@ export default async function (ctx) {
     };
   }
 
-  // ── 大号专属组件 (使用定高容器强制进度条和IP地址对齐) ──────────────────────────
+  // ── 大号专属组件 (完全重构底部对齐机制) ──────────────────────────────────
   const statCardLarge = (icon, title, value, subtextLines, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
     children: [
       mkRow([ mkIcon(icon, color, 16), mkSpacer(6), mkText(title, 15, "heavy", color), mkSpacer(), mkText(value, 24, "heavy", color, {}, { family: 'Menlo' }) ], 0, { height: 28 }),
-      mkSpacer(),
-      // 高度固定56，第一行为12px定高容器，确保进度条与右侧卡片的IP文本在一条绝对水平线上
-      { type: 'stack', direction: 'column', height: 56, justifyContent: 'flex-start', gap: 6, children: [
-        mkRow([ buildBar(pct, color, 8) ], 0, { height: 12 }),
-        ...subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }))
+      mkSpacer(), // 中间的弹性空间
+      { type: 'stack', direction: 'column', children: [
+        // 固定高度 14 容器放置进度条，保证跨列对齐
+        mkRow([ buildBar(pct, color, 8) ], 0, { height: 14 }),
+        mkSpacer(6), // 固定间距
+        // 固定高度 34 容器放置文本，无论几行文本，容器总高一致
+        { type: 'stack', direction: 'column', height: 34, justifyContent: 'flex-start', gap: 4, children: 
+          subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }))
+        }
       ]}
     ]
   });
@@ -320,12 +321,13 @@ export default async function (ctx) {
     type: 'stack', direction: 'column', flex: 1, backgroundColor: C.netBg, borderRadius: 14, padding: [16, 16],
     children: [
       mkRow([ mkIcon('network', C.net, 16), mkSpacer(6), mkText('NET', 15, "heavy", C.net), mkSpacer() ], 0, { height: 28 }),
-      mkSpacer(),
-      // 同样高度固定56，第一行为12px定高容器，放置IP文本
-      { type: 'stack', direction: 'column', height: 56, justifyContent: 'flex-start', gap: 6, children: [
-        mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 12 }),
-        { type: 'stack', direction: 'column', gap: 6, children: [
-          // 增大了最后两行网络数据的字号
+      mkSpacer(), // 中间的弹性空间，现在与其他卡片完全同步
+      { type: 'stack', direction: 'column', children: [
+        // 固定高度 14 容器放置 IP，保证与左侧的进度条严格处于同一水平线
+        mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 14 }),
+        mkSpacer(6), // 固定间距
+        // 固定高度 34 容器放置网络数据，与左侧文本区高度彻底拉齐
+        { type: 'stack', direction: 'column', height: 34, justifyContent: 'flex-start', gap: 4, children: [
           mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 13, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 13, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
           mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
         ]}
@@ -333,7 +335,7 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 大号布局 (2×2 排版) ─────────────────────────────────────────────────
+  // ── 大号布局 ─────────────────────────────────────────────────────────
   if (isLarge) {
     return {
       type: 'widget', backgroundGradient, padding: 16,
@@ -341,18 +343,15 @@ export default async function (ctx) {
         header(), mkSpacer(12),
         { type: 'stack', direction: 'column', flex: 1, gap: 12, children: [
           mkRow([ 
-            // CPU 配置：将 Docker 容器数移到了核心数和温度的中间
             statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, [
               `${d.cores}核 | 🐳${d.docker} | ${d.temp}°C`, 
               `Ld: ${d.load.join('/')}`
             ], d.cpuPct, cpuColor, cpuBgColor), 
-            // MEM 配置为单行 subtext
             statCardLarge('memorychip', 'MEM', `${d.memPct}%`, [
               `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`
             ], d.memPct, C.mem, C.memBg) 
           ], 12, { flex: 1 }),
           mkRow([ 
-            // DSK 配置为单行 subtext
             statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, [
               `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`
             ], d.diskPct, C.disk, C.dskBg), 
@@ -385,13 +384,13 @@ export default async function (ctx) {
     ]
   });
 
-  // ── 中号布局 (2×2 经典卡片) ───────────────────────────────────────────
+  // ── 中号布局 ───────────────────────────────────────────────────────────
   return {
     type: 'widget', backgroundGradient, padding: [10, 14, 12, 14],
     children: [
       header(), mkSpacer(6),
       mkRow([ 
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}核 | Ld: ${d.load.join('/')} | ${d.docker}`, d.cpuPct, cpuColor, cpuBgColor), 
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}核 | Ld: ${d.load.join('/')} | 🐳${d.docker}`, d.cpuPct, cpuColor, cpuBgColor), 
         statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
       ], 4, { flex: 1 }),
       mkSpacer(4),
