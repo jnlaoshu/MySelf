@@ -160,9 +160,11 @@ export default async function (ctx) {
     return `${Math.floor(diffMin / 60)}小时前`;
   };
 
-  // ── SSH 数据获取（SEP 已移入函数内部，彻底解决错误） ─────────────────────
+  // ── SSH 数据获取 ───────────────────────────────────────────────────────
   let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0, gpuUtil: 0, gpuMemPct: 0, gpuTemp: 0 };
   let session = null;
+  // ✅ 修复 Bug：将 SEP 提取到全局/外层作用域
+  const SEP = '<<SEP>>'; 
 
   const sshWithRetry = async (maxRetries = 2) => {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -173,7 +175,6 @@ export default async function (ctx) {
           timeout: 8000,
         });
 
-        const SEP = '<<SEP>>';   // ← 关键修复：移到函数内部
         const cmds = [
           'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
@@ -196,7 +197,6 @@ export default async function (ctx) {
     const stdout = await sshWithRetry();
     const p = stdout.split(SEP).map(s => s.trim());
 
-    // （以下数据解析部分与之前完全一致，为节省篇幅此处省略，实际代码中保留完整）
     const la = (p[0] || '0 0 0').split(' ');
     d.load = [parseFloat(la[0]) || 0, parseFloat(la[1]) || 0, parseFloat(la[2]) || 0];
 
@@ -293,7 +293,7 @@ export default async function (ctx) {
     mkText(relativeTime(), isLarge ? 10 : 9, "medium", C.muted, {}, { family: 'Menlo' })
   ], 0, { padding: 0 });
 
-  // 小号尺寸（保持不变）
+  // ── 小号尺寸 ───────────────────────────────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => mkRow([
       mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }),
@@ -314,7 +314,7 @@ export default async function (ctx) {
     };
   }
 
-  // 大号专属组件
+  // ── 大号专属组件 ───────────────────────────────────────────────────────
   const statCardLarge = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
     children: [
@@ -367,7 +367,7 @@ export default async function (ctx) {
     };
   }
 
-  // 中号组件（默认 DSK + NET）
+  // ── 中号组件（默认 DSK + NET） ───────────────────────────────────────────
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
