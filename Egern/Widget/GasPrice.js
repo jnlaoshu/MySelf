@@ -1,25 +1,22 @@
 /**
  * ==========================================
- * 📌 全国油价 Widget (三尺寸自适应版)
+ * 📌 全国油价 (Gas Price) 小组件
  * * ✨ 【主要功能】
  * • 三端尺寸完美适配：
- * - 小号 (Small) ：极简 2x2 四宫格，告别拥挤遮挡，纯净留白。
- * - 中号 (Medium)：经典 1x4 横排卡片布局，等比分配，信息直观。
- * - 大号 (Large) ：沉浸式 2x2 放大四宫格，字号与间距完美扩容。
+ * - 小号 (Small)  ：极简 2x2 四宫格，告别拥挤遮挡，纯净留白。
+ * - 中号 (Medium) ：经典 1x4 横排卡片布局，等比分配，信息直观。
+ * - 大号 (Large)  ：沉浸式 2x2 放大四宫格，字号与间距完美扩容。
  * • 实时油价精准拉取：支持 92/95/98/柴油，全拼音自定义省市参数。
  * • 智能调价倒数引擎：内置 2026 年法定调价日历，自动计算倒数时间。
  * • 视觉预警机制：距调价 ≤4 天预测高亮变色；>4 天本轮回顾置灰。
  * * 🔧 【环境变量】
  * GAS_REGION — 城市全拼音 (默认: sichuan/chengdu)
- * * 🔗 【脚本引用】
- * https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 【更新时间】
- * 2026.03.29 07:00
+ * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+ * * ⏱️ 更新时间 2026.03.30 10:00
  * ==========================================
  */
 
 export default async function (ctx) {
-  
   // ── 基础环境与配置 ──────────────────────────────────────────────────────
   const env = ctx.env || {};
   const regionParam = env.GAS_REGION || env.region || "sichuan/chengdu";
@@ -33,7 +30,7 @@ export default async function (ctx) {
   const P   = n => String(n).padStart(2, "0");
   const updateTimeStr = `${P(now.getMonth()+1)}.${P(now.getDate())} ${P(now.getHours())}:${P(now.getMinutes())}`;
 
-  // ── 色彩令牌与日历 ──────────────────────────────────────────────────────
+  // ── 统一色彩令牌系统 ──────────────────────────────────────────────────
   const C = {
     bg:      [{ light: '#FAFAFA', dark: '#1C1C1E' }, { light: '#EFEFF4', dark: '#111113' }],
     card:    { light: '#FFFFFF', dark: '#2C2C2E' },
@@ -52,10 +49,21 @@ export default async function (ctx) {
     [10,14],[10,28],[11,11],[11,25],[12,9],[12,23]
   ];
 
-  // ── UI 渲染辅助构建器 ───────────────────────────────────────────────────
-  const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
+  // ── UI 统一构建器 ──────────────────────────────
+  const mkText = (text, size, weight, color, opts = {}) => {
+    const { family: fontFamily, ...restOpts } = opts;
+    return {
+      type: "text",
+      text: String(text ?? ""),
+      font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
+      textColor: color,
+      ...restOpts
+    };
+  };
   const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
   const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
+  const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
   // ── 调价计算引擎 ────────────────────────────────────────────────────────
   const getNextAdjust = () => {
@@ -123,78 +131,55 @@ export default async function (ctx) {
     }
   } catch (_) {}
 
-  // 格式化价格数据源
+  // 格式化价格数据源（如果网络失败则显示 "--" 保底占位）
   const PRICE_ITEMS = [
     { label: "92号", key: "p92",    color: C.gold },
     { label: "95号", key: "p95",    color: C.red  },
     { label: "98号", key: "p98",    color: C.blue },
     { label: "柴油", key: "diesel", color: C.teal }
-  ].map(i => ({ ...i, val: prices[i.key] })).filter(i => i.val !== null);
+  ].map(i => ({ ...i, val: prices[i.key] !== null ? prices[i.key].toFixed(2) : "--" }));
 
+  // ── 通用卡片构建工厂 ─────────────────────────────────────────────────────
+  const buildPriceCard = (item, config) => ({
+    type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: config.radius, padding: config.padding,
+    children: [
+      mkSpacer(),
+      mkText(item.label, config.labelFz, config.labelWeight, item.color),
+      mkSpacer(config.innerGap),
+      mkText(item.val, config.valFz, "heavy", C.main),
+      mkSpacer()
+    ]
+  });
 
   // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
   if (isSmall) {
-    const priceCardSmall = ({ label, val, color }) => ({
-      type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 10, padding: [6, 2, 6, 2],
-      children: [
-        mkSpacer(),
-        mkText(label, 10, "bold", color),
-        mkSpacer(3),
-        mkText(val.toFixed(2), 15, "heavy", C.main),
-        mkSpacer()
-      ]
-    });
-
+    const cardCfg = { radius: 10, padding: [6, 2, 6, 2], labelFz: 10, labelWeight: "bold", valFz: 15, innerGap: 3 };
     return {
-      type: "widget", padding: 12, url: "hellobike://",
-      backgroundGradient: { type: "linear", colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      type: "widget", padding: 12, url: "hellobike://", backgroundGradient,
       children: [
         mkRow([
-          { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 13, height: 13, color: C.main },
-          mkSpacer(4),
-          mkText(`${regionName}油价`, 13, "heavy", C.main, { maxLines: 1, minScale: 0.8 }),
-          mkSpacer()
+          mkIcon("fuelpump.circle.fill", C.main, 13), mkSpacer(4),
+          mkText(`${regionName}油价`, 13, "heavy", C.main, { maxLines: 1, minScale: 0.8 }), mkSpacer()
         ], 0),
         mkSpacer(10),
-        
         { type: "stack", direction: "column", gap: 8, flex: 1, children: [
-          { type: "stack", direction: "row", gap: 8, flex: 1, children: PRICE_ITEMS.slice(0, 2).map(priceCardSmall) },
-          { type: "stack", direction: "row", gap: 8, flex: 1, children: PRICE_ITEMS.slice(2, 4).map(priceCardSmall) }
+          mkRow(PRICE_ITEMS.slice(0, 2).map(item => buildPriceCard(item, cardCfg)), 8, { flex: 1 }),
+          mkRow(PRICE_ITEMS.slice(2, 4).map(item => buildPriceCard(item, cardCfg)), 8, { flex: 1 })
         ]},
-        
         mkSpacer(10),
-        mkRow([
-          mkSpacer(),
-          { type: "image", src: "sf-symbol:clock.fill", width: 9, height: 9, color: nextAdjust.isUrgent ? C.red : C.muted },
-          mkSpacer(3),
-          mkText(`调价: ${nextAdjust.dateStr}`, 9, "bold", nextAdjust.isUrgent ? C.red : C.muted)
-        ], 0)
+        mkRow([ mkSpacer(), mkIcon("clock.fill", nextAdjust.isUrgent ? C.red : C.muted, 9), mkSpacer(3), mkText(`调价: ${nextAdjust.dateStr}`, 9, "bold", nextAdjust.isUrgent ? C.red : C.muted) ], 0)
       ]
     };
   }
 
   // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
   if (isLarge) {
-    const priceCardLarge = ({ label, val, color }) => ({
-      type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 16,
-      children: [
-        mkSpacer(),
-        mkText(label, 16, "heavy", color),
-        mkSpacer(10),
-        mkText(val.toFixed(2), 28, "heavy", C.main),
-        mkSpacer()
-      ]
-    });
-
+    const cardCfg = { radius: 16, padding: [0, 0, 0, 0], labelFz: 16, labelWeight: "heavy", valFz: 28, innerGap: 10 };
     return {
-      type: "widget", padding: 16, url: "hellobike://",
-      backgroundGradient: { type: "linear", colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+      type: "widget", padding: 16, url: "hellobike://", backgroundGradient,
       children: [
         mkRow([
-          { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 18, height: 18, color: C.main },
-          mkSpacer(4),
-          mkText(`${regionName}油价`, 17, "heavy", C.main),
-          mkSpacer(),
+          mkIcon("fuelpump.circle.fill", C.main, 18), mkSpacer(4), mkText(`${regionName}油价`, 17, "heavy", C.main), mkSpacer(),
           mkText("下轮调价: ", 12, "medium", infoColor, { minScale: 0.8 }),
           mkText(nextAdjust.dateStr, 12, "bold", infoColor, { minScale: 0.8 }),
           mkText(` ${nextAdjust.countdown}`, 12, "bold", infoColor, { minScale: 0.8 })
@@ -202,8 +187,8 @@ export default async function (ctx) {
 
         mkSpacer(16),
         { type: "stack", direction: "column", gap: 12, flex: 1, children: [
-          { type: "stack", direction: "row", gap: 12, flex: 1, children: PRICE_ITEMS.slice(0, 2).map(priceCardLarge) },
-          { type: "stack", direction: "row", gap: 12, flex: 1, children: PRICE_ITEMS.slice(2, 4).map(priceCardLarge) }
+          mkRow(PRICE_ITEMS.slice(0, 2).map(item => buildPriceCard(item, cardCfg)), 12, { flex: 1 }),
+          mkRow(PRICE_ITEMS.slice(2, 4).map(item => buildPriceCard(item, cardCfg)), 12, { flex: 1 })
         ]},
         mkSpacer(16),
         { type: "stack", height: 0.5, backgroundColor: C.divider, borderRadius: 1, children: [] },
@@ -211,60 +196,48 @@ export default async function (ctx) {
 
         mkRow([
           mkRow([
-            { type: "image", src: "sf-symbol:arrow.triangle.2.circlepath", width: 13, height: 13, color: C.muted },
+            mkIcon("arrow.triangle.2.circlepath", C.muted, 13),
             mkSpacer(4),
-            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" })
+            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" }) // Menlo 字体生效
           ], 0),
           mkSpacer(),
-          { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
+          mkRow([
               mkText(trendLabel, 12, "medium", C.muted),
               mkText(trendInfo, 12, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
-          ]}
+          ], 2)
         ], 0)
       ]
     };
   }
 
   // ── 视图渲染 (中号默认尺寸) ──────────────────────────────────────────────
-  const priceCard = ({ label, val, color }) => ({
-    type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: 13, padding: [12, 6, 12, 6],
-    children: [
-      mkText(label, 11, "bold", color),
-      mkSpacer(6),
-      mkText(val.toFixed(2), 18, "heavy", C.main)
-    ]
-  });
-
+  const cardCfgMed = { radius: 13, padding: [12, 6, 12, 6], labelFz: 11, labelWeight: "bold", valFz: 18, innerGap: 6 };
   return {
-    type: "widget", padding: 12, url: "hellobike://",
-    backgroundGradient: { type: "linear", colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
+    type: "widget", padding: 12, url: "hellobike://", backgroundGradient,
     children: [
       mkRow([
-        { type: "image", src: "sf-symbol:fuelpump.circle.fill", width: 16, height: 16, color: C.main },
-        mkSpacer(2),
-        mkText(`${regionName}油价`, 15, "heavy", C.main),
-        mkSpacer(),
+        mkIcon("fuelpump.circle.fill", C.main, 16), mkSpacer(2), mkText(`${regionName}油价`, 15, "heavy", C.main), mkSpacer(),
         mkText("下轮调价: ", 11, "medium", infoColor),
         mkText(nextAdjust.dateStr, 11, "bold", infoColor),
         mkText(` ${nextAdjust.countdown}`, 11, "bold", infoColor)
       ], 0),
 
       mkSpacer(12),
-      { type: "stack", direction: "row", gap: 6, children: PRICE_ITEMS.map(priceCard) },
+      mkRow(PRICE_ITEMS.map(item => buildPriceCard(item, cardCfgMed)), 6),
       mkSpacer(12),
       { type: "stack", height: 0.5, backgroundColor: C.divider, borderRadius: 1, children: [] },
       mkSpacer(8),
 
       mkRow([
         mkRow([
-          { type: "image", src: "sf-symbol:arrow.triangle.2.circlepath", width: 11, height: 11, color: C.muted },
-          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" })
+          mkIcon("arrow.triangle.2.circlepath", C.muted, 11),
+          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" }) // Menlo 字体生效
         ], 4),
         mkSpacer(),
-        { type: "stack", direction: "row", alignItems: "center", gap: 2, children: [
+        mkRow([
             mkText(trendLabel, 11, "medium", C.muted),
             mkText(trendInfo, 11, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
-        ]}
+        ], 2)
       ], 0)
     ]
   };
