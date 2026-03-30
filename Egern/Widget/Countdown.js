@@ -1,21 +1,21 @@
 /**
  * ==========================================
- * 📌 时光倒数 Widget
+ * 📌 时光倒数 (Countdown) 小组件
  *
  * ✨ 主要功能：
  * • 三尺寸自适应完美适配：
- *   - Small：左侧图标 + 紧凑双行节日（每类最多2个）
- *   - Medium：定宽标签列 + splitText 自动换行（每类最多3个）
- *   - Large：定宽标签列 + splitText 多行展开（每类最多7个）
+ * - Small：左侧图标 + 紧凑双行节日（每类最多2个）
+ * - Medium：定宽标签列 + 动态计算自动换行（每类最多3个）
+ * - Large：定宽标签列 + 动态计算多行展开（每类最多7个）
  * • 多类别节日聚合：法定假日、民俗节日、国际节日、专属纪念日
  * • 内置智能计算：农历/节气、成都春秋假、A股交割日与行权日
  * • 自定义支持：专属纪念日（最多6个）、置顶节日、是否显示春秋假/金融日期
  * • 优先级排序 + 多节日置顶高亮
- * • 智能主题：今日节日暖色背景、周末独立蓝调背景
+ * • 智能主题：今日节日暖色渐变、周末独立蓝调渐变、工作日极简渐变
  * • 性能优化：Lunar常量顶级声明 + 累计天数预计算 + Map/Set 去重
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.29 20:48
+ * ⏱️ 更新时间: 2026.03.30 10:00
  * ==========================================
  */
 
@@ -65,10 +65,7 @@ export default async function (ctx) {
   const springDateStr = getStr("SPRING_BREAK_DATE");
   const autumnDateStr = getStr("AUTUMN_BREAK_DATE");
 
-  const pinnedHolidays = getStr("PINNED_HOLIDAY", "高考")
-    .split(",")
-    .map(s => s.trim())
-    .filter(Boolean);
+  const pinnedHolidays = getStr("PINNED_HOLIDAY", "高考").split(",").map(s => s.trim()).filter(Boolean);
 
   const customDays = [1,2,3,4,5,6].map(i => ({
     name: getStr(`EXCLUSIVE_NAME_${i}`, i === 1 ? getStr("EXCLUSIVE_NAME", "我的生日") : ""),
@@ -76,38 +73,30 @@ export default async function (ctx) {
   })).filter(item => item.name && /^\d{1,2}\/\d{1,2}$/.test(item.date));
 
   // ── 尺寸检测 ──────────────────────────────────────────────────────────
-  const family  = ctx.widgetFamily ?? "systemMedium";
-  const isSmall = family === "systemSmall";
-  const isLarge = family === "systemLarge";
+  const family  = (ctx.widgetFamily || "systemMedium").toLowerCase();
+  const isSmall = family.includes("small");
+  const isLarge = family.includes("large");
 
-  // ── 色彩令牌 ──────────────────────────────────────────────────────────
+  // ── 统一色彩令牌系统 ──────────────────────────────────────────────────
   const C = {
-    bgWorkday: { light: "#FFFFFF", dark: "#1C1C1E" },
-    bgWeekend: { light: "#F4F8FF", dark: "#111827" },
-    bgFest:    { light: "#FFF8EC", dark: "#2A1F0E" },
-    main:      { light: "#1C1C1E", dark: "#FFFFFF"  },
-    sub:       { light: "#48484A", dark: "#D1D1D6"  },
-    muted:     { light: "#8E8E93", dark: "#8E8E93"  },
-    gold:      { light: "#B58A28", dark: "#D6A53A"  },
-    red:       { light: "#CA3B32", dark: "#FF453A"  },
-    blue:      { light: "#3A5F85", dark: "#5E8EB8"  },
-    teal:      { light: "#628C7B", dark: "#73A491"  }
+    bgWorkday:   [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
+    bgWeekend:   [{ light: '#F4F8FF', dark: '#111827' }, { light: '#E6F2FF', dark: '#0B0F19' }],
+    bgFest:      [{ light: '#FFF8EC', dark: '#2A1F0E' }, { light: '#FFEFD5', dark: '#1A1208' }],
+    main:        { light: '#1C1C1E', dark: '#FFFFFF'  },
+    sub:         { light: '#48484A', dark: '#D1D1D6'  },
+    muted:       { light: '#8E8E93', dark: '#8E8E93'  },
+    gold:        { light: '#B58A28', dark: '#D6A53A'  },
+    red:         { light: '#CA3B32', dark: '#FF453A'  },
+    blue:        { light: '#3A5F85', dark: '#5E8EB8'  },
+    teal:        { light: '#628C7B', dark: '#73A491'  },
+    transparent: '#00000000'
   };
 
-  // ── UI 辅助函数 ────────────────────────────────────────────────────────
-  const txt = (text, size, weight, color, opts = {}) => ({
-    type: "text", text: String(text ?? ""), font: { size, weight }, textColor: color, ...opts
-  });
-  const hstack = (children, gap = 4, opts = {}) => ({
-    type: "stack", direction: "row", alignItems: "center", gap, children, ...opts
-  });
-  const vstack = (children, gap = 4, opts = {}) => ({
-    type: "stack", direction: "column", gap, children, ...opts
-  });
-  const icon = (name, color, size = 13) => ({
-    type: "image", src: `sf-symbol:${name}`, color, width: size, height: size
-  });
-  const spacer = len => len != null ? { type: "spacer", length: len } : { type: "spacer" };
+  // ── UI 统一构建器 ─────────────────────────────────────────────────────
+  const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text ?? ""), font: { size, weight }, textColor: color, ...opts });
+  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
+  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
   // ── 时间基准 ───────────────────────────────────────────────────────────
   const tzOffset  = new Date().getTimezoneOffset();
@@ -119,8 +108,6 @@ export default async function (ctx) {
   const todayMs   = Date.UTC(Y, M - 1, now.getDate());
 
   const YMD = (y, m, d) => `${y}/${m < 10 ? "0" + m : m}/${d < 10 ? "0" + d : d}`;
-
-  // ── 统一使用"X天"显示 ──────────────────────────────────────────────────
   const formatDiff = d => `${d}天`;
 
   // ── 金融交割日推算 ─────────────────────────────────────────────────────
@@ -135,8 +122,7 @@ export default async function (ctx) {
   const getCustomDate = (y, dateStr, defaultCalc) => {
     const parts = getStr(dateStr, "").split("/");
     if (parts.length !== 2) return defaultCalc();
-    const m = Number(parts[0]);
-    const d = Number(parts[1]);
+    const m = Number(parts[0]), d = Number(parts[1]);
     if (!m || !d) return defaultCalc();
     return YMD(y, m, d);
   };
@@ -144,8 +130,7 @@ export default async function (ctx) {
   // ── 农历 l2s（累计天数优化版） ──────────────────────────────────────────
   const l2s = (y, m, d) => {
     ensureLunarCumulative(y + 1);
-    const offBase = lunarCumulativeCache.off.get(y) ?? 0;
-    let off = offBase;
+    let off = (lunarCumulativeCache.off.get(y) ?? 0);
     const lp = Lunar.info[y - 1900] & 0xf;
     for (let i = 1; i < m; i++) {
       off += Lunar.mDays(y, i);
@@ -163,31 +148,25 @@ export default async function (ctx) {
     };
     const wDay = (m, n, w) => {
       const f = new Date(Date.UTC(y, m - 1, 1));
-      const dd = f.getUTCDay();
-      const x = w - dd;
+      const x = w - f.getUTCDay();
       return YMD(y, m, 1 + (x < 0 ? x + 7 : x) + (n - 1) * 7);
     };
 
     const legal = [
-      ["元旦",   YMD(y, 1, 1),        1],
-      ["春节",   l2s(y, 1, 1),        3],
-      ["清明节", term(7),              1],
-      ["劳动节", YMD(y, 5, 1),        1],
-      ["端午节", l2s(y, 5, 5),        1],
-      ["中秋节", l2s(y, 8, 15),       1],
+      ["元旦",   YMD(y, 1, 1),        1], ["春节",   l2s(y, 1, 1),        3],
+      ["清明节", term(7),             1], ["劳动节", YMD(y, 5, 1),        1],
+      ["端午节", l2s(y, 5, 5),        1], ["中秋节", l2s(y, 8, 15),       1],
       ["国庆节", YMD(y, 10, 1),       3]
     ];
 
     if (showSchoolHolidays) {
       legal.push(["春假", getCustomDate(y, springDateStr, () => {
-        const qm = Lunar.term(y, 7);
-        const sb = new Date(qm.getTime() - 3 * 86400000);
+        const sb = new Date(Lunar.term(y, 7).getTime() - 3 * 86400000);
         return YMD(sb.getUTCFullYear(), sb.getUTCMonth() + 1, sb.getUTCDate());
       }), 3]);
       legal.push(["秋假", getCustomDate(y, autumnDateStr, () => {
         const nov1 = new Date(Date.UTC(y, 10, 1));
-        const offset = (3 - nov1.getUTCDay() + 7) % 7;
-        return YMD(y, 11, 1 + offset + 7);
+        return YMD(y, 11, 1 + ((3 - nov1.getUTCDay() + 7) % 7) + 7);
       }), 3]);
     }
 
@@ -219,15 +198,12 @@ export default async function (ctx) {
       folk: [
         ["元宵节", l2s(y, 1, 15), 1], ["龙抬头", l2s(y, 2, 2),  1], ["七夕节", l2s(y, 7, 7),  1],
         ["中元节", l2s(y, 7, 15), 1], ["重阳节", l2s(y, 9, 9),  1], ["寒衣节", l2s(y, 10, 1), 1],
-        ["腊八节", l2s(y, 12, 8), 1], ["小年",   l2s(y, 12, 23), 1],
-        ["除夕",   l2s(y, 12, Lunar.mDays(y, 12)), 1]
+        ["腊八节", l2s(y, 12, 8), 1], ["小年",   l2s(y, 12, 23), 1], ["除夕",   l2s(y, 12, Lunar.mDays(y, 12)), 1]
       ],
       intl: [
-        ["情人节", YMD(y, 2, 14),    1], ["妇女节", YMD(y, 3, 8),    1],
-        ["儿童节", YMD(y, 6, 1),     1], ["母亲节", wDay(5, 2, 0),   1],
-        ["父亲节", wDay(6, 3, 0),    1], ["万圣节", YMD(y, 10, 31),  1],
-        ["感恩节", wDay(11, 4, 4),   1], ["平安夜", YMD(y, 12, 24),  1],
-        ["圣诞节", YMD(y, 12, 25),   1]
+        ["情人节", YMD(y, 2, 14), 1], ["妇女节", YMD(y, 3, 8),  1], ["儿童节", YMD(y, 6, 1),  1],
+        ["母亲节", wDay(5, 2, 0), 1], ["父亲节", wDay(6, 3, 0), 1], ["万圣节", YMD(y, 10, 31),1],
+        ["感恩节", wDay(11, 4, 4),1], ["平安夜", YMD(y, 12, 24),1], ["圣诞节", YMD(y, 12, 25),1]
       ],
       exclusive
     };
@@ -241,12 +217,7 @@ export default async function (ctx) {
 
   // ── 优先级配置 ──────────────────────────────────────────────────────────
   const basePriority = { legal: 3, folk: 2, intl: 1, exclusive: 2 };
-  const specialPriority = {
-    春节: 10, 国庆节: 9, 高考: 9,
-    交割: 8,  行权: 8,
-    元旦: 7,  清明节: 7, 端午节: 7, 中秋节: 7,
-    春假: 6,  秋假: 6,   除夕: 6
-  };
+  const specialPriority = { 春节: 10, 国庆节: 9, 高考: 9, 交割: 8, 行权: 8, 元旦: 7, 清明节: 7, 端午节: 7, 中秋节: 7, 春假: 6, 秋假: 6, 除夕: 6 };
 
   const getPriority = (name, cat, sourceKind) => {
     if (!enablePrioritySort) return 1;
@@ -256,9 +227,7 @@ export default async function (ctx) {
 
   // ── 核心数据运算 ────────────────────────────────────────────────────────
   const result = { legal: new Map(), folk: new Map(), intl: new Map(), exclusive: new Map() };
-  const todayFests   = new Set();
-  const todayFinance = new Set();
-  const pinnedMap    = new Map();
+  const todayFests   = new Set(), todayFinance = new Set(), pinnedMap = new Map();
 
   for (const y of [Y, Y + 1]) {
     const f = getFestsCached(y);
@@ -267,9 +236,7 @@ export default async function (ctx) {
       for (const item of f[cat]) {
         const [name, dateStr, duration = 1, sourceKind = ""] = item;
         if (!dateStr) continue;
-        const parts = dateStr.split("/").map(Number);
-        if (parts.length !== 3) continue;
-        const [yy, mm, dd] = parts;
+        const [yy, mm, dd] = dateStr.split("/").map(Number);
         const diff = Math.floor((Date.UTC(yy, mm - 1, dd) - todayMs) / 86400000);
 
         if (diff <= 0) {
@@ -299,34 +266,21 @@ export default async function (ctx) {
     });
   });
 
-  const formatStr = (cat, limit) =>
-    result[cat].slice(0, limit).map(i => `${i.name} ${formatDiff(i.diff)}`).join("，");
+  const formatStr = (cat, limit) => result[cat].slice(0, limit).map(i => `${i.name} ${formatDiff(i.diff)}`).join("，");
 
-  // ── 高亮通知 ────────────────────────────────────────────────────────────
+  // ── 高亮通知与渐变主题 ──────────────────────────────────────────────────
   const todayNoticeParts = [];
-  if (todayFests.size > 0)
-    todayNoticeParts.push(`今日 🎉 ${Array.from(todayFests).slice(0, 2).join("·")}${todayFests.size > 2 ? "…" : ""}`);
-  if (todayFinance.size > 0)
-    todayNoticeParts.push(`今日 🚨 ${Array.from(todayFinance).join("·")}`);
+  if (todayFests.size > 0) todayNoticeParts.push(`今日 🎉 ${Array.from(todayFests).slice(0, 2).join("·")}${todayFests.size > 2 ? "…" : ""}`);
+  if (todayFinance.size > 0) todayNoticeParts.push(`今日 🚨 ${Array.from(todayFinance).join("·")}`);
   const todayNoticeText = todayNoticeParts.join(" ｜ ");
 
-  const stickyParts = pinnedHolidays
-    .filter(n => pinnedMap.has(n))
-    .map(n => `${n} ${formatDiff(pinnedMap.get(n))}`);
+  const stickyParts = pinnedHolidays.filter(n => pinnedMap.has(n)).map(n => `${n} ${formatDiff(pinnedMap.get(n))}`);
   const stickyText = stickyParts.length > 0 ? `🔝 ${stickyParts.join("·")}` : "";
 
-  // ── 主题 ────────────────────────────────────────────────────────────────
-  const themeKey = (todayFests.size > 0 || todayFinance.size > 0) ? "fest"
-    : (enableWeekendTheme && (currentDay === 0 || currentDay === 6)) ? "weekend"
-    : "workday";
+  const themeKey = (todayFests.size > 0 || todayFinance.size > 0) ? "fest" : (enableWeekendTheme && (currentDay === 0 || currentDay === 6)) ? "weekend" : "workday";
+  const bgColors = themeKey === "fest" ? C.bgFest : themeKey === "weekend" ? C.bgWeekend : C.bgWorkday;
+  const backgroundGradient = { type: "linear", colors: bgColors, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
-  const bg = themeKey === "fest" ? C.bgFest : themeKey === "weekend" ? C.bgWeekend : C.bgWorkday;
-  const backgroundGradient = {
-    type: "linear", colors: [bg, bg],
-    startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 }
-  };
-
-  // ── 分类配置表 ───────────────────────────────────────────────────────────
   const CATEGORY_CONFIG = [
     { key: "legal",     label: "法定", icon: "building.columns.fill", color: C.red  },
     { key: "folk",      label: "民俗", icon: "moon.stars.fill",       color: C.gold },
@@ -334,141 +288,128 @@ export default async function (ctx) {
     { key: "exclusive", label: "专属", icon: "gift.fill",             color: C.teal }
   ];
 
-  // ── Small 尺寸 ───────────────────────────────────────────────────────────
+  // ── 文本换行引擎 ────────────────────────────────────────────────────────
+  const splitTextToLines = (str, maxW) => {
+    if (!str) return [];
+    let lines = [], line = "", w = 0;
+    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
+      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+      if (w + tw > maxW) {
+        lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+        line = token;
+        w = tw;
+      } else {
+        line += token;
+        w += tw;
+      }
+    }
+    if (line) lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+    return lines;
+  };
+
+  const createRowFactory = (config) => (iconName, color, label, rawText, isAlert) => {
+    if (!rawText) return [];
+    const lines = splitTextToLines(rawText, config.maxW);
+    return lines.map((lineStr, idx) => ({
+      type: "stack", direction: "row", alignItems: "start", gap: config.rowGap,
+      children: [
+        { type: "stack", direction: "row", alignItems: "center", gap: 2, width: config.lw, children: [
+          mkIcon(idx === 0 ? iconName : "circle.fill", idx === 0 ? color : C.transparent, config.icz),
+          mkText(idx === 0 ? label : " ", config.fz, "heavy", idx === 0 ? color : C.transparent)
+        ]},
+        mkText(lineStr, config.fz, "medium", isAlert && /(交割|行权) [1-3]天/.test(lineStr) ? C.red : C.sub, { flex: 1, maxLines: 1 })
+      ]
+    }));
+  };
+
+  // ── Small 尺寸渲染 ───────────────────────────────────────────────────────
   if (isSmall) {
     const pinnedNames = pinnedHolidays.filter(n => pinnedMap.has(n));
-    const smallRows = [];
-
-    for (const cfg of CATEGORY_CONFIG) {
+    const smallRows = CATEGORY_CONFIG.map(cfg => {
       const fests = result[cfg.key].filter(i => !pinnedNames.includes(i.name)).slice(0, 2);
-      if (fests.length === 0) continue;
-      const rowText = fests.map(i => `${i.name} ${formatDiff(i.diff)}`).join("，");
-      smallRows.push(
-        hstack([
-          icon(cfg.icon, cfg.color, 13),
-          txt(rowText, 12, "medium", cfg.color, { flex: 1, maxLines: 1, minScale: 0.8 })
-        ], 6)
-      );
-    }
-
-    const stickyPartsSmall = pinnedHolidays
-      .filter(n => pinnedMap.has(n))
-      .map(n => `${n} ${formatDiff(pinnedMap.get(n))}`);
+      if (fests.length === 0) return null;
+      return mkRow([
+        mkIcon(cfg.icon, cfg.color, 13),
+        mkText(fests.map(i => `${i.name} ${formatDiff(i.diff)}`).join("，"), 12, "medium", cfg.color, { flex: 1, maxLines: 1, minScale: 0.8 })
+      ], 6);
+    }).filter(Boolean);
 
     let topElement = null;
-    if (stickyPartsSmall.length > 0) {
-      topElement = txt(`🔝 ${stickyPartsSmall[0]}`, 12, "bold", C.red, { minScale: 0.8, maxLines: 1 });
-    } else if (todayNoticeText) {
-      topElement = txt(todayNoticeText, 11, "bold", C.red, { minScale: 0.8, maxLines: 1 });
-    }
+    if (stickyParts.length > 0) topElement = mkText(`🔝 ${stickyParts[0]}`, 12, "bold", C.red, { minScale: 0.8, maxLines: 1 });
+    else if (todayNoticeText) topElement = mkText(todayNoticeText, 11, "bold", C.red, { minScale: 0.8, maxLines: 1 });
 
     return {
       type: "widget", padding: 14, backgroundGradient,
       children: [
-        hstack([
-          icon("hourglass.circle.fill", C.main, 16),
-          txt("时光\n倒数", 14, "heavy", C.main, { maxLines: 2 }),
-          spacer(),
+        mkRow([
+          mkIcon("hourglass.circle.fill", C.main, 16),
+          mkText("时光\n倒数", 14, "heavy", C.main, { maxLines: 2 }),
+          mkSpacer(),
           ...(topElement ? [topElement] : [])
         ], 6),
-        spacer(10),
-        vstack(smallRows, 8, { flex: 1, justifyContent: "center" })
+        mkSpacer(10),
+        { type: "stack", direction: "column", gap: 8, flex: 1, justifyContent: "center", children: smallRows }
       ]
     };
   }
 
-  // ── Medium & Large 尺寸 ─────────────────────────────────────────────────
-  const fz       = isLarge ? 14 : 12;
-  const icz      = isLarge ? 15 : 13;
-  const lw       = isLarge ? 60 : 52;
-  const rowGap   = isLarge ? 6  : 4;
-  const titleFz  = isLarge ? 17 : 15;
-  const titleIcz = isLarge ? 18 : 16;
-  const topFz    = isLarge ? 12 : 11.5;
-
-  const buildRow = (iconName, color, label, content, isFirst, contentColor = C.sub) => ({
-    type: "stack", direction: "row", alignItems: "start", gap: rowGap,
-    children: [
-      {
-        type: "stack", direction: "row", alignItems: "center", gap: 2, width: lw,
-        children: [
-          icon(isFirst ? iconName : "circle.fill", isFirst ? color : "#00000000", icz),
-          txt(isFirst ? label : " ", fz, "heavy", isFirst ? color : "#00000000")
-        ]
-      },
-      txt(content, fz, "medium", contentColor, { flex: 1 })
-    ]
-  });
-
-  const splitText = (str, maxW) => {
-    const text = String(str ?? "");
-    if (!text) return [];
-    let lines = [], cur = "", w = 0;
-    const tokens = text.match(/[\d\/a-zA-Z.\-]+|./gu) || [];
-    for (const token of tokens) {
-      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tw > maxW) {
-        lines.push(cur.replace(/[，\s]+$/, ""));
-        cur = token.replace(/^[，\s]+/, "");
-        w = tw;
-      } else {
-        cur += token;
-        w += tw;
-      }
-    }
-    if (cur) lines.push(cur);
-    return lines;
+  // ── Medium & Large 尺寸渲染 ─────────────────────────────────────────────
+  const layoutConfig = {
+    fz: isLarge ? 14 : 12,
+    icz: isLarge ? 15 : 13,
+    lw: isLarge ? 60 : 52,
+    maxW: isLarge ? 36 : 45,
+    rowGap: isLarge ? 6 : 4,
+    titleFz: isLarge ? 17 : 15,
+    titleIcz: isLarge ? 18 : 16,
+    topFz: isLarge ? 12 : 11.5
   };
 
-  const gridRows = [];
-  const maxW = isLarge ? 36 : 45;
+  const buildRows = createRowFactory(layoutConfig);
+  let gridRows = [];
 
   for (const cfg of CATEGORY_CONFIG) {
     const isExc = cfg.key === "exclusive";
     const limit = isLarge ? 7 : (isExc ? 6 : 3);
     const rawText = formatStr(cfg.key, limit);
     if (!rawText) continue;
-
+    
     if (isLarge || isExc) {
-      const lines = splitText(rawText, maxW);
-      lines.forEach((line, idx) => {
-        const isAlert = isExc && /(交割|行权) [1-3]天/.test(line);
-        gridRows.push(buildRow(cfg.icon, cfg.color, cfg.label, line, idx === 0, isAlert ? C.red : C.sub));
-      });
+      gridRows.push(...buildRows(cfg.icon, cfg.color, cfg.label, rawText, isExc));
     } else {
-      gridRows.push(buildRow(cfg.icon, cfg.color, cfg.label, rawText, true, C.sub));
+      gridRows.push({
+        type: "stack", direction: "row", alignItems: "start", gap: layoutConfig.rowGap, children: [
+          mkRow([ mkIcon(cfg.icon, cfg.color, layoutConfig.icz), mkText(cfg.label, layoutConfig.fz, "heavy", cfg.color) ], 2, { width: layoutConfig.lw }),
+          mkText(rawText, layoutConfig.fz, "medium", C.sub, { flex: 1 })
+        ]
+      });
     }
   }
 
   const dynamicGap = gridRows.length <= 4 ? (isLarge ? 14 : 11) : (isLarge ? 10 : 8);
 
   return {
-    type: "widget",
-    padding: isLarge ? 16 : 12,
-    backgroundGradient,
+    type: "widget", padding: isLarge ? 16 : 12, backgroundGradient,
     children: [
-      hstack([
-        icon("hourglass.circle.fill", C.main, titleIcz),
-        txt("时光倒数", titleFz, "heavy", C.main),
-        spacer(),
-        ...(stickyText ? [txt(stickyText, topFz, "bold", C.red, { maxLines: 1, minScale: 0.8 })] : [])
+      mkRow([
+        mkIcon("hourglass.circle.fill", C.main, layoutConfig.titleIcz),
+        mkText("时光倒数", layoutConfig.titleFz, "heavy", C.main),
+        mkSpacer(),
+        ...(stickyText ? [mkText(stickyText, layoutConfig.topFz, "bold", C.red, { maxLines: 1, minScale: 0.8 })] : [])
       ], 6),
 
-      spacer(todayNoticeText ? (isLarge ? 10 : 8) : (gridRows.length <= 4 ? 12 : 10)),
+      mkSpacer(todayNoticeText ? (isLarge ? 10 : 8) : (gridRows.length <= 4 ? 12 : 10)),
 
       ...(todayNoticeText ? [
-        hstack([
-          icon("sparkles", C.red, 13),
-          txt(todayNoticeText, 12, "bold", C.red, { maxLines: 1, minScale: 0.8 })
-        ], 4),
-        spacer(isLarge ? 10 : 8)
+        mkRow([ mkIcon("sparkles", C.red, 13), mkText(todayNoticeText, 12, "bold", C.red, { maxLines: 1, minScale: 0.8 }) ], 4),
+        mkSpacer(isLarge ? 10 : 8)
       ] : []),
 
       ...(gridRows.length > 0
         ? [{ type: "stack", direction: "column", alignItems: "start", gap: dynamicGap, children: gridRows }]
-        : [txt("近期暂无倒计时", fz, "medium", C.muted)]),
+        : [mkText("近期暂无倒计时", layoutConfig.fz, "medium", C.muted)]),
 
-      spacer()
+      mkSpacer()
     ]
   };
 }
