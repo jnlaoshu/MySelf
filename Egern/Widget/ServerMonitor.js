@@ -9,7 +9,7 @@
  * • 异常处理：内置连接失败重试机制（2次指数退避）。
  * • 标题状态：中号尺寸显示刷新与运行时间；大/小号隐藏时间信息以留白。
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 21:53
+ * ⏱️ 更新时间：2026.03.30 22:00
  * ==========================================
  */
 
@@ -115,8 +115,10 @@ export default async function (ctx) {
   const cycleEvery = Math.max(1, Number(ctx.env.SSH_CYCLE_EVERY) || 1);
   const cycleDisabled = String(ctx.env.SSH_CYCLE_DISABLED || ctx.env.SSH_NO_CYCLE || "").toLowerCase() === 'true' || ctx.env.SSH_NO_CYCLE === '1';
 
+  // 【修复】严谨的周期重置逻辑，防止整除错位
+  const maxCycle = cycleEvery * Math.max(1, servers.length);
   let cycleCounter = ctx.storage.getJSON('cycleCounter') || 0;
-  cycleCounter = (cycleCounter + 1) % 999999;
+  cycleCounter = (cycleCounter + 1) % maxCycle;
   ctx.storage.setJSON('cycleCounter', cycleCounter);
 
   let currentIndex = ctx.storage.getJSON('multiServerIndex') || 0;
@@ -256,11 +258,12 @@ export default async function (ctx) {
   const tempColor = getTempColor(d.temp);
   const tempBgColor = C.tempBg;
 
+  // 【修复】spacer 节点不可使用 flex 属性，统一使用空的 stack 占位
   const buildBar = (pct, color, h = 4) => ({
     type: 'stack', direction: 'row', height: h, borderRadius: h / 2, backgroundColor: C.barBg,
     children: pct > 0 ? [
       { type: 'stack', flex: Math.max(1, pct), height: h, borderRadius: h / 2, backgroundColor: color, children: [] },
-      ...(pct < 100 ? [{ type: 'spacer', flex: 100 - pct }] : [])
+      ...(pct < 100 ? [{ type: 'stack', flex: Math.max(1, 100 - pct), children: [] }] : [])
     ] : [mkSpacer()]
   });
 
@@ -299,20 +302,20 @@ export default async function (ctx) {
     };
   }
 
-  // ── 大号专属组件 (完全重构底部对齐机制) ──────────────────────────────────
+  // ── 大号专属组件 (安全的高度对齐机制) ──────────────────────────────────
+  // 【修复】移除了 justifyContent 依赖，通过在结尾强行注入 mkSpacer() 将内容顶到上方
   const statCardLarge = (icon, title, value, subtextLines, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
     children: [
       mkRow([ mkIcon(icon, color, 16), mkSpacer(6), mkText(title, 15, "heavy", color), mkSpacer(), mkText(value, 24, "heavy", color, {}, { family: 'Menlo' }) ], 0, { height: 28 }),
-      mkSpacer(), // 中间的弹性空间
+      mkSpacer(),
       { type: 'stack', direction: 'column', children: [
-        // 固定高度 14 容器放置进度条，保证跨列对齐
         mkRow([ buildBar(pct, color, 8) ], 0, { height: 14 }),
-        mkSpacer(6), // 固定间距
-        // 固定高度 34 容器放置文本，无论几行文本，容器总高一致
-        { type: 'stack', direction: 'column', height: 34, justifyContent: 'flex-start', gap: 4, children: 
-          subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }))
-        }
+        mkSpacer(6),
+        { type: 'stack', direction: 'column', height: 34, gap: 4, children: [
+          ...subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' })),
+          mkSpacer() // 强力顶部对齐推手
+        ]}
       ]}
     ]
   });
@@ -321,15 +324,15 @@ export default async function (ctx) {
     type: 'stack', direction: 'column', flex: 1, backgroundColor: C.netBg, borderRadius: 14, padding: [16, 16],
     children: [
       mkRow([ mkIcon('network', C.net, 16), mkSpacer(6), mkText('NET', 15, "heavy", C.net), mkSpacer() ], 0, { height: 28 }),
-      mkSpacer(), // 中间的弹性空间，现在与其他卡片完全同步
+      mkSpacer(),
       { type: 'stack', direction: 'column', children: [
-        // 固定高度 14 容器放置 IP，保证与左侧的进度条严格处于同一水平线
+        // 去除了 host 的 minScale，依赖 maxLines
         mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 14 }),
-        mkSpacer(6), // 固定间距
-        // 固定高度 34 容器放置网络数据，与左侧文本区高度彻底拉齐
-        { type: 'stack', direction: 'column', height: 34, justifyContent: 'flex-start', gap: 4, children: [
+        mkSpacer(6),
+        { type: 'stack', direction: 'column', height: 34, gap: 4, children: [
           mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 13, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 13, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
-          mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
+          mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0),
+          mkSpacer() // 强力顶部对齐推手
         ]}
       ]}
     ]
@@ -368,18 +371,24 @@ export default async function (ctx) {
     children: [
       mkRow([ mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }), mkSpacer(), mkText(value, 13, "heavy", color, {}, { family: 'Menlo' }) ], 4, { height: 16 }),
       mkSpacer(),
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 4, children: [ buildBar(pct, color), mkText(subtext, 9, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }) ]}
+      { type: 'stack', direction: 'column', height: 24, gap: 4, children: [ 
+        buildBar(pct, color), 
+        mkText(subtext, 9, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }),
+        mkSpacer()
+      ]}
     ]
   });
 
   const netCard = () => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: C.netBg, borderRadius: 8, padding: [8, 12],
     children: [
-      mkRow([ mkRow([ mkIcon('network', C.net, 13), mkText('NET', 12, "heavy", C.net) ], 2, { width: 52 }), mkSpacer(), mkText(d.host, 9, "medium", C.sub, { maxLines: 1, minScale: 0.5 }, { family: 'Menlo' }) ], 4, { height: 16 }),
+      mkRow([ mkRow([ mkIcon('network', C.net, 13), mkText('NET', 12, "heavy", C.net) ], 2, { width: 52 }), mkSpacer(), mkText(d.host, 9, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }) ], 4, { height: 16 }),
       mkSpacer(),
-      { type: 'stack', direction: 'column', height: 24, justifyContent: 'flex-start', gap: 1, children: [
+      // 【修复】恢复 gap: 4 保证与 statCard 一致，使底部 spacer 弹性伸展正常
+      { type: 'stack', direction: 'column', height: 24, gap: 4, children: [
         mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 9, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 9, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
-        mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
+        mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 8, "medium", C.sub, {}, { family: 'Menlo' }) ], 0),
+        mkSpacer()
       ]}
     ]
   });
