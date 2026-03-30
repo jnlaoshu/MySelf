@@ -2,14 +2,14 @@
  * ==========================================
  * 📌 服务器监控 (Server Monitor) 小组件
  * ✨ 【主要功能】
- * • 三端完美适配：Small（6列直排）、Medium（经典2×2）、Large（2×2巨幕 + 第二行三卡）
- * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker / GPU（NVIDIA）
- * • GPU监控：利用率% + 显存占用% + GPU温度（nvidia-smi）
- * • 智能动态颜色：CPU + 温度 + GPU 独立告警色（绿→黄→红）
- * • 完整负载 1/5/15 + 最后更新时间 + 多服务器轮播（支持强制关闭）
+ * • 三端完美适配：Small（5列直排）、Medium（经典2×2）、Large（巨幕2×2）
+ * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker
+ * • 智能标题栏：所有尺寸（小/中/大号）均直接显示精确刷新时间
+ * • 智能动态颜色：CPU + 温度 独立告警色（绿→黄→红）
+ * • 完整负载 1/5/15 + 多服务器轮播（支持强制关闭）
  * • 错误重试机制（2次指数退避） + 自定义颜色/背景
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 13:40（SEP 错误修复 + 中号NET + 大号三卡版）
+ * ⏱️ 更新时间：2026.03.30 14:00
  * ==========================================
  */
 
@@ -55,8 +55,6 @@ export default async function (ctx) {
     tempLow:     { light: '#34C759', dark: '#30D158' },
     tempMid:     { light: '#FF9500', dark: '#FF9F0A' },
     tempHigh:    { light: '#FF3B30', dark: '#FF453A' },
-    gpu:         { light: '#8B5CF6', dark: '#A78BFA' },
-    gpuBg:       { light: '#F3E8FF', dark: '#2A1F3A' },
     cpuBg:       { light: '#EAF6ED', dark: '#1A291E' },
     memBg:       { light: '#EBF4FA', dark: '#1A2433' },
     dskBg:       { light: '#FDF1E3', dark: '#33261A' },
@@ -77,7 +75,6 @@ export default async function (ctx) {
   C.mem = overrideColor('MEM', C.mem);
   C.disk = overrideColor('DISK', C.disk);
   C.net = overrideColor('NET', C.net);
-  C.gpu = overrideColor('GPU', C.gpu);
 
   let backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
   if (ctx.env.BG_LIGHT && ctx.env.BG_DARK) {
@@ -152,18 +149,14 @@ export default async function (ctx) {
     return Math.round(b) + 'B';
   };
 
+  // ── 时间处理（精确时间） ──────────────────────────────────────
   const updateTime = new Date();
-  const relativeTime = () => {
-    const diffMin = Math.floor((Date.now() - updateTime.getTime()) / 60000);
-    if (diffMin < 1) return '刚刚';
-    if (diffMin < 60) return `${diffMin}分钟前`;
-    return `${Math.floor(diffMin / 60)}小时前`;
-  };
+  const pad = n => String(n).padStart(2, "0");
+  const exactTimeStr = `${pad(updateTime.getHours())}:${pad(updateTime.getMinutes())}`;
 
   // ── SSH 数据获取 ───────────────────────────────────────────────────────
-  let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0, gpuUtil: 0, gpuMemPct: 0, gpuTemp: 0 };
+  let d = { host: server.host, hostname: server.name, serverIndex: displayIndex + 1, totalServers: servers.length, temp: 0, docker: 0 };
   let session = null;
-  // ✅ 修复 Bug：将 SEP 提取到全局/外层作用域
   const SEP = '<<SEP>>'; 
 
   const sshWithRetry = async (maxRetries = 2) => {
@@ -175,12 +168,12 @@ export default async function (ctx) {
           timeout: 8000,
         });
 
+        // 移除了 nvidia-smi GPU 查询指令
         const cmds = [
           'cat /proc/loadavg', 'cat /proc/uptime', 'head -1 /proc/stat', 'free -b', 'df -B1 / | tail -1', 'nproc',
           "awk '/^ *(eth|en|wlan|ens|eno|bond|veth)/{rx+=$2;tx+=$10}END{print rx,tx}' /proc/net/dev",
           'cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || cat /sys/class/hwmon/hwmon0/temp1_input 2>/dev/null || echo 0',
-          'docker ps -q 2>/dev/null | wc -l || echo 0',
-          'nvidia-smi --query-gpu=utilization.gpu,memory.used,memory.total,temperature.gpu --format=csv,noheader,nounits 2>/dev/null || echo "0,0,0,0"'
+          'docker ps -q 2>/dev/null | wc -l || echo 0'
         ];
 
         const { stdout } = await session.exec(cmds.join(` && echo '${SEP}' && `));
@@ -241,13 +234,6 @@ export default async function (ctx) {
     const tempRaw = parseInt(p[7]) || 0; d.temp = tempRaw > 1000 ? Math.round(tempRaw / 1000) : tempRaw;
     d.docker = parseInt(p[8]) || 0;
 
-    const gpuRaw = (p[9] || '0,0,0,0').split(',');
-    d.gpuUtil = parseFloat(gpuRaw[0]) || 0;
-    d.gpuMemUsed = (parseFloat(gpuRaw[1]) || 0) * 1048576;
-    d.gpuMemTotal = (parseFloat(gpuRaw[2]) || 1) * 1048576;
-    d.gpuMemPct = d.gpuMemTotal > 0 ? Math.round((d.gpuMemUsed / d.gpuMemTotal) * 100) : 0;
-    d.gpuTemp = parseFloat(gpuRaw[3]) || 0;
-
   } catch (e) {
     d.error = String(e.message || e);
   } finally {
@@ -270,8 +256,6 @@ export default async function (ctx) {
   const getTempColor = (t) => t > 65 ? C.tempHigh : (t > 45 ? C.tempMid : C.tempLow);
   const tempColor = getTempColor(d.temp);
   const tempBgColor = C.tempBg;
-  const gpuColor = d.gpuUtil > 80 ? C.tempHigh : (d.gpuUtil > 50 ? C.disk : C.gpu);
-  const gpuBgColor = C.gpuBg;
 
   const buildBar = (pct, color, h = 4) => ({
     type: 'stack', direction: 'row', height: h, borderRadius: h / 2, backgroundColor: C.barBg,
@@ -281,19 +265,26 @@ export default async function (ctx) {
     ] : [mkSpacer()]
   });
 
+  // ── 智能 Header 构建器 ────────────────────────────────────────────────
   const header = () => mkRow([
     mkIcon('server.rack', C.main, isLarge ? 18 : 14), mkSpacer(6),
     mkText(d.hostname, isLarge ? 18 : 14, "heavy", C.main, { maxLines: 1 }),
     ...(d.totalServers > 1 ? [mkSpacer(6), mkText(`${d.serverIndex}/${d.totalServers}`, isLarge ? 11 : 9, "bold", C.muted, {}, { family: 'Menlo' })] : []),
     mkSpacer(),
-    mkRow([ mkIcon('clock', C.disk, isLarge ? 13 : 11), mkText(d.uptimeStr, isLarge ? 12 : 10, "bold", C.disk, { maxLines: 1 }) ], isLarge ? 4 : 2),
-    mkSpacer(8),
-    mkRow([ mkIcon('thermometer', tempColor, isLarge ? 15 : 12), mkText(`${d.temp}°C`, isLarge ? 13 : 11, "heavy", tempColor, {}, { family: 'Menlo' }) ], 3),
-    mkSpacer(6),
-    mkText(relativeTime(), isLarge ? 10 : 9, "medium", C.muted, {}, { family: 'Menlo' })
+    
+    // 中号/大号显示 运行时间 + 温度
+    ...(!isSmall ? [
+      mkRow([ mkIcon('clock', C.disk, isLarge ? 13 : 11), mkText(d.uptimeStr, isLarge ? 12 : 10, "bold", C.disk, { maxLines: 1 }) ], isLarge ? 4 : 2),
+      mkSpacer(8),
+      mkRow([ mkIcon('thermometer', tempColor, isLarge ? 15 : 12), mkText(`${d.temp}°C`, isLarge ? 13 : 11, "heavy", tempColor, {}, { family: 'Menlo' }) ], 3),
+      mkSpacer(6)
+    ] : []),
+
+    // 所有尺寸（小/中/大）均显示精确刷新时间(如：12:43)
+    mkText(exactTimeStr, isLarge ? 11 : 9, "medium", C.muted, {}, { family: 'Menlo' })
   ], 0, { padding: 0 });
 
-  // ── 小号尺寸 ───────────────────────────────────────────────────────────
+  // ── 小号尺寸 (5卡排版，无温度/运行时间) ─────────────────────────────────
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => mkRow([
       mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }),
@@ -308,7 +299,7 @@ export default async function (ctx) {
         miniCard('memorychip', 'MEM', `${d.memPct}%`, C.mem, C.memBg),
         miniCard('internaldrive', 'DSK', `${d.diskPct}%`, C.disk, C.dskBg),
         miniCard('network', 'NET', `↓${fmtBytes(d.rxRate)}/s`, C.net, C.netBg),
-        miniCard('cpu.fill', 'GPU', `${d.gpuUtil}%`, gpuColor, gpuBgColor),
+        miniCard('thermometer', 'TEMP', `${d.temp}°C`, tempColor, tempBgColor),
         mkSpacer()
       ]
     };
@@ -338,15 +329,7 @@ export default async function (ctx) {
     ]
   });
 
-  const gpuCardLarge = () => ({
-    type: 'stack', direction: 'column', flex: 1, backgroundColor: gpuBgColor, borderRadius: 14, padding: [16, 16],
-    children: [
-      mkRow([ mkIcon('cpu.fill', gpuColor, 16), mkSpacer(6), mkText('GPU', 15, "heavy", gpuColor), mkSpacer(), mkText(`${d.gpuUtil}%`, 24, "heavy", gpuColor, {}, { family: 'Menlo' }) ], 0, { height: 28 }),
-      mkSpacer(),
-      { type: 'stack', direction: 'column', justifyContent: 'flex-start', gap: 10, children: [ buildBar(d.gpuMemPct, gpuColor, 8), mkText(`${fmtBytes(d.gpuMemUsed)} / ${fmtBytes(d.gpuMemTotal)} | ${d.gpuTemp}°C`, 13, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }) ]}
-    ]
-  });
-
+  // ── 大号布局 (2×2 排版逻辑) ─────────────────────────────────────
   if (isLarge) {
     return {
       type: 'widget', backgroundGradient, padding: 16,
@@ -359,15 +342,14 @@ export default async function (ctx) {
           ], 12, { flex: 1 }),
           mkRow([ 
             statCardLarge('internaldrive', 'DSK', `${d.diskPct}%`, `${fmtBytes(d.diskUsed)} / ${fmtBytes(d.diskTotal)}`, d.diskPct, C.disk, C.dskBg), 
-            netCardLarge(),
-            gpuCardLarge()
+            netCardLarge()
           ], 12, { flex: 1 })
         ]}
       ]
     };
   }
 
-  // ── 中号组件（默认 DSK + NET） ───────────────────────────────────────────
+  // ── 中号组件 ───────────────────────────────────────────────────────────
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
@@ -389,6 +371,7 @@ export default async function (ctx) {
     ]
   });
 
+  // ── 中号布局 (2×2 经典卡片) ───────────────────────────────────────────
   return {
     type: 'widget', backgroundGradient, padding: [10, 14, 12, 14],
     children: [
