@@ -5,11 +5,11 @@
  * • 三端完美适配：Small（4列直排）、Medium（经典2×2）、Large（巨幕2×2）
  * • 硬件直连 SSH 实时监控：CPU / 内存 / 磁盘 / 网络 / 温度 / 负载 / Docker
  * • 智能标题栏：小号、大号极简留白；仅中号显示带图标的刷新时间和运行时间
- * • 强迫症排版：大号尺寸进度条与 IP 地址水平居中对齐，多行数据更清晰
+ * • 强迫症排版：大号尺寸进度条与 IP 地址完美水平居中对齐，网络数据字号提升
  * • 完整负载 1/5/15 + 多服务器轮播（支持强制关闭）
  * • 错误重试机制（2次指数退避） + 自定义颜色/背景
  * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 21:18
+ * ⏱️ 更新时间：2026.03.30 21:43
  * ==========================================
  */
 
@@ -308,9 +308,9 @@ export default async function (ctx) {
     children: [
       mkRow([ mkIcon(icon, color, 16), mkSpacer(6), mkText(title, 15, "heavy", color), mkSpacer(), mkText(value, 24, "heavy", color, {}, { family: 'Menlo' }) ], 0, { height: 28 }),
       mkSpacer(),
-      // 设定高度为 54 并且从顶部对齐(flex-start)，使得所有卡片的进度条都在同一水平线上
-      { type: 'stack', direction: 'column', height: 54, justifyContent: 'flex-start', gap: 6, children: [
-        buildBar(pct, color, 8),
+      // 高度固定56，第一行为12px定高容器，确保进度条与右侧卡片的IP文本在一条绝对水平线上
+      { type: 'stack', direction: 'column', height: 56, justifyContent: 'flex-start', gap: 6, children: [
+        mkRow([ buildBar(pct, color, 8) ], 0, { height: 12 }),
         ...subtextLines.map(line => mkText(line, 11, "medium", C.sub, { maxLines: 1 }, { family: 'Menlo' }))
       ]}
     ]
@@ -321,13 +321,13 @@ export default async function (ctx) {
     children: [
       mkRow([ mkIcon('network', C.net, 16), mkSpacer(6), mkText('NET', 15, "heavy", C.net), mkSpacer() ], 0, { height: 28 }),
       mkSpacer(),
-      // 同样设定高度 54 并且从顶部对齐，通过高度 8 约束 IP 行，使其视觉上和旁边 8px 的进度条完全居中对齐
-      { type: 'stack', direction: 'column', height: 54, justifyContent: 'flex-start', gap: 6, children: [
-        mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 8 }),
-        mkSpacer(),
-        { type: 'stack', direction: 'column', gap: 4, children: [
-          mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 11, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 11, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
-          mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 10, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 10, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
+      // 同样高度固定56，第一行为12px定高容器，放置IP文本
+      { type: 'stack', direction: 'column', height: 56, justifyContent: 'flex-start', gap: 6, children: [
+        mkRow([ mkSpacer(), mkText(d.host, 12, "bold", C.sub, { maxLines: 1 }, { family: 'Menlo' }), mkSpacer() ], 0, { height: 12 }),
+        { type: 'stack', direction: 'column', gap: 6, children: [
+          // 增大了最后两行网络数据的字号
+          mkRow([ mkText(`↓${fmtBytes(d.rxRate)}/s`, 13, "bold", C.net, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.txRate)}/s`, 13, "bold", C.mem, {}, { family: 'Menlo' }) ], 0),
+          mkRow([ mkText(`↓${fmtBytes(d.netRx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }), mkSpacer(), mkText(`↑${fmtBytes(d.netTx)}`, 11, "medium", C.sub, {}, { family: 'Menlo' }) ], 0)
         ]}
       ]}
     ]
@@ -341,10 +341,10 @@ export default async function (ctx) {
         header(), mkSpacer(12),
         { type: 'stack', direction: 'column', flex: 1, gap: 12, children: [
           mkRow([ 
-            // CPU 配置为多行 subtext
+            // CPU 配置：将 Docker 容器数移到了核心数和温度的中间
             statCardLarge('cpu', 'CPU', `${d.cpuPct}%`, [
-              `${d.cores}核 | ${d.temp}°C`, 
-              `Ld: ${d.load.join('/')} | 🐳${d.docker}`
+              `${d.cores}核 | 🐳${d.docker} | ${d.temp}°C`, 
+              `Ld: ${d.load.join('/')}`
             ], d.cpuPct, cpuColor, cpuBgColor), 
             // MEM 配置为单行 subtext
             statCardLarge('memorychip', 'MEM', `${d.memPct}%`, [
@@ -391,7 +391,7 @@ export default async function (ctx) {
     children: [
       header(), mkSpacer(6),
       mkRow([ 
-        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}核 | Ld: ${d.load.join('/')} | 🐳${d.docker}`, d.cpuPct, cpuColor, cpuBgColor), 
+        statCard('cpu', 'CPU', `${d.cpuPct}%`, `${d.cores}核 | Ld: ${d.load.join('/')} | ${d.docker}`, d.cpuPct, cpuColor, cpuBgColor), 
         statCard('memorychip', 'MEM', `${d.memPct}%`, `${fmtBytes(d.memUsed)} / ${fmtBytes(d.memTotal)}`, d.memPct, C.mem, C.memBg) 
       ], 4, { flex: 1 }),
       mkSpacer(4),
