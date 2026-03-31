@@ -11,7 +11,7 @@
  * • 场景化主题：根据工作日、周末及节日当天动态切换界面视觉渐变背景。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.03.31 09:50
+ * ⏱️ 更新时间: 2026.03.31 10:30
  * ==========================================
  */
 
@@ -96,13 +96,13 @@ export default async function (ctx) {
   // ── 绝对时区计算 (UTC+8) ─────────────────────────────────────────────────
   const nowUtc = Date.now();
   const bjDate = new Date(nowUtc + 8 * 3600000);
-  
+ 
   const Y = bjDate.getUTCFullYear();
   const M = bjDate.getUTCMonth() + 1;
   const D = bjDate.getUTCDate();
   const currentHour = bjDate.getUTCHours();
   const currentDay = bjDate.getUTCDay();
-  
+ 
   const todayMs = Date.UTC(Y, M - 1, D);
 
   const YMD = (y, m, d) => `${y}/${m < 10 ? "0" + m : m}/${d < 10 ? "0" + d : d}`;
@@ -143,19 +143,19 @@ export default async function (ctx) {
       const bjT = new Date(t.getTime() + 8 * 3600000);
       return YMD(bjT.getUTCFullYear(), bjT.getUTCMonth() + 1, bjT.getUTCDate());
     };
-    
+   
     const wDay = (m, n, w) => {
       const f = new Date(Date.UTC(y, m - 1, 1));
       const x = w - f.getUTCDay();
       return YMD(y, m, 1 + (x < 0 ? x + 7 : x) + (n - 1) * 7);
     };
 
+    // 法定 (legal) 
     const legal = [
       ["元旦",   YMD(y, 1, 1),        1], ["春节",   l2s(y, 1, 1),        3],
       ["清明节", getCustomDate(y, qingmingDateStr) || term(7), 1],
       ["劳动节", YMD(y, 5, 1),        1], ["端午节", l2s(y, 5, 5),        1],
-      ["儿童节", YMD(y, 6, 1),        1], ["中秋节", l2s(y, 8, 15),       1],
-      ["国庆节", YMD(y, 10, 1),       3]
+      ["中秋节", l2s(y, 8, 15),       1], ["国庆节", YMD(y, 10, 1),       3]
     ];
 
     if (showSchoolHolidays) {
@@ -191,14 +191,16 @@ export default async function (ctx) {
 
     return {
       legal,
+      // 民俗 (folk)
       folk: [
         ["元宵节", l2s(y, 1, 15), 1], ["龙抬头", l2s(y, 2, 2),  1], ["七夕节", l2s(y, 7, 7),  1],
         ["中元节", l2s(y, 7, 15), 1], ["重阳节", l2s(y, 9, 9),  1], ["寒衣节", l2s(y, 10, 1), 1],
         ["腊八节", l2s(y, 12, 8), 1], ["小年",   l2s(y, 12, 23), 1], ["除夕",   l2s(y, 12, Lunar.mDays(y, 12)), 1]
       ],
+      // 国际 (intl)
       intl: [
         ["情人节", YMD(y, 2, 14), 1], ["妇女节", YMD(y, 3, 8),  1],
-        ["母亲节", wDay(5, 2, 0), 1], ["父亲节", wDay(6, 3, 0), 1], ["万圣节", YMD(y, 10, 31),1],
+        ["母亲节", wDay(5, 2, 0), 1], ["儿童节", YMD(y, 6, 1),  1], ["父亲节", wDay(6, 3, 0), 1], ["万圣节", YMD(y, 10, 31),1],
         ["感恩节", wDay(11, 4, 4),1], ["平安夜", YMD(y, 12, 24),1], ["圣诞节", YMD(y, 12, 25),1]
       ],
       exclusive
@@ -254,11 +256,14 @@ export default async function (ctx) {
     }
   }
 
+  // 在转换数组时，使用 filter 剔除已在置顶列表（pinnedMap）中的节假日
   Object.keys(result).forEach(cat => {
-    result[cat] = Array.from(result[cat].values()).sort((a, b) => {
-      if (a.diff !== b.diff) return a.diff - b.diff;
-      return enablePrioritySort ? b.priority - a.priority : 0;
-    });
+    result[cat] = Array.from(result[cat].values())
+      .filter(i => !pinnedMap.has(i.name)) // 过滤已置顶项
+      .sort((a, b) => {
+        if (a.diff !== b.diff) return a.diff - b.diff;
+        return enablePrioritySort ? b.priority - a.priority : 0;
+      });
   });
 
   const formatStr = (cat, limit) => result[cat].slice(0, limit).map(i => `${i.name} ${formatDiff(i.diff)}`).join("，");
@@ -368,7 +373,7 @@ export default async function (ctx) {
     const limit = isLarge ? 7 : (isExc ? 6 : 3);
     const rawText = formatStr(cfg.key, limit);
     if (!rawText) continue;
-    
+   
     if (isLarge || isExc) {
       gridRows.push(...buildRows(cfg.icon, cfg.color, cfg.label, rawText, isExc));
     } else {
