@@ -1,8 +1,8 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历角标切换与多模式教学周配置、专属纪念日设定、节假日置顶、优先级排序、金融交割日开关，及最多 5 台服务器的轮播监控配置。
+# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历模式与教学周配置、节假日与纪念日自定义（含清明/春秋假手动干预）、优先级与主题控制，及最多 5 台服务器的高可用轮播监控。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.03.30 11:00
+# ⏱️ 更新时间: 2026.03.31 10:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
@@ -50,13 +50,18 @@ env_schema:
     default_value: "true"
 
   SPRING_BREAK_DATE:
-    name: 🌸 春假自定义日期
-    description: "格式 MM/DD，留空使用内置成都春假逻辑"
-    default_value: ""
+    name: 🌸 春假手动设置
+    description: "格式 MM/DD（例如 04/01），留空则不显示该假期"
+    default_value: "04/01"
 
   AUTUMN_BREAK_DATE:
-    name: 🍂 秋假自定义日期
-    description: "格式 MM/DD，留空使用内置成都秋假逻辑"
+    name: 🍂 秋假手动设置
+    description: "格式 MM/DD，留空则不显示该假期"
+    default_value: ""
+
+  QINGMING_DATE:
+    name: 🌿 清明节调休覆盖
+    description: "格式 MM/DD（例如 04/04），用于手动修正调休偏差。留空则系统进行高精度天文节气计算。"
     default_value: ""
 
   SHOW_FINANCE_DATES:
@@ -152,6 +157,11 @@ env_schema:
     name: 🔄 轮播间隔（刷新次数）
     description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
     default_value: "1"
+    
+  SSH_RETRY_TIMES:
+    name: 🔁 SSH 连接重试次数
+    description: "遇到网络波动时的自动重试次数（防拥堵机制），默认2次。"
+    default_value: "2"
 
   # 服务器 1
   SSH_SERVER_1_NAME:
