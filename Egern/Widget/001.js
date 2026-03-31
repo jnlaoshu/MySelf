@@ -4,10 +4,10 @@
  *
  * ✨ 主要补丁与优化：
  * • 彻底删除春假和秋假的内置默认计算逻辑，由环境变量接管。
- * • 新增 QINGMING_DATE 环境变量手动覆写机制。
+ * • 新增 QINGMING_DATE 环境变量手动覆写机制（2026年默认 4/4）。
  * • 核心底层：全面采用 UTC+8 绝对时间锚点，彻底免疫系统夏令时与设备时区干扰。
  * • 节气校准：清明等所有节气精准 +8 小时对齐，杜绝夜间节气导致的“提早1天”Bug。
- * • 防呆设计：清明节不设死默认值，优先利用天文历法精准推演当年及次年正日。
+ * • 防呆设计：清明节优先环境变量，无效时自动回退天文历法。
  *
  * 🔗 更新时间: 2026.03.31（合入清明变量 + 时区安全底层）
  * ==========================================
@@ -58,8 +58,7 @@ export default async function (ctx) {
 
   const springDateStr   = getStr("SPRING_BREAK_DATE");
   const autumnDateStr   = getStr("AUTUMN_BREAK_DATE");
-  // 建议去掉默认值，让强大的时区算法默认自动算。有特殊需要时再通过配置覆写。
-  const qingmingDateStr = getStr("QINGMING_DATE", ""); 
+  const qingmingDateStr = getStr("QINGMING_DATE", "4/4");   // 2026年默认4/4（国务院安排）
 
   const pinnedHolidays = getStr("PINNED_HOLIDAY", "高考").split(",").map(s => s.trim()).filter(Boolean);
 
@@ -158,7 +157,7 @@ export default async function (ctx) {
 
     const legal = [
       ["元旦",   YMD(y, 1, 1),        1], ["春节",   l2s(y, 1, 1),        3],
-      // 优先判断环境变量覆盖，若无则执行精准天文计算
+      // 优先判断环境变量覆盖（2026默认4/4），无效时执行精准天文计算
       ["清明节", getCustomDate(y, qingmingDateStr) || term(7), 1],
       ["劳动节", YMD(y, 5, 1),        1], ["端午节", l2s(y, 5, 5),        1],
       ["中秋节", l2s(y, 8, 15),       1], ["国庆节", YMD(y, 10, 1),       3]
