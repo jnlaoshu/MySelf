@@ -1,15 +1,18 @@
 /**
  * ==========================================
  * 📌 服务器监控 (Server Monitor) 小组件
- * ✨ 【主要功能】
- * • 尺寸支持：适配小号（4列）、中号（2×2）、大号（2×2）尺寸。
- * • 监控指标：通过 SSH 实时获取 CPU、内存、磁盘、网络速率/总量、温度、负载及 Docker 容器数。
- * • 动态颜色：CPU 与温度指标支持基于数值阈值的警示色切换。
- * • 节点配置：支持配置最多 5 台服务器，提供自动轮播机制及禁用开关。
- * • 异常处理：内置连接失败重试机制（2次指数退避 + 抖动）。
- * • 标题状态：中大号尺寸显示运行时间（精确到分）与刷新时间；小号隐藏以留白。
- * 🔗 脚本引用：https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
- * ⏱️ 更新时间：2026.03.30 22:45
+ *
+ * ✨ 主要功能：
+ * • 多尺寸自适应：支持小号（4列极简）、中号（2×2经典）、大号（2×2增强）三种屏幕布局。
+ * • 实时硬件监控：通过 SSH 协议硬件直连，获取 CPU、内存、磁盘、网络吞吐、温度及系统负载。
+ * • 容器状态监控：大中号面板额外集成 Docker 活跃容器数量（🐳）实时追踪。
+ * • 动态阈值告警：CPU 及硬件温度支持基于危险阈值的自适应色彩切换（绿 → 黄 → 红）。
+ * • 多节点高可用：支持同时配置 1~5 台服务器，内置自定义频率的轮播展示与锁定机制。
+ * • 容灾容错引擎：内置连接失败异常捕获、指数退避重试与请求防抖机制。
+ * • 物理级 UI 对齐：采用底层定高容器与弹性占位隔离方案，实现跨端渲染的像素级防错位对齐。
+ *
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
+ * ⏱️ 更新时间: 2026.03.31 10:00
  * ==========================================
  */
 
@@ -36,12 +39,12 @@ export default async function (ctx) {
     return k;
   };
 
-  // ── 尺寸判断 ─────────────────────────────────────────────────────────────
+  // ── 尺寸判断与环境初始化 ──────────────────────────────────────────────────
   const family = (ctx.widgetFamily || 'systemMedium').toLowerCase();
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // ── 色彩系统 ─────────────────────────────────────────────────────────────
+  // ── 统一色彩令牌系统 ─────────────────────────────────────────────────────
   const C = {
     bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
     main:        { light: '#1C1C1E', dark: '#FFFFFF' },
@@ -71,6 +74,7 @@ export default async function (ctx) {
       dark:  ctx.env[darkKey]  || fallback.dark
     };
   };
+  
   C.cpu = overrideColor('CPU', C.cpu);
   C.mem = overrideColor('MEM', C.mem);
   C.disk = overrideColor('DISK', C.disk);
@@ -81,13 +85,13 @@ export default async function (ctx) {
     backgroundGradient = { type: 'linear', colors: [{ light: ctx.env.BG_LIGHT, dark: ctx.env.BG_DARK }], startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
   }
 
-  // ── UI 统一构建器 ─────────────────────────────────────────────────────
+  // ── UI 统一构建器 ───────────────────────────────────────────────────────
   const mkText   = (text, size, weight, color, opts = {}, fontOpts = {}) => ({ type: "text", text: String(text ?? ""), font: { size, weight, ...fontOpts }, textColor: color, ...opts });
   const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
   const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
   const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
-  // ── 服务器配置与轮播 ───────────────────────────────────────────────────
+  // ── 服务器配置解析与轮播算法 ───────────────────────────────────────────────
   let servers = [];
   for (let i = 1; i <= 5; i++) {
     const h = String(ctx.env[`SSH_SERVER_${i}_HOST`] || "").trim();
@@ -142,6 +146,7 @@ export default async function (ctx) {
   let thisPrivateKey = "";
   try { thisPrivateKey = parsePrivateKey(server.privateKey); } catch (e) {}
 
+  // ── 通用工具函数 ────────────────────────────────────────────────────────
   const fmtBytes = b => {
     if (b >= 1e12) return (b / 1e12).toFixed(1) + 'T';
     if (b >= 1e9)  return (b / 1e9).toFixed(1) + 'G';
@@ -154,7 +159,7 @@ export default async function (ctx) {
   const pad = n => String(n).padStart(2, "0");
   const exactTimeStr = `${pad(updateTime.getHours())}:${pad(updateTime.getMinutes())}`;
 
-  // ── SSH 数据获取 ───────────────────────────────────────────────────────
+  // ── SSH 数据获取与重试引擎 ───────────────────────────────────────────────
   let d = { 
     host: server.host, 
     hostname: server.name, 
@@ -210,12 +215,14 @@ export default async function (ctx) {
         
         if (attempt === maxRetries) throw e;
         
+        // 异常退避抖动机制
         const delay = 500 * Math.pow(2, attempt) + Math.random() * 300;
         await new Promise(r => setTimeout(r, delay));
       }
     }
   };
 
+  // ── 数据解析与清洗 ───────────────────────────────────────────────────────
   try {
     const stdout = await sshWithRetry();
     const p = stdout.split(SEP).map(s => s.trim());
@@ -223,7 +230,6 @@ export default async function (ctx) {
     const la = (p[0] || '0 0 0').split(' ');
     d.load = [parseFloat(la[0]) || 0, parseFloat(la[1]) || 0, parseFloat(la[2]) || 0];
 
-    // 运行时间精确到分，丢弃秒的显示
     const upSec = parseFloat((p[1] || '0').split(' ')[0]);
     if (!isNaN(upSec) && upSec > 0) {
       const y = Math.floor(upSec / 31536000); let rem = upSec % 31536000;
@@ -236,7 +242,7 @@ export default async function (ctx) {
       if (mo > 0) uStr += mo + '月'; 
       if (days > 0) uStr += days + '日';
       if (h > 0) uStr += h + '时'; 
-      uStr += m + '分'; // 最小单位固定为分
+      uStr += m + '分';
       d.uptimeStr = uStr;
     } else { 
       d.uptimeStr = "0分"; 
@@ -278,6 +284,7 @@ export default async function (ctx) {
     }
   }
 
+  // ── 错误状态渲染 ─────────────────────────────────────────────────────────
   if (d.error) {
     return {
       type: 'widget', padding: 16, backgroundGradient,
@@ -288,7 +295,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 动态颜色 ───────────────────────────────────────────────────────────
+  // ── 动态告警色与进度条渲染 ───────────────────────────────────────────────
   const cpuColor = d.cpuPct > 85 ? C.tempHigh : (d.cpuPct > 60 ? C.disk : C.cpu);
   const cpuBgColor = d.cpuPct > 85 ? C.netBg : (d.cpuPct > 60 ? C.dskBg : C.cpuBg);
   const getTempColor = (t) => t > 65 ? C.tempHigh : (t > 45 ? C.tempMid : C.tempLow);
@@ -303,7 +310,7 @@ export default async function (ctx) {
     ] : [mkSpacer()]
   });
 
-  // ── 智能 Header 构建器 ────────────────────────────────────────────────
+  // ── 组件区域划分与排版 ───────────────────────────────────────────────────
   const header = () => mkRow([
     mkIcon('server.rack', C.main, isLarge ? 18 : 14), mkSpacer(6),
     mkText(d.hostname, isLarge ? 18 : 14, "heavy", C.main, { maxLines: 1 }),
@@ -316,7 +323,7 @@ export default async function (ctx) {
     ] : [])
   ], 0, { padding: 0 });
 
-  // ── 小号尺寸 ──────────────────────────────────────────────────────────
+  // [1] Small 尺寸
   if (isSmall) {
     const miniCard = (icon, title, value, color, bg) => mkRow([
       mkRow([ mkIcon(icon, color, 13), mkText(title, 12, "heavy", color) ], 2, { width: 52 }),
@@ -336,7 +343,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 大号专属组件 ─────────────────────────────────────────────────────
+  // [2] Large 尺寸模块
   const statCardLarge = (icon, title, value, subtextLines, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 14, padding: [16, 16],
     children: [
@@ -389,7 +396,7 @@ export default async function (ctx) {
     };
   }
 
-  // ── 中号组件 ───────────────────────────────────────────────────────────
+  // [3] Medium 尺寸模块
   const statCard = (icon, title, value, subtext, pct, color, bg) => ({
     type: 'stack', direction: 'column', flex: 1, backgroundColor: bg, borderRadius: 8, padding: [8, 12],
     children: [
