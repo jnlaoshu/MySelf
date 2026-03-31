@@ -1,14 +1,15 @@
 /**
  * ==========================================
- * 📌 时光倒数 (Countdown) 小组件 - 完整补丁版（含清明节变量）
+ * 📌 时光倒数 (Countdown) 小组件 - 终极时区安全版
  *
- * ✨ 主要补丁：
- * • 彻底删除春假和秋假的任何内置默认计算逻辑
- * • 新增 QINGMING_DATE 环境变量（2026年默认 4/4）
- * • 清明节优先使用环境变量，无效时自动回退到节气计算
- * • 法定假日其他日期仍保留原有精确农历/节气计算
+ * ✨ 主要补丁与优化：
+ * • 彻底删除春假和秋假的内置默认计算逻辑，由环境变量接管。
+ * • 新增 QINGMING_DATE 环境变量手动覆写机制。
+ * • 核心底层：全面采用 UTC+8 绝对时间锚点，彻底免疫系统夏令时与设备时区干扰。
+ * • 节气校准：清明等所有节气精准 +8 小时对齐，杜绝夜间节气导致的“提早1天”Bug。
+ * • 防呆设计：清明节不设死默认值，优先利用天文历法精准推演当年及次年正日。
  *
- * 🔗 更新时间: 2026.03.31
+ * 🔗 更新时间: 2026.03.31（合入清明变量 + 时区安全底层）
  * ==========================================
  */
 
@@ -57,7 +58,8 @@ export default async function (ctx) {
 
   const springDateStr   = getStr("SPRING_BREAK_DATE");
   const autumnDateStr   = getStr("AUTUMN_BREAK_DATE");
-  const qingmingDateStr = getStr("QINGMING_DATE", "4/4");   // ← 新增：2026年默认4/4
+  // 建议去掉默认值，让强大的时区算法默认自动算。有特殊需要时再通过配置覆写。
+  const qingmingDateStr = getStr("QINGMING_DATE", ""); 
 
   const pinnedHolidays = getStr("PINNED_HOLIDAY", "高考").split(",").map(s => s.trim()).filter(Boolean);
 
@@ -92,14 +94,17 @@ export default async function (ctx) {
   const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
   const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
-  // ── 时间基准 ───────────────────────────────────────────────────────────
-  const tzOffset  = new Date().getTimezoneOffset();
-  const now       = new Date(Date.now() + (tzOffset + 480) * 60000);
-  const Y         = now.getFullYear();
-  const M         = now.getMonth() + 1;
-  const currentHour = now.getHours();
-  const currentDay  = now.getDay();
-  const todayMs   = Date.UTC(Y, M - 1, now.getDate());
+  // ── 核心修正：使用绝对 UTC 推算北京时间，完美避开夏令时及系统时区错乱 ──
+  const nowUtc = Date.now();
+  const bjDate = new Date(nowUtc + 8 * 3600000); // 强制平移至 UTC+8
+  
+  const Y = bjDate.getUTCFullYear();
+  const M = bjDate.getUTCMonth() + 1;
+  const D = bjDate.getUTCDate();
+  const currentHour = bjDate.getUTCHours();
+  const currentDay = bjDate.getUTCDay();
+  
+  const todayMs = Date.UTC(Y, M - 1, D);
 
   const YMD = (y, m, d) => `${y}/${m < 10 ? "0" + m : m}/${d < 10 ? "0" + d : d}`;
   const formatDiff = d => `${d}天`;
@@ -122,7 +127,7 @@ export default async function (ctx) {
     return YMD(y, m, d);
   };
 
-  // ── 农历 l2s ───────────────────────────────────────────────────────────
+  // ── 农历 l2s（累计天数优化版） ──────────────────────────────────────────
   const l2s = (y, m, d) => {
     ensureLunarCumulative(y + 1);
     let off = (lunarCumulativeCache.off.get(y) ?? 0);
@@ -137,10 +142,14 @@ export default async function (ctx) {
 
   // ── 节日数据生成 ────────────────────────────────────────────────────────
   const getFests = (y) => {
+    
+    // 核心修正：节气时区校准，强制对齐 +8 小时
     const term = n => {
       const t = Lunar.term(y, n);
-      return YMD(t.getUTCFullYear(), t.getUTCMonth() + 1, t.getUTCDate());
+      const bjT = new Date(t.getTime() + 8 * 3600000);
+      return YMD(bjT.getUTCFullYear(), bjT.getUTCMonth() + 1, bjT.getUTCDate());
     };
+    
     const wDay = (m, n, w) => {
       const f = new Date(Date.UTC(y, m - 1, 1));
       const x = w - f.getUTCDay();
@@ -148,17 +157,13 @@ export default async function (ctx) {
     };
 
     const legal = [
-      ["元旦",   YMD(y, 1, 1),        1],
-      ["春节",   l2s(y, 1, 1),        3],
-      // 【新增】清明节优先使用环境变量，2026默认4/4，无效时回退到节气
+      ["元旦",   YMD(y, 1, 1),        1], ["春节",   l2s(y, 1, 1),        3],
+      // 优先判断环境变量覆盖，若无则执行精准天文计算
       ["清明节", getCustomDate(y, qingmingDateStr) || term(7), 1],
-      ["劳动节", YMD(y, 5, 1),        1],
-      ["端午节", l2s(y, 5, 5),        1],
-      ["中秋节", l2s(y, 8, 15),       1],
-      ["国庆节", YMD(y, 10, 1),       3]
+      ["劳动节", YMD(y, 5, 1),        1], ["端午节", l2s(y, 5, 5),        1],
+      ["中秋节", l2s(y, 8, 15),       1], ["国庆节", YMD(y, 10, 1),       3]
     ];
 
-    // 春假和秋假仅依赖环境变量
     if (showSchoolHolidays) {
       const springDate = getCustomDate(y, springDateStr);
       if (springDate) legal.push(["春假", springDate, 3]);
