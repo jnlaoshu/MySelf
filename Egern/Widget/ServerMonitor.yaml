@@ -1,34 +1,42 @@
 # ==========================================
-# 📌 模块名称: 服务器监控 Widget
-# ✨ 主要功能: SSH 直连监控核心硬件指标，支持最多 5 台服务器自动轮播，内置动态告警色。
-# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml
-# ⏱️ 2026.03.30 10:00
+# 📌 模块名称: 服务器监控 (Server Monitor) 单组件配置
+# ✨ 主要功能: 提供服务器监控面板的可视化配置。支持配置多达 5 台服务器的 SSH 硬件直连，可控制轮播频率、断开重试容错等高级设定。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.yaml
+# ⏱️ 更新时间: 2026.03.31 10:00
 # ==========================================
 
-name: "服务器监控 Widget"
-description: "通过 SSH 协议实时可视化远端服务器指标(CPU/内存/网络等)，支持最多 5 台多服务器自动轮播。"
+name: "服务器监控配置"
+description: "服务器实时监控组件的环境参数配置模块"
 
 auto_update:
   interval: 43200
 
 env_schema:
+  # ── 轮播控制与容错机制 ───────────────────────────────────────────────────────
   SSH_CYCLE_DISABLED:
     name: ⏸️ 禁用多服务器轮播
-    description: "开启后，将锁定只显示第一台在线的服务器"
+    description: "开启后，面板将锁定监控并仅显示第一台在线的服务器"
     options: ["false", "true"]
     default_value: "false"
 
   SSH_CYCLE_EVERY:
-    name: 🔄 轮播间隔（刷新次数）
-    description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
+    name: 🔄 轮播间隔（次）
+    description: "控制多台服务器切换的刷新次数。默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换下一台。"
     default_value: "1"
+    
+  SSH_RETRY_TIMES:
+    name: 🔁 SSH 连接重试次数
+    description: "遇到网络波动或握手失败时的自动重试次数（附带指数退避防丢包），默认 2 次。"
+    default_value: "2"
 
+  # ── 节点配置区域 (1~5) ────────────────────────────────────────────────────
   # 服务器 1
   SSH_SERVER_1_NAME:
-    name: 🏷️ 服务器 1 显示名称
+    name: 🏷️ 服务器 1 名称
     default_value: "Oracle"
   SSH_SERVER_1_HOST:
-    name: 🌐 服务器 1 IP / 域名
+    name: 🌐 服务器 1 IP/域名
+    default_value: ""
   SSH_SERVER_1_PORT:
     name: 🔌 服务器 1 端口
     default_value: "22"
@@ -37,14 +45,20 @@ env_schema:
     default_value: "root"
   SSH_SERVER_1_PWD:
     name: 🔐 服务器 1 密码
+    default_value: ""
   SSH_SERVER_1_KEY:
     name: 🔑 服务器 1 私钥
+    description: "支持 Ed25519/RSA 等格式，填写私钥后将自动忽略密码"
+    default_value: ""
 
-  # 服务器 2（留空则不使用）
+  # 服务器 2
   SSH_SERVER_2_NAME:
-    name: 🏷️ 服务器 2 显示名称
+    name: 🏷️ 服务器 2 名称
+    description: "留空则不启用该节点"
+    default_value: ""
   SSH_SERVER_2_HOST:
-    name: 🌐 服务器 2 IP / 域名
+    name: 🌐 服务器 2 IP/域名
+    default_value: ""
   SSH_SERVER_2_PORT:
     name: 🔌 服务器 2 端口
     default_value: "22"
@@ -53,14 +67,19 @@ env_schema:
     default_value: "root"
   SSH_SERVER_2_PWD:
     name: 🔐 服务器 2 密码
+    default_value: ""
   SSH_SERVER_2_KEY:
     name: 🔑 服务器 2 私钥
+    default_value: ""
 
   # 服务器 3
   SSH_SERVER_3_NAME:
-    name: 🏷️ 服务器 3 显示名称
+    name: 🏷️ 服务器 3 名称
+    description: "留空则不启用该节点"
+    default_value: ""
   SSH_SERVER_3_HOST:
-    name: 🌐 服务器 3 IP / 域名
+    name: 🌐 服务器 3 IP/域名
+    default_value: ""
   SSH_SERVER_3_PORT:
     name: 🔌 服务器 3 端口
     default_value: "22"
@@ -69,14 +88,19 @@ env_schema:
     default_value: "root"
   SSH_SERVER_3_PWD:
     name: 🔐 服务器 3 密码
+    default_value: ""
   SSH_SERVER_3_KEY:
     name: 🔑 服务器 3 私钥
+    default_value: ""
 
   # 服务器 4
   SSH_SERVER_4_NAME:
-    name: 🏷️ 服务器 4 显示名称
+    name: 🏷️ 服务器 4 名称
+    description: "留空则不启用该节点"
+    default_value: ""
   SSH_SERVER_4_HOST:
-    name: 🌐 服务器 4 IP / 域名
+    name: 🌐 服务器 4 IP/域名
+    default_value: ""
   SSH_SERVER_4_PORT:
     name: 🔌 服务器 4 端口
     default_value: "22"
@@ -85,14 +109,19 @@ env_schema:
     default_value: "root"
   SSH_SERVER_4_PWD:
     name: 🔐 服务器 4 密码
+    default_value: ""
   SSH_SERVER_4_KEY:
     name: 🔑 服务器 4 私钥
+    default_value: ""
 
   # 服务器 5
   SSH_SERVER_5_NAME:
-    name: 🏷️ 服务器 5 显示名称
+    name: 🏷️ 服务器 5 名称
+    description: "留空则不启用该节点"
+    default_value: ""
   SSH_SERVER_5_HOST:
-    name: 🌐 服务器 5 IP / 域名
+    name: 🌐 服务器 5 IP/域名
+    default_value: ""
   SSH_SERVER_5_PORT:
     name: 🔌 服务器 5 端口
     default_value: "22"
@@ -101,8 +130,10 @@ env_schema:
     default_value: "root"
   SSH_SERVER_5_PWD:
     name: 🔐 服务器 5 密码
+    default_value: ""
   SSH_SERVER_5_KEY:
     name: 🔑 服务器 5 私钥
+    default_value: ""
 
 scriptings:
   - generic:
