@@ -1,6 +1,6 @@
 # ==========================================
 # 📌 模块名称: Egern 桌面小组件合集
-# ✨ 主要功能: 提供组件的全局可视化配置入口。支持黄历模式与教学周配置、节假日与纪念日自定义（含清明/春秋假手动干预）、优先级与主题控制，及最多 5 台服务器的高可用轮播监控。
+# ✨ 主要功能: 提供全套小组件的全局可视化配置入口。完美适配最新版底层 JS 的各项高阶能力，包含黄历定制、时光倒数（防调休）、专属纪念日、全国油价定位及高可用多节点 SSH 服务器监控。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
 # ⏱️ 更新时间: 2026.03.31 10:00
 # ==========================================
@@ -13,254 +13,245 @@ auto_update:
 
 env_schema:
 
-  # ── 岁时黄历 ──────────────────────────────────────────────────────────────
+  # ── [岁时黄历] 配置区 ───────────────────────────────────────────────────
   ASTRO_OR_WEEK:
-    name: 🔮 黄历右上角显示模式
+    name: 🔮 [黄历] 右上角显示模式
     description: "选择黄历面板右上角是显示星座，还是当年/当月周次"
     options: ["星座", "周次"]
     default_value: "星座"
 
   SHOW_TEACHING_WEEK:
-    name: 📚 全局启用教学周
-    description: "总开关。开启后，可在星座或周次模式旁展示教学周进度。"
+    name: 📚 [黄历] 全局启用教学周
+    description: "总开关。开启后，可在星座或周次模式旁展示教学周进度"
     options: ["true", "false"]
     default_value: "true"
 
   SHOW_TEACHING_WEEK_IN_WEEK:
-    name: 🔄 在周次模式下显示教学周
-    description: "开启后，即使选择了「周次」，也会在周次文本前强制显示教学周进度。"
+    name: 🔄 [黄历] 在周次模式下显示教学周
+    description: "开启后，即使选择了「周次」，也会在周次文本前强制显示教学周进度"
     options: ["true", "false"]
     default_value: "true"
 
   TEACHING_WEEK_START:
-    name: 🗓️ 教学周起始日期
-    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD（例如 2026/03/02）"
+    name: 🗓️ [黄历] 教学周起始日期
+    description: "输入本学期第一周周一的日期，格式 YYYY/MM/DD"
     default_value: "2026/03/02"
 
-  # ── 时光倒数 · 节日控制 ───────────────────────────────────────────────────
+  # ── [时光倒数] 节假日控制区 ──────────────────────────────────────────────
   PINNED_HOLIDAY:
-    name: ✨ 始终置顶节假日
-    description: "高亮置顶的节日名称，多个用英文逗号分隔（默认：高考）"
+    name: ✨ [倒数] 始终置顶节假日
+    description: "高亮置顶的节日名称，多个用英文逗号分隔"
     default_value: "高考"
 
   SHOW_SCHOOL_HOLIDAYS:
-    name: 🏫 显示春假和秋假
+    name: 🏫 [倒数] 显示春假和秋假
     description: "是否在倒数面板中显示春假和秋假"
     options: ["true", "false"]
     default_value: "true"
 
   SPRING_BREAK_DATE:
-    name: 🌸 春假手动设置
-    description: "格式 MM/DD（例如 04/01），留空则不显示该假期"
+    name: 🌸 [倒数] 春假手动设置
+    description: "格式 MM/DD，留空则不显示该假期"
     default_value: "04/01"
 
   AUTUMN_BREAK_DATE:
-    name: 🍂 秋假手动设置
+    name: 🍂 [倒数] 秋假手动设置
     description: "格式 MM/DD，留空则不显示该假期"
     default_value: ""
 
   QINGMING_DATE:
-    name: 🌿 清明节调休覆盖
-    description: "格式 MM/DD（例如 04/04），用于手动修正调休偏差。留空则系统进行高精度天文节气计算。"
+    name: 🌿 [倒数] 清明节调休覆盖
+    description: "格式 MM/DD，用于手动修正调休偏差。留空则系统进行高精度天文节气计算"
     default_value: ""
 
   SHOW_FINANCE_DATES:
-    name: 📈 显示金融交割日
+    name: 📈 [倒数] 显示金融交割日
     description: "是否显示 A 股期指交割日与期权行权日"
     options: ["true", "false"]
     default_value: "true"
 
-  # ── 时光倒数 · 排序与主题 ─────────────────────────────────────────────────
+  # ── [时光倒数] 排序与主题区 ──────────────────────────────────────────────
   ENABLE_PRIORITY_SORT:
-    name: 🔢 启用优先级排序
-    description: "开启后，重点节日（春节、国庆等）自动前置显示"
+    name: 🔢 [倒数] 启用优先级排序
+    description: "开启后，重点节日（如春节、国庆等）自动前置显示"
     options: ["true", "false"]
     default_value: "true"
 
   ENABLE_EXCLUSIVE_WEIGHT:
-    name: ⬆️ 提高专属纪念日权重
+    name: ⬆️ [倒数] 提高专属纪念日权重
     description: "开启后，专属纪念日在同日期竞争时优先展示"
     options: ["true", "false"]
     default_value: "true"
 
   ENABLE_WEEKEND_THEME:
-    name: 🎨 周末蓝调背景
+    name: 🎨 [倒数] 周末蓝调背景
     description: "开启后，周六/周日自动切换为蓝调背景风格"
     options: ["true", "false"]
     default_value: "true"
 
   SMALL_FORCE_FOUR_ROWS:
-    name: 📐 小号补足四行
+    name: 📐 [倒数] 小号补足四行
     description: "开启后，小号尺寸会从各类别补位，尽量保持四行展示"
     options: ["true", "false"]
     default_value: "true"
 
-  # ── 全国油价 ──────────────────────────────────────────────────────────────
-  GAS_REGION:
-    name: 📍 油价查询地区
-    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
-    default_value: "sichuan/chengdu"
-
-  # ── 专属纪念日 ────────────────────────────────────────────────────────────
+  # ── [专属纪念日] 配置区 ──────────────────────────────────────────────────
   EXCLUSIVE_NAME_1:
-    name: 🎁 专属纪念日 1
+    name: 🎁 [纪念日] 专属名称 1
     description: "设定最重要的纪念日名称"
     default_value: "我的生日"
   EXCLUSIVE_DATE_1:
-    name: 📅 纪念日 1 日期
+    name: 📅 [纪念日] 专属日期 1
     description: "日期格式必须严格为 MM/DD"
     default_value: "11/10"
 
   EXCLUSIVE_NAME_2:
-    name: 🎁 专属纪念日 2
+    name: 🎁 [纪念日] 专属名称 2
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_2:
-    name: 📅 纪念日 2 日期
-    description: "日期格式必须严格为 MM/DD"
+    name: 📅 [纪念日] 专属日期 2
 
   EXCLUSIVE_NAME_3:
-    name: 🎁 专属纪念日 3
+    name: 🎁 [纪念日] 专属名称 3
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_3:
-    name: 📅 纪念日 3 日期
-    description: "日期格式必须严格为 MM/DD"
+    name: 📅 [纪念日] 专属日期 3
 
   EXCLUSIVE_NAME_4:
-    name: 🎁 专属纪念日 4
+    name: 🎁 [纪念日] 专属名称 4
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_4:
-    name: 📅 纪念日 4 日期
-    description: "日期格式必须严格为 MM/DD"
+    name: 📅 [纪念日] 专属日期 4
 
   EXCLUSIVE_NAME_5:
-    name: 🎁 专属纪念日 5
+    name: 🎁 [纪念日] 专属名称 5
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_5:
-    name: 📅 纪念日 5 日期
-    description: "日期格式必须严格为 MM/DD"
+    name: 📅 [纪念日] 专属日期 5
 
   EXCLUSIVE_NAME_6:
-    name: 🎁 专属纪念日 6
+    name: 🎁 [纪念日] 专属名称 6
     description: "留空则不显示该项"
   EXCLUSIVE_DATE_6:
-    name: 📅 纪念日 6 日期
-    description: "日期格式必须严格为 MM/DD"
+    name: 📅 [纪念日] 专属日期 6
 
-  # ── 服务器监控 ────────────────────────────────────────────────────────────
+  # ── [全国油价] 配置区 ────────────────────────────────────────────────────
+  GAS_REGION:
+    name: 📍 [油价] 查询地区拼音
+    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
+    default_value: "sichuan/chengdu"
+
+  # ── [服务器监控] 轮播与容错区 ────────────────────────────────────────────
   SSH_CYCLE_DISABLED:
-    name: ⏸️ 禁用多服务器轮播
+    name: ⏸️ [监控] 禁用多节点轮播
     description: "开启后，将锁定只显示第一台在线的服务器"
     options: ["false", "true"]
     default_value: "false"
 
   SSH_CYCLE_EVERY:
-    name: 🔄 轮播间隔（刷新次数）
-    description: "默认 1（每次刷新都切换）。设为 3 则每刷新 3 次切换一台服务器。"
+    name: 🔄 [监控] 轮播频率（次）
+    description: "控制多节点切换频率。设为 3 则每刷新 3 次切换一台。"
     default_value: "1"
     
   SSH_RETRY_TIMES:
-    name: 🔁 SSH 连接重试次数
-    description: "遇到网络波动时的自动重试次数（防拥堵机制），默认2次。"
+    name: 🔁 [监控] 异常重试次数
+    description: "遇到网络波动时的防丢包重试次数（默认 2 次）"
     default_value: "2"
 
-  # 服务器 1
+  # ── [服务器监控] 节点配置区 ──────────────────────────────────────────────
   SSH_SERVER_1_NAME:
-    name: 🏷️ 服务器 1 显示名称
+    name: 🏷️ [节点1] 显示名称
     default_value: "Oracle"
   SSH_SERVER_1_HOST:
-    name: 🌐 服务器 1 IP / 域名
+    name: 🌐 [节点1] IP/域名
     default_value: ""
   SSH_SERVER_1_PORT:
-    name: 🔌 服务器 1 端口
+    name: 🔌 [节点1] 端口
     default_value: "22"
   SSH_SERVER_1_USER:
-    name: 👤 服务器 1 用户名
+    name: 👤 [节点1] 用户名
     default_value: "root"
   SSH_SERVER_1_PWD:
-    name: 🔐 服务器 1 密码
+    name: 🔐 [节点1] 密码
     default_value: ""
   SSH_SERVER_1_KEY:
-    name: 🔑 服务器 1 私钥
+    name: 🔑 [节点1] 私钥
     default_value: ""
 
-  # 服务器 2（留空则不使用）
   SSH_SERVER_2_NAME:
-    name: 🏷️ 服务器 2 显示名称
+    name: 🏷️ [节点2] 显示名称 (留空停用)
     default_value: ""
   SSH_SERVER_2_HOST:
-    name: 🌐 服务器 2 IP / 域名
+    name: 🌐 [节点2] IP/域名
     default_value: ""
   SSH_SERVER_2_PORT:
-    name: 🔌 服务器 2 端口
+    name: 🔌 [节点2] 端口
     default_value: "22"
   SSH_SERVER_2_USER:
-    name: 👤 服务器 2 用户名
+    name: 👤 [节点2] 用户名
     default_value: "root"
   SSH_SERVER_2_PWD:
-    name: 🔐 服务器 2 密码
+    name: 🔐 [节点2] 密码
     default_value: ""
   SSH_SERVER_2_KEY:
-    name: 🔑 服务器 2 私钥
+    name: 🔑 [节点2] 私钥
     default_value: ""
 
-  # 服务器 3
   SSH_SERVER_3_NAME:
-    name: 🏷️ 服务器 3 显示名称
+    name: 🏷️ [节点3] 显示名称 (留空停用)
     default_value: ""
   SSH_SERVER_3_HOST:
-    name: 🌐 服务器 3 IP / 域名
+    name: 🌐 [节点3] IP/域名
     default_value: ""
   SSH_SERVER_3_PORT:
-    name: 🔌 服务器 3 端口
+    name: 🔌 [节点3] 端口
     default_value: "22"
   SSH_SERVER_3_USER:
-    name: 👤 服务器 3 用户名
+    name: 👤 [节点3] 用户名
     default_value: "root"
   SSH_SERVER_3_PWD:
-    name: 🔐 服务器 3 密码
+    name: 🔐 [节点3] 密码
     default_value: ""
   SSH_SERVER_3_KEY:
-    name: 🔑 服务器 3 私钥
+    name: 🔑 [节点3] 私钥
     default_value: ""
 
-  # 服务器 4
   SSH_SERVER_4_NAME:
-    name: 🏷️ 服务器 4 显示名称
+    name: 🏷️ [节点4] 显示名称 (留空停用)
     default_value: ""
   SSH_SERVER_4_HOST:
-    name: 🌐 服务器 4 IP / 域名
+    name: 🌐 [节点4] IP/域名
     default_value: ""
   SSH_SERVER_4_PORT:
-    name: 🔌 服务器 4 端口
+    name: 🔌 [节点4] 端口
     default_value: "22"
   SSH_SERVER_4_USER:
-    name: 👤 服务器 4 用户名
+    name: 👤 [节点4] 用户名
     default_value: "root"
   SSH_SERVER_4_PWD:
-    name: 🔐 服务器 4 密码
+    name: 🔐 [节点4] 密码
     default_value: ""
   SSH_SERVER_4_KEY:
-    name: 🔑 服务器 4 私钥
+    name: 🔑 [节点4] 私钥
     default_value: ""
 
-  # 服务器 5
   SSH_SERVER_5_NAME:
-    name: 🏷️ 服务器 5 显示名称
+    name: 🏷️ [节点5] 显示名称 (留空停用)
     default_value: ""
   SSH_SERVER_5_HOST:
-    name: 🌐 服务器 5 IP / 域名
+    name: 🌐 [节点5] IP/域名
     default_value: ""
   SSH_SERVER_5_PORT:
-    name: 🔌 服务器 5 端口
+    name: 🔌 [节点5] 端口
     default_value: "22"
   SSH_SERVER_5_USER:
-    name: 👤 服务器 5 用户名
+    name: 👤 [节点5] 用户名
     default_value: "root"
   SSH_SERVER_5_PWD:
-    name: 🔐 服务器 5 密码
+    name: 🔐 [节点5] 密码
     default_value: ""
   SSH_SERVER_5_KEY:
-    name: 🔑 服务器 5 私钥
+    name: 🔑 [节点5] 私钥
     default_value: ""
 
 scriptings:
@@ -273,9 +264,11 @@ scriptings:
   - generic:
       name: 网络信息
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+      timeout: 5
   - generic:
       name: 全国油价
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+      timeout: 5
   - generic:
       name: 服务器监控
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
