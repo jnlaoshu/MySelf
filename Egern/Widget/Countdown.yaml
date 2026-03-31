@@ -1,63 +1,70 @@
 # ==========================================
-# 📌 模块名称: 时光倒数 Widget
-# ✨ 主要功能: 智能聚合四类节日，支持置顶排序、周末独立主题、春秋假推算与金融日过滤。
-# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml
-# ⏱️ 2026.03.30 10:00
+# 📌 模块名称: 时光倒数 (Countdown) 单组件配置
+# ✨ 主要功能: 提供时光倒数组件的可视化配置入口。支持自定义春秋假与清明节日期、金融交割日显示、节假日置顶高亮、优先级排序控制及最多6个专属纪念日设定。
+# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.yaml
+# ⏱️ 更新时间: 2026.03.31 09:50
 # ==========================================
 
-name: "时光倒数 Widget"
-description: "三尺寸自适应：小号去重微缩分类，中/大号经典分类列表。支持重点节日置顶与排序。"
+name: "时光倒数配置"
+description: "时光倒数小组件的独立环境参数配置模块"
 
 auto_update:
   interval: 43200
 
 env_schema:
-  PINNED_HOLIDAY:
-    name: ✨ 始终置顶节假日
-    description: "高亮置顶的节日名称，多个用英文逗号分隔"
-    default_value: "高考"
-
+  # ── 节假日动态控制 ────────────────────────────────────────────────────────
   SHOW_SCHOOL_HOLIDAYS:
     name: 🏫 显示春假和秋假
+    description: "是否在倒数面板中显示春假和秋假"
     options: ["true", "false"]
     default_value: "true"
 
   SPRING_BREAK_DATE:
-    name: 🌸 春假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
+    name: 🌸 春假手动设置
+    description: "格式 MM/DD（例如 04/01），留空则不显示春假"
+    default_value: "04/01"
 
   AUTUMN_BREAK_DATE:
-    name: 🍂 秋假自定义日期
-    description: "格式 MM/DD，留空使用内置逻辑"
+    name: 🍂 秋假手动设置
+    description: "格式 MM/DD，留空则不显示秋假"
+    default_value: ""
+
+  QINGMING_DATE:
+    name: 🌿 清明节调休覆盖
+    description: "格式 MM/DD（例如 04/04），用于手动修正调休偏差。留空则系统进行高精度天文节气计算。"
+    default_value: ""
 
   SHOW_FINANCE_DATES:
     name: 📈 显示金融交割日
+    description: "是否显示 A 股期指交割日与期权行权日"
     options: ["true", "false"]
     default_value: "true"
 
+  PINNED_HOLIDAY:
+    name: ✨ 始终置顶节假日
+    description: "高亮置顶的节日名称，多个用英文逗号分隔（例如：高考,春节）"
+    default_value: "高考"
+
+  # ── 排序与主题控制 ────────────────────────────────────────────────────────
   ENABLE_PRIORITY_SORT:
     name: 🔢 启用优先级排序
-    description: "开启后，重点节日（如春节）自动前置"
+    description: "开启后，重点节日（如春节、国庆等）在倒数面板自动前置显示"
     options: ["true", "false"]
     default_value: "true"
 
   ENABLE_EXCLUSIVE_WEIGHT:
     name: ⬆️ 提高专属纪念日权重
-    description: "开启后，专属纪念日在同日期竞争时优先展示"
+    description: "开启后，专属纪念日在同日期竞争排序时优先展示"
     options: ["true", "false"]
     default_value: "true"
 
   ENABLE_WEEKEND_THEME:
-    name: 🎨 周末蓝调背景
+    name: 🎨 启用周末独立主题
+    description: "开启后，周六/周日组件将自动切换为蓝调渐变背景风格"
     options: ["true", "false"]
     default_value: "true"
 
-  SMALL_FORCE_FOUR_ROWS:
-    name: 📐 小号补足四行
-    description: "小号尺寸自动从各类别补位，尽量保持四行展示"
-    options: ["true", "false"]
-    default_value: "true"
-
+  # ── 专属纪念日设定 ────────────────────────────────────────────────────────
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称"
