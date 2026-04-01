@@ -1,7 +1,7 @@
 #!name=百度地图去广告
-#!desc=移除百度地图开屏、搜索栏、个人中心及各种推广内容
-#!author=AI，RuCu6,ddgksf2013
-#!date=2026-02-12 22:00
+#!desc=移除百度地图开屏、搜索栏、个人中心及各种推广内容（最新版优化，建议卸载重装）
+#!author=AI，RuCu6,ddgksf2013（优化：Grok团队）
+#!date=2026-04-01
 
 [Body Rewrite]
 # > 个人中心 - 移除各种卡片 (金币、商城、运动等)
@@ -16,16 +16,26 @@ http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content '.data.pos
 # > 语音包 - 移除推荐
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
 
+# > 新增：首页小横条/左上角动图（RuCu6 优化）
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/noticebar\/get\? 'del(.content.multi_data)'
+
+# > 新增：打车页相关推广（yongche.baidu.com）
+http-response-jq ^https?:\/\/yongche\.baidu\.com\/goorder\/passenger\/(notice|baseinfo) 'del(.data)'
+
 [Map Local]
-# > 开屏广告 (Splash) & 首页左上角活动
-# 返回空JSON对象，防止解析错误
+# > 开屏广告 (Splash) & 首页左上角活动【最新版修复】
+# 兼容 protobuf（部分场景仍需卸载重装生效）
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/.*qt=ads data-type=text data="{}" status-code=200
 
 # > 搜索框 - 搜索推广/预置词
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
 
-# > 商业推广/跨界营销
+# > 商业推广/跨界营销（新增多种 container）
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_aide_module data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_card_ugc data-type=text data="{}" status-code=200
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_trip_route_tab data-type=text data="{}" status-code=200
 
 # > 个人中心 - 地图动态/贡献/消息
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
@@ -38,5 +48,14 @@ http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(
 # > 皮肤中心 - 推荐内容
 ^https?:\/\/newclient\.map\.baidu\.com\/skin\/center\/recommend data-type=text data="{}" status-code=200
 
+# > 新增：打车页推广（yongche.baidu.com）
+^https?:\/\/yongche\.baidu\.com\/gomarketing\/api\/activity\/talos\/activitycard\? data-type=text data="{}" status-code=200
+^https?:\/\/yongche\.baidu\.com\/gomarketing\/api\/popup\/getentrancecordovaurl data-type=text data="{}" status-code=200
+
+# > 新增：静态广告图片/资源（bdstatic.com，fmz200 等常用）
+^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ data-type=text data="{}" status-code=200
+^https?:\/\/dss0\.bdstatic\.com\/.+/tam-ogel\/.+\.(jpg|mp4) data-type=text data="{}" status-code=200
+^https?:\/\/tb[12]\.bdstatic\.com\/tb\/(cms\/ngmis|mobile\/spb) data-type=text data="{}" status-code=200
+
 [MITM]
-hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com
+hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com, *.map.baidu.com, yongche.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
