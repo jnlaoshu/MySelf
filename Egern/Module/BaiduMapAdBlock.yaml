@@ -1,61 +1,73 @@
-#!name=百度地图去广告
-#!desc=移除百度地图开屏、搜索栏、个人中心及各种推广内容（最新版优化，建议卸载重装）
+#!name=百度地图去广告【高级脚本版】
+#!desc=极限净化·高级脚本优化（ddgksf2013 bdmap.ads.js + 全面 reject）
 #!author=AI，RuCu6,ddgksf2013（优化：Grok团队）
+#!category=AdBlock
 #!date=2026-04-01
 
+[Rule]
+# ===============================
+# 百度地图广告域名精准屏蔽
+# ===============================
+DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN,180.76.76.200,REJECT,extended-matching,pre-matching
+
 [Body Rewrite]
-# > 个人中心 - 移除各种卡片 (金币、商城、运动等)
+# ===============================
+# JQ 辅助清理（保留原版增强）
+# ===============================
+# 个人中心 - 移除各种卡片
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner)'
 
-# > 搜索栏 - 移除热搜词/推荐
+# 搜索栏 - 移除热搜词/推荐
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? '.Result.data=[]'
 
-# > 发现页/周边 - 移除富媒体内容
+# 发现页/周边 - 移除富媒体
 http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content '.data.posts.content=[]'
 
-# > 语音包 - 移除推荐
+# 语音包 - 移除推荐
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
 
-# > 新增：首页小横条/左上角动图（RuCu6 优化）
+# 首页小横条/左上角动图
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/noticebar\/get\? 'del(.content.multi_data)'
 
-# > 新增：打车页相关推广（yongche.baidu.com）
-http-response-jq ^https?:\/\/yongche\.baidu\.com\/goorder\/passenger\/(notice|baseinfo) 'del(.data)'
-
 [Map Local]
-# > 开屏广告 (Splash) & 首页左上角活动【最新版修复】
-# 兼容 protobuf（部分场景仍需卸载重装生效）
+# ===============================
+# Mock 空响应防占位（核心接口）
+# ===============================
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads data-type=text data="{}" status-code=200
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/.*qt=ads data-type=text data="{}" status-code=200
-
-# > 搜索框 - 搜索推广/预置词
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw data-type=text data="{}" status-code=200
-
-# > 商业推广/跨界营销（新增多种 container）
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing data-type=text data="{}" status-code=200
-^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_aide_module data-type=text data="{}" status-code=200
-^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_card_ugc data-type=text data="{}" status-code=200
-^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/\?container=du_trip_route_tab data-type=text data="{}" status-code=200
-
-# > 个人中心 - 地图动态/贡献/消息
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic data-type=text data="{}" status-code=200
 ^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus\/bounty\/tips data-type=text data="{}" status-code=200
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/msgcenter\/pull data-type=text data="{}" status-code=200
-
-# > 各种活动弹窗/运营配置
 ^https?:\/\/newclient\.map\.baidu\.com\/operation\/activity data-type=text data="{}" status-code=200
-
-# > 皮肤中心 - 推荐内容
 ^https?:\/\/newclient\.map\.baidu\.com\/skin\/center\/recommend data-type=text data="{}" status-code=200
 
-# > 新增：打车页推广（yongche.baidu.com）
-^https?:\/\/yongche\.baidu\.com\/gomarketing\/api\/activity\/talos\/activitycard\? data-type=text data="{}" status-code=200
-^https?:\/\/yongche\.baidu\.com\/gomarketing\/api\/popup\/getentrancecordovaurl data-type=text data="{}" status-code=200
-
-# > 新增：静态广告图片/资源（bdstatic.com，fmz200 等常用）
+# 静态广告图片/资源（新增）
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ data-type=text data="{}" status-code=200
 ^https?:\/\/dss0\.bdstatic\.com\/.+/tam-ogel\/.+\.(jpg|mp4) data-type=text data="{}" status-code=200
 ^https?:\/\/tb[12]\.bdstatic\.com\/tb\/(cms\/ngmis|mobile\/spb) data-type=text data="{}" status-code=200
 
+[Script]
+# ===============================
+# 【高级脚本核心】ddgksf2013 bdmap.ads.js（最强版，深度清理 protobuf+JSON）
+# ===============================
+# 开屏 & 首页推广
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_开屏
+# 搜索推广
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_搜索
+# 跨界营销 & 活动
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_营销
+# 个人中心 & 消息
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_个人中心
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/msgcenter\/pull script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_消息
+# 首页小横条 & 其他
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/noticebar\/get script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_小横条
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/operation\/activity script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_活动
+# 静态资源广告
+http-response ^https?:\/\/dss0\.bdstatic\.com\/ script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本_图片广告
+
 [MITM]
-hostname = %APPEND% 180.76.76.200, newclient.map.baidu.com, httpdns.baidubce.com, ugc.map.baidu.com, *.map.baidu.com, yongche.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
+hostname = %APPEND% newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, 180.76.76.200, httpdns.baidubce.com
