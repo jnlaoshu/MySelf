@@ -1,13 +1,27 @@
 # 规则名称: Bing
-# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+# 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+# 优化时间: 2026.04.02 (补充 Copilot / Sydney 及核心 API 域名)
 
 domain_suffix_set:
+  # --- 核心搜索与门户 ---
   - bing.com
   - bing.com.cn
   - bing.net
+  - bingworld.com
+  
+  # --- Copilot / AI 聊天底层支撑 (关键) ---
+  - bingapis.com
+  - sydney.bing.com
+  - edgeservices.bing.com
+  - dictates.bing.com
+  
+  # --- 开发者、广告与扩展服务 ---
   - bingads.com
   - bingagencyawards.com
   - bingapistatistics.com
   - bingsandbox.com
   - bingvisualsearch.com
-  - bingworld.com
+
+# 补充关键字匹配，防止部分边缘 CDN 漏网
+domain_keyword_set:
+  - bingdict
