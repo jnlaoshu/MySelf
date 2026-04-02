@@ -1,0 +1,104 @@
+name: 自动更新地图去广告规则
+
+on:
+  schedule:
+    - cron: '0 16 * * *'      # 每天北京时间 00:00 执行
+  workflow_dispatch:          # 支持手动一键运行
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 实时拉取并生成 3 个规范模块
+        run: |
+          TODAY=$(date +%Y-%m-%d)
+          mkdir -p Egern/Module
+
+          # ==================== 高德地图模块 ====================
+          # 拉取 ddgksf2013 最新完整规则
+          curl -s https://raw.githubusercontent.com/ddgksf2013/Rewrite/master/AdBlock/AmapAds.conf > /tmp/AmapAds.conf
+          # 规范头部（删除 UserScript 块，替换为干净中性头部）
+          cat > Egern/Module/AmapAdBlock.yaml << EOF
+          #!name=高德地图去广告模块
+          #!desc=高德地图广告清理（卸载重装生效）
+          #!author=ddgksf2013/Rewrite
+          #!category=AdBlock
+          #!date=${TODAY}
+          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
+          EOF
+          # 追加清理后的规则 + 整合 kelee 脚本
+          tail -n +22 /tmp/AmapAds.conf >> Egern/Module/AmapAdBlock.yaml
+          echo "" >> Egern/Module/AmapAdBlock.yaml
+          echo "# kelee 补充脚本（兼容 Egern）" >> Egern/Module/AmapAdBlock.yaml
+          echo "http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee" >> Egern/Module/AmapAdBlock.yaml
+
+          # ==================== 百度地图模块 ====================
+          cat > Egern/Module/BaiduMapAdBlock.yaml << EOF
+          #!name=百度地图去广告模块
+          #!desc=百度地图广告清理（卸载重装生效）
+          #!author=ddgksf2013/Scripts
+          #!category=AdBlock
+          #!date=${TODAY}
+          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
+
+          [Rule]
+          DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
+          DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
+          DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
+          DOMAIN,180.76.76.200,REJECT,extended-matching,pre-matching
+
+          [Script]
+          # 百度地图高级脚本（ddgksf2013 官方最新）
+          http-response ^https?:\/\/(newclient\.map\.baidu\.com|dss0\.bdstatic\.com) script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本
+
+          [MITM]
+          hostname = %APPEND% newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, 180.76.76.200, httpdns.baidubce.com
+          EOF
+
+          # ==================== 地图合集模块 ====================
+          cat > Egern/Module/MapAdBlock.yaml << EOF
+          #!name=地图去广告合集模块
+          #!desc=高德+百度地图广告清理（卸载重装生效）
+          #!author=ddgksf2013/Rewrite + ddgksf2013/Scripts
+          #!category=AdBlock
+          #!date=${TODAY}
+          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+
+          [Rule]
+          DOMAIN,amap-aos-info-nogw.amap.com,REJECT
+          DOMAIN,free-aos-cdn-image.amap.com,REJECT
+          DOMAIN,optimus-ads.amap.com,REJECT
+          DOMAIN,dss0.bdstatic.com,REJECT
+          DOMAIN,tb1.bdstatic.com,REJECT
+          DOMAIN,tb2.bdstatic.com,REJECT
+          DOMAIN,180.76.76.200,REJECT
+
+          [Script]
+          # 高德地图高级脚本（ddgksf2013 官方最新）
+          http-response ^https?:\/\/.*\.amap\.com\/ws\/.* script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js, requires-body=true, tag=高德_高级脚本
+          # kelee 补充脚本（兼容 Egern）
+          http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee
+          # 百度地图高级脚本（ddgksf2013 官方最新）
+          http-response ^https?:\/\/(newclient\.map\.baidu\.com|dss0\.bdstatic\.com) script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本
+
+          [MITM]
+          hostname = %APPEND% *.amap.com, *.map.baidu.com, m5.amap.com, m5-zb.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
+          EOF
+
+      - name: 提交并推送更新
+        run: |
+          git config --global user.name "Grok Auto Update"
+          git config --global user.email "grok@x.ai"
+          git add Egern/Module/AmapAdBlock.yaml Egern/Module/BaiduMapAdBlock.yaml Egern/Module/MapAdBlock.yaml
+          if git diff --cached --quiet; then
+            echo "规则无变化，跳过提交"
+          else
+            git commit -m "自动更新: 地图去广告模块 ${TODAY}"
+            git push
+          fi
