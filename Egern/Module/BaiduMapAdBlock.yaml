@@ -3,7 +3,8 @@
 #!author=ddgksf2013/Scripts
 #!category=AdBlock
 #!date=2026-04-02
-# 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
+# 引用链接：
+# BaiduMapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
 
 [Rule]
 DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
