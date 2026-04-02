@@ -358,7 +358,7 @@ policy_groups:
 rules:
   # 国内核心短视频防误杀 (抖音)
   - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Douyin/Douyin.list
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/DouYin/DouYin.list
       policy: DIRECT
 
   # 广告拦截
