@@ -1,79 +1,61 @@
 # 规则名称: AppleProxy
-# Apple 外区内容代理规则
-# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
-# 更新时间 2026.02.09
-
-payload:
-
-  # 一 Apple TV / Apple Music 美区内容
-  - DOMAIN,itunes.apple.com
-  - DOMAIN,music.apple.com
-  - DOMAIN,tv.apple.com
-  - DOMAIN,itunesconnect.apple.com
-  - DOMAIN,appstoreconnect.apple.com
-
-  # 二 TestFlight 美区回退
-  - DOMAIN,testflight.apple.com
-  - DOMAIN,api.testflight.apple.com
-
-  # 三 App Store 美区下载与动态内容
-  - DOMAIN-SUFFIX,apps.apple.com
-  - DOMAIN-SUFFIX,apptrailers.itunes.apple.com
-  - DOMAIN,itunes.apple.com.edgekey.net
-  - DOMAIN,apple.com.edgekey.net
-
-  # 四 iTunes 辅助与 CDN 外区出口
-  - DOMAIN-SUFFIX,appldnld.apple.com
-  - DOMAIN-SUFFIX,swcdn.apple.com
-  - DOMAIN-SUFFIX,fwdownload.apple.com
-
-  # 五 永久代理兜底
-  - DOMAIN-SUFFIX,apple.com
-
+# 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AppleProxy.yaml
+# 优化时间: 2026.04.0
 
 domain_set:
-  - api-glb-sea.smoot.apple.com
-  - apple.comscoreresearch.com
-  - apps.apple.com  
-  - books.itunes.apple.com
-  - cdn.apple-cloudkit.com
-  - cvws.icloud-content.com
-  - developer.apple.com
-  - devimages-cdn.apple.com
-  - devstreaming-cdn.apple.com
-  - docs-assets.developer.apple.com
-  - gspe1-ssl.ls.apple.com
-  - hls-svod.itunes.apple.com
-  - itunes.apple.com
-  - js-cdn.music.apple.com
-  - lookup-api.apple.com
-  - mask-api.icloud.com
-  - mask-h2.icloud.com
-  - mask.icloud.com
+  # --- Apple News (严格锁区服务) ---
   - news-assets.apple.com
   - news-client.apple.com
   - news-edge.apple.com
   - news-events.apple.com
-  - np-edge.itunes.apple.com
-  - play-edge.itunes.apple.com
-  - sandbox.itunes.apple.com
-  - testflight.apple.com
+  - apple.comscoreresearch.com
+
+  # --- Apple TV & Apple Music (外区流媒体体验优化) ---
+  - tv.apple.com
   - tv.applemusic.com
+  - music.apple.com
+  - js-cdn.music.apple.com
+  - books.itunes.apple.com
+  - hls-svod.itunes.apple.com
+  - play-edge.itunes.apple.com
+  - np-edge.itunes.apple.com
   - uts-api.itunes.apple.com
+
+  # --- App Store / iTunes 核心 API (注：不包含实际 App 的 CDN 下载流) ---
+  - itunes.apple.com
+  - apps.apple.com
+  - sandbox.itunes.apple.com
+  - lookup-api.apple.com
+
+  # --- 开发者服务 (加速文档与 WWDC 视频) ---
+  - developer.apple.com
+  - devimages-cdn.apple.com
+  - devstreaming-cdn.apple.com
+  - docs-assets.developer.apple.com
+  - appstoreconnect.apple.com
+  - itunesconnect.apple.com
+
+  # --- TestFlight 外区回退支持 ---
+  - testflight.apple.com
+  - api.testflight.apple.com
+
+  # --- iCloud 隐私代理 (Private Relay) ---
+  - mask.icloud.com
+  - mask-api.icloud.com
+  - mask-h2.icloud.com
+  
+  # --- 其他 API 边缘节点 ---
+  - api-glb-sea.smoot.apple.com
+  - gspe1-ssl.ls.apple.com
+
 domain_suffix_set:
-  - aaplimg.com
-  - apple-cloudkit.com
-  - apple-dns.net
-  - apple-mapkit.com
-  - apple.co
-  - apple.com
+  # --- 核心外区后缀 ---
   - apple.news
   - appsto.re
-  - appstore.com
-  - cdn-apple.com
-  - icloud-content.com
-  - icloud.com
-  - itunes.com
-  - me.com
+  - apple.co
+  - apple-mapkit.com
   - organicfruitapps.com
-  - push-apple.com.akadns.net
+
+domain_keyword_set:
+  - apple.com.edgekey.net
+  - itunes.apple.com.edgekey.net
