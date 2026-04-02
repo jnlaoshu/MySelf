@@ -1,0 +1,63 @@
+#!name=地图去广告合集（高德 + 百度）
+#!desc=高德地图 + 百度地图广告拦截合集（脚本源：ddgksf2013）
+#!author=jnlaoshu
+#!category=AdBlock
+#!date=2026-04-02
+#!upstream-commit=amap.js@87737f3 bdmap.ads.js@unknown
+#!source=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+
+# ════════════════════════════════════════
+# 高德地图
+# ════════════════════════════════════════
+
+[Rule]
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT
+DOMAIN,free-aos-cdn-image.amap.com,REJECT
+DOMAIN,optimus-ads.amap.com,REJECT
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT
+DOMAIN,dss0.bdstatic.com,REJECT
+DOMAIN,tb1.bdstatic.com,REJECT
+DOMAIN,tb2.bdstatic.com,REJECT
+IP-CIDR,180.76.76.200/32,REJECT,no-resolve
+
+[Rewrite]
+# ── 高德 JQ ──
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
+http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-car-end - reject-dict
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv - reject-dict
+^https:\/\/m5-zb\.amap\.com\/ws\/boss\/order_web\/\w{8}_information - reject-dict
+
+# ── 百度 JQ ──
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner)'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? '.Result.data=[]'
+http-response-jq ^https?:\/\/.*map\.baidu\.com\/.*govui\/rich_content '.data.posts.content=[]'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/noticebar\/get\? 'del(.content.multi_data)'
+^https?:\/\/newclient\.map\.baidu\.com\/contributor-bus\/bounty\/tips - reject-dict
+^https?:\/\/newclient\.map\.baidu\.com\/skin\/center\/recommend - reject-dict
+
+[Script]
+# ── 高德脚本 ──
+http-response ^https?:\/\/.*\.amap\.com\/ws\/(valueadded|aos)\/alimama\/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_开屏
+http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_我的页面
+http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_搜索热词
+http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/scene\/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_场景推荐
+http-response ^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_路线首页
+http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_附近
+http-response ^https?:\/\/.*\.amap\.com\/ws\/promotion-web\/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_打车
+http-response ^https?:\/\/(.*\.amap\.com|sns\.amap\.com)\/ws\/msgbox\/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_消息
+http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_推广位
+
+# ── 百度脚本 ──
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=ads script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_开屏
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui.*qt=hw script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_搜索
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_营销
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_个人中心
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/msgcenter\/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_消息
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/client\/noticebar\/get script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_横条
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/operation\/activity script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/bdmap.ads.js, requires-body=true, tag=百度_活动
+
+[MITM]
+hostname = *.amap.com, m5-zb.amap.com, sns.amap.com, newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, httpdns.baidubce.com
