@@ -1,5 +1,5 @@
 # > https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新：2026.02.16 21:25
+# 优化时间：2026.04.02 (补充最新音视频、绘画及垂直领域 AIGC 服务)
 
 domain_suffix_set:
   # --- OpenAI (ChatGPT / Sora / DALL-E) ---
@@ -27,7 +27,7 @@ domain_suffix_set:
   - claudeusercontent.com
 
   # --- Google (Gemini / Bard / NotebookLM) ---
-  - gemini.google
+  - gemini.google.com
   - deepmind.com
   - deepmind.google
   - generativeai.google
@@ -37,12 +37,8 @@ domain_suffix_set:
   - aistudio.google.com
   - notebooklm.google.com
 
-  # --- Microsoft (Copilot / Bing) ---
+  # --- Microsoft (Copilot) ---
   - copilot.microsoft.com
-  - bing.com
-  - bingapis.com
-  - sydney.bing.com
-  - edgeservices.bing.com
 
   # --- xAI (Grok) ---
   - grok.com
@@ -52,7 +48,7 @@ domain_suffix_set:
   - meta.ai
   - imagine.meta.com
 
-  # --- Others (Perplexity / Poe / Mistral / Groq) ---
+  # --- AI 搜索、聊天与垂直大模型 ---
   - perplexity.ai
   - pplx.ai
   - poe.com
@@ -60,6 +56,23 @@ domain_suffix_set:
   - groq.com
   - huggingface.co
   - stability.ai
+  - phind.com
+  - you.com
+  - character.ai
+  - cohere.com
+  - leonardo.ai
+  - civitai.com
+
+  # --- AI 音视频与多媒体 (Suno / Udio / Runway / Luma) ---
+  - suno.com
+  - suno.ai
+  - udio.com
+  - runwayml.com
+  - lumalabs.ai
+  - pika.art
+  - elevenlabs.io
+  - klingai.com
+  - heygen.com
 
   # --- Midjourney & Discord ---
   - midjourney.com
@@ -73,5 +86,7 @@ domain_keyword_set:
   - openai
   - chatgpt
   - anthropic
+  - claude
   - midjourney
   - copilot
+  - perplexity
