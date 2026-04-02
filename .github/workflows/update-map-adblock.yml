@@ -30,10 +30,11 @@ jobs:
           #!author=ddgksf2013/Rewrite
           #!category=AdBlock
           #!date=${TODAY}
-          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
+          # 引用链接：
+          # AmapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
           EOF
-          # 追加清理后的规则 + 整合 kelee 脚本
-          tail -n +22 /tmp/AmapAds.conf >> Egern/Module/AmapAdBlock.yaml
+          # 追加清理后的规则（从第17行开始，跳过header）
+          tail -n +17 /tmp/AmapAds.conf >> Egern/Module/AmapAdBlock.yaml
           echo "" >> Egern/Module/AmapAdBlock.yaml
           echo "# kelee 补充脚本（兼容 Egern）" >> Egern/Module/AmapAdBlock.yaml
           echo "http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee" >> Egern/Module/AmapAdBlock.yaml
@@ -45,7 +46,8 @@ jobs:
           #!author=ddgksf2013/Scripts
           #!category=AdBlock
           #!date=${TODAY}
-          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
+          # 引用链接：
+          # BaiduMapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
 
           [Rule]
           DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
@@ -68,7 +70,8 @@ jobs:
           #!author=ddgksf2013/Rewrite + ddgksf2013/Scripts
           #!category=AdBlock
           #!date=${TODAY}
-          # 引用链接：https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+          # 引用链接：
+          # MapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
           [Rule]
           DOMAIN,amap-aos-info-nogw.amap.com,REJECT
@@ -99,6 +102,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "规则无变化，跳过提交"
           else
-            git commit -m "自动更新: 地图去广告模块 ${TODAY}"
+            git commit -m "chore: 更新地图去广告模块 ${TODAY}（ddgksf2013/Rewrite + kelee）"
             git push
           fi
