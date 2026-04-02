@@ -1,13 +1,14 @@
-#!name=高德地图去广告【高级脚本版】
-#!desc=极限净化·高级脚本优化（ddgksf2013 amap.js + 全面 reject）
-#!author=AI 修改，RuCu6, ddgksf2013（优化：Grok团队）
+#!name=高德地图去广告
+#!desc=纯净版高德地图广告清理模块，极限净化（2026最新优化，建议卸载重装）
+#!author=AI 修改，RuCu6, ddgksf2013, kelv1n1n, QingRex（优化：Grok团队）
 #!category=AdBlock
 #!date=2026-04-01
 
 [Rule]
 # ===============================
-# 高德广告域名精准屏蔽
+# 高德广告域名精准屏蔽（已移除危险全域REJECT）
 # ===============================
+# 开屏、首页Banner、导航页、附近页、打车页等
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,optimus-ads.amap.com,REJECT,extended-matching,pre-matching
@@ -15,15 +16,20 @@ DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
 
 [Body Rewrite]
 # ===============================
-# JQ 辅助清理（保留原版增强）
+# 高德关键接口 JQ 清理（增强版）
 # ===============================
+# 搜索业务营销推广（营销卡片、tips等）
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
+
+# 搜索首页历史标签
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
+
+# 打车订单详情弹窗
 http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
 
 [Map Local]
 # ===============================
-# Mock 空响应防占位（保留核心接口）
+# 高德 Mock 响应（防占位显示，精准版）
 # ===============================
 ^https:\/\/m5\.amap\.com\/ws\/valueadded\/alimama\/splash_screen data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/aos\/alimama\/splash_screen data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -32,33 +38,25 @@ http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail
 ^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(main-page-assets|main-page-location) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5-zb\.amap\.com\/ws\/boss\/order_web\/\w{8}_information data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaas data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search\/nearbyrec_smart data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5-zb\.amap\.com\/ws\/promotion-web\/resource data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
 # ===============================
-# 【高级脚本核心】ddgksf2013 amap.js（最强版，深度清理）
+# 高德广告脚本处理（kelee最新版 + 兼容）
 # ===============================
-# 开屏广告
-http-response ^https?:\/\/.*\.amap\.com\/ws\/valueadded\/alimama\/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_开屏
-# 我的页面
-http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_我的页面
-# 搜索热词 + scene
-http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_搜索
-http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/scene\/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_搜索
-# 路线规划 + 首页 + 附近 + 打车 + 消息
-http-response ^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_路线首页
-http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_附近
-http-response ^https?:\/\/.*\.amap\.com\/ws\/promotion-web\/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_打车
-http-response ^https?:\/\/.*\.amap\.com\/ws\/msgbox\/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_消息
-http-response ^https?:\/\/.*\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_推广
+http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
+http-response ^https:\/\/m5-zb\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
 
-# （可选保留你原来的 kelee.js 作为备用，效果叠加）
-# http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee备用
+# 额外 ddgksf2013 风格（可选，增强路线/附近页）
+# http-response ^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/card-service-route-plan\? url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js
 
 [MITM]
+# 高德 MITM 主机名（扩展版）
 hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, sns.amap.com, ai.amap.com, center.amap.com, amap-aos-info-nogw.amap.com, optimus-ads.amap.com
