@@ -2,9 +2,10 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.03.27 09:20
+# ⏱️ 更新时间: 2026.04.02 15:30
 # ==========================================
 
+# 基本配置
 ipv6: false
 http_port: 3080
 socks_port: 3090
@@ -355,6 +356,11 @@ policy_groups:
 
 # 路由规则
 rules:
+  # 国内核心短视频防误杀 (抖音)
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Douyin/Douyin.list
+      policy: DIRECT
+
   # 广告拦截
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
@@ -474,9 +480,6 @@ modules:
     enabled: true
   - name: KuWo
     url: https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/Kuwo/kuwo.sgmodule
-    enabled: true
-  - name: Ximalaya
-    url: "https://script.hub/file/_start_/https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js/_end_/ximalaya.sgmodule?type=qx-rewrite&target=surge-module&del=true&jqEnabled=true"
     enabled: true
   - name: 雪球去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
