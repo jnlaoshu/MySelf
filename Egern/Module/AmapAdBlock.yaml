@@ -1,88 +1,126 @@
-#!name=高德地图去广告【高级脚本版】
-#!desc=极限净化·高级脚本优化（ddgksf2013 amap.js + 全面 reject）
-#!author=AI 修改，RuCu6, ddgksf2013（优化：Grok团队）
-#!category=AdBlock
-#!date=2026-04-01
+审查结果如下，有一处新问题需要关注，另有一处老问题回退了。
 
-[Rule]
+🔴 老问题回退
+MITM hostnames 依然冗余且含 REJECT 域名
+上轮已修正过，这版又恢复为冗余写法。结论不变：
+	∙	*.amap.com 已完全覆盖其下所有子域名条目，重复列出无意义
+	∙	amap-aos-info-nogw.amap.com、optimus-ads.amap.com、v.smtcdns.com 在 rules 里已被 REJECT，TLS 握手不会完成，MITM 无从介入
+应保持上轮精简结果：
 
-# ===============================
+mitm:
+  hostnames:
+    - '*.amap.com'
 
-# 高德广告域名精准屏蔽
 
-# ===============================
+🟡 新增问题：type: request + $done({ response }) 模式待验证
 
-DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
-DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
-DOMAIN,optimus-ads.amap.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
+- name: 高德地图_本地空响应拦截
+  type: request
+  inline: |
+    $done({
+      response: {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      }
+    });
 
-[Body Rewrite]
 
-# ===============================
+在 Surge 中，request 脚本可以通过 $done({ response: {...} }) 直接短路返回本地响应，这是其官方支持的行为。Egern 是否支持同一模式目前无官方文档明确记载，存在以下两种可能：
+	∙	✅ Egern 兼容了该 API → 脚本正常生效，这是最优方案
+	∙	❌ Egern 不支持该格式 → $done() 被忽略，请求照常发出，广告拦截完全失效
+建议实机验证：用 Network 日志确认这三条接口是否真的返回了本地 {}，还是依然访问了远端服务器。
+若验证不通过，最保险的回退方案是将这三条改回 type: response 内联脚本（仅在收到真实响应后由脚本覆盖 body），虽然无法节省流量，但兼容性有保证。
 
-# JQ 辅助清理（保留原版增强）
+✅ 其余均合规
 
-# ===============================
 
-http-response-jq ^https://m5.amap.com/ws/shield/search_business/process/marketingOperationStructured? ‘delpaths([[“data”,“commonMaterial”],[“data”,“tipsOperationLocation”],[“data”,“resourcePlacement”]])’
-http-response-jq ^https://m5.amap.com/ws/shield/search_poi/homepage? ‘delpaths([[“history_tags”]])’
-http-response-jq ^https://m5-zb.amap.com/ws/sharedtrip/taxi/order_detail_car_tips? ‘delpaths([[“data”,“carTips”,“data”,“popupInfo”]])’
 
-[Map Local]
+|节点                          |状态|
+|----------------------------|--|
+|`rules`                     |✅ |
+|`scriptings` JQ 辅助清理逻辑      |✅ |
+|`scriptings` 外链脚本           |✅ |
+|`requires_body: true` 使用正确  |✅ |
+|request 脚本不含 `requires_body`|✅ |
 
-# ===============================
+完整修正代码
+仅修正 MITM，type: request 部分保留原样等待实机验证：
 
-# Mock 空响应防占位（保留核心接口）
-
-# ===============================
-
-^https://m5.amap.com/ws/valueadded/alimama/splash_screen data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/aos/alimama/splash_screen data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page) data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/search/new_hotword data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/scene/recommend data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/valueadded/weather data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/search_poi/tips_adv data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5-zb.amap.com/ws/boss/order_web/\w{8}_information data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/dsp/profile/index/nodefaas data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/frogserver/aocs/updatable data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5.amap.com/ws/shield/search/nearbyrec_smart data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://m5-zb.amap.com/ws/promotion-web/resource data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-^https://sns.amap.com/ws/msgbox/pull data-type=text data=”{}” status-code=200 header=“Content-Type:application/json”
-
-[Script]
+name: "高德地图去广告【高级脚本版】"
+description: "极限净化·原生适配 Egern，已将 mock 转换为本地极速空响应脚本，兼容性拉满。"
+author: "AI / RuCu6 / ddgksf2013"
 
 # ===============================
-
-# 【高级脚本核心】ddgksf2013 amap.js（最强版，深度清理）
+# 1. 域名精准屏蔽
+# ===============================
+rules:
+  - domain: amap-aos-info-nogw.amap.com
+    policy: REJECT
+  - domain: free-aos-cdn-image.amap.com
+    policy: REJECT
+  - domain: optimus-ads.amap.com
+    policy: REJECT
+  - domain_suffix: v.smtcdns.com
+    policy: REJECT
 
 # ===============================
+# 2. 脚本动态净化 (核心修复区)
+# ===============================
+scriptings:
+  # --- 纯广告接口本地极速 Mock ---
+  # 注：$done({ response }) 在 request 脚本中短路返回为 Surge 官方行为，
+  # Egern 支持情况需实机验证（查看 Network 日志确认请求是否真正被拦截）。
+  - name: 高德地图_本地空响应拦截
+    match: "^https?://m5(-zb)?\\.amap\\.com/ws/(valueadded/weather|shield/search_poi/tips_adv|boss/order_web/\\w{8}_information)"
+    type: request
+    inline: |
+      $done({
+        response: {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        }
+      });
 
-# 开屏广告
+  # --- 完美替代原 JQ 的内联极速处理 ---
+  - name: 高德地图_JQ辅助清理
+    match: "^https?://m5(-zb)?\\.amap\\.com/ws/(shield/search_business/process/marketingOperationStructured|shield/search_poi/homepage|sharedtrip/taxi/order_detail_car_tips)"
+    type: response
+    requires_body: true
+    inline: |
+      let body = $response.body;
+      try {
+        let obj = JSON.parse(body);
+        let url = $request.url;
+        // 移除营销结构化数据
+        if (url.includes("marketingOperationStructured") && obj.data) {
+          delete obj.data.commonMaterial;
+          delete obj.data.tipsOperationLocation;
+          delete obj.data.resourcePlacement;
+        }
+        // 移除首页历史搜索标签推广
+        if (url.includes("search_poi/homepage")) {
+          delete obj.history_tags;
+        }
+        // 移除打车详情页弹窗广告
+        if (url.includes("order_detail_car_tips") && obj.data?.carTips?.data) {
+          delete obj.data.carTips.data.popupInfo;
+        }
+        body = JSON.stringify(obj);
+      } catch(e) {}
+      $done({ body });
 
-http-response ^https?://.*.amap.com/ws/valueadded/alimama/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_开屏
+  # --- ddgksf2013 高级净化脚本 ---
+  - name: 高德地图_核心高级脚本
+    match: "^https?://.*\\.amap\\.com/ws/(valueadded/alimama/splash_screen|aos/alimama/splash_screen|shield/dsp/profile/index/nodefaas|shield/search/new_hotword|shield/scene/recommend|faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page)|shield/search/nearbyrec_smart|promotion-web/resource|msgbox/pull|shield/frogserver/aocs/updatable)"
+    type: response
+    requires_body: true
+    url: https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js
 
-# 我的页面
-
-http-response ^https?://.*.amap.com/ws/shield/dsp/profile/index/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_我的页面
-
-# 搜索热词 + scene
-
-http-response ^https?://.*.amap.com/ws/shield/search/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_搜索
-http-response ^https?://.*.amap.com/ws/shield/scene/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_搜索
-
-# 路线规划 + 首页 + 附近 + 打车 + 消息
-
-http-response ^https?://.*.amap.com/ws/faas/amap-navigation/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_路线首页
-http-response ^https?://.*.amap.com/ws/shield/search/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_附近
-http-response ^https?://.*.amap.com/ws/promotion-web/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_打车
-http-response ^https?://.*.amap.com/ws/msgbox/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_消息
-http-response ^https?://.*.amap.com/ws/shield/frogserver/aocs/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_高级脚本_推广
-
-# （可选保留你原来的 kelee.js 作为备用，效果叠加）
-
-http-response ^https://m5.amap.com/ws/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee备用
-
-[MITM]
-hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, sns.amap.com, ai.amap.com, center.amap.com, amap-aos-info-nogw.amap.com, optimus-ads.amap.com
+# ===============================
+# 3. MITM 解密主机名
+# ===============================
+mitm:
+  hostnames:
+    - '*.amap.com'
