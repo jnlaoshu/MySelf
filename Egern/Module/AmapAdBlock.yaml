@@ -1,42 +1,77 @@
 #!name=高德地图去广告
-#!desc=纯净版高德地图广告清理模块，极限净化
-#!author=AI 修改， RuCu6, ddgksf2013
-#!category=AdBlock
-#!date=2026-02-12 21:40
+#!desc=2026.04.03 18:23 更新
+#!author=AI优化, RuCu6, ddgksf2013, 可莉🅥
 
 [Rule]
 # ===============================
-# 高德广告域名屏蔽
+# 域名拦截 (Domain Rules)
 # ===============================
-# 开屏广告、首页Banner、导航页、附近页、打车页等
+# 说明：拦截广告分发与统计域名。
+# 作用范围：开屏广告、首页 Banner、视频与图片物料分发等。
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,amap.com,REJECT,extended-matching,pre-matching
 
 [Body Rewrite]
 # ===============================
-# 高德关键接口 JQ 清理
+# 响应体精简 (Body Rewrite - JQ)
 # ===============================
-# 搜索页、打车页、导航页等关键广告数据
+# 说明：通过 JQ 语法移除 JSON 响应中的特定广告与推广节点。
+
+# 移除基础营销物料、运营位及搜索历史推广
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
+
+# 移除打车页面弹窗及乘车提示
 http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
+
+# 移除本地生活/商家搜索结果中的营销数据
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
+
+# 移除搜索主页的推广标签
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
 
 [Map Local]
 # ===============================
-# 高德 Mock 响应（防占位显示）
+# 本地响应重写 (Map Local)
 # ===============================
+# 说明：对相关接口直接返回 200 OK 及空对象 `{}`，以去除 UI 元素占位。
+
+# 全局泛接口拦截
 ^https:\/\/m5\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/oss\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sns\.amap\.com\/ws\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
+# 打车与本地生活接口
+^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# 搜索与个性化推荐接口
+^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# 导航卡片与首页附加资产接口
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(?:car-end|route-plan) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(?:main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# 附加功能接口（天气、消息中心等）
+^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
 [Script]
 # ===============================
-# 高德广告脚本处理
+# 脚本处理 (Scripting)
 # ===============================
-http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
-http-response ^https:\/\/m5-zb\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_全面广告清理
+# 说明：引入外部脚本，处理动态广告逻辑。
+# 来源：kelee.one
+http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_广告清理(m5)
+http-response ^https:\/\/m5-zb\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_广告清理(m5-zb)
 
 [MITM]
-# 高德 MITM 主机名
-hostname = %APPEND% *.amap.com
+# ===============================
+# 流量解密配置 (MITM Hostnames)
+# ===============================
+# 说明：解析以下域名的 HTTPS 流量，以确保上述重写规则与脚本生效。
+hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com
