@@ -1,10 +1,7 @@
 name: "高德地图去广告【高级脚本版】"
-description: "极限净化·原生适配 Egern，已将 mock 转换为本地极速空响应脚本，兼容性拉满。"
+description: "极限净化·原生适配 Egern，已修复 YAML 转义问题，极速无感去广告。"
 author: "AI / RuCu6 / ddgksf2013"
 
-# ===============================
-# 1. 域名精准屏蔽
-# ===============================
 rules:
   - domain: amap-aos-info-nogw.amap.com
     policy: REJECT
@@ -15,15 +12,11 @@ rules:
   - domain_suffix: v.smtcdns.com
     policy: REJECT
 
-# ===============================
-# 2. 脚本动态净化 (核心修复区)
-# ===============================
 scriptings:
-  # --- 纯广告接口本地极速 Mock ---
-  # 注：$done({ response }) 在 request 脚本中短路返回为 Surge 官方行为，
-  # Egern 支持情况需实机验证（查看 Network 日志确认请求是否真正被拦截）。
+  # --- 纯广告接口本地极速拦截 ---
+  # 注：$done({ response }) 短路返回为 Surge 官方行为，Egern 支持情况需实机验证。
   - name: 高德地图_本地空响应拦截
-    match: "^https?://m5(-zb)?\\.amap\\.com/ws/(valueadded/weather|shield/search_poi/tips_adv|boss/order_web/\\w{8}_information)"
+    match: '^https?://m5(-zb)?\.amap\.com/ws/(valueadded/weather|shield/search_poi/tips_adv|boss/order_web/\w{8}_information)'
     type: request
     inline: |
       $done({
@@ -34,9 +27,9 @@ scriptings:
         }
       });
 
-  # --- 完美替代原 JQ 的内联极速处理 ---
+  # --- 替代原 JQ 的内联极速处理 ---
   - name: 高德地图_JQ辅助清理
-    match: "^https?://m5(-zb)?\\.amap\\.com/ws/(shield/search_business/process/marketingOperationStructured|shield/search_poi/homepage|sharedtrip/taxi/order_detail_car_tips)"
+    match: '^https?://m5(-zb)?\.amap\.com/ws/(shield/search_business/process/marketingOperationStructured|shield/search_poi/homepage|sharedtrip/taxi/order_detail_car_tips)'
     type: response
     requires_body: true
     inline: |
@@ -64,14 +57,11 @@ scriptings:
 
   # --- ddgksf2013 高级净化脚本 ---
   - name: 高德地图_核心高级脚本
-    match: "^https?://.*\\.amap\\.com/ws/(valueadded/alimama/splash_screen|aos/alimama/splash_screen|shield/dsp/profile/index/nodefaas|shield/search/new_hotword|shield/scene/recommend|faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page)|shield/search/nearbyrec_smart|promotion-web/resource|msgbox/pull|shield/frogserver/aocs/updatable)"
+    match: '^https?://.*\.amap\.com/ws/(valueadded/alimama/splash_screen|aos/alimama/splash_screen|shield/dsp/profile/index/nodefaas|shield/search/new_hotword|shield/scene/recommend|faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page)|shield/search/nearbyrec_smart|promotion-web/resource|msgbox/pull|shield/frogserver/aocs/updatable)'
     type: response
     requires_body: true
     url: https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js
 
-# ===============================
-# 3. MITM 解密主机名
-# ===============================
 mitm:
   hostnames:
     - '*.amap.com'
