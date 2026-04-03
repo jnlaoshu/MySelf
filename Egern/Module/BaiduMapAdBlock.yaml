@@ -1,42 +1,57 @@
 #!name=百度地图去广告
-#!desc=融合社区最新精细化规则，基于 JS 核心剔除与精准 CDN 拦截的终极形态
+#!desc=2026.04.03 18:27 更新
 #!author=AI, RuCu6, ddgksf2013, fmz200, bai1zi
-#!date=2026.04.03 17:25
 
 [Rule]
-# > 拦截 HTTPDNS 防穿透 (非常重要，否则客户端会绕过代理直连下载广告)
+# ===============================
+# 域名拦截 (Domain Rules)
+# ===============================
+# 说明：拦截 HTTPDNS，防止客户端绕过代理直连下载广告资源。
 DOMAIN,httpdns.baidubce.com,REJECT
 
-https://ahrefs.com/writing-tools/paragraph-rewriter
-# > 纯废料接口与 CDN 静态广告精准拦截 (替代 Map Local，直接 reject 断流提速)
-# 纯广告运营与推荐弹窗
+# ===============================
+# URL 拒绝请求 (URL Reject)
+# ===============================
+# 说明：直接丢弃广告相关的请求，阻断静态广告加载。
+
+# 拦截运营活动与推荐弹窗接口
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) - reject
 
-# > 开屏广告 CDN 静态资源 - tam-ogel 广告 SDK 等 (完美吸收 fmz200/bai1zi 规则)
+# 拦截开屏广告及相关 SDK 的 CDN 静态资源
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ - reject
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) - reject
 ^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ - reject
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump - reject
 
 [Body Rewrite]
-# > 个人中心 - 移除各种推广卡片 (采用您精细化的扩展字段，完美覆盖)
+# ===============================
+# 响应体精简 (Body Rewrite - JQ)
+# ===============================
+# 说明：通过 JQ 语法移除 JSON 响应中的特定广告与推广节点。
+
+# 移除个人中心推广卡片
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
 
-# > 搜索栏 - 移除热搜词/推荐
+# 移除搜索栏热搜词与推荐
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
 
-# > 发现页/周边 - 移除富媒体内容
+# 移除发现页与周边的富媒体内容
 http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
 
-# > 语音包 - 移除推荐列表
+# 移除语音包推荐列表
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
 
 [Script]
-# > 核心开屏与架构广告 (保护地图基础架构)
-# 将您扩展的 phpui\d* 及 qt=(ads|splash|startpage|openad|hw) 变体全部合并，交由高级脚本进行 JSON 节点剥离
-# 这能彻底避免 "{}" 导致的本地缓存广告反噬！
+# ===============================
+# 脚本处理 (Scripting)
+# ===============================
+# 说明：通过脚本动态剥离核心开屏与架构广告节点，避免直接返回空对象导致的缓存异常。
+# 作用范围：开屏广告、交叉营销、消息中心等。
 百度地图_核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-# 补充了 bdstatic.com 家族域名，以支持 URL Rewrite 中精确到路径的解密拦截
+# ===============================
+# 流量解密配置 (MITM Hostnames)
+# ===============================
+# 说明：解析以下域名的 HTTPS 流量，以确保上述拦截与重写规则生效。
 hostname = %APPEND% newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
