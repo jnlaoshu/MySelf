@@ -1,10 +1,7 @@
 name: "百度地图去广告【高级脚本版】"
-description: "极限净化·高级脚本优化（ddgksf2013），已修复 Map Local 与 Script 冲突问题，原生适配 Egern 2.18.0+"
+description: "极限净化·高级脚本优化（ddgksf2013），已修复 YAML 转义问题，原生适配 Egern 2.18.0+"
 author: "AI / RuCu6 / ddgksf2013"
 
-# ===============================
-# 1. 域名精准屏蔽
-# ===============================
 rules:
   - domain: dss0.bdstatic.com
     policy: REJECT
@@ -15,15 +12,11 @@ rules:
   - ip_cidr: 180.76.76.200/32
     policy: REJECT
 
-# ===============================
-# 2. 脚本动态净化 (核心)
-# ===============================
 scriptings:
   # --- 纯广告接口本地极速拦截 ---
-  # 注：$done({ response }) 在 request 脚本中短路返回为 Surge 官方行为，
-  # Egern 支持情况需实机验证（查看 Network 日志确认请求是否真正被拦截）。
+  # 注：$done({ response }) 短路返回为 Surge 官方行为，Egern 支持情况需实机验证。
   - name: 百度地图_本地空响应拦截
-    match: "^https?://newclient\\.map\\.baidu\\.com/(contributor-bus/bounty/tips|skin/center/recommend)"
+    match: '^https?://newclient\.map\.baidu\.com/(contributor-bus/bounty/tips|skin/center/recommend)'
     type: request
     inline: |
       $done({
@@ -34,9 +27,9 @@ scriptings:
         }
       });
 
-  # --- 完美替代原 JQ 功能的内联脚本 ---
+  # --- 替代原 JQ 功能的内联脚本 ---
   - name: 百度地图_JQ辅助清理
-    match: "^https?://newclient\\.map\\.baidu\\.com/(usercenter/mine/page|living/nearby/hot-words|.*govui/rich_content|voice/pack/list)"
+    match: '^https?://newclient\.map\.baidu\.com/(usercenter/mine/page|living/nearby/hot-words|.*govui/rich_content|voice/pack/list)'
     type: response
     requires_body: true
     inline: |
@@ -61,14 +54,11 @@ scriptings:
 
   # --- ddgksf2013 高级净化脚本 (开屏/搜索/活动/消息) ---
   - name: 百度地图_核心高级脚本
-    match: "^https?://newclient\\.map\\.baidu\\.com/(client/phpui2/\\?qt=ads|client/phpui.*qt=hw|client/crossmarketing|client/usersystem/home/dynamic|client/msgcenter/pull|client/noticebar/get|operation/activity)"
+    match: '^https?://newclient\.map\.baidu\.com/(client/phpui2/\?qt=ads|client/phpui.*qt=hw|client/crossmarketing|client/usersystem/home/dynamic|client/msgcenter/pull|client/noticebar/get|operation/activity)'
     type: response
     requires_body: true
     url: https://ddgksf2013.top/scripts/bdmap.ads.js
 
-# ===============================
-# 3. MITM 解密主机名
-# ===============================
 mitm:
   hostnames:
     - '*.map.baidu.com'
