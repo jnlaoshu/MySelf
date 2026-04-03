@@ -1,34 +1,39 @@
 #!name=高德地图去广告
 #!desc=屏蔽开屏/搜索/首页/路线/附近/打车/消息推广
-#!author=ddgksf2013（Egern 适配：jnlaoshu）
+#!author=jnlaoshu
 #!category=AdBlock
 #!date=2026-04-03
 
 [Rule]
+# ── 广告域名直接拦截 ──
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT
 DOMAIN,free-aos-cdn-image.amap.com,REJECT
 DOMAIN,optimus-ads.amap.com,REJECT
 DOMAIN-SUFFIX,v.smtcdns.com,REJECT
 
-[Script]
+[Rewrite]
 # ── 开屏广告 ──
-http-response ^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_开屏
-# ── 我的页面 ──
-http-response ^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_我的页面
-# ── 搜索热词 ──
-http-response ^https?://.*\.amap\.com/ws/shield/search/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_搜索热词
-# ── 场景推荐 ──
-http-response ^https?://.*\.amap\.com/ws/shield/scene/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_场景推荐
-# ── 路线规划 & 首页 ──
-http-response ^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_路线首页
-# ── 附近推荐 ──
-http-response ^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_附近
+^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen - reject-dict
+^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable - reject-dict
+# ── 我的页面推广 ──
+^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas - reject-dict
+# ── 搜索热词 & 场景推荐 ──
+^https?://.*\.amap\.com/ws/shield/search/new_hotword - reject-dict
+^https?://.*\.amap\.com/ws/shield/scene/recommend - reject-dict
+^https?://.*\.amap\.com/ws/shield/search_poi/tips_adv - reject-dict
+^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart - reject-dict
+# ── 路线规划推广 ──
+^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page) - reject-dict
 # ── 打车推广 ──
-http-response ^https?://.*\.amap\.com/ws/promotion-web/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_打车
+^https?://.*\.amap\.com/ws/promotion-web/resource - reject-dict
+^https?://m5-zb\.amap\.com/ws/promotion-web/resource - reject-dict
 # ── 消息中心 ──
-http-response ^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_消息
-# ── FROG 推广位 ──
-http-response ^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_推广位
+^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull - reject-dict
+# ── 打车订单推广 ──
+^https?://m5-zb\.amap\.com/ws/boss/order_web/\w+_information - reject-dict
+^https?://m5-zb\.amap\.com/ws/sharedtrip/taxi/order_detail_car_tips - reject-dict
+# ── 天气推广 ──
+^https?://.*\.amap\.com/ws/valueadded/weather - reject-dict
 
 [MITM]
 hostname = *.amap.com, m5-zb.amap.com, sns.amap.com

@@ -1,31 +1,33 @@
 #!name=百度地图去广告
 #!desc=屏蔽开屏/搜索/营销/个人中心/消息/活动推广
-#!author=ddgksf2013（Egern 适配：jnlaoshu）
+#!author=jnlaoshu
 #!category=AdBlock
 #!date=2026-04-03
 
 [Rule]
-# 180.76.76.200 是 IP 地址，DOMAIN 规则不适用，如需拦截请改用：
+# ── 广告域名直接拦截 ──
+# 180.76.76.200 为 IP，如需拦截请启用下行：
 # IP-CIDR,180.76.76.200/32,REJECT
 DOMAIN,dss0.bdstatic.com,REJECT
 DOMAIN,tb1.bdstatic.com,REJECT
 DOMAIN,tb2.bdstatic.com,REJECT
 
-[Script]
+[Rewrite]
 # ── 开屏 & 首页推广 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_开屏
-# ── 搜索推广词 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_搜索
-# ── 跨界营销 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/crossmarketing script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_营销
-# ── 个人中心 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_个人中心
+^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads - reject-dict
+^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw - reject-dict
+# ── 跨界营销 & 活动 ──
+^https?://newclient\.map\.baidu\.com/client/crossmarketing - reject-dict
+^https?://newclient\.map\.baidu\.com/operation/activity - reject-dict
+# ── 个人中心推广 ──
+^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic - reject-dict
+^https?://newclient\.map\.baidu\.com/skin/center/recommend - reject-dict
 # ── 消息中心 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/msgcenter/pull script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_消息
+^https?://newclient\.map\.baidu\.com/client/msgcenter/pull - reject-dict
 # ── 首页小横条 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/noticebar/get script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_横条
-# ── 活动推广 ──
-http-response ^https?://newclient\.map\.baidu\.com/operation/activity script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_活动
+^https?://newclient\.map\.baidu\.com/client/noticebar/get - reject-dict
+# ── 悬赏推广 ──
+^https?://newclient\.map\.baidu\.com/contributor-bus/bounty/tips - reject-dict
 
 [MITM]
 hostname = newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, httpdns.baidubce.com

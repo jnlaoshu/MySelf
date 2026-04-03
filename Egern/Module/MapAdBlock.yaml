@@ -1,6 +1,6 @@
 #!name=地图去广告合集
 #!desc=高德 + 百度地图广告清理
-#!author=ddgksf2013（Egern 适配：jnlaoshu）
+#!author=jnlaoshu
 #!category=AdBlock
 #!date=2026-04-03
 
@@ -13,25 +13,32 @@ DOMAIN,dss0.bdstatic.com,REJECT
 DOMAIN,tb1.bdstatic.com,REJECT
 DOMAIN,tb2.bdstatic.com,REJECT
 
-[Script]
+[Rewrite]
 # ── 高德地图 ──
-http-response ^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_开屏
-http-response ^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_我的页面
-http-response ^https?://.*\.amap\.com/ws/shield/search/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_搜索热词
-http-response ^https?://.*\.amap\.com/ws/shield/scene/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_场景推荐
-http-response ^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_路线首页
-http-response ^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_附近
-http-response ^https?://.*\.amap\.com/ws/promotion-web/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_打车
-http-response ^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_消息
-http-response ^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_推广位
+^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen - reject-dict
+^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable - reject-dict
+^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas - reject-dict
+^https?://.*\.amap\.com/ws/shield/search/new_hotword - reject-dict
+^https?://.*\.amap\.com/ws/shield/scene/recommend - reject-dict
+^https?://.*\.amap\.com/ws/shield/search_poi/tips_adv - reject-dict
+^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart - reject-dict
+^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page) - reject-dict
+^https?://.*\.amap\.com/ws/promotion-web/resource - reject-dict
+^https?://m5-zb\.amap\.com/ws/promotion-web/resource - reject-dict
+^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull - reject-dict
+^https?://m5-zb\.amap\.com/ws/boss/order_web/\w+_information - reject-dict
+^https?://m5-zb\.amap\.com/ws/sharedtrip/taxi/order_detail_car_tips - reject-dict
+^https?://.*\.amap\.com/ws/valueadded/weather - reject-dict
 # ── 百度地图 ──
-http-response ^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_开屏
-http-response ^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_搜索
-http-response ^https?://newclient\.map\.baidu\.com/client/crossmarketing script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_营销
-http-response ^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_个人中心
-http-response ^https?://newclient\.map\.baidu\.com/client/msgcenter/pull script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_消息
-http-response ^https?://newclient\.map\.baidu\.com/client/noticebar/get script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_横条
-http-response ^https?://newclient\.map\.baidu\.com/operation/activity script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_活动
+^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads - reject-dict
+^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw - reject-dict
+^https?://newclient\.map\.baidu\.com/client/crossmarketing - reject-dict
+^https?://newclient\.map\.baidu\.com/operation/activity - reject-dict
+^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic - reject-dict
+^https?://newclient\.map\.baidu\.com/skin/center/recommend - reject-dict
+^https?://newclient\.map\.baidu\.com/client/msgcenter/pull - reject-dict
+^https?://newclient\.map\.baidu\.com/client/noticebar/get - reject-dict
+^https?://newclient\.map\.baidu\.com/contributor-bus/bounty/tips - reject-dict
 
 [MITM]
 hostname = *.amap.com, m5-zb.amap.com, sns.amap.com, newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, httpdns.baidubce.com
