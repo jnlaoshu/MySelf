@@ -82,7 +82,7 @@ http-response ^https?://.*.amap.com/ws/shield/frogserver/aocs/updatable script-p
 
 # （可选保留你原来的 kelee.js 作为备用，效果叠加）
 
-# http-response ^https://m5.amap.com/ws/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee备用
+http-response ^https://m5.amap.com/ws/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee备用
 
 [MITM]
 hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, sns.amap.com, ai.amap.com, center.amap.com, amap-aos-info-nogw.amap.com, optimus-ads.amap.com
