@@ -1,5 +1,5 @@
 name: "高德地图去广告【高级脚本版】"
-description: "极限净化·原生适配 Egern，已修复 YAML 转义问题，极速无感去广告。"
+description: "极限净化·原生适配 Egern，极速无感去广告。"
 author: "AI / RuCu6 / ddgksf2013"
 
 rules:
@@ -12,22 +12,11 @@ rules:
   - domain_suffix: v.smtcdns.com
     policy: REJECT
 
-scriptings:
-  # --- 纯广告接口本地极速拦截 ---
-  # 注：$done({ response }) 短路返回为 Surge 官方行为，Egern 支持情况需实机验证。
-  - name: 高德地图_本地空响应拦截
-    match: '^https?://m5(-zb)?\.amap\.com/ws/(valueadded/weather|shield/search_poi/tips_adv|boss/order_web/\w{8}_information)'
-    type: request
-    inline: |
-      $done({
-        response: {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-          body: "{}"
-        }
-      });
+url_rewrites:
+  - match: '^https?://m5(-zb)?\.amap\.com/ws/(valueadded/weather|shield/search_poi/tips_adv|boss/order_web/\w{8}_information)'
+    type: reject
 
-  # --- 替代原 JQ 的内联极速处理 ---
+scriptings:
   - name: 高德地图_JQ辅助清理
     match: '^https?://m5(-zb)?\.amap\.com/ws/(shield/search_business/process/marketingOperationStructured|shield/search_poi/homepage|sharedtrip/taxi/order_detail_car_tips)'
     type: response
@@ -37,17 +26,14 @@ scriptings:
       try {
         let obj = JSON.parse(body);
         let url = $request.url;
-        // 移除营销结构化数据
         if (url.includes("marketingOperationStructured") && obj.data) {
           delete obj.data.commonMaterial;
           delete obj.data.tipsOperationLocation;
           delete obj.data.resourcePlacement;
         }
-        // 移除首页历史搜索标签推广
         if (url.includes("search_poi/homepage")) {
           delete obj.history_tags;
         }
-        // 移除打车详情页弹窗广告
         if (url.includes("order_detail_car_tips") && obj.data?.carTips?.data) {
           delete obj.data.carTips.data.popupInfo;
         }
@@ -55,7 +41,6 @@ scriptings:
       } catch(e) {}
       $done({ body });
 
-  # --- ddgksf2013 高级净化脚本 ---
   - name: 高德地图_核心高级脚本
     match: '^https?://.*\.amap\.com/ws/(valueadded/alimama/splash_screen|aos/alimama/splash_screen|shield/dsp/profile/index/nodefaas|shield/search/new_hotword|shield/scene/recommend|faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page)|shield/search/nearbyrec_smart|promotion-web/resource|msgbox/pull|shield/frogserver/aocs/updatable)'
     type: response
