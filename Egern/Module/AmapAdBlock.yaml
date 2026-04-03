@@ -1,52 +1,34 @@
-#!name=高德地图去广告模块
-#!desc=高德地图广告清理（卸载重装生效）
-#!author=ddgksf2013/Rewrite
+#!name=高德地图去广告
+#!desc=屏蔽开屏/搜索/首页/路线/附近/打车/消息推广
+#!author=ddgksf2013（Egern 适配：jnlaoshu）
 #!category=AdBlock
-#!date=2026-04-02
-# 引用链接：
-# AmapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
+#!date=2026-04-03
 
-hostname = m5.amap.com, m5-zb.amap.com, center.amap.com, amap-aos-info-nogw.amap.com, ai.amap.com
+[Rule]
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT
+DOMAIN,free-aos-cdn-image.amap.com,REJECT
+DOMAIN,optimus-ads.amap.com,REJECT
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT
 
-host-suffix, optimus-ads.amap.com, direct
+[Script]
+# ── 开屏广告 ──
+http-response ^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_开屏
+# ── 我的页面 ──
+http-response ^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_我的页面
+# ── 搜索热词 ──
+http-response ^https?://.*\.amap\.com/ws/shield/search/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_搜索热词
+# ── 场景推荐 ──
+http-response ^https?://.*\.amap\.com/ws/shield/scene/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_场景推荐
+# ── 路线规划 & 首页 ──
+http-response ^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_路线首页
+# ── 附近推荐 ──
+http-response ^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_附近
+# ── 打车推广 ──
+http-response ^https?://.*\.amap\.com/ws/promotion-web/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_打车
+# ── 消息中心 ──
+http-response ^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_消息
+# ── FROG 推广位 ──
+http-response ^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_推广位
 
-
-# > 高德地图_开屏请求@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/aos\/alimama\/splash_screen url reject-200
-# > 高德地图_首页底部信息流@ddgksf2013
-^https?:\/\/.*\.amap\.com\/v\d\/ai_rec\/ url reject-dict
-# > 高德地图_amdc处理@ddgksf2013
-^http:\/\/amdc\.m\.taobao\.com url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amdc.js
-# > 高德地图_底部tab栏角标@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/message\/notice\/list url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_路线规划下方广告@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/card-service-route-plan\? url reject-dict
-# > 高德地图_首页右中广告@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/shield\/frogserver\/aocs\/updatable url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_附近页面@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/nearbyrec_smart url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_打车页面处理@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/promotion-web\/resource url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_Tip请求@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/boss\/order_web\/\w{8}_information url reject-200
-# > 高德地图_首页底部处理@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/faas\/amap-navigation\/main-page url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_通用广告请求@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution url reject
-# > 高德地图_开屏广告@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/valueadded\/alimama\/splash_screen url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_首页顶部推广@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/msgbox\/pull url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_我的页面@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/shield\/dsp\/profile\/index\/nodefaas url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_搜索框热词@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/shield\/search\/new_hotword url script-response-body https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js
-# > 高德地图_搜索框scene@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/shield\/scene\/recommend url reject-dict
-# > 高德地图_首页左上角gif@ddgksf2013
-^https?:\/\/.*\.amap\.com\/uploadimg\/\w+\.gif url reject-img
-# > 高德地图_左下天气@ddgksf2013
-^https?:\/\/.*\.amap\.com\/ws\/valueadded\/weather url reject-dict
-
-# kelee 补充脚本（兼容 Egern）
-http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee
+[MITM]
+hostname = *.amap.com, m5-zb.amap.com, sns.amap.com

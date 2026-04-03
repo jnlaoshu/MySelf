@@ -1,27 +1,37 @@
-#!name=地图去广告合集模块
-#!desc=高德+百度地图广告清理（卸载重装生效）
-#!author=ddgksf2013/Rewrite + ddgksf2013/Scripts
+#!name=地图去广告合集
+#!desc=高德 + 百度地图广告清理
+#!author=ddgksf2013（Egern 适配：jnlaoshu）
 #!category=AdBlock
-#!date=2026-04-02
-# 引用链接：
-# MapAdBlock.yaml: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+#!date=2026-04-03
 
 [Rule]
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT
 DOMAIN,free-aos-cdn-image.amap.com,REJECT
 DOMAIN,optimus-ads.amap.com,REJECT
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT
 DOMAIN,dss0.bdstatic.com,REJECT
 DOMAIN,tb1.bdstatic.com,REJECT
 DOMAIN,tb2.bdstatic.com,REJECT
-DOMAIN,180.76.76.200,REJECT
 
 [Script]
-# 高德地图高级脚本（ddgksf2013 官方最新）
-http-response ^https?:\/\/.*\.amap\.com\/ws\/.* script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/refs/heads/master/amap.js, requires-body=true, tag=高德_高级脚本
-# kelee 补充脚本（兼容 Egern）
-http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_kelee
-# 百度地图高级脚本（ddgksf2013 官方最新）
-http-response ^https?:\/\/(newclient\.map\.baidu\.com|dss0\.bdstatic\.com) script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_高级脚本
+# ── 高德地图 ──
+http-response ^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_开屏
+http-response ^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_我的页面
+http-response ^https?://.*\.amap\.com/ws/shield/search/new_hotword script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_搜索热词
+http-response ^https?://.*\.amap\.com/ws/shield/scene/recommend script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_场景推荐
+http-response ^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|main-page) script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_路线首页
+http-response ^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_附近
+http-response ^https?://.*\.amap\.com/ws/promotion-web/resource script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_打车
+http-response ^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_消息
+http-response ^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable script-path=https://raw.githubusercontent.com/ddgksf2013/Scripts/master/amap.js, requires-body=true, tag=高德_推广位
+# ── 百度地图 ──
+http-response ^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_开屏
+http-response ^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_搜索
+http-response ^https?://newclient\.map\.baidu\.com/client/crossmarketing script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_营销
+http-response ^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_个人中心
+http-response ^https?://newclient\.map\.baidu\.com/client/msgcenter/pull script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_消息
+http-response ^https?://newclient\.map\.baidu\.com/client/noticebar/get script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_横条
+http-response ^https?://newclient\.map\.baidu\.com/operation/activity script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度_活动
 
 [MITM]
-hostname = %APPEND% *.amap.com, *.map.baidu.com, m5.amap.com, m5-zb.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
+hostname = *.amap.com, m5-zb.amap.com, sns.amap.com, newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, httpdns.baidubce.com
