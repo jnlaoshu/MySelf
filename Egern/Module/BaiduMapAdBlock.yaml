@@ -3,7 +3,7 @@ description: "极限净化·高级脚本优化（ddgksf2013），已修复 Map L
 author: "AI / RuCu6 / ddgksf2013"
 
 # ===============================
-# 1. 域名精准屏蔽与静态资源拦截
+# 1. 域名精准屏蔽
 # ===============================
 rules:
   - domain: dss0.bdstatic.com
@@ -15,28 +15,25 @@ rules:
   - ip_cidr: 180.76.76.200/32
     policy: REJECT
 
-url_rewrites:
-  # 拦截静态广告图片/资源
-  - match: "^https?://dss0\\.bdstatic\\.com/-0U0bnSm1A5BphGlnYG/"
-    type: reject
-  - match: "^https?://dss0\\.bdstatic\\.com/.+/tam-ogel/.+\\.(jpg|mp4)"
-    type: reject
-  - match: "^https?://tb[12]\\.bdstatic\\.com/tb/(cms/ngmis|mobile/spb)"
-    type: reject
-  # 拦截非核心活动的打扰提示 (原 Map Local 遗留的安全拦截)
-  - match: "^https?://newclient\\.map\\.baidu\\.com/contributor-bus/bounty/tips"
-    type: mock
-    status_code: 200
-    body: "{}"
-  - match: "^https?://newclient\\.map\\.baidu\\.com/skin/center/recommend"
-    type: mock
-    status_code: 200
-    body: "{}"
-
 # ===============================
 # 2. 脚本动态净化 (核心)
 # ===============================
 scriptings:
+  # --- 纯广告接口本地极速拦截 ---
+  # 注：$done({ response }) 在 request 脚本中短路返回为 Surge 官方行为，
+  # Egern 支持情况需实机验证（查看 Network 日志确认请求是否真正被拦截）。
+  - name: 百度地图_本地空响应拦截
+    match: "^https?://newclient\\.map\\.baidu\\.com/(contributor-bus/bounty/tips|skin/center/recommend)"
+    type: request
+    inline: |
+      $done({
+        response: {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+          body: "{}"
+        }
+      });
+
   # --- 完美替代原 JQ 功能的内联脚本 ---
   - name: 百度地图_JQ辅助清理
     match: "^https?://newclient\\.map\\.baidu\\.com/(usercenter/mine/page|living/nearby/hot-words|.*govui/rich_content|voice/pack/list)"
@@ -49,7 +46,7 @@ scriptings:
         let url = $request.url;
         // 个人中心移除卡片
         if (url.includes("usercenter/mine/page") && obj.data) {
-          delete obj.data.sport_card; delete obj.data.gold; 
+          delete obj.data.sport_card; delete obj.data.gold;
           delete obj.data.gold_coin_card; delete obj.data.shop; delete obj.data.usersystem_b_banner;
         }
         // 搜索栏热搜
@@ -63,7 +60,6 @@ scriptings:
       $done({ body });
 
   # --- ddgksf2013 高级净化脚本 (开屏/搜索/活动/消息) ---
-  # 注意：这里移除了空 Mock，让真实数据流入脚本，由脚本剔除广告后返回，保证 App 稳定运行
   - name: 百度地图_核心高级脚本
     match: "^https?://newclient\\.map\\.baidu\\.com/(client/phpui2/\\?qt=ads|client/phpui.*qt=hw|client/crossmarketing|client/usersystem/home/dynamic|client/msgcenter/pull|client/noticebar/get|operation/activity)"
     type: response
@@ -75,10 +71,5 @@ scriptings:
 # ===============================
 mitm:
   hostnames:
-    - newclient.map.baidu.com
     - '*.map.baidu.com'
-    - dss0.bdstatic.com
-    - tb1.bdstatic.com
-    - tb2.bdstatic.com
-    - 180.76.76.200
     - httpdns.baidubce.com
