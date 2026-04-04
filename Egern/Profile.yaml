@@ -1,8 +1,7 @@
 # ==========================================
-# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
-# ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
+# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置（2.18.0 诊断版）
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.03 15:30
+# ⏱️ 更新时间: 2026.04.04 19:00
 # ==========================================
 
 # 基本配置
@@ -44,10 +43,6 @@ dns:
     - system
     - 223.5.5.5
     - 119.29.29.29
-  proxy_nameservers:                  # ← 新增：代理专用加密 DNS（直连，不走代理链）
-    - https://1.1.1.1/dns-query
-    - https://8.8.8.8/dns-query
-    - https://dns.google/dns-query
   upstreams:
     AliDNS:
       - h3://dns.alidns.com/dns-query
@@ -324,7 +319,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
   - select:
       name: Google
-      policies: [美国节点,自选策略]
+      policies: [美国节点, 自选策略]          # ← 已修复 typo
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
   - select:
@@ -360,17 +355,12 @@ policy_groups:
 
 # 路由规则
 rules:
-  # 国内核心短视频防误杀 (抖音)
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/DouYin/DouYin.list
       policy: DIRECT
-
-  # 广告拦截
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
-
-  # 局域网与系统直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
@@ -386,16 +376,12 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
       policy: DIRECT
-
-  # AI 服务
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
       policy: Bing
-
-  # 流媒体服务
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Disney/Disney.list
       policy: Disney
@@ -417,8 +403,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
       policy: YouTube
-
-  # 常用工具
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list
       policy: GitHub
@@ -440,8 +424,6 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list
       policy: WeChat
-
-  # 国内兜底
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/ChinaMax/ChinaMax.list
       policy: DIRECT
@@ -449,8 +431,6 @@ rules:
       match: CN
       policy: DIRECT
       no_resolve: true
-
-  # 全局兜底
   - default:
       policy: 自选策略
 
