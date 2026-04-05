@@ -2,13 +2,12 @@
  * ==========================================
  * 📌 岁时黄历 (Almanac) 小组件
  *
- * ✨ 【功能概览】
- * • 尺寸适配：支持 Small、Medium、Large 三种组件尺寸，区分紧凑列表与定宽多行列表排版。
- * • 节日计算：内置农历算法数组，支持计算法定节假日、民俗节日、国际节日、金融交割/行权日的倒计时。
- * • 时区基准：采用 UTC+8 固定时区进行绝对时间计算。
- * • 自定义配置：支持通过环境变量设置最多 6 个专属纪念日，支持修改清明节及春/秋假的起始日期。
- * • 排序与显示：支持按倒数天数及分类优先级进行排序，支持指定节日跨分类置顶。
- * • 状态响应：根据工作日、周末、节假日当天状态切换背景渐变色；当天节日提示于中大号标题栏显示，小号于分类行内显示。
+ * 【功能说明】
+ * • 尺寸支持：适配小号（农历信息全量）、中号（黄历基础布局）、大号（增加节气展示及换行处理）。
+ * • 农历引擎：本地计算干支、生肖、农历日期及二十四节气（修复了跨时区及当月首节气匹配偏移漏洞）。
+ * • 远程数据：请求 openApiData 获取宜忌、冲煞及运势评分，网络异常时支持本地容错降级。
+ * • 动态置顶：节气当天，将原右上角的“星座/当月周次”替换为“今日 节气名”，图标同步变更为节气标志。
+ * • 教学周显示：支持根据环境变量参数独立渲染学期进度，并兼容双模式。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
  * ⏱️ 更新时间: 2026.04.05 08:30
@@ -17,10 +16,11 @@
 
 export default async function(ctx) {
   // ── 环境变量 ──────────────────────────────────────────────────────────────
-  const envMode    = String(ctx.env?.ASTRO_OR_WEEK       ?? '').trim();
-  const SHOW_MODE  = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
-  const envShowTW  = String(ctx.env?.SHOW_TEACHING_WEEK  ?? 'true').trim().toLowerCase();
-  const envTWStart = String(ctx.env?.TEACHING_WEEK_START ?? '').trim();
+  const envMode         = String(ctx.env?.ASTRO_OR_WEEK              ?? '').trim();
+  const SHOW_MODE       = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
+  const envShowTW       = String(ctx.env?.SHOW_TEACHING_WEEK         ?? 'true').trim().toLowerCase();
+  const envShowTWInWeek = String(ctx.env?.SHOW_TEACHING_WEEK_IN_WEEK ?? 'true').trim().toLowerCase();
+  const envTWStart      = String(ctx.env?.TEACHING_WEEK_START        ?? '').trim();
 
   // ── 尺寸检测 ──────────────────────────────────────────────────────────────
   const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
@@ -56,15 +56,17 @@ export default async function(ctx) {
 
   // ── 教学周计算 ────────────────────────────────────────────────────────────
   let teachingWeekStr = "";
-  if (SHOW_MODE === 'astro' && envShowTW === 'true' && envTWStart) {
-    const tStart = new Date(envTWStart.replace(/-/g, '/'));
-    if (!isNaN(tStart.getTime())) {
-      const diffDays = Math.floor((new Date(Y, M - 1, D).getTime() - new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate()).getTime()) / 86400000);
-      teachingWeekStr = diffDays >= 0 ? `教学第${Math.floor(diffDays / 7) + 1}周` : "未开学";
+  if (envShowTW === 'true' && envTWStart) {
+    if (SHOW_MODE === 'astro' || envShowTWInWeek === 'true') {
+      const tStart = new Date(envTWStart.replace(/-/g, '/'));
+      if (!isNaN(tStart.getTime())) {
+        const diffDays = Math.floor((new Date(Y, M - 1, D).getTime() - new Date(tStart.getFullYear(), tStart.getMonth(), tStart.getDate()).getTime()) / 86400000);
+        teachingWeekStr = diffDays >= 0 ? `教学第${Math.floor(diffDays / 7) + 1}周` : "未开学";
+      }
     }
   }
 
-  // ── ISO 周次计算（新增 onlyYear 参数控制是否只返回当年周） ───────────────────────
+  // ── ISO 周次计算 ──────────────────────────────────────────────────────────
   const getWeekInfo = (dateObj, onlyYear = false) => {
     const d      = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -72,24 +74,23 @@ export default async function(ctx) {
     const yearStart  = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo     = Math.ceil((d.getTime() - yearStart.getTime()) / 86400000 / 7 + 1);
     
-    // 节气当天仅需当年周
     if (onlyYear) return `本年第${weekNo}周`;
     
-    // 常规模式返回完整周次
     const offsetDate = dateObj.getDate() + (new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getDay() || 7) - 1;
     return `本年第${weekNo}周 · 月第${Math.ceil(offsetDate / 7)}周`;
   };
 
-  // ── 农历引擎 ──────────────────────────────────────────────────────────────
+  // ── 农历引擎 (节气安全定位修正) ──────────────────────────────────────────
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
     termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
     getTerm(y, n) {
-      return new Date(
+      const t = new Date(
         (31556925974.7 * (y - 1900)) +
         [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n - 1] * 60000 +
         Date.UTC(1900, 0, 6, 2, 5)
-      ).getUTCDate();
+      );
+      return new Date(t.getTime() + 8 * 3600000).getUTCDate();
     },
     parse(y, m, d) {
       let offset = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
@@ -118,14 +119,18 @@ export default async function(ctx) {
       }
       if (offset < 0) { offset += temp; i--; }
       const lD      = offset + 1;
-      const tId     = m * 2 - (d < this.getTerm(y, m * 2 - 1) ? 2 : 1);
+      
+      const term1 = this.getTerm(y, m * 2 - 1);
+      const term2 = this.getTerm(y, m * 2);
+      const term  = (d === term1) ? this.termNames[m * 2 - 2] : (d === term2) ? this.termNames[m * 2 - 1] : "";
+      
       const gz      = "甲乙丙丁戊己庚辛壬癸"[(lYear - 4) % 10] + "子丑寅卯辰巳午未申酉戌亥"[(lYear - 4) % 12];
       const ani     = "鼠牛虎兔龙蛇马羊猴鸡狗猪"[(lYear - 4) % 12];
       const cnMonth = `${isLeap ? "闰" : ""}${"正二三四五六七八九十冬腊"[i - 1]}月`;
       const cnDay   = lD === 10 ? "初十" : lD === 20 ? "二十" : lD === 30 ? "三十"
         : ["初","十","廿","卅"][Math.floor(lD / 10)] + ["日","一","二","三","四","五","六","七","八","九","十"][lD % 10];
       const astro   = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m * 2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m - 1] ? 2 : 0), 2) + "座";
-      return { gz, ani, cn: `${cnMonth}${cnDay}`, term: this.getTerm(y, tId + 1) === d ? this.termNames[tId] : "", astro };
+      return { gz, ani, cn: `${cnMonth}${cnDay}`, term, astro };
     }
   };
 
@@ -194,26 +199,20 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  // ── 顶部角标通告逻辑（严格按照有无节气控制渲染） ──────────────────────────────────
-  // 1. 常规逻辑初始化（确保无节气时绝对原样输出）
+  // ── 顶部角标通告逻辑（条件拦截置顶） ────────────────────────────────────
   let topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   let topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // 2. 仅在有节气时覆写展示逻辑
   if (obj.term) { 
-    // 修改：将节气当天的图标替换为与节气分类一致的 leaf.arrow.circlepath
     topIcon = 'leaf.arrow.circlepath'; 
     if (SHOW_MODE === 'week') {
-      // 周次模式：今日节气名 + 仅保留当年周
       topText = `今日 ${obj.term} · ${getWeekInfo(now, true)}`;
     } else {
-      // 星座模式：替换星座为今日节气名（教学周仍由 UI 自然拼接到前方）
       topText = `今日 ${obj.term}`;
     }
   }
 
-  // ── 渲染核心逻辑合并去重 ────────────────────────────────────────────────
-  // 统一文本折行引擎
+  // ── 渲染核心逻辑合并 ──────────────────────────────────────────────────
   const splitTextToLines = (str, maxW) => {
     if (!str) return [];
     let lines = [], line = "", w = 0;
@@ -232,7 +231,6 @@ export default async function(ctx) {
     return lines;
   };
 
-  // 统一行级渲染工厂
   const createRowFactory = (config) => (raw, icon, color, label, contentColor = C.sub) => {
     if (!raw) return [];
     const lines = splitTextToLines(raw, config.maxW);
@@ -261,7 +259,6 @@ export default async function(ctx) {
             mkText(`周${WEEK}`, 12, "heavy", C.muted)
           ]},
           mkSpacer(),
-          // 右上角角标限制，防止侵占过多行内空间
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
              mkIcon(topIcon, C.gold, 11),
              mkText(topText, 10, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
