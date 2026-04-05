@@ -1,44 +1,84 @@
-#!name=地图去广告合集
-#!desc=高德 + 百度地图广告清理
-#!author=jnlaoshu
-#!category=AdBlock
-#!date=2026-04-03
+#!name=地图三合一去广告（高德 · 百度 · 腾讯）
+#!desc=2026.04.05 12:30 更新 | 整合高德、百度、腾讯地图去广告规则
+#!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
+#!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+
 
 [Rule]
-DOMAIN,amap-aos-info-nogw.amap.com,REJECT
-DOMAIN,free-aos-cdn-image.amap.com,REJECT
-DOMAIN,optimus-ads.amap.com,REJECT
-DOMAIN-SUFFIX,v.smtcdns.com,REJECT
-DOMAIN,dss0.bdstatic.com,REJECT
-DOMAIN,tb1.bdstatic.com,REJECT
-DOMAIN,tb2.bdstatic.com,REJECT
+
+# ── 高德地图 ──
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
+DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
+
+# ── 百度地图 ──
+DOMAIN,httpdns.baidubce.com,REJECT
+
+# ── 腾讯地图 ──
+DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 
 [Rewrite]
-# ── 高德地图 ──
-^https?://.*\.amap\.com/ws/(valueadded|aos)/alimama/splash_screen - reject-dict
-^https?://.*\.amap\.com/ws/shield/frogserver/aocs/updatable - reject-dict
-^https?://.*\.amap\.com/ws/shield/dsp/profile/index/nodefaas - reject-dict
-^https?://.*\.amap\.com/ws/shield/search/new_hotword - reject-dict
-^https?://.*\.amap\.com/ws/shield/scene/recommend - reject-dict
-^https?://.*\.amap\.com/ws/shield/search_poi/tips_adv - reject-dict
-^https?://.*\.amap\.com/ws/shield/search/nearbyrec_smart - reject-dict
-^https?://.*\.amap\.com/ws/faas/amap-navigation/(card-service-route-plan|card-service-car-end|main-page) - reject-dict
-^https?://.*\.amap\.com/ws/promotion-web/resource - reject-dict
-^https?://m5-zb\.amap\.com/ws/promotion-web/resource - reject-dict
-^https?://(.*\.amap\.com|sns\.amap\.com)/ws/msgbox/pull - reject-dict
-^https?://m5-zb\.amap\.com/ws/boss/order_web/\w+_information - reject-dict
-^https?://m5-zb\.amap\.com/ws/sharedtrip/taxi/order_detail_car_tips - reject-dict
-^https?://.*\.amap\.com/ws/valueadded/weather - reject-dict
+
 # ── 百度地图 ──
-^https?://newclient\.map\.baidu\.com/client/phpui2/\?qt=ads - reject-dict
-^https?://newclient\.map\.baidu\.com/client/phpui.*qt=hw - reject-dict
-^https?://newclient\.map\.baidu\.com/client/crossmarketing - reject-dict
-^https?://newclient\.map\.baidu\.com/operation/activity - reject-dict
-^https?://newclient\.map\.baidu\.com/client/usersystem/home/dynamic - reject-dict
-^https?://newclient\.map\.baidu\.com/skin/center/recommend - reject-dict
-^https?://newclient\.map\.baidu\.com/client/msgcenter/pull - reject-dict
-^https?://newclient\.map\.baidu\.com/client/noticebar/get - reject-dict
-^https?://newclient\.map\.baidu\.com/contributor-bus/bounty/tips - reject-dict
+^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) reject
+^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject
+^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) reject
+^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ reject
+^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump reject
+
+# ── 腾讯地图 ──
+^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ reject
+^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:ad|recommend|promotion) reject
+^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? reject
+
+[Body Rewrite]
+
+# ── 高德地图 ──
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
+http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
+http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
+
+# ── 百度地图 ──
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
+http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
+
+# ── 腾讯地图 ──
+http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
+http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
+
+[Map Local]
+
+# ── 高德地图 ──
+# 注：已移除泛解析拦截（m5/oss/sns .amap.com/ws/.*），交由 Script 精准处理
+^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(?:car-end|route-plan) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(?:main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# ── 腾讯地图 ──
+^https:\/\/sv\.map\.qq\.com\/txmap\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+[Script]
+
+# ── 高德地图 ──
+http-response ^https:\/\/m5\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_广告清理(m5)
+http-response ^https:\/\/m5-zb\.amap\.com\/ws\/.* script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, tag=高德_广告清理(m5-zb)
+
+# ── 百度地图 ──
+http-response ^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity) script-path=https://ddgksf2013.top/scripts/bdmap.ads.js, requires-body=true, tag=百度地图_核心净化
 
 [MITM]
-hostname = *.amap.com, m5-zb.amap.com, sns.amap.com, newclient.map.baidu.com, *.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, httpdns.baidubce.com
+hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
