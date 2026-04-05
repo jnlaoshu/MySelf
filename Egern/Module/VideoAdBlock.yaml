@@ -1,10 +1,10 @@
 #!name=流媒体去广告
-#!desc=2026.04.05 | 净化爱奇艺、优酷、腾讯视频、芒果TV
-#!author=RuCu6, ddgksf2013
+#!desc=2026.04.05 | 净化爱奇艺、优酷、腾讯视频、芒果TV。
+#!author=fmz200,ddgksf2013
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
 
 [Rule]
-# 腾讯视频
+# ── 腾讯视频 ──
 DOMAIN,adsmind.gdtimg.com,REJECT
 DOMAIN,tmead.y.qq.com,REJECT
 DOMAIN,btrace.qq.com,REJECT
@@ -12,52 +12,52 @@ DOMAIN,btrace.video.qq.com,REJECT
 DOMAIN,advideo.qq.com,REJECT
 DOMAIN,ad.qq.com,REJECT
 
-# 爱奇艺
+# ── 爱奇艺 ──
 DOMAIN,t7z.cupid.iqiyi.com,REJECT
 DOMAIN,t7z.cupid.ptqy.gitv.tv,REJECT
 DOMAIN,msg.iqiyi.com,REJECT
 DOMAIN,cupid.iqiyi.com,REJECT
 DOMAIN,ad.iqiyi.com,REJECT
 
-# 优酷视频
+# ── 优酷视频 ──
 DOMAIN,ad.m.youku.com,REJECT
 DOMAIN,val.youku.com,REJECT
 DOMAIN,lstat.youku.com,REJECT
 DOMAIN,ykad.youku.com,REJECT
 
-# 芒果 TV
+# ── 芒果 TV ──
 DOMAIN,da.mgtv.com,REJECT
 DOMAIN,x-da.mgtv.com,REJECT
 DOMAIN,ad.mgtv.com,REJECT
 
 [Map Local]
-# 腾讯视频
+# ── 腾讯视频 ──
 ^https?:\/\/livew\.l\.qq\.com\/livemsg\? data-type=text data="{}" status-code=200
 ^https?:\/\/ad\.qq\.com\/.* data-type=text data="{}" status-code=200
 
-# 爱奇艺
+# ── 爱奇艺 ──
 ^https?:\/\/ifacelog\.iqiyi\.com\/.* data-type=text data="{}" status-code=200
 ^https?:\/\/dash-api\.iqiyi\.com\/mac\/api\/ad\/ data-type=text data="{}" status-code=200
 ^https?:\/\/cupid\.iqiyi\.com\/.* data-type=text data="{}" status-code=200
 
-# 优酷视频
+# ── 优酷视频 ──
 ^https?:\/\/vali\.cp31\.ott\.cibntv\.net\/.* data-type=text data="{}" status-code=200
 ^https?:\/\/ykad-data\.youku\.com\/.* data-type=text data="{}" status-code=200
 ^https?:\/\/ad\.m\.youku\.com\/.* data-type=text data="{}" status-code=200
 
-# 芒果 TV
+# ── 芒果 TV ──
 ^https?:\/\/app\.mgtv\.com\/v1\/splash\/.* data-type=text data="{}" status-code=200
 ^https?:\/\/ad\.mgtv\.com\/.* data-type=text data="{}" status-code=200
 
 [Script]
-# 腾讯视频
-腾讯视频_核心净化 = type=http-response, pattern=^https?:\/\/vd\.l\.qq\.com\/proxyhttp, requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/tencentvideo.js
+# ── 腾讯视频 (采用 fmz200 稳定镜像备份) ──
+腾讯视频_核心净化 = type=http-response, pattern=^https?:\/\/vd\.l\.qq\.com\/proxyhttp, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/tencentvideo.js
 
-# 爱奇艺
-爱奇艺_核心净化 = type=http-response, pattern=^https?:\/\/(cupid|ad|ifacelog)\.iqiyi\.com\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/iqiyi.js
+# ── 爱奇艺 (采用 fmz200 稳定镜像备份) ──
+爱奇艺_核心净化 = type=http-response, pattern=^https?:\/\/(cupid|ad|ifacelog)\.iqiyi\.com\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/iqiyi.js
 
-# 优酷视频
-优酷_核心净化 = type=http-response, pattern=^https?:\/\/(ykad|ad\.m|val)\.youku\.com\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/youku.js
+# ── 优酷视频 (采用 fmz200 稳定镜像备份) ──
+优酷_核心净化 = type=http-response, pattern=^https?:\/\/(ykad|ad\.m|val)\.youku\.com\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/youku.js
 
 [MITM]
 hostname = *.qq.com, *.iqiyi.com, *.youku.com, *.mgtv.com
