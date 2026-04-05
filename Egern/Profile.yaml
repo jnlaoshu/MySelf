@@ -1,7 +1,8 @@
 # ==========================================
-# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置（2.18.0 诊断版）
+# 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
+# ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.04 19:00
+# ⏱️ 更新时间: 2026.04.05 15:00
 # ==========================================
 
 # 基本配置
@@ -319,7 +320,7 @@ policy_groups:
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
   - select:
       name: Google
-      policies: [美国节点, 自选策略]          # ← 已修复 typo
+      policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
   - select:
@@ -355,6 +356,12 @@ policy_groups:
 
 # 路由规则
 rules:
+  # ── 核心底层兜底 ──
+  # 拦截 QUIC 协议，强制大厂 App (如百度、腾讯) 回退 TCP 以便 MITM 解密去广告
+  - protocol:
+      match: quic
+      policy: REJECT
+
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/DouYin/DouYin.list
       policy: DIRECT
@@ -468,15 +475,15 @@ modules:
   - name: 雪球去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
     enabled: true
-  - name: 高德地图去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/AmapAdBlock.yaml
+  - name: 综合电商去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
     enabled: true
-  - name: 百度地图去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/BaiduMapAdBlock.yaml
+  - name: 地图三合一去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+    enabled: true
+  - name: 差旅出行去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
     enabled: true
   - name: BiliBili去广告
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
-    enabled: true
-  - name: 综合电商去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
     enabled: true
