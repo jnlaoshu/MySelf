@@ -3,20 +3,15 @@
  * 📌 岁时黄历 (Almanac) 小组件
  *
  * ✨ 【功能概览】
- * • 三尺寸自适应布局：
- * - 小号：日历风，农历信息全量展示(含生肖与时辰)，紧凑美观。
- * - 中号：经典黄历风，保留原生原版经典布局结构与缩进。
- * - 大号：对标倒计时排版，节气展示扩充至 6 个，统一行距逐行铺满自动换行。
- * • 农历引擎：干支、生肖、农历日期、二十四节气，全部本地计算。
- * • 宜忌数据：远程 API 获取，多字段 key 兼容，断网自动降级。
- *
- * 🔧 【环境变量】
- * ASTRO_OR_WEEK         — 右上角显示「星座」或「周次」(默认: 星座)
- * SHOW_TEACHING_WEEK    — 是否显示教学周 (默认: true)
- * TEACHING_WEEK_START   — 教学周起始日期，格式 YYYY-MM-DD
+ * • 尺寸适配：支持 Small、Medium、Large 三种组件尺寸，区分紧凑列表与定宽多行列表排版。
+ * • 节日计算：内置农历算法数组，支持计算法定节假日、民俗节日、国际节日、金融交割/行权日的倒计时。
+ * • 时区基准：采用 UTC+8 固定时区进行绝对时间计算。
+ * • 自定义配置：支持通过环境变量设置最多 6 个专属纪念日，支持修改清明节及春/秋假的起始日期。
+ * • 排序与显示：支持按倒数天数及分类优先级进行排序，支持指定节日跨分类置顶。
+ * • 状态响应：根据工作日、周末、节假日当天状态切换背景渐变色；当天节日提示于中大号标题栏显示，小号于分类行内显示。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.03.30 10:00
+ * ⏱️ 更新时间: 2026.04.05 08:30
  * ==========================================
  */
 
@@ -69,13 +64,18 @@ export default async function(ctx) {
     }
   }
 
-  // ── ISO 周次计算 ──────────────────────────────────────────────────────────
-  const getWeekInfo = (dateObj) => {
+  // ── ISO 周次计算（新增 onlyYear 参数控制是否只返回当年周） ───────────────────────
+  const getWeekInfo = (dateObj, onlyYear = false) => {
     const d      = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart  = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo     = Math.ceil((d.getTime() - yearStart.getTime()) / 86400000 / 7 + 1);
+    
+    // 节气当天仅需当年周
+    if (onlyYear) return `本年第${weekNo}周`;
+    
+    // 常规模式返回完整周次
     const offsetDate = dateObj.getDate() + (new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getDay() || 7) - 1;
     return `本年第${weekNo}周 · 月第${Math.ceil(offsetDate / 7)}周`;
   };
@@ -194,8 +194,23 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
-  const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
+  // ── 顶部角标通告逻辑（严格按照有无节气控制渲染） ──────────────────────────────────
+  // 1. 常规逻辑初始化（确保无节气时绝对原样输出）
+  let topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
+  let topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
+
+  // 2. 仅在有节气时覆写展示逻辑
+  if (obj.term) { 
+    // 修改：将节气当天的图标替换为与节气分类一致的 leaf.arrow.circlepath
+    topIcon = 'leaf.arrow.circlepath'; 
+    if (SHOW_MODE === 'week') {
+      // 周次模式：今日节气名 + 仅保留当年周
+      topText = `今日 ${obj.term} · ${getWeekInfo(now, true)}`;
+    } else {
+      // 星座模式：替换星座为今日节气名（教学周仍由 UI 自然拼接到前方）
+      topText = `今日 ${obj.term}`;
+    }
+  }
 
   // ── 渲染核心逻辑合并去重 ────────────────────────────────────────────────
   // 统一文本折行引擎
