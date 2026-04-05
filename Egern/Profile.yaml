@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.05 17:55
+# ⏱️ 更新时间: 2026.04.05 21:00
 # ==========================================
 
 # 基本配置
@@ -255,7 +255,7 @@ policy_groups:
       filter: >-
         (?xi) ^ (?! .* (?:
           🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
-          🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
+          🇯抛|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
           🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
           🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
           🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
@@ -484,6 +484,12 @@ modules:
     enabled: true
   - name: 差旅出行去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
+    enabled: true
+  - name: 音乐流媒体去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
+    enabled: true
+  - name: 视频流媒体去广告
+    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
     enabled: true
   - name: BiliBili去广告
     url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
