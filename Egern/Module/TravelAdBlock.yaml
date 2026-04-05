@@ -1,6 +1,6 @@
 #!name=差旅出行去广告
-#!desc=2026.04.06 | 滴滴出行、12306、携程、哈啰
-#!author=AI, ddgksf2013
+#!desc=2026.04.06 | 深度净化滴滴出行、12306、携程、哈啰
+#!author=AI优化, RuCu6 (fmz200 Backup)
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
 
 [Rule]
@@ -18,23 +18,6 @@ DOMAIN,ad.ctrip.com,REJECT
 # ── 哈啰出行 ──
 DOMAIN,ad.hellobike.com,REJECT
 
-[Rewrite]
-# ── 哈啰出行静态广告拦截 ──
-^https?:\/\/image\.hellobike\.com\/images\/ad_.* reject
-
-# ── 滴滴出行 (JQ 响应体精简) ──
-http-response-jq ^https?:\/\/api\.didiglobal\.com\/gulfstream\/passenger\/v2\/core\/experience 'del(.data.cards[]? | select(.type == "operation" or .type == "marketing" or .type == "banner"))'
-
-# ── 铁路 12306 (JQ 响应体精简) ──
-http-response-jq ^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm 'del(.materialsList, .advertParam, .appDynamicParam)'
-
-# ── 携程旅行 (JQ 响应体精简) ──
-http-response-jq ^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/16709\/json\/getHomePageData 'del(.data.PromotionList, .data.BannerList, .data.FloatWindow)'
-
-# ── 哈啰出行 (JQ 响应体精简) ──
-http-response-jq ^https?:\/\/api\.hellobike\.com\/api\.boss\.boss\.AppHomeBoss\/getHomeBoss 'if .data and .data.homeCardVos then .data.homeCardVos |= map(select(.cardType != "marketing" and .cardType != "operation" and .cardType != "banner")) else . end'
-http-response-jq ^https?:\/\/api\.hellobike\.com\/api\.vehicle\.bike\.bikeHome\/getConfig 'del(.data.banner, .data.floatLayer, .data.popWindow)'
-
 [Map Local]
 # ── 原 reject-dict 转换为 Egern 原生强 Mock (防红字报错) ──
 
@@ -51,6 +34,23 @@ http-response-jq ^https?:\/\/api\.hellobike\.com\/api\.vehicle\.bike\.bikeHome\/
 # ── 哈啰出行 ──
 ^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd data-type=text data="{}" status-code=200
 ^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList data-type=text data="{}" status-code=200
+
+[Rewrite]
+# ── 哈啰出行后台静态广告拦截 ──
+^https?:\/\/image\.hellobike\.com\/images\/ad_.* reject
+
+[Script]
+# ── 滴滴出行 (采用 fmz200 稳定镜像备份) ──
+滴滴_核心净化 = type=http-response, pattern=^https?:\/\/api\.didiglobal\.com\/gulfstream\/(passenger\/v2\/(app\/launch|core\/experience)|passport\/v2\/auth\/config), requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/didi.js
+
+# ── 铁路 12306 (采用 fmz200 稳定镜像备份) ──
+12306_核心净化 = type=http-response, pattern=^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/12306.js
+
+# ── 携程旅行 (采用 fmz200 稳定镜像备份) ──
+携程_核心净化 = type=http-response, pattern=^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(11898\/json\/HomePageData|16709\/json\/getHomePageData|14446\/json\/getSplashConfig), requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/ctrip.js
+
+# ── 哈啰出行 (采用 fmz200 稳定镜像备份) ──
+哈啰_核心净化 = type=http-response, pattern=^https?:\/\/api\.hellobike\.com\/api\.boss\.boss\.AppHomeBoss\/getHomeBoss, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/hello.js
 
 [MITM]
 hostname = api.didiglobal.com, gts.diditaxi.com.cn, mobile.12306.cn, ad.12306.cn, api.hellobike.com, m.ctrip.com
