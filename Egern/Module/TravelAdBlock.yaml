@@ -1,93 +1,56 @@
-#!name=差旅出行去广告（滴滴 · 12306 · 携程 · 哈啰）
-#!desc=2026.04.06 更新 | 深度净化滴滴出行、铁路12306、携程旅行、哈啰出行的开屏、弹窗及推广模块。
-#!author=AI优化, RuCu6, ddgksf2013
+#!name=差旅出行去广告
+#!desc=2026.04.06 | 滴滴出行、12306、携程、哈啰
+#!author=AI, ddgksf2013
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
 
-# ══════════════════════════════════════════
-# [Rule] 域名拦截 (DNS 级阻断)
-# ══════════════════════════════════════════
 [Rule]
-
 # ── 滴滴出行 ──
-DOMAIN,gts.diditaxi.com.cn,REJECT,extended-matching,pre-matching
-DOMAIN,xflow.didistatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,adx.xiaojukeji.com,REJECT,extended-matching,pre-matching
+DOMAIN,gts.diditaxi.com.cn,REJECT
+DOMAIN,xflow.didistatic.com,REJECT
+DOMAIN,adx.xiaojukeji.com,REJECT
 
 # ── 铁路 12306 ──
-DOMAIN,ad.12306.cn,REJECT,extended-matching,pre-matching
+DOMAIN,ad.12306.cn,REJECT
 
 # ── 携程旅行 ──
-DOMAIN,ad.ctrip.com,REJECT,extended-matching,pre-matching
+DOMAIN,ad.ctrip.com,REJECT
 
 # ── 哈啰出行 ──
-DOMAIN,ad.hellobike.com,REJECT,extended-matching,pre-matching
+DOMAIN,ad.hellobike.com,REJECT
 
-# ══════════════════════════════════════════
-# [Rewrite] URL 拒绝请求 (伪装放行与静态断流)
-# ══════════════════════════════════════════
 [Rewrite]
-
-# ── 滴滴出行 ──
-# 开屏与弹窗接口返回空字典，防止触发网络异常提示
-^https?:\/\/api\.didiglobal\.com\/gulfstream\/splash\/v1\/ad reject-dict
-^https?:\/\/api\.didiglobal\.com\/gulfstream\/passenger\/v2\/app\/launch reject-dict
-
-# ── 铁路 12306 ──
-# 拦截开屏广告拉取
-^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm\?operation=appAdList reject-dict
-
-# ── 携程旅行 ──
-# 精准剥离首页浮窗、开屏图及广告配置
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(16189\/json\/searchAppFloatWindow|14446\/json\/getSplashConfig) reject-dict
-
-# ── 哈啰出行 ──
-# 活动推广与全屏弹窗屏蔽
-^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd reject-dict
-^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList reject-dict
-# 拦截后台加载的活动静态图
+# ── 哈啰出行静态广告拦截 ──
 ^https?:\/\/image\.hellobike\.com\/images\/ad_.* reject
 
-# ══════════════════════════════════════════
-# [Body Rewrite] 响应体精简（JQ 静态前置兜底）
-# ══════════════════════════════════════════
-[Body Rewrite]
-
-# ── 滴滴出行 ──
-# 剔除首页底栏及各频道业务冗余（如货运、金融等营销位）
+# ── 滴滴出行 (JQ 响应体精简) ──
 http-response-jq ^https?:\/\/api\.didiglobal\.com\/gulfstream\/passenger\/v2\/core\/experience 'del(.data.cards[]? | select(.type == "operation" or .type == "marketing" or .type == "banner"))'
 
-# ── 铁路 12306 ──
-# 拔除首页营销展位、商业动态推广节点
+# ── 铁路 12306 (JQ 响应体精简) ──
 http-response-jq ^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm 'del(.materialsList, .advertParam, .appDynamicParam)'
 
-# ── 携程旅行 ──
-# 拔除首页滚动 Banner 及各类促销横幅
+# ── 携程旅行 (JQ 响应体精简) ──
 http-response-jq ^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/16709\/json\/getHomePageData 'del(.data.PromotionList, .data.BannerList, .data.FloatWindow)'
 
-# ── 哈啰出行 ──
-# 剔除首页营销卡片、横幅及浮动红包
+# ── 哈啰出行 (JQ 响应体精简) ──
 http-response-jq ^https?:\/\/api\.hellobike\.com\/api\.boss\.boss\.AppHomeBoss\/getHomeBoss 'if .data and .data.homeCardVos then .data.homeCardVos |= map(select(.cardType != "marketing" and .cardType != "operation" and .cardType != "banner")) else . end'
 http-response-jq ^https?:\/\/api\.hellobike\.com\/api\.vehicle\.bike\.bikeHome\/getConfig 'del(.data.banner, .data.floatLayer, .data.popWindow)'
 
-# ══════════════════════════════════════════
-# [Script] 脚本处理（远程脚本动态终极净化）
-# ══════════════════════════════════════════
-[Script]
+[Map Local]
+# ── 原 reject-dict 转换为 Egern 原生强 Mock (防红字报错) ──
 
 # ── 滴滴出行 ──
-滴滴_核心净化 = type=http-response, pattern=^https?:\/\/api\.didiglobal\.com\/gulfstream\/(passenger\/v2\/(app\/launch|core\/experience)|passport\/v2\/auth\/config), requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/didi.js
+^https?:\/\/api\.didiglobal\.com\/gulfstream\/splash\/v1\/ad data-type=text data="{}" status-code=200
+^https?:\/\/api\.didiglobal\.com\/gulfstream\/passenger\/v2\/app\/launch data-type=text data="{}" status-code=200
 
 # ── 铁路 12306 ──
-12306_核心净化 = type=http-response, pattern=^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm, requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/12306.js
+^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm\?operation=appAdList data-type=text data="{}" status-code=200
 
 # ── 携程旅行 ──
-携程_核心净化 = type=http-response, pattern=^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(11898\/json\/HomePageData|16709\/json\/getHomePageData|14446\/json\/getSplashConfig), requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/ctrip.js
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(16189\/json\/searchAppFloatWindow|14446\/json\/getSplashConfig) data-type=text data="{}" status-code=200
 
 # ── 哈啰出行 ──
-哈啰_核心净化 = type=http-response, pattern=^https?:\/\/api\.hellobike\.com\/api\.boss\.boss\.AppHomeBoss\/getHomeBoss, requires-body=true, script-path=https://raw.githubusercontent.com/RuCu6/QuanX/main/Scripts/hello.js
+^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd data-type=text data="{}" status-code=200
+^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList data-type=text data="{}" status-code=200
 
-# ══════════════════════════════════════════
-# [MITM] 流量解密配置
-# ══════════════════════════════════════════
 [MITM]
-hostname = %APPEND% api.didiglobal.com, gts.diditaxi.com.cn, mobile.12306.cn, ad.12306.cn, api.hellobike.com, m.ctrip.com
+hostname = api.didiglobal.com, gts.diditaxi.com.cn, mobile.12306.cn, ad.12306.cn, api.hellobike.com, m.ctrip.com
