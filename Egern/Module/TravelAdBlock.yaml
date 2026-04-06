@@ -1,56 +1,57 @@
 #!name=差旅出行去广告
-#!desc=2026.04.06 | 深度净化滴滴出行、12306、携程、哈啰
-#!author=AI优化, RuCu6 (fmz200 Backup)
+#!desc=2026.04.06 | 滴滴 12306 携程 哈啰，规则来源：LoonKissSurge/ZenmoFeiShi/kokoryh/blackmatrix7
+#!author=jnlaoshu, ZenmoFeiShi, kokoryh, blackmatrix7, RuCu6
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
 
 [Rule]
 # ── 滴滴出行 ──
-DOMAIN,gts.diditaxi.com.cn,REJECT
-DOMAIN,xflow.didistatic.com,REJECT
-DOMAIN,adx.xiaojukeji.com,REJECT
+# 来源：LoonKissSurge 新手友好的去广告集合.official.sgmodule
+DOMAIN,hd.xiaojukeji.com,REJECT
+DOMAIN,gwp.xiaojukeji.com,REJECT
 
 # ── 铁路 12306 ──
-DOMAIN,ad.12306.cn,REJECT
+# 注意：ad.12306.cn 必须设为 DIRECT，交由下方脚本处理；设为 REJECT 会导致请求被底层丢弃，脚本失效
+DOMAIN,ad.12306.cn,DIRECT
 
 # ── 携程旅行 ──
 DOMAIN,ad.ctrip.com,REJECT
+DOMAIN,ma-adx.ctrip.com,REJECT
 
 # ── 哈啰出行 ──
 DOMAIN,ad.hellobike.com,REJECT
 
-[Map Local]
-# ── 原 reject-dict 转换为 Egern 原生强 Mock (防红字报错) ──
-
-# ── 滴滴出行 ──
-^https?:\/\/api\.didiglobal\.com\/gulfstream\/splash\/v1\/ad data-type=text data="{}" status-code=200
-^https?:\/\/api\.didiglobal\.com\/gulfstream\/passenger\/v2\/app\/launch data-type=text data="{}" status-code=200
-
-# ── 铁路 12306 ──
-^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm\?operation=appAdList data-type=text data="{}" status-code=200
-
-# ── 携程旅行 ──
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(16189\/json\/searchAppFloatWindow|14446\/json\/getSplashConfig) data-type=text data="{}" status-code=200
-
-# ── 哈啰出行 ──
-^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd data-type=text data="{}" status-code=200
-^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList data-type=text data="{}" status-code=200
-
 [Rewrite]
-# ── 哈啰出行后台静态广告拦截 ──
-^https?:\/\/image\.hellobike\.com\/images\/ad_.* reject
+# ── 携程旅行（来源：blackmatrix7 AdvertisingLite，已验证） ──
+^https?:\/\/m\.ctrip\.com\/restapi\/[\w\/]+tripAds reject
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/\d+\/json\/getAdsList reject
+^https?:\/\/ma-adx\.ctrip\.com\/_ma\.gif reject
+
+# ── 滴滴出行（来源：LoonKissSurge/ZenmoFeiShi，已由 Body Rewrite 合并至此） ──
+# 清理"我的"页面营销卡片（天天领福利/金融服务/更多服务/企业服务/安全中心）
+http-response-jq ^https:\/\/common\.diditaxi\.com\.cn\/common\/v\d\/usercenter\/me '.data.cards |= map(select(.title != "天天领福利" and .title != "金融服务" and .title != "更多服务" and .title != "企业服务" and .title != "安全中心")) | .data.cards[] |= if .tag == "wallet" then .items |= map(select(.title == "优惠券")) | if .card_type == 4 then .bottom_items |= map(select(.title == "省钱套餐" or .title == "出行里程")) else . end else . end'
+# 清理首页底栏导航（仅保留打车/代驾/骑行/拼车四项核心功能）
+http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/core '.data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "driverservice" or .nav_id == "bike" or .nav_id == "carmate")) | .data.disorder_cards.bottom_nav_list.data |= map(select(.id == "v6x_home" or .id == "home_page" or .id == "user_center"))'
+# 清理场景列表中的优惠商城推广入口
+http-response-jq ^https:\/\/api\.udache\.com\/gulfstream\/pre-sale\/v1\/other\/pGetSceneList '.data.scene_list |= map(select(.text != "优惠商城")) | .data.show_data[] |= (if .scene_ids then .scene_ids |= map(select(. != "scene_coupon_mall")) else . end)'
+# 清理顶部轮播 Banner 的元图推广
+http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/ota\/na\/yuantu\/infoList '.data.disorder_cards.top_banner_card.data |= if .[0].T == "yuentu_top_banner" then .[1:] else . end'
+# 清理行程中悬浮推广组件
+http-response-jq ^https:\/\/api\.udache\.com\/gulfstream\/passenger-center\/v2\/other\/pInTripLayout '.data.order_components |= map(select(.name != "passenger_common_casper"))'
+
+[Map Local]
+# ── 携程旅行（开屏 & 浮窗，来源：LoonKissSurge WeChat专项优化模块） ──
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/16189\/json\/searchAppFloatWindow data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/14446\/json\/getSplashConfig data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# ── 哈啰出行（广告接口） ──
+^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-# ── 滴滴出行 (采用 fmz200 稳定镜像备份) ──
-滴滴_核心净化 = type=http-response, pattern=^https?:\/\/api\.didiglobal\.com\/gulfstream\/(passenger\/v2\/(app\/launch|core\/experience)|passport\/v2\/auth\/config), requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/didi.js
-
-# ── 铁路 12306 (采用 fmz200 稳定镜像备份) ──
-12306_核心净化 = type=http-response, pattern=^https?:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/12306.js
-
-# ── 携程旅行 (采用 fmz200 稳定镜像备份) ──
-携程_核心净化 = type=http-response, pattern=^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/(11898\/json\/HomePageData|16709\/json\/getHomePageData|14446\/json\/getSplashConfig), requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/ctrip.js
-
-# ── 哈啰出行 (采用 fmz200 稳定镜像备份) ──
-哈啰_核心净化 = type=http-response, pattern=^https?:\/\/api\.hellobike\.com\/api\.boss\.boss\.AppHomeBoss\/getHomeBoss, requires-body=true, script-path=https://raw.githubusercontent.com/fmz200/wool_scripts/main/QuantumultX/rewrite/RuCu6/hello.js
+# ── 铁路 12306 ──
+# 脚本作者：kokoryh，已验证有效
+# 拦截 getAdList 接口，返回伪造空素材令开屏广告秒过
+12306_净化 = type=http-response, pattern=^https?:\/\/ad\.12306\.cn\/ad\/ser\/getAdList, requires-body=true, script-path=https://raw.githubusercontent.com/kokoryh/Script/master/js/12306.js
 
 [MITM]
-hostname = api.didiglobal.com, gts.diditaxi.com.cn, mobile.12306.cn, ad.12306.cn, api.hellobike.com, m.ctrip.com
+hostname = hd.xiaojukeji.com, gwp.xiaojukeji.com, common.diditaxi.com.cn, conf.diditaxi.com.cn, api.udache.com, ad.12306.cn, m.ctrip.com, ad.ctrip.com, ma-adx.ctrip.com, api.hellobike.com, ad.hellobike.com
