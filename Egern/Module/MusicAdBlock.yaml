@@ -1,6 +1,7 @@
 #!name=音乐流媒体净化
-#!desc=2026.04.06 AI优化 | 整合酷狗·酷我·Spotify·YT Music·网易云·汽水·QQ音乐
+#!desc=2026.04.06 | 整合酷狗·酷我·Spotify·YT Music·网易云·汽水·QQ音乐
 #!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013（墨鱼）, app2smile, kelee
+#!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
 [Rule]
 # ── 酷狗 / 酷我 ──
@@ -30,8 +31,6 @@ DOMAIN,iadmat.nosdn.127.net,REJECT
 DOMAIN,iadmusicmat.music.126.net,REJECT
 DOMAIN,iadmusicmatvideo.music.126.net,REJECT
 DOMAIN,iadmatapk.nosdn.127.net,REJECT
-DOMAIN,httpdns.music.163.com,REJECT
-DOMAIN,httpdns.n.netease.com,REJECT
 
 # ── QQ音乐 ──
 DOMAIN,tmead.y.qq.com,REJECT
@@ -48,16 +47,16 @@ DOMAIN,oth.str.mdt.qq.com,REJECT
 DOMAIN,h.trace.qq.com,REJECT
 DOMAIN,us.l.qq.com,REJECT
 
-# ── 基础 URL 拦截 ──
-^https?:\/\/spclient\.wg\.spotify\.com\/(ad-logic|ads|ad)\/ - reject
-^https?:\/\/ads\.kugou\.com\/.* - reject
-^https?:\/\/splash\.kugou\.com\/.* - reject
-^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd - reject
-^https?:\/\/rich\.kuwo\.cn\/AdService - reject
-^https?:\/\/bd-api\.kuwo\.cn\/.* - reject
+[Rewrite]
+# ── URL 拦截 ──
+^https?:\/\/spclient\.wg\.spotify\.com\/(ad-logic|ads|ad)\/ reject
+^https?:\/\/ads\.kugou\.com\/.* reject
+^https?:\/\/splash\.kugou\.com\/.* reject
+^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd reject
+^https?:\/\/rich\.kuwo\.cn\/AdService reject
+^https?:\/\/bd-api\.kuwo\.cn\/.* reject
 
-[Body Rewrite]
-# ── 汽水音乐（墨鱼版 JQ 净化） ──
+# ── 汽水音乐 ──
 http-response-jq ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/me\? 'del(.reward_ad_banner)'
 http-response-jq ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/card 'del(.preview_guide)'
 http-response-jq ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/search-block 'del(.search_chart_block)'
@@ -65,34 +64,34 @@ http-response-jq ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/activit
 http-response-jq ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/feed\/song-tab '.items |= map(select(.type == "track"))'
 
 [Map Local]
-# ── 网易云音乐（活动弹窗 & VIP 启动页） ──
+# ── 网易云音乐 ──
 ^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/content\/activity\/music\/jar\/template\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/sp\/flow\/popup\/query data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── QQ音乐（开屏 & 启动广告） ──
+# ── QQ音乐 ──
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── 汽水音乐（视频广告、弹窗、位置、TAGS、DNS 等） ──
+# ── 汽水音乐 ──
 ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/luna\/(media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+){1,3}\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/tnc.*zijieapi\.com\/get_domains data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-# 酷狗音乐
-酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
+# ── 酷狗 ──
+酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*,  requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
 
-# 酷我音乐
-酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
+# ── 酷我 ──
+酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*,  requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
 
-# Spotify
-Spotify_核心净化 = type=http-response, pattern=^https:\/\/.*spotify\.com\/(bootstrap|user-customization-service|pendragon), requires-body=true, binary-body-mode=true, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js
+# ── Spotify ──
+Spotify_核心净化 = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/((bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize))$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
 
-# YouTube Music（采用 Maasea 新版 Enhance 脚本，支持歌词/字幕/参数增强）
+# ── YouTube Music ──
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
-# 网易云音乐
-网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*, requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
+# ── 网易云 ──
+网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*,  requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
 
 [MITM]
-hostname = *.kugou.com, *.kuwo.cn, spclient.wg.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, tnc*-*.zijieapi.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, api.spotify.com, *.googlevideo.com
+hostname = *.kugou.com, *.kuwo.cn, spclient.wg.spotify.com, *spclient.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, tnc*-*.zijieapi.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, api.spotify.com, *.googlevideo.com
