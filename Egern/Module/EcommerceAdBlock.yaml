@@ -74,8 +74,6 @@ http-response-jq ^https:\/\/rms\.meituan\.com\/api\/v1\/rmsmina\/c\/queryShopPor
 
 [Map Local]
 ^https?:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/(nearby\/widget\/info|taskCenter\/task\/report|ad\/|live\/feed\/info\/simplelive\/card) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/.*\.amemv\.com\/aweme\/v\d\/(ad|splash)\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/.*\.amemv\.com\/aweme\/v\d\/coupon\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/.*\.gifshow\.com\/rest\/(n\/)?(ad|splash|commercial)\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/api\.pinduoduo\.com\/search_hotquery\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/api\.pinduoduo\.com\/api\/(aristotle\/(unrated_order_for_unreceived_tab|query_order_list_tabs_element)|aquarius\/hungary\/global\/homepage|caterham\/v3\/query\/(order_express_group|new_chat_group|personal|my_order_group|likes)) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -126,4 +124,4 @@ http-response-jq ^https:\/\/rms\.meituan\.com\/api\/v1\/rmsmina\/c\/queryShopPor
 大众点评去广告2 = type=http-response, pattern=^https?:\/\/ddplus\.meituan\.net\/v\d\/mss_\w+\/picassovc, script-path=https://raw.githubusercontent.com/zirawell/R-Store/main/Res/Scripts/AntiAd/dianping.js, requires-body=true
 
 [MITM]
-hostname = api.pinduoduo.com, api.m.jd.com, jxapi.m.jd.com, acs.m.taobao.com, acs.m.tmall.com, gw.alicdn.com, heic.alicdn.com, guide-acs.m.taobao.com, poplayer.template.alibaba.com, acs.m.goofish.com, wmapi.meituan.com, rms.meituan.com, mall.meituan.com, p.meituan.com, s3plus.meituan.net, flowplus.meituan.net, img.meituan.net, ddplus.meituan.net, *.dianping.com, *.elemecdn.com, mapi.appvipshop.com, edith.xiaohongshu.com, app.dewu.com, m.suning.com, acs.m.fliggy.com, *.amemv.com, *.gifshow.com, az*-api.ksapisrv.com, az*-api-idc.ksapisrv.com, apissl.gifshow.com, apissl.ksapisrv.com
+hostname = api.pinduoduo.com, api.m.jd.com, jxapi.m.jd.com, acs.m.taobao.com, acs.m.tmall.com, gw.alicdn.com, heic.alicdn.com, guide-acs.m.taobao.com, poplayer.template.alibaba.com, acs.m.goofish.com, wmapi.meituan.com, rms.meituan.com, mall.meituan.com, p.meituan.com, s3plus.meituan.net, flowplus.meituan.net, img.meituan.net, ddplus.meituan.net, *.dianping.com, *.elemecdn.com, mapi.appvipshop.com, edith.xiaohongshu.com, app.dewu.com, m.suning.com, acs.m.fliggy.com, *.gifshow.com, az*-api.ksapisrv.com, az*-api-idc.ksapisrv.com, apissl.gifshow.com, apissl.ksapisrv.com
