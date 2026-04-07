@@ -1,6 +1,6 @@
 #!name=音乐流媒体净化
-#!desc=2026.04.07 更新。酷狗·酷我·Spotify·YT Music·网易云·汽水·QQ音乐
-#!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee
+#!desc=2026.04.07 更新。酷狗、酷我、Spotify、YTMusic、网易云、汽水、QQ音乐
+#!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee, VirgilClyne, 001ProMax
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
 [Rule]
@@ -13,7 +13,16 @@ DOMAIN,log.kuwo.cn,REJECT
 DOMAIN,mobilead.kuwo.cn,REJECT
 DOMAIN,kaiping.kuwo.cn,REJECT
 DOMAIN,mgxhtj.kuwo.cn,REJECT
-DOMAIN-SUFFIX,spotify.com,REJECT
+AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT
+DOMAIN-SUFFIX,ads.spotify.com,REJECT
+DOMAIN-SUFFIX,ad-analytics.spotify.com,REJECT
+DOMAIN-SUFFIX,analytics.spotify.com,REJECT
+DOMAIN-SUFFIX,log.spotify.com,REJECT
+DOMAIN-SUFFIX,events.spotify.com,REJECT
+DOMAIN-SUFFIX,tracking.spotify.com,REJECT
+DOMAIN,adeventtracker.spotify.com,REJECT
+DOMAIN,audio-ec.spotify.com,REJECT
+DOMAIN,audio-ak-spotify-com.akamaized.net,REJECT
 DOMAIN,admusicpic.music.126.net,REJECT
 DOMAIN,iadmat.nosdn.127.net,REJECT
 DOMAIN,iadmusicmat.music.126.net,REJECT
@@ -36,12 +45,18 @@ DOMAIN,h.trace.qq.com,REJECT
 DOMAIN,us.l.qq.com,REJECT
 
 [Rewrite]
-^https?:\/\/spclient\.wg\.spotify\.com\/(ad-logic|ads|ad)\/ reject
 ^https?:\/\/ads\.kugou\.com\/.* reject
 ^https?:\/\/splash\.kugou\.com\/.* reject
 ^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd reject
 ^https?:\/\/rich\.kuwo\.cn\/AdService reject
 ^https?:\/\/bd-api\.kuwo\.cn\/.* reject
+# Spotify Header 防缓存
+^https:\/\/.*spotify\.com\/bootstrap\/v1\/bootstrap request-header-del if-none-match
+^https:\/\/.*spotify\.com\/bootstrap\/v1\/bootstrap request-header-del etag
+^https:\/\/.*spotify\.com\/user-customization-service\/v1\/customize request-header-del if-none-match
+^https:\/\/.*spotify\.com\/user-customization-service\/v1\/customize request-header-del etag
+# Spotify URL 修复
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/me\? 'del(.reward_ad_banner)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/card 'del(.preview_guide)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/search-block 'del(.search_chart_block)'
@@ -58,15 +73,25 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/fee
 ^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/sp\/flow\/popup\/query data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/.*spotify\.com\/pendragon\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
 酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*,  requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
 酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*,  requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
-Spotify_核心净化 = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/((bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize))$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
+Spotify_Tracks增强 = type=http-response, pattern=^https:\/\/api\.spotify\.com\/v1\/tracks, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
+Spotify_歌词请求JSON = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+format=json, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
+Spotify_歌词请求Proto = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
+Spotify_翻译歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=Translate, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
+Spotify_翻译歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
+Spotify_External歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=External, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
+Spotify_External歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
+Spotify_去广告核心 = type=http-response, pattern=^https:\/\/.*spotify\.com\/(bootstrap|user-customization-service), requires-body=true, binary-body-mode=true, timeout=20, argument=[false,true], script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js
+Spotify_Premium_JSON = type=http-request, pattern=^https:\/\/.*spotify\.com\/(artistview\/v1\/artist|album-entity-view\/v2\/album), timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
+Spotify_Premium_Proto = type=http-response, pattern=^https:\/\/.*spotify\.com\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize), requires-body=true, binary-body-mode=true, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*,  requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
 
 [MITM]
-hostname = *.kugou.com, *.kuwo.cn, *.spotify.com, spclient.wg.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, *.googlevideo.com
+hostname = *.kugou.com, *.kuwo.cn, api.spotify.com, spclient.wg.spotify.com, audio-spclient.spotify.com, dealer.spotify.com, gew-spclient.spotify.com, *-spclient.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, *.googlevideo.com
