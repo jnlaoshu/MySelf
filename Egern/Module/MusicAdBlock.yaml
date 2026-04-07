@@ -13,13 +13,7 @@ DOMAIN,log.kuwo.cn,REJECT
 DOMAIN,mobilead.kuwo.cn,REJECT
 DOMAIN,kaiping.kuwo.cn,REJECT
 DOMAIN,mgxhtj.kuwo.cn,REJECT
-DOMAIN,audio-ads.spotify.com,REJECT
-DOMAIN,ads-fa.spotify.com,REJECT
-DOMAIN,ads.spotify.com,REJECT
-DOMAIN,adserver.spotify.com,REJECT
-DOMAIN,analytics.spotify.com,REJECT
-DOMAIN,pubads.spotify.com,REJECT
-DOMAIN,partner.spotify.com,REJECT
+DOMAIN-SUFFIX,spotify.com,REJECT
 DOMAIN,admusicpic.music.126.net,REJECT
 DOMAIN,iadmat.nosdn.127.net,REJECT
 DOMAIN,iadmusicmat.music.126.net,REJECT
@@ -66,7 +60,6 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/fee
 ^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/tnc.*zijieapi\.com\/get_domains data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
 酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*,  requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
@@ -76,4 +69,4 @@ YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/
 网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*,  requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
 
 [MITM]
-hostname = *.kugou.com, *.kuwo.cn, spclient.wg.spotify.com, *spclient.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, tnc*-*.zijieapi.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, api.spotify.com, *.googlevideo.com
+hostname = *.kugou.com, *.kuwo.cn, *.spotify.com, spclient.wg.spotify.com, youtubei.googleapis.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, *.googlevideo.com
