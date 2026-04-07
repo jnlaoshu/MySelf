@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.05 21:00
+# ⏱️ 更新时间: 2026.04.07 14:55
 # ==========================================
 
 # 基本配置
@@ -130,6 +130,16 @@ dns:
     - domain_suffix:
         match: wegame.com
         value: DNSPod
+    # 百度系
+    - domain_suffix:
+        match: baidu.com
+        value: DNSPod
+    - domain_suffix:
+        match: bdstatic.com
+        value: DNSPod
+    - domain_suffix:
+        match: bcebos.com
+        value: DNSPod
     # 字节跳动系
     - domain_suffix:
         match: bytedance.com
@@ -255,7 +265,7 @@ policy_groups:
       filter: >-
         (?xi) ^ (?! .* (?:
           🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
-          🇯抛|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
+          🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
           🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
           🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
           🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
@@ -352,23 +362,17 @@ policy_groups:
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
-      flatten: false
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
 
 # 路由规则
 rules:
-  # ── 核心底层兜底 ──
-  # 拦截 QUIC 协议，强制大厂 App (如百度、腾讯) 回退 TCP 以便 MITM 解密去广告
+  # ── 协议层预处理 ──
+  # 拦截 QUIC，强制大厂 App 回退 TCP 以便 MITM 解密去广告
   - protocol:
       match: quic
       policy: REJECT
 
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/DouYin/DouYin.list
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
-      policy: 猎杀广告
+  # ── 最高优放行：内网与时间同步 (防误杀优化) ──
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
@@ -381,6 +385,11 @@ rules:
   - domain_suffix:
       match: time.android.com
       policy: DIRECT
+
+  # ── 应用层分流与去广告 ──
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
+      policy: 猎杀广告
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
       policy: DIRECT
@@ -461,18 +470,6 @@ modules:
   - name: WeatherKit
     url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
     enabled: true
-  - name: Spotify
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Spotify.yaml
-    enabled: true
-  - name: YouTube Enhance
-    url: https://raw.githubusercontent.com/Maasea/sgmodule/master/YouTube.Enhance.sgmodule
-    enabled: true
-  - name: KuGou
-    url: https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/KuGou.sgmodule
-    enabled: true
-  - name: KuWo
-    url: https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/Kuwo/kuwo.sgmodule
-    enabled: true
   - name: 雪球去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
     enabled: true
@@ -490,7 +487,4 @@ modules:
     enabled: true
   - name: 视频流媒体去广告
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
-    enabled: true
-  - name: BiliBili去广告
-    url: https://raw.githubusercontent.com/app2smile/rules/master/module/bilibili.sgmodule
     enabled: true
