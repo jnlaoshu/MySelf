@@ -5,7 +5,6 @@
 
 [Rule]
 DOMAIN,ad.douyin.com,REJECT
-DOMAIN,bds.snssdk.com,REJECT
 DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN,toblog.snssdk.com,REJECT
 DOMAIN,api-ad.byteimg.com,REJECT
@@ -75,7 +74,7 @@ http-response-jq ^https:\/\/rms\.meituan\.com\/api\/v1\/rmsmina\/c\/queryShopPor
 
 [Map Local]
 ^https?:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/(nearby\/widget\/info|taskCenter\/task\/report|ad\/|live\/feed\/info\/simplelive\/card) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/.*\.amemv\.com\/aweme\/v\d\/(ad|splash|commercial)\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/.*\.amemv\.com\/aweme\/v\d\/(ad|splash)\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/.*\.amemv\.com\/aweme\/v\d\/coupon\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/.*\.gifshow\.com\/rest\/(n\/)?(ad|splash|commercial)\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/api\.pinduoduo\.com\/search_hotquery\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
