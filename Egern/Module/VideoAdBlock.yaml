@@ -1,5 +1,5 @@
 #!name=流媒体去广告
-#!desc=2026.04.07 更新。净化爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max
+#!desc=2026.04.07 15:35 更新。爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max。
 #!author=AI优化, ddgksf2013, app2smile, Maasea
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
 
@@ -49,6 +49,9 @@ DOMAIN,braze.max.com,REJECT
 DOMAIN,brightline.tv,REJECT
 
 [Map Local]
+# ── YouTube Initplayback 广告拦截 ──
+^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain"
+
 ^https?:\/\/livew\.l\.qq\.com\/livemsg\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/ad\.qq\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/ifacelog\.iqiyi\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -68,10 +71,15 @@ DOMAIN,brightline.tv,REJECT
 ^https?:\/\/brightline\.tv\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
+# ── B站 ──
 B站_JSON净化 = type=http-response, pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show)|feed\/index\?)|resource\/show\/tab\/v2), requires-body=true, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/bilibili-json.js
 B站_Proto净化 = type=http-response, pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.(view\.v1\.View\/View|dynamic\.v2\.Dynamic\/DynAll|playurl\.v1\.PlayURL\/PlayView)$, requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/bilibili-proto.js
-优酷_核心净化 = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/.*,  requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
-YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting), requires-body=true, binary-body-mode=true, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
+
+# ── 优酷 ──
+优酷_核心净化 = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/.*, requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
+
+# ── YouTube Enhance ──
+YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 [MITM]
 hostname = *.qq.com, *.iqiyi.com, *.youku.com, *.mgtv.com, *.bilibili.com, grpc.biliapi.net, youtubei.googleapis.com, *.googlevideo.com, *.netflix.com, *.disneyplus.com, *.disney.com, *.max.com, *.hbomax.com
