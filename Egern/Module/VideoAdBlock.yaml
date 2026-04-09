@@ -1,5 +1,5 @@
 #!name=流媒体去广告
-#!desc=2026.04.09 16:40 更新。爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max。
+#!desc=2026.04.09 17:20 更新。爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max。
 #!author=AI优化, ddgksf2013, app2smile, Maasea
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
 
@@ -96,7 +96,7 @@ B站_Proto净化 = type=http-response, pattern=^https:\/\/(grpc\.biliapi\.net|ap
 
 # ── YouTube (Music) Enhance ──
 # YTM_Request 为 YTM 正常工作必要前置
-YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js
+YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 [MITM]
