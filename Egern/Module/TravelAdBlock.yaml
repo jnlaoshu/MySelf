@@ -1,5 +1,5 @@
 #!name=差旅出行去广告
-#!desc=2026.04.07 更新。滴滴 + 12306 + 携程 + 哈啰
+#!desc=2026.04.09 21:05 更新。滴滴、12306、携程、哈啰
 #!author=AI优化, LoonKissSurge, ZenmoFeiShi, kokoryh, blackmatrix7, RuCu6, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
 
@@ -19,11 +19,8 @@ DOMAIN,ad.hellobike.com,REJECT
 [Rewrite]
 ^https?:\/\/m\.ctrip\.com\/restapi\/[\w\/]+tripAds reject
 ^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/\d+\/json\/getAdsList reject
-^https?:\/\/ma-adx\.ctrip\.com\/_ma\.gif reject
-http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d\/core\? '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
-http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/core\? '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
+http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d+\/core\? '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
 http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/fast\? 'delpaths([["data","disorder_cards","communicate_card"],["data","disorder_cards","not_login_bottom_bar"],["data","disorder_cards","riding_code_card"],["data","order_cards","car_owner_widget_card"],["data","order_cards","marketing_card"],["data","order_cards","super_banner_card"],["data","disorder_cards","car_icon","data","icon_info_new_agreement"]])'
-http-response-jq ^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget\? 'delpaths([["data","mult_home_banner"]])'
 http-response-jq ^https:\/\/common\.diditaxi\.com\.cn\/common\/v5\/usercenter\/layout$ '.data |= (.instances |= (to_entries | map(select(.key as $k | ["center_base_info_card", "center_tool_card", "center_wallet_finance_card", "center_order_related_card"] | index($k))) | from_entries)) | .data.instances.center_wallet_finance_card.data.view_info |= map(select(.title == "优惠卡券" or .title == "余额" or .title == "福利金"))'
 http-response-jq ^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/dache_homepage_layout\? '.data |= (.instances |= (to_entries | map(select(.key | test("feed_back_|dache_main_member|order_container_|dache_main_core_icon|dache_main_card_"))) | from_entries))'
 http-response-jq ^https:\/\/api\.udache\.com\/gulfstream\/porsche\/v1\/pSFCHomePage\? '.data |= (if . == null then null else {hot_route_info, legal_info} end) | . as $root | .data.tab_list = ($root.data.tab_list | map(select(.tab_id == "passenger")))'
@@ -49,4 +46,4 @@ http-response-jq ^https:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\? '.data |= map
 移除12306应用内广告 = type=http-request, pattern=^https:\/\/mobile\.12306\.cn\/otsmobile\/app\/mgs\/mgw\.htm$, script-path=https://kelee.one/Resource/JavaScript/12306/12306_remove_ads.js, requires-body=true
 
 [MITM]
-hostname = %APPEND% hd.xiaojukeji.com, gwp.xiaojukeji.com, common.diditaxi.com.cn, conf.diditaxi.com.cn, api.udache.com, ad.12306.cn, m.ctrip.com, ad.ctrip.com, ma-adx.ctrip.com, api.hellobike.com, ad.hellobike.com, as.xiaojukeji.com, lion.didialift.com, ct.xiaojukeji.com, res.xiaojukeji.com, htwkop.xiaojukeji.com, daijia.kuaidadi.com, mobile.12306.cn
+hostname = %APPEND% hd.xiaojukeji.com, gwp.xiaojukeji.com, common.diditaxi.com.cn, conf.diditaxi.com.cn, api.udache.com, ad.12306.cn, m.ctrip.com, ad.ctrip.com, ma-adx.ctrip.com, api.hellobike.com, ad.hellobike.com, as.xiaojukeji.com, lion.didialift.com, ct.xiaojukeji.com, res.xiaojukeji.com, htwkop.xiaojukeji.com, daijia.kuaidadi.com, mobile.12306.cn, poi.map.xiaojukeji.com
