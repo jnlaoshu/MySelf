@@ -1,11 +1,9 @@
 #!name=地图三合一去广告
-#!desc=2026.04.05 12:45 更新。 高德、百度、腾讯地图
+#!desc=2026.04.09 11:55。 高德、百度、腾讯地图
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
-
 [Rule]
-
 # ── 高德地图 ──
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
@@ -18,18 +16,20 @@ DOMAIN,httpdns.baidubce.com,REJECT
 DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
 DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
 DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
+# 新增社区最新补充的百度广告CDN（2026年常见路径）
+DOMAIN,ss0.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN,gss0.bdstatic.com,REJECT,extended-matching,pre-matching
 
 # ── 腾讯地图 ──
 DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 
 [Rewrite]
-
 # ── 百度地图 ──
 # 运营活动与推荐弹窗接口
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) reject
 # 开屏广告及 SDK CDN 静态资源（精准路径拦截，与 Rule 层互补）
-^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject
+^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject-200
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) reject
 ^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ reject
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump reject
@@ -42,7 +42,6 @@ DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? reject
 
 [Body Rewrite]
-
 # ── 高德地图 ──
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
 http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
@@ -58,14 +57,15 @@ http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-wor
 http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
 # 移除语音包推荐列表
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
-# 精准剔除开屏 JSON 中的广告节点与跳转字段（兜底 Script 前的静态防线）
-http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw)'
+# 精准剔除开屏 JSON 中的广告节点与跳转字段（已扩展更多字段，覆盖2026新结构）
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
 
 # ── 腾讯地图 ──
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
 [Map Local]
+# （高德和腾讯部分保持不变，百度无Map Local需求）
 
 # ── 高德地图 ──
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -86,14 +86,12 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 ^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-
 # ── 高德地图 ──
 高德_广告清理_m5 = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
 高德_广告清理_m5zb = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
 
 # ── 百度地图 ──
-# 动态剥离开屏广告跳转节点（最终防线，处理 Body Rewrite 未覆盖的动态字段）
 百度地图_核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
+hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
