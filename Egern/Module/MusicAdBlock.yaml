@@ -1,5 +1,5 @@
 #!name=音乐流媒体净化
-#!desc=2026.04.09 16:38 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐。
+#!desc=2026.04.09 17:25 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐。
 #!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee, VirgilClyne, 001ProMax
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
@@ -124,7 +124,7 @@ Spotify_External歌词Proto = type=http-response, pattern=^https:\/\/spclient\.w
 
 # ── YouTube (Music) Enhance ──
 # YTM_Request 为 YTM 正常工作必要前置，两版均缺失此条
-YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js
+YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 # ── 网易云音乐 ──
