@@ -1,5 +1,5 @@
 #!name=音乐流媒体净化
-#!desc=2026.04.07 15:25 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐。
+#!desc=2026.04.09 15:30 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐。
 #!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee, VirgilClyne, 001ProMax
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
@@ -14,14 +14,27 @@ DOMAIN,log.kuwo.cn,REJECT
 DOMAIN,mobilead.kuwo.cn,REJECT
 DOMAIN,kaiping.kuwo.cn,REJECT
 DOMAIN,mgxhtj.kuwo.cn,REJECT
+# 酷狗额外广告域名（来自Yu9191最新）
+DOMAIN,webvoobssdl.kugou.com,REJECT
+DOMAIN,ads.service.kugou.com,REJECT
+DOMAIN,adsfile.kugou.com,REJECT
+DOMAIN,mdpfilebssdlbig.kugou.com,REJECT
+DOMAIN,adserviceretry.kugou.com,REJECT
 
-# ── Spotify (已还原网页翻译导致的乱码域名) ──
+# ── Spotify 增强版（整合app2smile + 用户Spotify.yaml） ──
 DOMAIN,audio-ads.spotify.com,REJECT
 DOMAIN,ads-fa.spotify.com,REJECT
 DOMAIN-KEYWORD,-ad-spotify.com,REJECT
 DOMAIN,analytics.spotify.com,REJECT
 DOMAIN,audio-ak-spotify-com.akamaized.net,REJECT
 DOMAIN,b.scorecardresearch.com,REJECT
+DOMAIN-SUFFIX,ads.spotify.com,REJECT
+DOMAIN-SUFFIX,ad-analytics.spotify.com,REJECT
+DOMAIN-SUFFIX,log.spotify.com,REJECT
+DOMAIN-SUFFIX,events.spotify.com,REJECT
+DOMAIN-SUFFIX,tracking.spotify.com,REJECT
+# QUIC协议广告拦截（彻底阻断Spotify广告通道）
+AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT
 
 # ── 网易云音乐 ──
 DOMAIN,admusicpic.music.126.net,REJECT
@@ -54,12 +67,24 @@ DOMAIN,us.l.qq.com,REJECT
 ^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd reject
 ^https?:\/\/rich\.kuwo\.cn\/AdService reject
 ^https?:\/\/bd-api\.kuwo\.cn\/.* reject
+# 酷狗额外VIP/广告弹窗拒绝（来自Yu9191）
+^https:\/\/vipssr\.kugou\.com\/static\/js\/async\/flexPayPopup reject
+^https:\/\/.*\.kugou\.com\/vipssr\/prepay_ios\.html reject
+^https:\/\/staticssl\.kugou\.com\/common\/js-lib\/vip\/dlg_ctrler_v2\.js$ reject
+^https:\/\/h5\.kugou\.com\/apps\/vipcenter\/_next\/static\/css reject
+^https:\/\/vipssr\.kugou\.com\/static\/js\/vip\/newUi\/vipPageUnionIosContent- reject
+^https:\/\/fx\.service\.kugou\.com\/fx\/activity\/register\/center\/sidebar\/configV2$ reject
+^https:\/\/service1\.fanxing\.kugou\.com\/video\/mo\/live\/pull\/mutiline\/cfg reject
+^http:\/\/log\.web\.kugou\.com\/postEvent\.php$ reject
 
 # ── Spotify Header 防缓存 ──
 ^https:\/\/.*spotify\.com\/bootstrap\/v1\/bootstrap request-header-del if-none-match
 ^https:\/\/.*spotify\.com\/bootstrap\/v1\/bootstrap request-header-del etag
 ^https:\/\/.*spotify\.com\/user-customization-service\/v1\/customize request-header-del if-none-match
 ^https:\/\/.*spotify\.com\/user-customization-service\/v1\/customize request-header-del etag
+
+# ── Spotify URL修复（artistview平台切换，来自用户Spotify.yaml） ──
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad
 
 # ── 汽水音乐 JQ 净化 ──
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/me\? 'del(.reward_ad_banner)'
@@ -71,6 +96,9 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/fee
 [Map Local]
 # ── YouTube (Music) Initplayback 广告 ──
 ^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain"
+
+# ── Spotify Pendragon 广告配置清空（关键修复，来自用户Spotify.yaml） ──
+^https?:\/\/.*spotify\.com\/pendragon\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # ── 网易云音乐 ──
 ^https?:\/\/interface\d?\.music\.163\.com\/eapi\/(?:delivery\/(batch-)?deliver|moment\/tab\/info\/|side-bar\/mini-program\/music-service\/account|yunbei\/account\/entrance\/|community\/friends\/fans-group\/artist\/group\/|mine\/applet\/redpoint|music\/songshare\/text\/recommend\/|resniche\/position\/play\/new\/|resniche\/tspopup\/show|resource\/comments?\/musiciansaid\/|user\/sub\/artist|ios\/version|mlivestream\/entrance\/playpage\/|link\/position\/show\/strategy|link\/scene\/show\/resource|v1\/content\/exposure\/comment\/banner\/) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -89,12 +117,20 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/fee
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
+# ── 酷我 额外广告清空（来自Yuheng0101最新） ──
+^https?:\/\/mobilead\.kuwo\.cn\/EcomResourceServer\/(getIOSIsHideAd|getMotor)\.do data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/rich\.kuwo\.cn\/(AdService|ecom)\/kaiping\/ad[iI]nfo data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/user\/adVip\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/operate(\/(adVip|freeMode\/h5))?\/text data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/ad\.tencentmusic\.com\/config\/uni data-type=text data=" " status-code=200 header="Content-Type:application/json"
+^https?:\/\/abt-kuwo\.tencentmusic\.com\/kuwo\/ui\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
 [Script]
 # ── 酷狗 / 酷我 ──
 酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
 酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
 
-# ── Spotify Kelee 增强组 ──
+# ── Spotify Kelee 增强组（保留原歌词/Tracks功能） ──
 Spotify_Tracks增强 = type=http-response, pattern=^https:\/\/api\.spotify\.com\/v1\/tracks, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
 Spotify_歌词请求JSON = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+format=json, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
 Spotify_歌词请求Proto = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
@@ -104,11 +140,15 @@ Spotify_External歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg
 Spotify_External歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
 Spotify_去广告核心 = type=http-response, pattern=^https:\/\/.*spotify\.com\/(bootstrap|user-customization-service), requires-body=true, binary-body-mode=true, timeout=20, argument=[false,true], script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js
 
-# ── YouTube (Music) Enhance (写入硬编码 JSON 参数) ──
+# ── Spotify app2smile Premium 增强（关键新增：彻底去广告 + 部分Premium解锁，解决广告残留） ──
+Spotify_Premium_JSON = type=http-request, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/, requires-body=0, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
+Spotify_Premium_Proto = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$, requires-body=1, binary-body-mode=1, max-size=0, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
+
+# ── YouTube (Music) Enhance（Maasea完整版，保持正常播放/搜索/浏览） ──
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 # ── 网易云音乐 ──
 网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*, requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
 
 [MITM]
-hostname = *.kugou.com, *.kuwo.cn, *.spotify.com, youtubei.googleapis.com, *.googlevideo.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com
+hostname = *.kugou.com, *.kuwo.cn, *.spotify.com, youtubei.googleapis.com, *.googlevideo.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, spclient.wg.spotify.com, *-spclient.spotify.com
