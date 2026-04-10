@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.09 21:50
+# ⏱️ 更新时间: 2026.04.10 17:53
 # ==========================================
 
 # 基本配置
@@ -53,7 +53,7 @@ dns:
       - h3://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
   forward:
-    # 阿里系
+    # 阿里系（CDN 调度深度依赖 AliDNS，专属转发收益最大）
     - domain_suffix:
         match: alibaba.com
         value: AliDNS
@@ -102,31 +102,6 @@ dns:
     - domain_suffix:
         match: alibabacloud.com
         value: AliDNS
-    # 腾讯系
-    - domain_suffix:
-        match: qq.com
-        value: DNSPod
-    - domain_suffix:
-        match: tencent.com
-        value: DNSPod
-    - domain_suffix:
-        match: wechat.com
-        value: DNSPod
-    - domain_suffix:
-        match: qpic.cn
-        value: DNSPod
-    - domain_suffix:
-        match: qlogo.cn
-        value: DNSPod
-    - domain_suffix:
-        match: gtimg.com
-        value: DNSPod
-    - domain_suffix:
-        match: qcloud.com
-        value: DNSPod
-    - domain_suffix:
-        match: wegame.com
-        value: DNSPod
     # 本地域名直连
     - domain_suffix:
         match: local
@@ -140,7 +115,7 @@ dns:
     - domain_suffix:
         match: router.asus.com
         value: system
-    # 兜底
+    # 兜底（AliDNS h3 优先，DNSPod 备援）
     - domain_wildcard:
         match: '*'
         value: Default
@@ -311,12 +286,12 @@ policy_groups:
 # 路由规则
 rules:
   # ── 协议层预处理 ──
-  # 拦截 QUIC 协议，强制大厂 App 回退 TCP 以便 MITM 解密去广告
+  # 拦截 QUIC，强制大厂 App 回退 TCP 以便 MITM 解密去广告
   - protocol:
       match: quic
       policy: REJECT
 
-  # ── 最高优放行：内网与时间同步 (防误杀优化) ──
+  # ── 最高优放行：内网与时间同步 ──
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
@@ -399,9 +374,18 @@ rules:
       policy: 自选策略
 
 # MITM
+# excludes 仅排除与全部去广告模块业务域完全不重叠的直连域名
 mitm:
   ca_p12: egern.p12
   ca_passphrase: egern
+  hostnames:
+    excludes:
+      - "*.wechat.com"
+      - "*.weixin.com"
+      - "*.alipay.com"
+      - "*.microsoft.com"
+      - "*.live.com"
+      - "*.office.com"
 
 # 模块配置
 modules:
