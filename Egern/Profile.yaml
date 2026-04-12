@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.10 17:53
+# ⏱️ 更新时间: 2026.04.12 23:23
 # ==========================================
 
 # 基本配置
@@ -102,12 +102,34 @@ dns:
     - domain_suffix:
         match: alibabacloud.com
         value: AliDNS
+    # 腾讯系（CDN 调度深度依赖 DNSPod，专属转发收益最大）
+    - domain_suffix:
+        match: qq.com
+        value: DNSPod
+    - domain_suffix:
+        match: wechat.com
+        value: DNSPod
+    - domain_suffix:
+        match: weixin.com
+        value: DNSPod
+    - domain_suffix:
+        match: tencent.com
+        value: DNSPod
+    - domain_suffix:
+        match: tencentcloud.com
+        value: DNSPod
+    - domain_suffix:
+        match: qcloud.com
+        value: DNSPod
+    - domain_suffix:
+        match: qpic.cn
+        value: DNSPod
+    - domain_suffix:
+        match: gtimg.com
+        value: DNSPod
     # 本地域名直连
     - domain_suffix:
         match: local
-        value: system
-    - domain_suffix:
-        match: localhost
         value: system
     - domain_suffix:
         match: lan
