@@ -1,11 +1,11 @@
 # 规则名称: Lan (局域网与系统底层通信直连)
 # 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
-# 优化时间: 2026.04.02
-
+# 优化时间: 2026.04.13
 domain_suffix_set:
   # --- 本地网络与测试域名 ---
   - local
   - localhost
+  - localdomain
   - ip6-localhost
   - ip6-loopback
   - lan
@@ -13,36 +13,46 @@ domain_suffix_set:
   - test
   - example
   - invalid
-
   # --- 常见路由器管理后台 (防代理导致无法进后台) ---
   - router.asus.com
   - asuscomm.com
   - routerlogin.net
+  - routerlogin.com
   - tplogin.cn
+  - tplinkwifi.net
+  - tplinkmodem.net
+  - tplinkrepeater.net
+  - mercusys.com
   - tendawifi.com
   - miwifi.com
   - phicomm.me
   - peplink.com
-
-  # --- 公共 Wi-Fi 认证与网络连通性探测 (解决连星巴克/酒店连不上网弹不出登录框的问题) ---
+  - dlink.com
+  - netgear.com
+  - wavlink.com
+  - hiwifi.com
+  # --- NAS 局域网发现 ---
+  - find.synology.com
+  - myqnapcloud.com
+  # --- 公共 Wi-Fi 认证与网络连通性探测 ---
   - captive.apple.com
   - edge-http.microsoft.com
   - msftconnecttest.com
   - msftncsi.com
   - detectportal.firefox.com
-
 ip_cidr_set:
-  - 10.0.0.0/8        # 私有网络 (Class A)
-  - 100.64.0.0/10     # 运营商级 NAT (CGNAT)
-  - 127.0.0.0/8       # 本地回环 (Loopback)
-  - 169.254.0.0/16    # 链路本地 (Link-Local)
-  - 172.16.0.0/12     # 私有网络 (Class B)
-  - 192.168.0.0/16    # 私有网络 (Class C)
-  - 224.0.0.0/4       # 组播 (Multicast)
+  - 0.0.0.0/8          # 本网络保留段
+  - 10.0.0.0/8         # 私有网络 (Class A)
+  - 100.64.0.0/10      # 运营商级 NAT (CGNAT)
+  - 127.0.0.0/8        # 本地回环 (Loopback)
+  - 169.254.0.0/16     # 链路本地 (Link-Local)
+  - 172.16.0.0/12      # 私有网络 (Class B)
+  - 192.168.0.0/16     # 私有网络 (Class C)
+  - 224.0.0.0/4        # 组播 (Multicast)
   - 255.255.255.255/32 # 广播地址 (Broadcast)
-
 ip_cidr6_set:
-  - ::1/128           # IPv6 本地回环
-  - fc00::/7          # IPv6 私有地址 (ULA)
-  - fe80::/10         # IPv6 链路本地地址
-  - ff00::/8          # IPv6 组播地址
+  - ::1/128            # IPv6 本地回环
+  - ::ffff:0:0/96      # IPv4 映射地址
+  - fc00::/7           # IPv6 私有地址 (ULA)
+  - fe80::/10          # IPv6 链路本地地址
+  - ff00::/8           # IPv6 组播地址
