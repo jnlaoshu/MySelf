@@ -1,24 +1,20 @@
-# > https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 优化时间：2026.04.02 (补充最新音视频、绘画及垂直领域 AIGC 服务)
-
+# 规则名称: AIGC (人工智能生成内容)
+# 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+# 优化时间: 2026.04.13 16:00
 domain_suffix_set:
   # --- OpenAI (ChatGPT / Sora / DALL-E) ---
   - chatgpt.com
+  - chat.com
   - openai.com
   - oaistatic.com
   - oaiusercontent.com
-  - chat.com
   - sora.com
   - ai.com
-  # OpenAI Infrastructure
-  - stripe.com
-  - auth0.com
-  - identrust.com
+
+  # --- OpenAI 基础设施 (语音/实验/遥测) ---
   - statsigapi.net
   - featuregates.org
-  - livekit.cloud
-  - azureedge.net
-  - azurefd.net
+  - livekit.cloud             # OpenAI 实时语音 WebRTC 通信
 
   # --- Anthropic (Claude) ---
   - anthropic.com
@@ -31,7 +27,6 @@ domain_suffix_set:
   - deepmind.com
   - deepmind.google
   - generativeai.google
-  - googleusercontent.com
   - generativelanguage.googleapis.com
   - proactivebackend-pa.googleapis.com
   - aistudio.google.com
@@ -39,6 +34,8 @@ domain_suffix_set:
 
   # --- Microsoft (Copilot) ---
   - copilot.microsoft.com
+  - edgeservices.bing.com
+  - sydney.bing.com           # [按需保留] 部分旧版 Copilot 或特定环境的 WebSocket 通信
 
   # --- xAI (Grok) ---
   - grok.com
@@ -62,8 +59,12 @@ domain_suffix_set:
   - cohere.com
   - leonardo.ai
   - civitai.com
+  - deepseek.com
+  - cursor.com                # AI 代码编辑器
+  - cursor.sh                 # Cursor 早期域名及部分 CDN 下载链接
+  - replicate.com             # AI 模型托管与云端运行平台
 
-  # --- AI 音视频与多媒体 (Suno / Udio / Runway / Luma) ---
+  # --- AI 音视频与多媒体 ---
   - suno.com
   - suno.ai
   - udio.com
@@ -73,14 +74,12 @@ domain_suffix_set:
   - elevenlabs.io
   - klingai.com
   - heygen.com
+  - haiper.ai                 # 视频生成
+  - krea.ai                   # 实时渲染与图像增强
 
-  # --- Midjourney & Discord ---
+  # --- Midjourney ---
   - midjourney.com
   - mj.run
-  - discord.com
-  - discord.gg
-  - discordapp.com
-  - discordapp.net
 
 domain_keyword_set:
   - openai
@@ -88,5 +87,4 @@ domain_keyword_set:
   - anthropic
   - claude
   - midjourney
-  - copilot
   - perplexity
