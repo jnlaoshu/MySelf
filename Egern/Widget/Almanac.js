@@ -6,10 +6,10 @@
  * • 尺寸支持：适配小号（农历信息全量）、中号（黄历基础布局）、大号（增加节气展示及换行处理）。
  * • 农历引擎：本地计算干支、生肖、农历日期及二十四节气（完美修复跨时区及当月首节气匹配漏洞）。
  * • 远程数据：请求 openApiData 获取宜忌、冲煞及运势评分，网络异常时支持本地容错降级。
- * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/月周次。
+ * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.04.05 08:45
+ * ⏱️ 更新时间: 2026.04.13 15:00
  * ==========================================
  */
 
@@ -69,9 +69,9 @@ export default async function(ctx) {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart  = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo     = Math.ceil((d.getTime() - yearStart.getTime()) / 86400000 / 7 + 1);
-    
-    const offsetDate = dateObj.getDate() + (new Date(dateObj.getFullYear(), dateObj.getMonth(), 1).getDay() || 7) - 1;
-    return `本年第${weekNo}周 · 月第${Math.ceil(offsetDate / 7)}周`;
+
+    const dayOfYear  = Math.round((new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()) - new Date(dateObj.getFullYear(), 0, 0)) / 86400000);
+    return `本年第${weekNo}周 · 第${dayOfYear}天`;
   };
 
   // ── 农历引擎 (已包含节气安全定位修正) ──────────────────────────────────────
@@ -113,11 +113,11 @@ export default async function(ctx) {
       }
       if (offset < 0) { offset += temp; i--; }
       const lD      = offset + 1;
-      
+
       const term1 = this.getTerm(y, m * 2 - 1);
       const term2 = this.getTerm(y, m * 2);
       const term  = (d === term1) ? this.termNames[m * 2 - 2] : (d === term2) ? this.termNames[m * 2 - 1] : "";
-      
+
       const gz      = "甲乙丙丁戊己庚辛壬癸"[(lYear - 4) % 10] + "子丑寅卯辰巳午未申酉戌亥"[(lYear - 4) % 12];
       const ani     = "鼠牛虎兔龙蛇马羊猴鸡狗猪"[(lYear - 4) % 12];
       const cnMonth = `${isLeap ? "闰" : ""}${"正二三四五六七八九十冬腊"[i - 1]}月`;
@@ -135,7 +135,7 @@ export default async function(ctx) {
     for (let i = 1; i <= 24; i++)
       allTerms.push({ name: Lunar.termNames[i - 1], date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i)) });
   });
-  
+
   let upcomingTerms = [], upcomingTermsLarge = [];
   for (let i = 0; i < allTerms.length; i++) {
     const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
@@ -158,7 +158,7 @@ export default async function(ctx) {
     const resp = await ctx.http.get(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, { timeout: 10000 });
     const json     = JSON.parse(await resp.text());
     const patterns = [`${Y}-${P(M)}-${P(D)}`, `${Y}-${M}-${D}`, `${Y}/${P(M)}/${P(D)}`, `${Y}/${M}/${D}`, `${Y}${P(M)}${P(D)}`];
-    
+
     const findDateData = (data) => {
       if (!data || typeof data !== 'object') return null;
       for (const key in data) {
@@ -193,7 +193,7 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  // ── 顶部角标：恢复双模式原生逻辑 ──────────────────────────────────────────
+  // ── 顶部角标 ──────────────────────────────────────────
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
@@ -244,7 +244,6 @@ export default async function(ctx) {
             mkText(`周${WEEK}`, 12, "heavy", C.muted)
           ]},
           mkSpacer(),
-          // 右上角角标限制，防止侵占过多行内空间
           { type: 'stack', direction: 'row', alignItems: 'center', gap: 3, children: [
              mkIcon(topIcon, C.gold, 11),
              mkText(topText, 10, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
@@ -275,7 +274,7 @@ export default async function(ctx) {
     topIconFz: isLg ? 12 : 11,
     gap: isLg ? 8 : 6
   };
-  
+
   const buildRows = createRowFactory(layoutConfig);
   const yiJiRows = [
     ...buildRows(rawYi, 'checkmark.circle.fill', C.yi, '宜'),
