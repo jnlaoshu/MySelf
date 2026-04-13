@@ -1,6 +1,6 @@
 # 规则名称: AIGC (人工智能生成内容)
 # 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 优化时间: 2026.04.13 16:00
+# 优化时间: 2026.04.13 16:50
 domain_suffix_set:
   # --- OpenAI (ChatGPT / Sora / DALL-E) ---
   - chatgpt.com
@@ -21,6 +21,7 @@ domain_suffix_set:
   - claude.ai
   - claude.com
   - claudeusercontent.com
+  - auth0.com               # Claude iOS App 登录鉴权依赖
 
   # --- Google (Gemini / Bard / NotebookLM) ---
   - gemini.google.com
