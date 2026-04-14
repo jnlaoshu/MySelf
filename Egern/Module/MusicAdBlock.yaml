@@ -1,6 +1,6 @@
 #!name=音乐流媒体净化
-#!desc=2026.04.09 17:25 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐。
-#!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee, VirgilClyne, 001ProMax
+#!desc=2026.04.14 更新。酷狗、酷我、Spotify、YT Music、网易云、汽水、QQ音乐、喜马拉雅、蜻蜓FM、猫耳FM（去广告+界面精简）。
+#!author=AI优化, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, kelee, VirgilClyne, 001ProMax, WeiGiegie, 可莉
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
 [Rule]
@@ -22,7 +22,6 @@ DOMAIN-KEYWORD,-ad-spotify.com,REJECT
 DOMAIN,analytics.spotify.com,REJECT
 DOMAIN,audio-ak-spotify-com.akamaized.net,REJECT
 DOMAIN,b.scorecardresearch.com,REJECT
-# QUIC 广告通道阻断
 PROTOCOL,QUIC,REJECT
 
 # ── 网易云音乐 ──
@@ -49,6 +48,19 @@ DOMAIN,oth.str.mdt.qq.com,REJECT
 DOMAIN,h.trace.qq.com,REJECT
 DOMAIN,us.l.qq.com,REJECT
 
+# ── 喜马拉雅 ──
+DOMAIN,ad.ximalaya.com,REJECT
+DOMAIN,adse.ximalaya.com,REJECT
+DOMAIN,adse.wsa.ximalaya.com,REJECT
+DOMAIN,adbs.ximalaya.com,REJECT
+DOMAIN,adbehavior.ximalaya.com,REJECT
+DOMAIN,adbehavior.wsa.ximalaya.com,REJECT
+
+# ── 蜻蜓FM / 猫耳FM ──
+DOMAIN,ad.qtfm.cn,REJECT
+DOMAIN,adlaunch.qtfm.cn,REJECT
+DOMAIN-SUFFIX,missevan.com,REJECT  # 猫耳FM 广告追踪域名
+
 [Rewrite]
 # ── URL 拒绝 ──
 ^https?:\/\/ads\.kugou\.com\/.* reject
@@ -57,13 +69,32 @@ DOMAIN,us.l.qq.com,REJECT
 ^https?:\/\/rich\.kuwo\.cn\/AdService reject
 ^https?:\/\/bd-api\.kuwo\.cn\/.* reject
 
-# ── Spotify Header 防缓存（确保服务端返回完整 200，脚本可处理 body）──
+# ── 喜马拉雅 去广告 ──
+^https?://passport\.ximalaya\.com/friendship-mobile/v1/findFriendsBanner/show/ reject
+^https?://xdcs-collector\.ximalaya\.com/api/v1/realtime reject
+^https?://adse\.wsa\.ximalaya\.com reject
+^https?://adse\.ximalaya\.com reject
+^https?://ad\.ximalaya\.com reject
+^https?://ulogs\.umeng\.com\/unify_logs reject
+^https?://.+ximalaya\.com/x-web-activity/signIn/getHomePageSignInInfo/ reject-200
+^https?://.+ximalaya\.com/product/promotion/v1/album/price reject-200
+^https?://mobile\.ximalaya\.com/business-sale-promotion-guide-mobile-web/popup/info/ reject
+
+# ── 蜻蜓FM 去广告（移除开屏、信息流、推荐、弹窗等）──
+^https:\/\/app\.qtfm\.cn\/recommendapi\/v\d\/emotion$ reject
+^https:\/\/search\.qtfm\.cn\/v\d\/keyword\/default$ reject
+
+# ── 猫耳FM 去广告（移除开屏、青少年模式、直播入口等）──
+^https:\/\/app\.missevan\.com\/x\/recommend\/get-popup$ reject-200
+^https:\/\/data\.missevan\.com\/site\/ad-track$ reject-200
+
+# ── Spotify Header 防缓存 ──
 ^https:\/\/spclient\.wg\.spotify\.com\/bootstrap\/v1\/bootstrap$ request-header-del if-none-match
 ^https:\/\/spclient\.wg\.spotify\.com\/bootstrap\/v1\/bootstrap$ request-header-del etag
 ^https:\/\/spclient\.wg\.spotify\.com\/user-customization-service\/v1\/customize$ request-header-del if-none-match
 ^https:\/\/spclient\.wg\.spotify\.com\/user-customization-service\/v1\/customize$ request-header-del etag
 
-# ── Spotify artistview 平台切换（解锁歌手主页，iphone → ipad）──
+# ── Spotify artistview 平台切换 ──
 ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad
 
 # ── 汽水音乐 JQ 净化 ──
@@ -72,6 +103,33 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/car
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/search-block 'del(.search_chart_block)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/activities 'del(.activity_map)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/feed\/song-tab '.items |= map(select(.type == "track"))'
+
+# ── 蜻蜓FM Body JQ 净化 ──
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/signin\/show_homepage_icon$ 'if (getpath(["data"]) | has("display_icon")) then (setpath(["data","display_icon"]; false)) else . end'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/recommendapi\/v\d\/hotpage\? '.data.head |= map(select(.type == "IconGrid")) | .data.feeds |= map(select(.type == "Channel" or .type == "Radio" or .type == "ListenListChannel"))'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/channel\/\d{6}\/playpage\/\d{8} 'delpaths([["data","related_recommend"]])'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/channel\/\d{6}\/playpage\/\d{8} 'delpaths([["data","recommend_bar"]])'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/mylistenpage 'delpaths([["data","banner"]])'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/subscribed_channels\? 'delpaths([["data","recommends"]])'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/channelpage\/\d+$ 'delpaths([["data","vip_recommend"]])'
+http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/channelpage\/\d+$ 'delpaths([["data","recommend_delivery"]])'
+
+# ── 猫耳FM Body JQ 净化 ──
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/launch\? 'delpaths([["info","splash"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/launch\? 'delpaths([["info","splash_ready"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","tab_bar_live"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["0"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","enable_tab_bar_live_notice"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["false"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","teenager_popup_mode"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["0"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","httpdns"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","homepage_top_task_button"]])'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ '.info.cronet |= (fromjson | .quic=false | tojson)'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/tabs\? '.info.tabs |= map(select(.title as $t | ["直播", "发现", "广播剧", "听书", "分类"] | index($t) != null))'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/icons\? '.info.icons |= map(select(.title as $t | $t == "直播" or $t == "必听剧" or $t == "免费榜" or $t == "夜猫子" or $t == "启动音"))'
+http-response-jq ^https:\/\/app\.missevan\.com\/discovery\/list$ '.info |= map(map(select(.title != "免流服务")))'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info","search_words"]])'
 
 [Map Local]
 # ── YouTube (Music) 广告流拦截 ──
@@ -104,16 +162,34 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/fee
 ^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/operate(\/(adVip|freeMode\/h5))?\/text data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/abt-kuwo\.tencentmusic\.com\/kuwo\/ui\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
+# ── 蜻蜓FM Map Local 清空 ──
+^https:\/\/app\.qtfm\.cn\/recommendapi\/v8\/ai_assistant_point$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/signin\/show_homepage_icon$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/user\/task\/play$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/i_listen\/guess_you_like\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/recpage-c\.qtfm\.cn\/v\d\/favorites$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/user\.qtfm\.cn\/u\d\/api\/v\d\/user\/following_podcaster\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/entry\.qtfm\.cn\/api\/v\d\/personal\/\?carrier data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/search\.qtfm\.cn\/v3\/entry$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/woqt2\.qtfm\.cn\/v2\/userConfig\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# ── 猫耳FM Map Local 清空 ──
+^https:\/\/data\.missevan\.com\/site\/ad-track$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/app\.missevan\.com\/x\/recommend\/get-popup$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/fm\.missevan\.com\/api\/v2\/meta\/banner$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/fm\.missevan\.com\/api\/v2\/recommended\/top\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/fm\.missevan\.com\/api\/v2\/chatroom\/sound\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
 [Script]
 # ── 酷狗 / 酷我 ──
 酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
 酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
 
-# ── Spotify 去广告核心（app2smile proto 方案，唯一处理 bootstrap/customize）──
+# ── Spotify 去广告核心 ──
 Spotify_去广告_Request = type=http-request, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(artistview\/v1\/artist|album-entity-view\/v2\/album)\/, requires-body=false, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
 Spotify_去广告_Proto = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
 
-# ── Spotify 歌词增强（kelee，与去广告脚本端点不重叠，无冲突）──
+# ── Spotify 歌词增强 ──
 Spotify_Tracks增强 = type=http-response, pattern=^https:\/\/api\.spotify\.com\/v1\/tracks, requires-body=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
 Spotify_歌词请求JSON = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+format=json, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
 Spotify_歌词请求Proto = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
@@ -123,12 +199,14 @@ Spotify_External歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg
 Spotify_External歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
 
 # ── YouTube (Music) Enhance ──
-# YTM_Request 为 YTM 正常工作必要前置，两版均缺失此条
 YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 # ── 网易云音乐 ──
 网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*, requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
 
+# ── 喜马拉雅 核心净化 ──
+喜马拉雅_核心净化 = type=http-response, pattern=^https?:\/\/.+((ximalaya)|(xmcdn)).+(mobile-user\/v2\/homePage|product\/detail\/v1|v1\/album\/track\/ts|mobile-playpage\/track\/v4\/baseInfo\/ts|mobile-playpage\/playpage\/tabs\/v2|mobile-playpage\/playpage\/track\/qualityAndEffect|mobile\/download\/v2\/track|mobile-user-grade\/decoratorV2\/decorationDetails\/page|mobile-album\/album\/plant\/grass), requires-body=true, script-path=https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js
+
 [MITM]
-hostname = *.kugou.com, *.kuwo.cn, spclient.wg.spotify.com, *-spclient.spotify.com, api.spotify.com, *.spotify.com, youtubei.googleapis.com, *.googlevideo.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com
+hostname = *.kugou.com, *.kuwo.cn, spclient.wg.spotify.com, *-spclient.spotify.com, api.spotify.com, *.spotify.com, youtubei.googleapis.com, *.googlevideo.com, interface*.music.163.com, *.music.126.net, music.163.com, beta-luna.douyin.com, api.qishui.com, *.y.qq.com, *.tencentmusic.com, y.gtimg.cn, music.qq.com, *.ximalaya.com, *.xmcdn.com, mobwsa.ximalaya.com, passport.ximalaya.com, apisg.himalaya.com, app.qtfm.cn, entry.qtfm.cn, recpage-c.qtfm.cn, user.qtfm.cn, search.qtfm.cn, woqt2.qtfm.cn, app.missevan.com, data.missevan.com, fm.missevan.com
