@@ -1,5 +1,5 @@
 #!name=地图三合一去广告
-#!desc=2026.04.09 11:55。 高德、百度、腾讯地图
+#!desc=2026.04.14 21:10。 高德、百度、腾讯地图
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
@@ -65,7 +65,11 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data",
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
 [Map Local]
-# （高德和腾讯部分保持不变，百度无Map Local需求）
+# 百度地图开屏广告决策接口
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=bar data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+
+# 百度地图广告投放接口
+^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # ── 高德地图 ──
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -94,4 +98,4 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 百度地图_核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
+hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
