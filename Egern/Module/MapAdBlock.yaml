@@ -1,6 +1,6 @@
 #!name=地图三合一去广告
-#!desc=2026.04.14 23:10。高德、百度、腾讯地图
-#!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
+#!desc=2026.04.15 15:15。高德、百度、腾讯地图
+#!author=RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
 [Rule]
@@ -16,6 +16,9 @@ DOMAIN,tb1.bdstatic.com,REJECT
 DOMAIN,tb2.bdstatic.com,REJECT
 DOMAIN,ss0.bdstatic.com,REJECT
 DOMAIN,gss0.bdstatic.com,REJECT
+# 广告SDK（日志中 http:// 直连，Rule 层拦截即可）
+DOMAIN,sdk.1rtb.net,REJECT
+DOMAIN,sdk.beizi.biz,REJECT
 
 # ── 腾讯地图 ──
 DOMAIN,adstats.map.qq.com,REJECT
@@ -56,6 +59,14 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 # ── 百度地图 ──
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=bar data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/imap\/ulog\/batchup\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/client\/imap\/ulog\/s\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/feed-server\/useraction\/report\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/feed-server\/useraction\/pulse_report\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/feed-server\/activity\/task_init\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/voiceic\/cloudcontrol\/engine data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/client\/info-protection\/usage\/stat\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/newclient\.map\.baidu\.com\/client\/usercredit\/security\/factor\/? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # ── 高德地图 ──
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
