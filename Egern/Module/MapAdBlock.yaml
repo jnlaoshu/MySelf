@@ -1,6 +1,6 @@
 #!name=地图三合一去广告
-#!desc=2026.04.15 15:15。高德、百度、腾讯地图
-#!author=RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
+#!desc=2026.04.15 修复版 | 高德、百度、腾讯地图。已彻底修复百度地图首页广告过滤失效问题（移除 404 脚本，全量切换至极速 JQ 净化引擎）。
+#!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
 [Rule]
@@ -25,13 +25,14 @@ DOMAIN,adstats.map.qq.com,REJECT
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
 
 [Rewrite]
-# ── 百度地图 ──
-^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) reject
+# ── 百度地图 URL 静态断流 ──
+^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup|activity)) reject
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject-200
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) reject
 ^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ reject
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump reject
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) reject
+# 精准拦截各种硬编码的广告请求
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/\?qt=(ads|splash|startpage|openad|hw) reject
 
 # ── 腾讯地图 ──
 ^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ reject
@@ -44,19 +45,21 @@ http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
 
-# ── 百度地图 Body Rewrite ──
+# ── 百度地图 (核心修复：全量 JQ 接管首页、我的页面净化) ──
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
 http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
-http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
+# 核心：拦截首页推荐流、卡片与动态下发广告
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing 'del(.data.banner, .data.popup, .data.float_card)'
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/usersystem\/home\/dynamic 'del(.data.ad_info, .data.promotion, .data.activities)'
 
 # ── 腾讯地图 Body Rewrite ──
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
 [Map Local]
-# ── 百度地图 ──
+# ── 百度地图 (精简上报阻断，防止启动拖慢) ──
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui2\/\?qt=bar data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/crossmarketing\/? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/newclient\.map\.baidu\.com\/imap\/ulog\/batchup\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -91,8 +94,8 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 高德_广告清理_m5 = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, max-size=-1
 高德_广告清理_m5zb = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true, max-size=-1
 
-# ── 百度地图 ──
-百度地图_核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, max-size=-1, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
+# ── 百度地图脚本已移除，全量由原生 JQ 引擎接管 ──
 
 [MITM]
-hostname = *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, sns.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
+# 清理了多余的冗余前缀，保留核心泛域名
+hostname = *.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
