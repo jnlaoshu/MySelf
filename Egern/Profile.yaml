@@ -2,7 +2,7 @@
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.04.13 15:48
+# ⏱️ 更新时间: 2026.04.16 21:32
 # ==========================================
 
 # 基本配置
@@ -11,7 +11,7 @@ http_port: 3080
 socks_port: 3090
 allow_external_connections: true
 vif_only: true
-hide_vpn_icon: true
+hide_vpn_icon: false
 public_ip_lookup_url: https://ifconfig.me/ip
 
 # VIF 排除路由
