@@ -1,8 +1,7 @@
 # ==========================================
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
-# ✨ 主要功能: 集成大厂核心域名专属 DNS 解析、VIF 局域网旁路优化、节点自动化跨区优选、以及基于漏斗模型的精细化分流路由（广告拦截/内网直连/应用代理/国内兜底），并全量支持外挂脚本与组件模块。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.05.01 22:30
+# ⏱️ 更新时间: 2026.05.02 16:36
 # ==========================================
 
 # 基本配置
@@ -11,7 +10,6 @@ http_port: 3080
 socks_port: 3090
 allow_external_connections: true
 vif_only: true
-block_quic: true
 hide_vpn_icon: false
 
 # 排除与真实 IP 配置
@@ -40,6 +38,9 @@ direct_latency_test_url: http://www.apple.com/library/test/success.html
 # DNS 配置
 dns:
   public_ip_lookup_url: https://ifconfig.me/ip
+  proxy_nameservers:
+    - https://8.8.8.8/dns-query
+    - https://1.1.1.1/dns-query
   bootstrap:
     - system
     - 223.5.5.5
@@ -139,7 +140,7 @@ policy_groups:
           🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
           🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
           🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
-          🇺🇸|美国|United\s*States|America|\bUSA?\\b|
+          🇺🇸|美国|United\s*States|America|\bUSA?\b|
           洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
           \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
           倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
