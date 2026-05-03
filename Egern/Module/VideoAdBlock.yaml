@@ -1,10 +1,10 @@
 #!name=流媒体去广告
-#!desc=2026.04.09 17:20 更新。爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max。
+#!desc=2026.05.03 10:45 更新。爱奇艺、优酷、腾讯视频、芒果TV、B站、Netflix、Disney+ 及 Max。
 #!author=AI优化, ddgksf2013, app2smile, Maasea
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
 
 [Rule]
-# ── 腾讯视频 ──
+# TencentVideo
 DOMAIN,adsmind.gdtimg.com,REJECT
 DOMAIN,tmead.y.qq.com,REJECT
 DOMAIN,btrace.qq.com,REJECT
@@ -12,29 +12,29 @@ DOMAIN,btrace.video.qq.com,REJECT
 DOMAIN,advideo.qq.com,REJECT
 DOMAIN,ad.qq.com,REJECT
 
-# ── 爱奇艺 ──
+# iQiyi
 DOMAIN,t7z.cupid.iqiyi.com,REJECT
 DOMAIN,t7z.cupid.ptqy.gitv.tv,REJECT
 DOMAIN,msg.iqiyi.com,REJECT
 DOMAIN,cupid.iqiyi.com,REJECT
 DOMAIN,ad.iqiyi.com,REJECT
 
-# ── 优酷 ──
+# Youku
 DOMAIN,ad.m.youku.com,REJECT
 DOMAIN,val.youku.com,REJECT
 DOMAIN,lstat.youku.com,REJECT
 DOMAIN,ykad.youku.com,REJECT
 
-# ── 芒果TV ──
+# MangoTV
 DOMAIN,da.mgtv.com,REJECT
 DOMAIN,x-da.mgtv.com,REJECT
 DOMAIN,ad.mgtv.com,REJECT
 
-# ── B站 ──
+# Bilibili
 DOMAIN,mall.bilibili.com,REJECT
 DOMAIN,cm.bilibili.com,REJECT
 
-# ── Netflix ──
+# Netflix
 DOMAIN,ichnaea.netflix.com,REJECT
 DOMAIN,beacon.netflix.com,REJECT
 DOMAIN,ads.netflix.com,REJECT
@@ -45,7 +45,7 @@ DOMAIN,analytics.netflix.com,REJECT
 DOMAIN,events.netflix.com,REJECT
 DOMAIN,fls.netflix.com,REJECT
 
-# ── Disney+ ──
+# DisneyPlus
 DOMAIN,ads.disneyplus.com,REJECT
 DOMAIN,disneyadvertising.com,REJECT
 DOMAIN,beacon.disneyplus.com,REJECT
@@ -54,7 +54,7 @@ DOMAIN,tracking.disneyplus.com,REJECT
 DOMAIN,analytics.disneyplus.com,REJECT
 DOMAIN,telemetry.disneyplus.com,REJECT
 
-# ── Max ──
+# Max
 DOMAIN,ads.max.com,REJECT
 DOMAIN,beacon.max.com,REJECT
 DOMAIN,log.max.com,REJECT
@@ -64,38 +64,30 @@ DOMAIN,braze.max.com,REJECT
 DOMAIN,brightline.tv,REJECT
 
 [Map Local]
-# ── YouTube (Music) 广告流拦截 ──
-^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain"
-
-# ── 腾讯视频 ──
+# TencentVideo
 ^https?:\/\/livew\.l\.qq\.com\/livemsg\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/ad\.qq\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── 爱奇艺 ──
+# iQiyi
 ^https?:\/\/ifacelog\.iqiyi\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/dash-api\.iqiyi\.com\/mac\/api\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/vali\.cp31\.ott\.cibntv\.net\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── 优酷 ──
+# Youku
 ^https?:\/\/ykad-data\.youku\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── 芒果TV ──
+# MangoTV
 ^https?:\/\/app\.mgtv\.com\/v1\/splash\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# ── B站 ──
+# Bilibili
 ^https?:\/\/app\.bilibili\.com\/x\/v2\/splash\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/app\.bilibili\.com\/x\/v2\/account\/teenagers\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-# ── B站 ──
-B站_JSON净化 = type=http-response, pattern=^https:\/\/app\.bilibili\.com\/x\/(v2\/(splash\/(list|show)|feed\/index\?)|resource\/show\/tab\/v2), requires-body=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/bilibili-json.js
-B站_Proto净化 = type=http-response, pattern=^https:\/\/(grpc\.biliapi\.net|app\.bilibili\.com)\/bilibili\.app\.(view\.v1\.View\/View|dynamic\.v2\.Dynamic\/DynAll|playurl\.v1\.PlayURL\/PlayView)$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/bilibili-proto.js
+# Youku
+Youku_Script = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/(v3\/play\/ad|v5\/play\/ad|adn\/(p|x)lay|api\/ad|play\/preroll|live\/ad)\/.*, requires-body=true, max-size=-1, timeout=20, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
 
-# ── 优酷 ──
-优酷_核心净化 = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/(v3\/play\/ad|v5\/play\/ad|adn\/(p|x)lay|api\/ad|play\/preroll|live\/ad)\/.*, requires-body=true, max-size=-1, timeout=20, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
-
-# ── YouTube (Music) Enhance ──
-# YTM_Request 为 YTM 正常工作必要前置
+# YouTube
 YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
