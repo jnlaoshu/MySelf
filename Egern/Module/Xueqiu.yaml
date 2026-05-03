@@ -1,38 +1,33 @@
 #!name=雪球去广告
-#!desc=移除开屏广告、各类横幅广告、信息流广告、帖内广告、新用户定向广告、各类弹窗、股票/基金/私募/直播推荐。
-#!author=可莉🅥 & Optimized
-#!icon=https://raw.githubusercontent.com/luestr/IconResource/main/App_icon/120px/Snowball.png
-#!date=2025-11-25 03:30:07
+#!desc=2026.05.03 11:00 更新。移除开屏广告、各类横幅广告、信息流广告、帖内广告、新用户定向广告、各类弹窗、股票/基金/私募/直播推荐。
+#!author=AI优化, 可莉🅥
+#!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
+
+https://monica.im/en/tools/rewrite-text
+# 开屏与促销广告精准拦截
+^https?:\/\/api\.xueqiu\.com\/snowpard\/launch_strategy\/query\.json _ reject-dict
+^https?:\/\/api\.xueqiu\.com\/brand\/search\/v1\.json _ reject-dict
+^https?:\/\/(api|promo)\.xueqiu\.com\/promotion\/(display_cache|display_ad|feed_display|search_ad) _ reject-dict
 
 [Body Rewrite]
-http-response-jq ^https:\/\/open\.xueqiu\.com\/mpaas\/config\/content\?.*timeline_tab_name 'delpaths([["data"], ["isitor_page_login_config"], ["visitor_page_login_config"]])'
+# 清理时间线顶部的登录提示与冗余配置
+http-response-jq ^https:\/\/open\.xueqiu\.com\/mpaas\/config\/content\?.*timeline_tab_name 'delpaths([["data"], ["visitor_page_login_config"]])'
 
 [Map Local]
+# 空数据占位屏蔽各类推荐与浮窗
 ^https:\/\/api\.xueqiu\.com\/snowpard\/launch_strategy\/query\.json\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/open\.xueqiu\.com\/mpaas\/config\/content\?.+home_visitor_relation_config data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/ucprofile\/api\/user\/batchGetUserBasicInfo\.json data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/lightsnow\/launch\/plan\/bee\/query\.json\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/lightsnow\/optional\/banner\/query\.json data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/snowflake-theme\/query\/v1\/hot_event\/rich_tag_new\.json\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/query\/v1\/hot_event\/tag\.json\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/open\.xueqiu\.com\/mpaas\/config\/content\?.+cube_detail_bottom_operation_trade_button data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/recommend-proxy\/card\/zj_card\.json\?feed_id=207 data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/recommend-proxy\/card\/portfolio_tab_symbol\.json data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/stock\.xueqiu\.com\/v5\/stock\/group\/recommend\/default\/list\.json data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/api\.xueqiu\.com\/livestream\/structure\/live\/hotCard\.json data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
 ^https:\/\/fund\.xueqiu\.com\/fundx\/activity\/x\/web\/c\/index\/dataByCode\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [MITM]
-hostname = api.xueqiu.com, open.xueqiu.com, stock.xueqiu.com, fund.xueqiu.com, *.xueqiu.com, 39.103.79.14, 39.106.97.84, 47.95.49.75, 101.201.62.20, 101.201.62.26, 101.201.175.228, 124.250.48.3, 182.92.145.50, 182.92.251.113
+hostname = %APPEND% api.xueqiu.com, promo.xueqiu.com, open.xueqiu.com, stock.xueqiu.com, fund.xueqiu.com, *.xueqiu.com, 39.103.79.14, 39.106.97.84, 47.95.49.75, 101.201.62.20, 101.201.62.26, 101.201.175.228, 124.250.48.3, 182.92.145.50, 182.92.251.113
