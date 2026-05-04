@@ -1,5 +1,5 @@
 #!name=差旅出行去广告
-#!desc=2026.05.03 10:50 更新。滴滴、12306、携程、哈啰
+#!desc=2026.05.04 10:00 更新。滴滴、12306、携程、哈啰
 #!author=AI优化, LoonKissSurge, ZenmoFeiShi, kokoryh, blackmatrix7, RuCu6, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
 
@@ -13,7 +13,7 @@ AND,((IP-ASN,63646,no-resolve),(DEST-PORT,25641),(PROTOCOL,TCP)),REJECT
 IP-CIDR,112.53.55.225/32,REJECT
 IP-CIDR,139.199.240.84/32,REJECT
 
-# ChinaRailway
+# ChinaRailway (配合Rewrite中的JQ脚本进行去广告，防止直接拦截导致卡开屏)
 DOMAIN,ad.12306.cn,DIRECT
 
 # Ctrip
@@ -24,6 +24,7 @@ DOMAIN,ma-adx.ctrip.com,REJECT
 DOMAIN,ad.hellobike.com,REJECT
 
 [Rewrite]
+# ================= JQ Data Processing =================
 # Didi
 http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v\d+\/core\? '.data.disorder_cards.bottom_nav_list.data |= map(select(.id == "home_page" or .id == "user_center")) | .data.order_cards.nav_list_card.data |= map(select(.nav_id == "dache_anycar" or .nav_id == "carmate" or .nav_id == "driverservice" or .nav_id == "zhandianbashi" or .nav_id == "yuancheng" or .nav_id == "pincheche" or .nav_id == "bike" or .nav_id == "special_ride" or .nav_id == "nav_more_v3"))'
 http-response-jq ^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/fast\? 'delpaths([["data","disorder_cards","communicate_card"],["data","disorder_cards","not_login_bottom_bar"],["data","disorder_cards","riding_code_card"],["data","order_cards","car_owner_widget_card"],["data","order_cards","marketing_card"],["data","order_cards","super_banner_card"],["data","disorder_cards","car_icon","data","icon_info_new_agreement"]])'
@@ -38,24 +39,24 @@ http-response-jq ^https:\/\/as\.xiaojukeji\.com\/ep\/as\/toggles\? '.data |= map
 # ChinaRailway
 http-response-jq ^https:\/\/ad\.12306\.cn\/ad\/ser\/getAdList$ 'delpaths([["materialsList"], ["advertParam"]])'
 
-[Map Local]
+# ================= Native Reject-Dict =================
 # Didi
-^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/lion\.didialift\.com\/broker\/\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/poi\.map\.xiaojukeji\.com\/mapapi\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/res\.xiaojukeji\.com\/resapi\/activity\/mget reject-dict
+^https:\/\/lion\.didialift\.com\/broker\/\? reject-dict
+^https:\/\/conf\.diditaxi\.com\.cn\/homepage\/v1\/other\/slow\? reject-dict
+^https:\/\/ct\.xiaojukeji\.com\/agent\/v3\/feeds\? reject-dict
+^https:\/\/conf\.diditaxi\.com\.cn\/dynamic\/conf reject-dict
+^https:\/\/poi\.map\.xiaojukeji\.com\/mapapi\/recommend\? reject-dict
 
 # Ctrip
-^https?:\/\/m\.ctrip\.com\/restapi\/[\w\/]+tripAds data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/\d+\/json\/getAdsList data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/16189\/json\/searchAppFloatWindow data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/14446\/json\/getSplashConfig data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/m\.ctrip\.com\/restapi\/[\w\/]+tripAds reject-dict
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/\d+\/json\/getAdsList reject-dict
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/16189\/json\/searchAppFloatWindow reject-dict
+^https?:\/\/m\.ctrip\.com\/restapi\/soa2\/14446\/json\/getSplashConfig reject-dict
 
 # HelloBike
-^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/api\.hellobike\.com\/api\.common\.activity\.AppAd\/getAd reject-dict
+^https?:\/\/api\.hellobike\.com\/api\.common\.ad\.AdAdver\/getAdverList reject-dict
 
 [Script]
 # ChinaRailway
