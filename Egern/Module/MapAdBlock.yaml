@@ -1,5 +1,5 @@
 #!name=地图三合一去广告
-#!desc=2026.05.03 更新。包含高德、百度、腾讯地图。
+#!desc=2026.05.04 10:00 更新。包含高德、百度、腾讯地图。
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
@@ -8,48 +8,26 @@
 # 防 HTTPDNS 劫持 (核心优化，防止高德绕过代理)
 DOMAIN,amdc.m.taobao.com,REJECT
 # 核心广告/遥测域名拦截
-DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
-DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
+DOMAIN,amap-aos-info-nogw.amap.com,REJECT
+DOMAIN,free-aos-cdn-image.amap.com,REJECT
+DOMAIN-SUFFIX,v.smtcdns.com,REJECT
 # 防卡顿直连 (避免正常服务被阻断)
 DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT
 
 # === 百度地图 ===
 DOMAIN,httpdns.baidubce.com,REJECT
-DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,ss0.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,gss0.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN,dss0.bdstatic.com,REJECT
+DOMAIN,tb1.bdstatic.com,REJECT
+DOMAIN,tb2.bdstatic.com,REJECT
+DOMAIN,ss0.bdstatic.com,REJECT
+DOMAIN,gss0.bdstatic.com,REJECT
 
 # === 腾讯地图 ===
-DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
-DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
+DOMAIN,adstats.map.qq.com,REJECT
+DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT
 
-https://ahrefs.com/writing-tools/paragraph-rewriter
-# === 高德地图 ===
-# 拦截开屏广告
-^https?:\/\/.*\.amap\.com\/ws\/(aos|valueadded)\/alimama\/splash_screen _ reject-200
-# 拦截打车 Tip 请求与商业归因
-^https?:\/\/.*\.amap\.com\/ws\/boss\/order_web\/\w{8}_information _ reject-200
-^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution _ reject
-# 拦截首页动图推广
-^https?:\/\/.*\.amap\.com\/uploadimg\/\w+\.gif _ reject-dict
-
-# === 百度地图 ===
-^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) _ reject
-^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ _ reject-200
-^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) _ reject
-^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ _ reject
-^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump _ reject
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) _ reject-dict
-
-# === 腾讯地图 ===
-^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ _ reject
-^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:ad|recommend|promotion) _ reject
-^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? _ reject
-
-[Body Rewrite]
+[Rewrite]
+# ================= JQ Data Processing =================
 # === 高德地图 ===
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
 http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
@@ -67,24 +45,38 @@ http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
-[Map Local]
+# ================= Native Reject / Reject-Dict =================
 # === 高德地图 ===
-^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(?:car-end|route-plan) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(?:main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/.*\.amap\.com\/ws\/(aos|valueadded)\/alimama\/splash_screen reject-200
+^https?:\/\/.*\.amap\.com\/ws\/boss\/order_web\/\w{8}_information reject-200
+^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution reject
+^https?:\/\/.*\.amap\.com\/uploadimg\/\w+\.gif reject-dict
+^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? reject-dict
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? reject-dict
+^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? reject-dict
+^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? reject-dict
+^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ reject-dict
+^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend\? reject-dict
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(?:car-end|route-plan) reject-dict
+^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list\? reject-dict
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(?:main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) reject-dict
+^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? reject-dict
+^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? reject-dict
+
+# === 百度地图 ===
+^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) reject
+^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject-200
+^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) reject
+^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ reject
+^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump reject
+^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) reject-dict
 
 # === 腾讯地图 ===
-^https:\/\/sv\.map\.qq\.com\/txmap\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ reject
+^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:ad|recommend|promotion) reject
+^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? reject-dict
+^https:\/\/sv\.map\.qq\.com\/txmap\/ad\/ reject-dict
+^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? reject-dict
 
 [Script]
 # === 高德地图 ===
@@ -95,4 +87,4 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 百度地图核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-hostname = %APPEND% *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
+hostname = *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
