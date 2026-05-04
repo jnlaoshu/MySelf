@@ -1,15 +1,20 @@
 #!name=地图三合一去广告
-#!desc=2026.05.03 10:55 更新。 高德、百度、腾讯地图
+#!desc=2026.05.03 更新。包含高德、百度、腾讯地图。
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
 [Rule]
-# 高德地图
+# === 高德地图 ===
+# 防 HTTPDNS 劫持 (核心优化，防止高德绕过代理)
+DOMAIN,amdc.m.taobao.com,REJECT
+# 核心广告/遥测域名拦截
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
+# 防卡顿直连 (避免正常服务被阻断)
+DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT
 
-# 百度地图
+# === 百度地图 ===
 DOMAIN,httpdns.baidubce.com,REJECT
 DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
 DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
@@ -17,12 +22,21 @@ DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
 DOMAIN,ss0.bdstatic.com,REJECT,extended-matching,pre-matching
 DOMAIN,gss0.bdstatic.com,REJECT,extended-matching,pre-matching
 
-# 腾讯地图
+# === 腾讯地图 ===
 DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 
-https://monica.im/en/tools/rewrite-text
-# 百度地图
+https://ahrefs.com/writing-tools/paragraph-rewriter
+# === 高德地图 ===
+# 拦截开屏广告
+^https?:\/\/.*\.amap\.com\/ws\/(aos|valueadded)\/alimama\/splash_screen _ reject-200
+# 拦截打车 Tip 请求与商业归因
+^https?:\/\/.*\.amap\.com\/ws\/boss\/order_web\/\w{8}_information _ reject-200
+^https?:\/\/.*\.amap\.com\/ws\/asa\/ads_attribution _ reject
+# 拦截首页动图推广
+^https?:\/\/.*\.amap\.com\/uploadimg\/\w+\.gif _ reject-dict
+
+# === 百度地图 ===
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) _ reject
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ _ reject-200
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) _ reject
@@ -30,31 +44,31 @@ https://monica.im/en/tools/rewrite-text
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump _ reject
 ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) _ reject-dict
 
-# 腾讯地图
+# === 腾讯地图 ===
 ^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ _ reject
 ^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:ad|recommend|promotion) _ reject
 ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? _ reject
 
 [Body Rewrite]
-# 高德地图
+# === 高德地图 ===
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
 http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
 
-# 百度地图
+# === 百度地图 ===
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
 http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
 
-# 腾讯地图
+# === 腾讯地图 ===
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
 [Map Local]
-# 高德地图
+# === 高德地图 ===
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
@@ -67,17 +81,17 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 ^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 腾讯地图
+# === 腾讯地图 ===
 ^https:\/\/sv\.map\.qq\.com\/txmap\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-# 高德地图
+# === 高德地图 ===
 高德广告清理_m5 = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
 高德广告清理_m5zb = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
 
-# 百度地图
+# === 百度地图 ===
 百度地图核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
