@@ -1,5 +1,5 @@
 #!name=地图三合一去广告
-#!desc=2026.05.04 10:00 更新。包含高德、百度、腾讯地图。
+#!desc=2026.05.04 10:08 更新。高德、百度、腾讯地图。
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
@@ -15,9 +15,7 @@ DOMAIN-SUFFIX,v.smtcdns.com,REJECT
 DOMAIN-SUFFIX,optimus-ads.amap.com,DIRECT
 
 # === 百度地图 ===
-# 拦截 HTTPDNS 劫持
 DOMAIN,httpdns.baidubce.com,REJECT
-# 拦截静态广告/素材下发域名
 DOMAIN,dss0.bdstatic.com,REJECT
 DOMAIN,tb1.bdstatic.com,REJECT
 DOMAIN,tb2.bdstatic.com,REJECT
@@ -68,11 +66,11 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 
 # === 百度地图 ===
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) reject
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) reject-dict
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ reject-200
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) reject
 ^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ reject
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump reject
+# 注意：已移除原先覆盖 .*qt=(ads|splash) 的 reject-dict，交给下方的 Script 在响应期净化，恢复首页版式。
 
 # === 腾讯地图 ===
 ^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ reject
