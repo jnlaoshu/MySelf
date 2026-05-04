@@ -1,6 +1,6 @@
 #!name=音乐流媒体净化
-#!desc=2026.05.03 更新 | 酷狗/酷我/波点音乐/Spotify/YT Music/网易云/汽水音乐/QQ音乐/喜马拉雅/蜻蜓FM/猫耳FM（去广告+界面精简+会员增强）
-#!author=AI整合 | Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, WeiGiegie, kelee 等
+#!desc=2026.05.04 09:40 更新 | 酷狗/酷我/波点音乐/Spotify/YT Music/网易云/汽水音乐/QQ音乐/喜马拉雅/蜻蜓FM/猫耳FM（去广告+界面精简+会员增强）
+#!author=AI优化 | Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, WeiGiegie, kelee 等
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
 [Rule]
@@ -18,12 +18,10 @@ DOMAIN,kaiping.kuwo.cn,REJECT
 DOMAIN,mgxhtj.kuwo.cn,REJECT
 
 # ── Spotify ──
-DOMAIN,audio-ads.spotify.com,REJECT
-DOMAIN,ads-fa.spotify.com,REJECT
-DOMAIN-KEYWORD,-ad-spotify.com,REJECT
-DOMAIN,analytics.spotify.com,REJECT
 DOMAIN,audio-ak-spotify-com.akamaized.net,REJECT
 DOMAIN,b.scorecardresearch.com,REJECT
+DOMAIN,ads-fa.spotify.com,REJECT
+DOMAIN-KEYWORD,-ad-spotify.com,REJECT
 
 # ── 网易云音乐 ──
 DOMAIN,admusicpic.music.126.net,REJECT
@@ -68,7 +66,7 @@ DOMAIN,adlaunch.qtfm.cn,REJECT
 DOMAIN,ad.missevan.com,REJECT
 
 [Rewrite]
-# URL 拒绝
+# 酷狗 & 酷我
 ^https?:\/\/ads\.kugou\.com\/.* reject
 ^https?:\/\/splash\.kugou\.com\/.* reject
 ^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd reject
@@ -90,10 +88,10 @@ DOMAIN,ad.missevan.com,REJECT
 ^https:\/\/app\.missevan\.com\/x\/recommend\/get-popup$ reject-200
 ^https:\/\/data\.missevan\.com\/site\/ad-track$ reject-200
 
-# Spotify Header + artistview
+# Spotify (修复版)
 ^https:\/\/spclient\.wg\.spotify\.com\/bootstrap\/v1\/bootstrap$ request-header-del if-none-match
 ^https:\/\/spclient\.wg\.spotify\.com\/user-customization-service\/v1\/customize$ request-header-del if-none-match
-^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad
+^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone reject
 
 # Body JQ 净化
 # 汽水音乐
@@ -113,8 +111,7 @@ http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/channelpage\/\d+$ 'delpath
 
 # 猫耳FM
 http-response-jq ^https:\/\/app\.missevan\.com\/site\/launch\? 'delpaths([["info","splash"],["info","splash_ready"]])'
-http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","tab_bar_live"],["info","enable_tab_bar_live_notice"],["info","teenager_popup_mode"],["info","httpdns"],["info","homepage_top_task_button"]])'
-http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ '.info.cronet |= (fromjson | .quic=false | tojson)'
+http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","tab_bar_live"],["info","enable_tab_bar_live_notice"],["info","teenager_popup_mode"],["info","httpdns"],["info","homepage_top_task_button"]]) | .info.cronet |= (fromjson | .quic=false | tojson)'
 http-response-jq ^https:\/\/app\.missevan\.com\/site\/tabs\? '.info.tabs |= map(select(.title as $t | ["直播", "发现", "广播剧", "听书", "分类"] | index($t) != null))'
 http-response-jq ^https:\/\/app\.missevan\.com\/site\/icons\? '.info.icons |= map(select(.title as $t | $t == "直播" or $t == "必听剧" or $t == "免费榜" or $t == "夜猫子" or $t == "启动音"))'
 http-response-jq ^https:\/\/app\.missevan\.com\/discovery\/list$ '.info |= map(map(select(.title != "免流服务")))'
@@ -130,9 +127,9 @@ http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info
 # 波点音乐
 ^https?:\/\/tmeadcomm\.y\.qq\.com\/ data-type=text data=" " status-code=200
 
-# 网易云音乐（精准）
-^https?:\/\/interface\d?\.music\.163\.com\/eapi\/(?:delivery\/(?:batch-)?deliver|moment\/tab\/info\/|side-bar\/mini-program\/music-service\/account|yunbei\/account\/entrance\/|community\/friends\/fans-group\/artist\/group\/|mine\/applet\/redpoint|music\/songshare\/text\/recommend\/|resniche\/position\/play\/new\/|resniche\/tspopup\/show|resource\/comments?\/musiciansaid\/|user\/sub\/artist|ios\/version|mlivestream\/entrance\/playpage\/|link\/position\/show\/strategy|link\/scene\/show\/resource|v1\/content\/exposure\/comment\/banner\/) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/interface\d?\.music\.163\.com\/w?eapi\/(?:activity\/bonus\/playpage\/time\/query|resource-exposure\/|search\/(?:chart\/|rcmd\/keyword\/|specialkeyword\/)) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+# 网易云音乐
+^https?:\/\/interface\d?\.music\.163\.com\/eapi\/(delivery\/(batch-)?deliver|moment\/tab\/info\/|side-bar\/mini-program\/music-service\/account|yunbei\/account\/entrance\/|community\/friends\/fans-group\/artist\/group\/|mine\/applet\/redpoint|music\/songshare\/text\/recommend\/|resniche\/position\/play\/new\/|resniche\/tspopup\/show|resource\/comments?\/musiciansaid\/|user\/sub\/artist|ios\/version|mlivestream\/entrance\/playpage\/|link\/position\/show\/strategy|link\/scene\/show\/resource|v1\/content\/exposure\/comment\/banner\/) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/interface\d?\.music\.163\.com\/w?eapi\/(activity\/bonus\/playpage\/time\/query|resource-exposure\/|search\/(chart\/|rcmd\/keyword\/|specialkeyword\/)) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/interface\d\.music\.163\.com\/eapi\/my\/podcast\/tab\/recommend data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/interface\d?\.music\.163\.com\/e?api\/(ocpc\/)?ad\/ data-type=text data="" status-code=200 header="Content-Type:text/plain"
 ^https?:\/\/interface\d?\.music\.163\.com\/w?e?api\/search\/default data-type=text data="" status-code=200 header="Content-Type:text/plain"
@@ -141,17 +138,17 @@ http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info
 
 # QQ音乐
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(?:t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 汽水音乐
-^https:\/\/(?:beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(?:media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(?:beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 酷我
-^https?:\/\/mobilead\.kuwo\.cn\/EcomResourceServer\/(?:getIOSIsHideAd|getMotor)\.do data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/rich\.kuwo\.cn\/(?:AdService|ecom)\/kaiping\/ad[iI]nfo data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/mobilead\.kuwo\.cn\/EcomResourceServer\/(getIOSIsHideAd|getMotor)\.do data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/rich\.kuwo\.cn\/(AdService|ecom)\/kaiping\/ad[iI]nfo data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/user\/adVip\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/operate(?:\/(?:adVip|freeMode\/h5))?\/text data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/operate\/(adVip|freeMode\/h5)?\/?text data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/abt-kuwo\.tencentmusic\.com\/kuwo\/ui\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 蜻蜓FM
