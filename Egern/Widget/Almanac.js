@@ -9,7 +9,7 @@
  * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.05.05 19:15
+ * ⏱️ 更新时间: 2026.04.13 15:00
  * ==========================================
  */
 
@@ -69,119 +69,62 @@ export default async function(ctx) {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart  = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo     = Math.ceil((d.getTime() - yearStart.getTime()) / 86400000 / 7 + 1);
+
     const dayOfYear  = Math.round((new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()) - new Date(dateObj.getFullYear(), 0, 0)) / 86400000);
     return `本年第${weekNo}周 · 第${dayOfYear}天`;
   };
 
-  // ── 农历引擎（重构优化版）────────────────────────────────────────────────
+  // ── 农历引擎 (已包含节气安全定位修正) ──────────────────────────────────────
   const Lunar = {
-    // 农历数据表（1900-2100）
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
-
     termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
-
     getTerm(y, n) {
-      const terms = [0, 21208, 42467, 63836, 85337, 107014, 128867, 150921, 173149, 195551,
-                    218072, 240693, 263343, 285989, 308563, 331033, 353350, 375494, 397447,
-                    419210, 440795, 462224, 483532, 504758];
-      const base = Date.UTC(1900, 0, 6, 2, 5);
-      const ms = base + (31556925974.7 * (y - 1900) + terms[n - 1] * 60000);
-      return new Date(ms + 8 * 3600000); // 东八区
+      const t = new Date(
+        (31556925974.7 * (y - 1900)) +
+        [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n - 1] * 60000 +
+        Date.UTC(1900, 0, 6, 2, 5)
+      );
+      // 修复：原先的 t.getTime() + 8 * 3600000 会导致时区加算两次，部分节气推迟一天
+      return t.getUTCDate();
     },
-
-    getOffset(y, m, d) {
-      return Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
-    },
-
-    getYearDays(y) {
-      let sum = 348;
-      const code = this.info[y - 1900];
-      for (let i = 0x8000; i > 0x8; i >>= 1) sum += (code & i) ? 1 : 0;
-      return sum + ((code & 0xf) ? ((code & 0x10000) ? 30 : 29) : 0);
-    },
-
-    getLeapMonth(y) {
-      return this.info[y - 1900] & 0xf;
-    },
-
-    getMonthDays(y, m) {
-      return (this.info[y - 1900] & (0x10000 >> m)) ? 30 : 29;
-    },
-
-    getLeapDays(y) {
-      if (this.getLeapMonth(y) === 0) return 0;
-      return (this.info[y - 1900] & 0x10000) ? 30 : 29;
-    },
-
-    getLunarInfoByOffset(offset) {
-      let year = 1900, temp = 0;
-      while (offset > 0) {
-        temp = this.getYearDays(year);
-        if (offset < temp) break;
+    parse(y, m, d) {
+      let offset = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
+      let i, temp = 0;
+      for (i = 1900; i < 2101 && offset > 0; i++) {
+        temp = 348;
+        for (let j = 0x8000; j > 0x8; j >>= 1) temp += (this.info[i - 1900] & j) ? 1 : 0;
+        temp += (this.info[i - 1900] & 0xf) ? ((this.info[i - 1900] & 0x10000) ? 30 : 29) : 0;
         offset -= temp;
-        year++;
       }
-      if (offset < 0) { offset += temp; year--; }
-
-      const leap = this.getLeapMonth(year);
-      let isLeapMonth = false;
-      let month = 1;
-
-      for (month = 1; month <= 12; month++) {
-        let days = this.getMonthDays(year, month);
-        if (leap > 0 && month === leap + 1) {
-          if (!isLeapMonth) {
-            --month; isLeapMonth = true; days = this.getLeapDays(year);
-          } else {
-            isLeapMonth = false;
-          }
+      if (offset < 0) { offset += temp; i--; }
+      const lYear = i, leap = this.info[lYear - 1900] & 0xf;
+      let isLeap = false;
+      for (i = 1; i < 13 && offset > 0; i++) {
+        if (leap > 0 && i === (leap + 1) && !isLeap) {
+          --i; isLeap = true;
+          temp = (this.info[lYear - 1900] & 0x10000) ? 30 : 29;
+        } else {
+          temp = (this.info[lYear - 1900] & (0x10000 >> i)) ? 30 : 29;
         }
-        if (offset < days) break;
-        offset -= days;
+        if (isLeap && i === (leap + 1)) isLeap = false;
+        offset -= temp;
       }
+      if (offset === 0 && leap > 0 && i === leap + 1) {
+        isLeap = !isLeap ? true : (isLeap = false, --i, false);
+      }
+      if (offset < 0) { offset += temp; i--; }
+      const lD      = offset + 1;
 
-      const day = offset + 1;
-      return { lYear: year, lMonth: month, lDay: day, isLeap: isLeapMonth };
-    },
-
-    getLunarDayName(day) {
-      if (day === 10) return "初十";
-      if (day === 20) return "二十";
-      if (day === 30) return "三十";
-      const tens = ["初", "十", "廿", "卅"];
-      const units = ["日","一","二","三","四","五","六","七","八","九","十"];
-      return tens[Math.floor(day / 10)] + units[day % 10];
-    },
-
-    getSolarTerm(y, m, d) {
-      const todayMs = new Date(y, m - 1, d).getTime();
       const term1 = this.getTerm(y, m * 2 - 1);
       const term2 = this.getTerm(y, m * 2);
+      const term  = (d === term1) ? this.termNames[m * 2 - 2] : (d === term2) ? this.termNames[m * 2 - 1] : "";
 
-      if (Math.abs(term1.getTime() - todayMs) < 86400000 * 1.5) {
-        return this.termNames[m * 2 - 2];
-      }
-      if (Math.abs(term2.getTime() - todayMs) < 86400000 * 1.5) {
-        return this.termNames[m * 2 - 1];
-      }
-      return "";
-    },
-
-    parse(y, m, d) {
-      const offset = this.getOffset(y, m, d);
-      const { lYear, lMonth, lDay, isLeap } = this.getLunarInfoByOffset(offset);
-
-      const gz = "甲乙丙丁戊己庚辛壬癸"[(lYear - 4) % 10] + "子丑寅卯辰巳午未申酉戌亥"[(lYear - 4) % 12];
-      const ani = "鼠牛虎兔龙蛇马羊猴鸡狗猪"[(lYear - 4) % 12];
-
-      const cnMonth = `${isLeap ? "闰" : ""}${"正二三四五六七八九十冬腊"[lMonth - 1]}月`;
-      const cnDay = this.getLunarDayName(lDay);
-
-      const term = this.getSolarTerm(y, m, d);
-
-      const astro = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(
-        m * 2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m - 1] ? 2 : 0), 2) + "座";
-
+      const gz      = "甲乙丙丁戊己庚辛壬癸"[(lYear - 4) % 10] + "子丑寅卯辰巳午未申酉戌亥"[(lYear - 4) % 12];
+      const ani     = "鼠牛虎兔龙蛇马羊猴鸡狗猪"[(lYear - 4) % 12];
+      const cnMonth = `${isLeap ? "闰" : ""}${"正二三四五六七八九十冬腊"[i - 1]}月`;
+      const cnDay   = lD === 10 ? "初十" : lD === 20 ? "二十" : lD === 30 ? "三十"
+        : ["初","十","廿","卅"][Math.floor(lD / 10)] + ["日","一","二","三","四","五","六","七","八","九","十"][lD % 10];
+      const astro   = "摩羯水瓶双鱼白羊金牛双子巨蟹狮子处女天秤天蝎射手摩羯".substr(m * 2 - (d < [20,19,21,21,21,22,23,23,23,23,22,22][m - 1] ? 2 : 0), 2) + "座";
       return { gz, ani, cn: `${cnMonth}${cnDay}`, term, astro };
     }
   };
@@ -189,22 +132,17 @@ export default async function(ctx) {
   // ── 未来节气 ────────────────────────────────────────────────────────────
   const todayMs  = new Date(Y, M - 1, D).getTime();
   const allTerms = [];
-
   [-1, 0, 1].forEach(offset => {
-    for (let i = 1; i <= 24; i++) {
-      const termDate = Lunar.getTerm(Y + offset, i);
-      allTerms.push({ name: Lunar.termNames[i - 1], date: termDate });
-    }
+    for (let i = 1; i <= 24; i++)
+      allTerms.push({ name: Lunar.termNames[i - 1], date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i)) });
   });
-
-  allTerms.sort((a, b) => a.date.getTime() - b.date.getTime());
 
   let upcomingTerms = [], upcomingTermsLarge = [];
   for (let i = 0; i < allTerms.length; i++) {
     const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
-    if (diff >= -1) {
-      const startIdx = (diff <= 0) ? i + 1 : i;
-      const mapFn = t => `${t.name} ${Math.max(0, Math.round((t.date.getTime() - todayMs) / 86400000))}天`;
+    if (diff >= 0) {
+      const startIdx = diff === 0 ? i + 1 : i;
+      const mapFn = t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`;
       upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
       upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(mapFn);
       break;
@@ -256,11 +194,11 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  // ── 顶部角标 ─────────────────────────────────────────────────────────────
+  // ── 顶部角标 ──────────────────────────────────────────
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 文字换行工具 ─────────────────────────────────────────────────────────
+  // ── 渲染核心逻辑合并去重 ────────────────────────────────────────────────
   const splitTextToLines = (str, maxW) => {
     if (!str) return [];
     let lines = [], line = "", w = 0;
@@ -294,7 +232,7 @@ export default async function(ctx) {
     }));
   };
 
-  // ── 小号布局 ─────────────────────────────────────────────────────────────
+  // ── 小号布局 ─────────────────────
   if (isSmall) {
     return {
       type: 'widget', padding: 12, url: 'calshow://',
@@ -326,7 +264,7 @@ export default async function(ctx) {
     };
   }
 
-  // ── 中大号布局 ───────────────────────────────────────────────────────────
+  // ── 中大号公用布局参数调度 ──────────────────────────────────────────────
   const isLg = isLarge;
   const layoutConfig = {
     fz: isLg ? 14 : 12,
