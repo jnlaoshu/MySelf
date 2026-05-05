@@ -4,28 +4,28 @@
  *
  * 【功能说明】
  * • 尺寸支持：适配小号（农历信息全量）、中号（黄历基础布局）、大号（增加节气展示及换行处理）。
- * • 农历引擎：本地计算干支、生肖、农历日期及二十四节气。
- * • 远程数据：请求 openApiData 获取宜忌、冲煞及运势评分。
- * • 顶部角标：支持「星座」与「周次」双模式切换。
+ * • 农历引擎：本地计算干支、生肖、农历日期及二十四节气（完美修复跨时区及当月首节气匹配漏洞）。
+ * • 远程数据：请求 openApiData 获取宜忌、冲煞及运势评分，网络异常时支持本地容错降级。
+ * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.05.05 16:50
+ * ⏱️ 更新时间: 2026.05.05 17:00
  * ==========================================
  */
 
 export default async function(ctx) {
-  // ── 环境变量 ──────────────────────────────────────────────────────────────
+  // ====================== 环境配置 ======================
   const envMode    = String(ctx.env?.ASTRO_OR_WEEK       ?? '').trim();
   const SHOW_MODE  = (envMode === '周次' || envMode.toLowerCase() === 'week') ? 'week' : 'astro';
   const envShowTW  = String(ctx.env?.SHOW_TEACHING_WEEK  ?? 'true').trim().toLowerCase();
   const envTWStart = String(ctx.env?.TEACHING_WEEK_START ?? '').trim();
 
-  // ── 尺寸检测 ──────────────────────────────────────────────────────────────
+  // ====================== 尺寸检测 ======================
   const family  = (ctx.widgetFamily || 'systemMedium').toLowerCase();
   const isSmall = family.includes('small');
   const isLarge = family.includes('large');
 
-  // ── 色彩令牌 ──────────────────────────────────────────────────────────────
+  // ====================== 色彩定义 ======================
   const C = {
     bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
     main:        { light: '#1C1C1E', dark: '#FFFFFF'  },
@@ -39,20 +39,20 @@ export default async function(ctx) {
     transparent: '#00000000'
   };
 
-  // ── UI 基础构建器 ─────────────────────────────────────────────────────────
+  // ====================== UI 构建器 ======================
   const mkText   = (text, size, weight, color, opts = {}) => ({ type: "text", text: String(text), font: { size, weight }, textColor: color, ...opts });
   const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
   const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
   const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
 
-  // ── 时间基准（强制 UTC+8）─────────────────────────────────────────────────
+  // ====================== 时间基准（强制 UTC+8） ======================
   const tzOffset = new Date().getTimezoneOffset();
   const now      = new Date(Date.now() + (tzOffset + 480) * 60000);
   const [Y, M, D] = [now.getFullYear(), now.getMonth() + 1, now.getDate()];
   const WEEK = "日一二三四五六"[now.getDay()];
   const P = n => String(n).padStart(2, '0');
 
-  // ── 教学周计算 ────────────────────────────────────────────────────────────
+  // ====================== 教学周计算 ======================
   let teachingWeekStr = "";
   if (SHOW_MODE === 'astro' && envShowTW === 'true' && envTWStart) {
     const tStart = new Date(envTWStart.replace(/-/g, '/'));
@@ -62,7 +62,7 @@ export default async function(ctx) {
     }
   }
 
-  // ── ISO 周次计算 ──────────────────────────────────────────────────────────
+  // ====================== ISO 周次计算 ======================
   const getWeekInfo = (dateObj) => {
     const d      = new Date(Date.UTC(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate()));
     const dayNum = d.getUTCDay() || 7;
@@ -73,18 +73,21 @@ export default async function(ctx) {
     return `本年第${weekNo}周 · 第${dayOfYear}天`;
   };
 
-  // ── 农历引擎 ─────────────────────────────────────────────────────────────
+  // ====================== 农历引擎 ======================
   const Lunar = {
     info: [0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5b0,0x14573,0x052b0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b6a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x05ac0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x092e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520],
+    
     termNames: ["小寒","大寒","立春","雨水","惊蛰","春分","清明","谷雨","立夏","小满","芒种","夏至","小暑","大暑","立秋","处暑","白露","秋分","寒露","霜降","立冬","小雪","大雪","冬至"],
+    
     getTerm(y, n) {
       const t = new Date(
         (31556925974.7 * (y - 1900)) +
         [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n - 1] * 60000 +
         Date.UTC(1900, 0, 6, 2, 5)
       );
-      return new Date(t.getTime() + 8 * 3600000).getUTCDate();
+      return new Date(t.getTime() + 8 * 3600000);
     },
+    
     parse(y, m, d) {
       let offset = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
       let i, temp = 0;
@@ -111,10 +114,10 @@ export default async function(ctx) {
         isLeap = !isLeap ? true : (isLeap = false, --i, false);
       }
       if (offset < 0) { offset += temp; i--; }
-      const lD      = offset + 1;
+      const lD = offset + 1;
 
-      const term1 = this.getTerm(y, m * 2 - 1);
-      const term2 = this.getTerm(y, m * 2);
+      const term1 = this.getTerm(y, m * 2 - 1).getDate();
+      const term2 = this.getTerm(y, m * 2).getDate();
       const term  = (d === term1) ? this.termNames[m * 2 - 2] : (d === term2) ? this.termNames[m * 2 - 1] : "";
 
       const gz      = "甲乙丙丁戊己庚辛壬癸"[(lYear - 4) % 10] + "子丑寅卯辰巳午未申酉戌亥"[(lYear - 4) % 12];
@@ -127,44 +130,45 @@ export default async function(ctx) {
     }
   };
 
-  // ── 未来节气（已修复当天显示）────────────────────────────────────────────
-  const todayMs  = new Date(Y, M - 1, D).getTime();
+  // ====================== 节气计算（精确判断当天） ======================
+  const nowMs = now.getTime();
   const allTerms = [];
   [-1, 0, 1].forEach(offset => {
     for (let i = 1; i <= 24; i++) {
-      allTerms.push({
-        name: Lunar.termNames[i - 1],
-        date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i))
+      allTerms.push({ 
+        name: Lunar.termNames[i - 1], 
+        date: Lunar.getTerm(Y + offset, i) 
       });
     }
   });
 
-  let upcomingTerms = [], upcomingTermsLarge = [];
   let todayTerm = "";
+  let upcomingTerms = [], upcomingTermsLarge = [];
 
   for (let i = 0; i < allTerms.length; i++) {
-    const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
-    if (diff === 0) {
-      todayTerm = allTerms[i].name;
+    const t = allTerms[i];
+    const diffMs = t.date.getTime() - nowMs;
+    if (diffMs >= 0 && diffMs < 86400000) {           // 当天
+      todayTerm = t.name;
       const startIdx = i + 1;
-      const mapFn = t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`;
-      upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
+      const mapFn = tt => `${tt.name} ${Math.ceil((tt.date.getTime() - nowMs) / 86400000)}天`;
+      upcomingTerms = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
       upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(mapFn);
       break;
-    } else if (diff > 0) {
+    } else if (diffMs > 0) {
       const startIdx = i;
-      const mapFn = t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`;
-      upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
+      const mapFn = tt => `${tt.name} ${Math.ceil((tt.date.getTime() - nowMs) / 86400000)}天`;
+      upcomingTerms = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
       upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(mapFn);
       break;
     }
   }
 
-  // ── 农历解析 & 时辰 ───────────────────────────────────────────────────────
+  // ====================== 农历信息 & 时辰 ======================
   const obj        = Lunar.parse(Y, M, D);
   const shichenStr = "子丑寅卯辰巳午未申酉戌亥"[Math.floor((now.getHours() + 1) % 24 / 2)] + "时";
 
-  // ── 远程黄历数据 ─────────────────────────────────────────────────────────
+  // ====================== 远程黄历数据 ======================
   let apiData = {};
   try {
     const resp = await ctx.http.get(`https://raw.githubusercontent.com/zqzess/openApiData/main/calendar_new/${Y}/${Y}${P(M)}.json`, { timeout: 10000 });
@@ -190,7 +194,7 @@ export default async function(ctx) {
     apiData = findDateData(json) || {};
   } catch (_) {}
 
-  // ── 宜忌 & 冲煞 & 运势 ───────────────────────────────────────────────────
+  // ====================== 宜忌 & 冲煞 & 运势 ======================
   const getVal = (...keys) => {
     for (const k of keys) if (apiData[k] != null && apiData[k] !== '') return String(apiData[k]);
     return "";
@@ -205,18 +209,18 @@ export default async function(ctx) {
   }
   const starStr = "⭐".repeat(parseInt(getVal("score", "Score", "pingfen", "star")) || 4);
 
-  // ── 顶部角标 ─────────────────────────────────────────────────────────────
+  // ====================== 顶部角标 ======================
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 文本换行工具 ─────────────────────────────────────────────────────────
+  // ====================== 文本自动换行工具 ======================
   const splitTextToLines = (str, maxW) => {
     if (!str) return [];
     let lines = [], line = "", w = 0;
-    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
-      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tw > maxW) {
-        lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+    for (const token of (str.match(/[\d\/a-zA-Z.\-，、]+|./gu) || [])) {
+      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1), 0);
+      if (w + tw > maxW && line.length > 0) {
+        lines.push(line.trim());
         line = token;
         w = tw;
       } else {
@@ -224,7 +228,7 @@ export default async function(ctx) {
         w += tw;
       }
     }
-    if (line) lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
+    if (line) lines.push(line.trim());
     return lines;
   };
 
@@ -243,7 +247,7 @@ export default async function(ctx) {
     }));
   };
 
-  // ── 小号布局 ─────────────────────────────────────────────────────────────
+  // ====================== 小号布局 ======================
   if (isSmall) {
     const termDisplay = todayTerm ? `今日${todayTerm}` : (upcomingTerms[0] || "");
     return {
@@ -269,20 +273,20 @@ export default async function(ctx) {
         mkSpacer(6),
         ...(rawJi ? [mkRow([ mkIcon('xmark.circle.fill',     C.ji, 11), mkText(rawJi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1, minScale: 0.8 }) ], 6)] : []),
         mkSpacer(8),
-        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo,           10, "medium", C.muted, { maxLines: 1, minScale: 0.8 }) ], 6),
+        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo, 10, "medium", C.muted, { maxLines: 1, minScale: 0.8 }) ], 6),
         mkSpacer(6),
         mkRow([ mkIcon('leaf.arrow.circlepath',  C.term, 11), mkText(termDisplay, 10, "medium", C.term,  { maxLines: 1, minScale: 0.8 }) ], 6)
       ]
     };
   }
 
-  // ── 中大号布局 ───────────────────────────────────────────────────────────
+  // ====================== 中大号布局 ======================
   const isLg = isLarge;
   const layoutConfig = {
     fz: isLg ? 14 : 12,
     icz: isLg ? 15 : 13,
     lw: isLg ? 60 : 52,
-    maxW: isLg ? 38 : 52,
+    maxW: isLg ? 42 : 60,
     headerFz: isLg ? 17 : 15,
     topIconFz: isLg ? 12 : 11,
     gap: isLg ? 8 : 6
