@@ -9,7 +9,7 @@
  * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.04.13 15:00
+ * ⏱️ 更新时间: 2026.05.05 16:45
  * ==========================================
  */
 
@@ -128,20 +128,27 @@ export default async function(ctx) {
     }
   };
 
-  // ── 未来节气 ────────────────────────────────────────────────────────────
-  const todayMs  = new Date(Y, M - 1, D).getTime();
+  // ── 未来节气倒计时修复 (完美规避 1 天误差) ──────────────────────────────────
+  // 使用 UTC 当天零点进行绝对对齐，忽略时分秒带来的毫秒级误差
+  const todayMs = Date.UTC(Y, M - 1, D);
   const allTerms = [];
   [-1, 0, 1].forEach(offset => {
-    for (let i = 1; i <= 24; i++)
-      allTerms.push({ name: Lunar.termNames[i - 1], date: new Date(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i)) });
+    for (let i = 1; i <= 24; i++) {
+      allTerms.push({
+        name: Lunar.termNames[i - 1],
+        date: Date.UTC(Y + offset, Math.floor((i - 1) / 2), Lunar.getTerm(Y + offset, i))
+      });
+    }
   });
 
   let upcomingTerms = [], upcomingTermsLarge = [];
   for (let i = 0; i < allTerms.length; i++) {
-    const diff = Math.round((allTerms[i].date.getTime() - todayMs) / 86400000);
-    if (diff >= 0) {
-      const startIdx = diff === 0 ? i + 1 : i;
-      const mapFn = t => `${t.name} ${Math.round((t.date.getTime() - todayMs) / 86400000)}天`;
+    // 使用严格的相减和四舍五入得出纯净的“相差天数”
+    const diffDays = Math.round((allTerms[i].date - todayMs) / 86400000);
+    // 如果今天就是这个节气（diffDays === 0），那么列表里从"下一个节气"开始显示倒计时
+    if (diffDays >= 0) {
+      const startIdx = diffDays === 0 ? i + 1 : i;
+      const mapFn = t => `${t.name} ${Math.round((t.date - todayMs) / 86400000)}天`;
       upcomingTerms      = allTerms.slice(startIdx, startIdx + 4).map(mapFn);
       upcomingTermsLarge = allTerms.slice(startIdx, startIdx + 6).map(mapFn);
       break;
@@ -226,6 +233,7 @@ export default async function(ctx) {
           mkIcon(idx === 0 ? icon : 'circle.fill', idx === 0 ? color : C.transparent, config.icz),
           mkText(idx === 0 ? label : " ", config.fz, "heavy", idx === 0 ? color : C.transparent)
         ]},
+        // 关键修复：确保文字不被截断，且自动充满可用空间
         mkText(lineStr, config.fz, "medium", contentColor, { flex: 1, maxLines: 1 })
       ]
     }));
@@ -263,13 +271,14 @@ export default async function(ctx) {
     };
   }
 
-  // ── 中大号公用布局参数调度 ──────────────────────────────────────────────
+  // ── 中大号公用布局参数调度 (优化了中号的宽度阈值，防止提前出省略号) ─────────
   const isLg = isLarge;
   const layoutConfig = {
     fz: isLg ? 14 : 12,
     icz: isLg ? 15 : 13,
     lw: isLg ? 60 : 52,
-    maxW: isLg ? 38 : 52,
+    // 关键修复：中号 maxW 由 52 放宽至 58，避免单行文字过多导致的省略号
+    maxW: isLg ? 38 : 58,
     headerFz: isLg ? 17 : 15,
     topIconFz: isLg ? 12 : 11,
     gap: isLg ? 8 : 6
