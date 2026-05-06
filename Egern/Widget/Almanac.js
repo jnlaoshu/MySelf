@@ -9,7 +9,7 @@
  * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.04.13 15:00
+ * ⏱️ 更新时间: 2026.05.06 09:08
  * ==========================================
  */
 
@@ -84,7 +84,8 @@ export default async function(ctx) {
         [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n - 1] * 60000 +
         Date.UTC(1900, 0, 6, 2, 5)
       );
-      return new Date(t.getTime() + 8 * 3600000).getUTCDate();
+      // 修复：原先的 t.getTime() + 8 * 3600000 会导致时区加算两次，部分节气推迟一天
+      return t.getUTCDate();
     },
     parse(y, m, d) {
       let offset = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(1900, 0, 31)) / 86400000);
@@ -197,38 +198,24 @@ export default async function(ctx) {
   const topIcon = SHOW_MODE === 'week' ? 'list.number' : 'sparkles';
   const topText = SHOW_MODE === 'week' ? getWeekInfo(now) : obj.astro;
 
-  // ── 渲染核心逻辑合并去重 ────────────────────────────────────────────────
-  const splitTextToLines = (str, maxW) => {
-    if (!str) return [];
-    let lines = [], line = "", w = 0;
-    for (const token of (str.match(/[\d\/a-zA-Z.\-]+|./gu) || [])) {
-      const tw = [...token].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 2 : 1.1), 0);
-      if (w + tw > maxW) {
-        lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
-        line = token;
-        w = tw;
-      } else {
-        line += token;
-        w += tw;
-      }
-    }
-    if (line) lines.push(line.replace(/^[，\s]+|[，\s]+$/g, ""));
-    return lines;
-  };
-
+  // ── 渲染核心逻辑去重与原生自动换行优化 ────────────────────────────────────
+  
+  // 核心改动：不再使用手工 splitTextToLines 截断文本，改用系统原生的自动换行
   const createRowFactory = (config) => (raw, icon, color, label, contentColor = C.sub) => {
     if (!raw) return [];
-    const lines = splitTextToLines(raw, config.maxW);
-    return lines.map((lineStr, idx) => ({
+    
+    return [{
       type: 'stack', direction: 'row', alignItems: 'start', gap: 4,
       children: [
+        // 1. 左侧容器：固定宽度的 Icon 与 Label，确保多行文本换行后左侧对齐不受影响
         { type: 'stack', direction: 'row', alignItems: 'center', gap: 2, width: config.lw, children: [
-          mkIcon(idx === 0 ? icon : 'circle.fill', idx === 0 ? color : C.transparent, config.icz),
-          mkText(idx === 0 ? label : " ", config.fz, "heavy", idx === 0 ? color : C.transparent)
+          mkIcon(icon, color, config.icz),
+          mkText(label, config.fz, "heavy", color)
         ]},
-        mkText(lineStr, config.fz, "medium", contentColor, { flex: 1, maxLines: 1 })
+        // 2. 右侧内容：使用 flex: 1 撑满剩余空间，并通过 maxLines: 0 启用系统级别的自动多行换行
+        mkText(raw, config.fz, "medium", contentColor, { flex: 1, maxLines: 0 })
       ]
-    }));
+    }];
   };
 
   // ── 小号布局 ─────────────────────
@@ -252,11 +239,12 @@ export default async function(ctx) {
         mkSpacer(8),
         mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, 11, "bold", C.gold, { maxLines: 1, minScale: 0.8 }),
         mkSpacer(8),
+        // 小组件空间有限，仍保持单行截断缩小显示
         ...(rawYi ? [mkRow([ mkIcon('checkmark.circle.fill', C.yi, 11), mkText(rawYi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1, minScale: 0.8 }) ], 6)] : []),
         mkSpacer(6),
         ...(rawJi ? [mkRow([ mkIcon('xmark.circle.fill',     C.ji, 11), mkText(rawJi.replace(/\s+/g, ' '), 11, "medium", C.sub, { maxLines: 1, minScale: 0.8 }) ], 6)] : []),
         mkSpacer(8),
-        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo,           10, "medium", C.muted, { maxLines: 1, minScale: 0.8 }) ], 6),
+        mkRow([ mkIcon('shield.lefthalf.filled', C.gold, 11), mkText(chongshaInfo,            10, "medium", C.muted, { maxLines: 1, minScale: 0.8 }) ], 6),
         mkSpacer(6),
         mkRow([ mkIcon('leaf.arrow.circlepath',  C.term, 11), mkText(upcomingTerms[0] || "", 10, "medium", C.term,  { maxLines: 1, minScale: 0.8 }) ], 6)
       ]
@@ -268,8 +256,7 @@ export default async function(ctx) {
   const layoutConfig = {
     fz: isLg ? 14 : 12,
     icz: isLg ? 15 : 13,
-    lw: isLg ? 60 : 52,
-    maxW: isLg ? 38 : 52,
+    lw: isLg ? 60 : 52, 
     headerFz: isLg ? 17 : 15,
     topIconFz: isLg ? 12 : 11,
     gap: isLg ? 8 : 6
