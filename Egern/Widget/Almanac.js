@@ -9,7 +9,7 @@
  * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.05.06 08:40
+ * ⏱️ 更新时间: 2026.05.06 08:48
  * ==========================================
  */
 
@@ -269,7 +269,7 @@ export default async function(ctx) {
     fz: isLg ? 14 : 12,
     icz: isLg ? 15 : 13,
     lw: isLg ? 60 : 52,
-    maxW: isLg ? 38 : 52, 
+    maxW: isLg ? 38 : 50, 
     headerFz: isLg ? 17 : 15,
     topIconFz: isLg ? 12 : 11,
     gap: isLg ? 8 : 6
