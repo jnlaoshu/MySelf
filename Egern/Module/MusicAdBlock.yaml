@@ -1,5 +1,5 @@
 #!name=音乐流媒体净化
-#!desc=2026.05.04 09:50 更新 | 酷狗/酷我/波点/Spotify/YTM/网易云/汽水/QQ音乐/喜马拉雅/蜻蜓/猫耳
+#!desc=2026.06.01 22:36 更新 | 酷狗/酷我/波点/Spotify/YTM/网易云/汽水/QQ音乐/喜马拉雅/蜻蜓/猫耳
 #!author=AI整合优化 | 奶思, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, WeiGiegie 等
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
@@ -194,7 +194,7 @@ http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info
 [Script]
 # 酷狗 / 酷我
 酷狗_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kugou\.com\/(v[0-9]+|openapi|userdata|ssr|vip|card)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yu9191/Rewrite/refs/heads/main/kugou.js
-酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/kuwo.js
+酷我_核心净化 = type=http-response, pattern=^https?:\/\/.*\.kuwo\.cn\/(openapi|mobi|vip|homepages)\/.*, requires-body=true, script-path=https://raw.githubusercontent.com/Yuheng0101/X/main/Scripts/Kuwo/kuwo.js
 
 # 波点音乐
 波点音乐_增强 = type=http-response, pattern=^https?:\/\/(?:(?:bd-api|h5app|bodianyin|ab-bodian)\.kuwo\.cn\/(?:api\/(?:ucenter\/users\/(?:pub|login)|play\/(?:music\/v2\/(?:audioUrl|checkRight)|advert\/info)|service\/(?:music\/(?:info|download\/(?:info|config))|home\/module|global\/config\/(?:scene|vipEnter)|banner\/positions|advert\/config)|search\/topic\/word\/list|pay\/(?:vip\/(?:invitation\/(?:assist\/popup|swell)|lowPriceText)|sp\/actVip|audition\/url)|advert\/free\/config|popup\/start\/info|abtest\/ui\/info|rec\/feed)|abtest\/ui\/info)|us\.l\.qq\.com\/exapp|xs\.gdt\.qq\.com\/style_factory\/template_list), requires-body=true, max-size=-1, timeout=60, script-path=https://raw.githubusercontent.com/WeiGiegie/666/main/bdyy.js
