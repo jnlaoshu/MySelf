@@ -351,7 +351,11 @@ mitm:
 modules:
   - name: 常用小组件
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-    enabled: true
+  env:
+    TEACHING_WEEK_START: 2026/03/02
+    EXCLUSIVE_NAME_2: 暑假
+    EXCLUSIVE_DATE_2: 07/04
+  enabled: true
   - name: Sub-Store
     url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
     enabled: true
