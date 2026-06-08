@@ -1,11 +1,11 @@
 # ==========================================
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.05.02 16:36
+# ⏱️ 更新时间: 2026.06.09
 # ==========================================
 
 # 基本配置
-ipv6: false
+ipv6: true
 http_port: 3080
 socks_port: 3090
 allow_external_connections: true
@@ -31,16 +31,13 @@ hijack_dns:
 geoip_db_url: https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-Country.mmdb
 asn_db_url: https://github.com/P3TERX/GeoLite.mmdb/raw/download/GeoLite2-ASN.mmdb
 
-# 测速 URL
+# 全局测速 URL
 proxy_latency_test_url: http://www.gstatic.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
 # DNS 配置
 dns:
   public_ip_lookup_url: https://ifconfig.me/ip
-  proxy_nameservers:
-    - https://8.8.8.8/dns-query
-    - https://1.1.1.1/dns-query
   bootstrap:
     - system
     - 223.5.5.5
@@ -53,6 +50,7 @@ dns:
     Default:
       - h3://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
+      - tcp://8.8.8.8:53
   forward:
     - domain_suffix: { match: alibaba.com, value: AliDNS }
     - domain_suffix: { match: alipay.com, value: AliDNS }
@@ -72,7 +70,7 @@ dns:
     - domain_suffix: { match: lan, value: system }
     - wildcard: { match: '*', value: Default }
 
-# 策略组
+# ==================== 策略组 ====================
 policy_groups:
   - external:
       name: 全部节点
@@ -81,54 +79,64 @@ policy_groups:
         - https://sub.store/download/collection/AllServer?target=Egern
       icon: 🌹
       hidden: true
-  - auto_test:
+
+  # === smart 智能策略组 ===
+  - smart:
       name: 香港节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港"
-      interval: 600
+      interval: 300
       tolerance: 50
+      latency_test_url: http://www.gstatic.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
-  - auto_test:
+
+  - smart:
       name: 美国节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b"
-      interval: 600
+      interval: 300
       tolerance: 50
+      latency_test_url: http://www.gstatic.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
-  - auto_test:
+
+  - smart:
       name: 台湾节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b"
-      interval: 600
+      interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
-  - auto_test:
+
+  - smart:
       name: 日本节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b"
-      interval: 600
+      interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
-  - auto_test:
+
+  - smart:
       name: 狮城节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b"
-      interval: 600
+      interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
-  - auto_test:
+
+  - smart:
       name: 韩国节点
       policies: [全部节点]
       flatten: true
       filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
-      interval: 600
+      interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+
   - select:
       name: 其他节点
       policies: [全部节点]
@@ -140,102 +148,124 @@ policy_groups:
           🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
           🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
           🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
-          🇺🇸|美国|United\s*States|America|\bUSA?\b|
+          🇺🇸|美国|United\s*States|America|\bUSA?\\b|
           洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
           \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
           倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
         ) ) .+ $
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
   - select:
       name: 自选策略
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
       icon: 😜
+
+  # === 业务分流策略组 ===
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
       flatten: true
+      latency_test_url: https://ios.chat.openai.com/public-api/ping
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+
   - select:
       name: Bing
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
+
   - select:
       name: Disney
       policies: [狮城节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+
   - select:
       name: HBO
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
+
   - select:
       name: Netflix
       policies: [狮城节点, 自选策略]
       flatten: true
+      latency_test_url: https://www.netflix.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
+
   - select:
       name: Spotify
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
+
   - select:
       name: TikTok
       policies: [日本节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
+
   - select:
       name: YouTubeMusic
       policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
+
   - select:
       name: YouTube
       policies: [香港节点, 自选策略]
       flatten: true
+      latency_test_url: https://www.youtube.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+
   - select:
       name: GitHub
       policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
+
   - select:
       name: Google
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
+
   - select:
       name: Microsoft
       policies: [DIRECT, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+
   - select:
       name: PayPal
       policies: [美国节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
+
   - select:
       name: Telegram
       policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
+
   - select:
       name: Twitter
       policies: [香港节点, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
+
   - select:
       name: WeChat
       policies: [DIRECT, 自选策略]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
+
   - select:
       name: 猎杀广告
       policies: [REJECT, DIRECT]
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
 
-# 路由规则
+# ==================== 路由规则 ====================
 rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
@@ -304,7 +334,7 @@ rules:
   - default:
       policy: 自选策略
 
-# MITM
+# MITM 配置
 mitm:
   ca_p12: egern.p12
   ca_passphrase: egern
