@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: 𝐄𝐠𝐞𝐫𝐧@𝐥𝐚𝐨𝐬𝐡𝐮 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.09
+# ⏱️ 更新时间: 2026.06.12 09:25
 # ==========================================
 
 # 基本配置
@@ -85,7 +85,7 @@ policy_groups:
       name: 香港节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港"
+      filter: "(?i)(?:🇭🇰|香港|\\b(?:HK|Hong)\\b)"
       interval: 300
       tolerance: 50
       latency_test_url: http://www.gstatic.com/generate_204
@@ -95,7 +95,7 @@ policy_groups:
       name: 美国节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b"
+      filter: "(?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\\b(?:US|United\\s*States|America)\\b)"
       interval: 300
       tolerance: 50
       latency_test_url: http://www.gstatic.com/generate_204
@@ -105,7 +105,7 @@ policy_groups:
       name: 台湾节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b"
+      filter: "(?i)(?:🇹🇼|台湾|\\b(?:TW|Tai|Taiwan)\\b)"
       interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
@@ -114,7 +114,7 @@ policy_groups:
       name: 日本节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b"
+      filter: "(?i)(?:🇯🇵|日本|东京|大阪|\\b(?:JP|Japan)\\b)"
       interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
@@ -123,7 +123,7 @@ policy_groups:
       name: 狮城节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b"
+      filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b|\\bSG|SG\\b)"
       interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
@@ -132,7 +132,7 @@ policy_groups:
       name: 韩国节点
       policies: [全部节点]
       flatten: true
-      filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
+      filter: "(?i)(?:🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)"
       interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
@@ -141,18 +141,7 @@ policy_groups:
       name: 其他节点
       policies: [全部节点]
       flatten: true
-      filter: >-
-        (?xi) ^ (?! .* (?:
-          🇭🇰|香港|Hong\s*Kong|\bHKG?\b|(?:深|沪|京|广)港|
-          🇯🇵|日本|东京|大阪|Japan|\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\b|
-          🇸🇬|新加坡|狮城|Singapore|\b(?:SGP?|SIN)\b|
-          🇹🇼|台湾|Taiwan|\b(?:TWN?|TPE|Taipei)\b|
-          🇰🇷|韩国|首尔|仁川|Korea|South\s*Korea|\b(?:KOR|KR|ICN|SEL)\b|
-          🇺🇸|美国|United\s*States|America|\bUSA?\\b|
-          洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|
-          \b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\b|
-          倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组
-        ) ) .+ $
+      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\\b(?:US|United\\s*States|America)\\b|🇹🇼|台湾|\\b(?:TW|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b|\\bSG|SG\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b|倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组|Music|欢迎|重置)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 
   - select:
