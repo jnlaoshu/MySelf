@@ -11,7 +11,7 @@
  * • 状态响应：根据工作日、周末、节假日当天状态切换背景渐变色；当天节日提示于中大号标题栏显示，小号于分类行内显示。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.04.01 01:40
+ * ⏱️ 更新时间: 2026.06.16 23:12
  * ==========================================
  */
 
@@ -284,7 +284,7 @@ export default async function (ctx) {
 
   // ── 标题栏通告逻辑（中大号） ───────────────────────────────────────────────
   const todayNoticeParts = [];
-  if (todayFests.size > 0)   todayNoticeParts.push(`今日 ${Array.from(todayFests).slice(0, 2).join("·")}${todayFests.size > 2 ? "…" : ""}`);
+  if (todayFests.size > 0)   todayNoticeParts.push(`今日 ${Array.from(todayFests).join("·")}`);
   if (todayFinance.size > 0) todayNoticeParts.push(`今日 ${Array.from(todayFinance).join("·")}`);
   const todayNoticeText = todayNoticeParts.join(" ｜ ");
 
