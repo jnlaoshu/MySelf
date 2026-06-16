@@ -1,8 +1,17 @@
-// ==UserScript==
-// @name 2026世界杯赛程(Egern满血显示版)
-// @version 15.4
-// @description 修正标题栏右侧“更新时间”的对齐问题，增加右侧边距使其与下方卡片内容边缘完美对齐。
-// ==/UserScript==
+/**
+ * ==========================================
+ * 📌 2026世界杯赛程 (WorldCup2026) 小组件
+ *
+ * 【功能说明】
+ * • 布局排版：针对小尺寸屏幕深度优化，采用左侧日期栏与右侧赛事列表的对齐分栏结构，防止内容溢出截断。
+ * • 赛事引擎：实时调用 ESPN API 获取昨天、今天、明天的赛事日程及比分，网络异常时提供容错提示。
+ * • 状态展示：精确区分并高亮未开赛、进行中（含动态比赛时间）、已结束等状态，全面支持深浅色模式自适应。
+ * • 汉化字典：内置百余个国家队中英汉化与国旗字典库，智能翻转主客队国旗位置以实现视觉上的完美对称对齐。
+ *
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/WorldCup2026.js
+ * ⏱️ 更新时间: 2026.06.16 18:05
+ * ==========================================
+ */
 
 // ---------------------------
 // 全局样式微调参数
@@ -184,7 +193,7 @@ export default async function(ctx) {
       { type: "text", text: "世界杯赛程", font: { size: 16, weight: "bold" }, textColor: T.teamName },
       { type: "spacer" },
       { type: "text", text: updateStr, font: { size: 11 }, textColor: T.updateTime },
-      { type: "spacer", length: 8 } // 右侧增加8px间距，使更新时间与下方卡片内边距对其，不再贴紧右侧边缘
+      { type: "spacer", length: 8 } // 右侧增加间距，使更新时间与下方卡片内边距对齐
     ]
   };
 
@@ -329,7 +338,7 @@ export default async function(ctx) {
               { type: "spacer" }
             ]
           },
-          // 主队列（右对齐）—— 国旗已经在名字后面
+          // 主队列（右对齐）
           {
             type: "stack", direction: "row", width: COL_WIDTH_TEAM,
             children: [
@@ -346,7 +355,7 @@ export default async function(ctx) {
               { type: "spacer" }
             ]
           },
-          // 客队列（左对齐）—— 国旗在名字前面
+          // 客队列（左对齐）
           {
             type: "stack", direction: "row", width: COL_WIDTH_TEAM,
             children: [
