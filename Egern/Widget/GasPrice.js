@@ -12,7 +12,7 @@
  * * 🔧 【环境变量】
  * GAS_REGION — 城市全拼音 (默认: sichuan/chengdu)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.03.30 10:00
+ * * ⏱️ 更新时间 2026.06.17 18:00
  * ==========================================
  */
 
@@ -49,23 +49,7 @@ export default async function (ctx) {
     [10,14],[10,28],[11,11],[11,25],[12,9],[12,23]
   ];
 
-  // ── UI 统一构建器 ──────────────────────────────
-  const mkText = (text, size, weight, color, opts = {}) => {
-    const { family: fontFamily, ...restOpts } = opts;
-    return {
-      type: "text",
-      text: String(text ?? ""),
-      font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
-      textColor: color,
-      ...restOpts
-    };
-  };
-  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
-  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
-  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
-  const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
-
-  // ── 调价计算引擎 ────────────────────────────────────────────────────────
+  // ── 调价计算引擎（后备） ──────────────────────────────────────────────
   const getNextAdjust = () => {
     const next = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59).getTime() > now.getTime());
     if (!next) return { dateStr: "待更新", countdown: "", isUrgent: false, daysLeft: 99 };
@@ -83,8 +67,8 @@ export default async function (ctx) {
     };
   };
 
-  const nextAdjust = getNextAdjust();
-  const infoColor  = nextAdjust.isUrgent ? C.red : C.gold;
+  // ── 初始化（将使用网络数据覆盖） ──────────────────────────────────────
+  let nextAdjust = getNextAdjust();
 
   // ── 网络数据获取与解析 ──────────────────────────────────────────────────
   const prices = { p92: null, p95: null, p98: null, diesel: null };
@@ -112,15 +96,34 @@ export default async function (ctx) {
     if (tm) {
       const [, timeText, priceText] = tm;
       const rd = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
-      const adjustDate = rd ? `${P(rd[1])}.${P(rd[2])} ${P(rd[3])}:00` : "未知时间";
+      
+      // ★★★ 核心修正：优先使用网页中的调价日期，覆盖硬编码日历 ★★★
+      if (rd) {
+        const targetMonth = parseInt(rd[1]);
+        const targetDay   = parseInt(rd[2]);
+        const targetHour  = parseInt(rd[3]);
+        // 构造目标日期（年份与当前一致，假设调价日不会跨年）
+        const target = new Date(Y, targetMonth - 1, targetDay, targetHour, 0, 0);
+        if (target.getTime() > now.getTime()) {
+          const totalHours = Math.floor((target.getTime() - now.getTime()) / 3600000);
+          const days = Math.floor(totalHours / 24);
+          const hours = totalHours % 24;
+          nextAdjust = {
+            dateStr:   `${P(targetMonth)}.${P(targetDay)} ${P(targetHour)}:00`,
+            countdown: `(${days}d${hours}h后)`,
+            isUrgent:  totalHours < 72,
+            daysLeft:  days
+          };
+        }
+      }
 
+      // 解析涨跌趋势信息（保持原有逻辑）
       const isUp   = /上调|上涨|涨/.test(priceText);
       const isDown = /下调|下跌|降|跌/.test(priceText);
       const amounts = (priceText.match(/[\d.]+\s*元\/升/g) || []).map(p => p.match(/[\d.]+/)[0]);
       const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
 
-      trendInfo = `${adjustDate}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
-
+      // 根据距离调价天数决定显示“下轮预测”还是“本轮调价”
       if (nextAdjust.daysLeft <= 4) {
         trendLabel = "下轮预测: ";
         trendColor = isUp ? C.red : isDown ? C.teal : C.muted;
@@ -128,8 +131,13 @@ export default async function (ctx) {
         trendLabel = "本轮调价: ";
         trendColor = C.muted;
       }
+      // 组装趋势信息（使用网页中的原始日期和幅度）
+      const rawDateStr = rd ? `${P(rd[1])}.${P(rd[2])} ${P(rd[3])}:00` : "未知时间";
+      trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
     }
-  } catch (_) {}
+  } catch (_) {
+    // 网络失败时保留后备日历数据，趋势信息保持默认
+  }
 
   // 格式化价格数据源（如果网络失败则显示 "--" 保底占位）
   const PRICE_ITEMS = [
@@ -150,6 +158,22 @@ export default async function (ctx) {
       mkSpacer()
     ]
   });
+
+  // ── UI 统一构建器 ──────────────────────────────
+  const mkText = (text, size, weight, color, opts = {}) => {
+    const { family: fontFamily, ...restOpts } = opts;
+    return {
+      type: "text",
+      text: String(text ?? ""),
+      font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
+      textColor: color,
+      ...restOpts
+    };
+  };
+  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
+  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
+  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
+  const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
   // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
   if (isSmall) {
@@ -175,6 +199,7 @@ export default async function (ctx) {
   // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
   if (isLarge) {
     const cardCfg = { radius: 16, padding: [0, 0, 0, 0], labelFz: 16, labelWeight: "heavy", valFz: 28, innerGap: 10 };
+    const infoColor = nextAdjust.isUrgent ? C.red : C.gold;
     return {
       type: "widget", padding: 16, url: "hellobike://", backgroundGradient,
       children: [
@@ -198,7 +223,7 @@ export default async function (ctx) {
           mkRow([
             mkIcon("arrow.triangle.2.circlepath", C.muted, 13),
             mkSpacer(4),
-            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" }) // Menlo 字体生效
+            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" })
           ], 0),
           mkSpacer(),
           mkRow([
@@ -212,14 +237,15 @@ export default async function (ctx) {
 
   // ── 视图渲染 (中号默认尺寸) ──────────────────────────────────────────────
   const cardCfgMed = { radius: 13, padding: [12, 6, 12, 6], labelFz: 11, labelWeight: "bold", valFz: 18, innerGap: 6 };
+  const infoColorMed = nextAdjust.isUrgent ? C.red : C.gold;
   return {
     type: "widget", padding: 12, url: "hellobike://", backgroundGradient,
     children: [
       mkRow([
         mkIcon("fuelpump.circle.fill", C.main, 16), mkSpacer(2), mkText(`${regionName}油价`, 15, "heavy", C.main), mkSpacer(),
-        mkText("下轮调价: ", 11, "medium", infoColor),
-        mkText(nextAdjust.dateStr, 11, "bold", infoColor),
-        mkText(` ${nextAdjust.countdown}`, 11, "bold", infoColor)
+        mkText("下轮调价: ", 11, "medium", infoColorMed),
+        mkText(nextAdjust.dateStr, 11, "bold", infoColorMed),
+        mkText(` ${nextAdjust.countdown}`, 11, "bold", infoColorMed)
       ], 0),
 
       mkSpacer(12),
@@ -231,7 +257,7 @@ export default async function (ctx) {
       mkRow([
         mkRow([
           mkIcon("arrow.triangle.2.circlepath", C.muted, 11),
-          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" }) // Menlo 字体生效
+          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" })
         ], 4),
         mkSpacer(),
         mkRow([
