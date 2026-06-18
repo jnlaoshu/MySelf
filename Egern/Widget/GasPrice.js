@@ -12,7 +12,7 @@
  * * 🔧 【环境变量】
  * GAS_REGION — 城市全拼音 (默认: sichuan/chengdu)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.06.19 06:45
+ * * ⏱️ 更新时间 2026.06.19 06:55
  * ==========================================
  */
 
@@ -49,25 +49,72 @@ export default async function (ctx) {
     [10,14],[10,28],[11,11],[11,25],[12,9],[12,23]
   ];
 
-  // ── 调价计算引擎（后备） ──────────────────────────────────────────────
-  const getNextAdjust = () => {
-    const next = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59).getTime() > now.getTime());
-    if (!next) return { dateStr: "待更新", countdown: "", isUrgent: false, daysLeft: 99 };
+  // ── 增强版调价计算引擎 ─────────────────────────────────────────────────
+  const getNextAdjust = (html = null) => {
+    let targetDate = null;
+    let isWebExpired = false;
+    let rawWebDateStr = "未知时间";
 
-    const target     = new Date(Y, next[0]-1, next[1], 23, 59, 59);
-    const totalHours = Math.floor((target.getTime() - now.getTime()) / 3600000);
+    // 1. 尝试从网页解析
+    if (html) {
+      const tm = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
+      if (tm) {
+        const timeText = tm[1];
+        const rd = timeText.match(/(\d{1,2})[月.\-]?(\d{1,2})[日]?\s*(\d{1,2})?[:时]?/);
+        if (rd) {
+          const m = parseInt(rd[1]);
+          const d = parseInt(rd[2]);
+          const candidate = new Date(Y, m - 1, d, 23, 59, 59);
+          rawWebDateStr = `${P(m)}.${P(d)} 24:00`;
+
+          if (candidate.getTime() > now.getTime()) {
+            targetDate = candidate;
+          } else {
+            isWebExpired = true;
+          }
+        }
+      }
+    }
+
+    // 2. 回退到日历 + 10天冷却保护
+    if (!targetDate) {
+      let baseTime = now.getTime();
+      if (isWebExpired) {
+        const [mStr, dStr] = rawWebDateStr.split('.');
+        const webMonth = parseInt(mStr);
+        const webDay = parseInt(dStr.split(' ')[0]);
+        const webDate = new Date(Y, webMonth - 1, webDay, 23, 59, 59);
+        baseTime = webDate.getTime() + 10 * 24 * 3600 * 1000;
+      }
+
+      const next = CALENDAR_2026.find(([m, d]) => {
+        const t = new Date(Y, m - 1, d, 23, 59, 59);
+        return t.getTime() > baseTime;
+      });
+
+      if (next) {
+        targetDate = new Date(Y, next[0] - 1, next[1], 23, 59, 59);
+      }
+    }
+
+    if (!targetDate) {
+      return { dateStr: "待更新", countdown: "", isUrgent: false, daysLeft: 99, isWebExpired, rawWebDateStr };
+    }
+
+    const totalHours = Math.floor((targetDate.getTime() - now.getTime()) / 3600000);
     const days  = Math.floor(totalHours / 24);
     const hours = totalHours % 24;
 
     return {
-      dateStr:   `${P(next[0])}.${P(next[1])} 24:00`,
+      dateStr:   `${P(targetDate.getMonth() + 1)}.${P(targetDate.getDate())} 24:00`,
       countdown: `(${days}d${hours}h后)`,
       isUrgent:  totalHours < 72,
-      daysLeft:  days
+      daysLeft:  days,
+      isWebExpired,
+      rawWebDateStr
     };
   };
 
-  // ── 初始化（将使用网络数据覆盖） ──────────────────────────────────────
   let nextAdjust = getNextAdjust();
 
   // ── 网络数据获取与解析 ──────────────────────────────────────────────────
@@ -83,68 +130,42 @@ export default async function (ctx) {
 
     regionName = (html.match(/<title>([^_]+)_/) || [])[1]?.replace(/(油价|实时|今日|最新|价格)/g, "").trim() || "全国";
 
+    // 解析油价
     for (const m of html.matchAll(/<dt>(.*?)<\/dt>[\s\S]*?<dd>([\d.]+)\(元\)<\/dd>/g)) {
       const val = parseFloat(m[2]);
       if (isNaN(val)) continue;
-      if      (m[1].includes("92")) prices.p92    = val;
-      else if (m[1].includes("95")) prices.p95    = val;
-      else if (m[1].includes("98")) prices.p98    = val;
+      if (m[1].includes("92")) prices.p92 = val;
+      else if (m[1].includes("95")) prices.p95 = val;
+      else if (m[1].includes("98")) prices.p98 = val;
       else if (m[1].includes("柴") || m[1].includes("0号")) prices.diesel = val;
     }
 
+    nextAdjust = getNextAdjust(html);
+
+    // 趋势信息
     const tm = html.match(/<div class="tishi">[\s\S]*?<span>([^<]+)<\/span>[\s\S]*?<br\/>([\s\S]+?)<br\/>/);
     if (tm) {
-      const [, timeText, priceText] = tm;
-      const rd = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
-      
-      // 提前解析涨跌幅文本
+      const [, , priceText] = tm;
       const isUp   = /上调|上涨|涨/.test(priceText);
       const isDown = /下调|下跌|降|跌/.test(priceText);
       const amounts = (priceText.match(/[\d.]+\s*元\/升/g) || []).map(p => p.match(/[\d.]+/)[0]);
       const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
 
-      // ★★★ 核心修正：分离过期数据的处理逻辑 ★★★
-      if (rd) {
-        const targetMonth = parseInt(rd[1]);
-        const targetDay   = parseInt(rd[2]);
-        const targetHour  = parseInt(rd[3]);
-        // 构造目标日期
-        const target = new Date(Y, targetMonth - 1, targetDay, targetHour, 0, 0);
-        const totalHours = Math.floor((target.getTime() - now.getTime()) / 3600000);
-        const rawDateStr = `${P(targetMonth)}.${P(targetDay)} ${P(targetHour)}:00`;
-
-        if (totalHours >= 0) {
-          // 情况 A：网页数据在未来（网站已更新） -> 正常作为下轮调价
-          const days = Math.floor(totalHours / 24);
-          const hours = totalHours % 24;
-          nextAdjust = {
-            dateStr:   rawDateStr,
-            countdown: `(${days}d${hours}h后)`,
-            isUrgent:  totalHours < 72,
-            daysLeft:  days
-          };
-          trendLabel = days <= 4 ? "下轮预测: " : "本轮调价: ";
-          trendColor = days <= 4 ? (isUp ? C.red : isDown ? C.teal : C.muted) : C.muted;
-          trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
-        } else {
-          // 情况 B：网页数据已过期（网站还没更新下一轮） 
-          // -> 顶部保持 fallback 到日历，底部明确标注这是“已调价”的旧数据避免误导
-          trendLabel = "上轮已调: ";
-          trendColor = C.muted; // 过期数据置灰
-          trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
-        }
+      if (nextAdjust.isWebExpired) {
+        trendLabel = "上轮已调: ";
+        trendColor = C.muted;
+        trendInfo  = `${nextAdjust.rawWebDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`;
       } else {
-        // 情况 C：没匹配到具体日期的兜底
         trendLabel = nextAdjust.daysLeft <= 4 ? "下轮预测: " : "本轮调价: ";
         trendColor = nextAdjust.daysLeft <= 4 ? (isUp ? C.red : isDown ? C.teal : C.muted) : C.muted;
-        trendInfo = `未知时间, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
+        trendInfo  = `${nextAdjust.dateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`;
       }
     }
   } catch (_) {
-    // 网络失败时保留后备日历数据，趋势信息保持默认
+    nextAdjust = getNextAdjust();
   }
 
-  // 格式化价格数据源（如果网络失败则显示 "--" 保底占位）
+  // ── 价格卡片数据 ───────────────────────────────────────────────────────
   const PRICE_ITEMS = [
     { label: "92号", key: "p92",    color: C.gold },
     { label: "95号", key: "p95",    color: C.red  },
@@ -152,9 +173,28 @@ export default async function (ctx) {
     { label: "柴油", key: "diesel", color: C.teal }
   ].map(i => ({ ...i, val: prices[i.key] !== null ? prices[i.key].toFixed(2) : "--" }));
 
-  // ── 通用卡片构建工厂 ─────────────────────────────────────────────────────
+  // ── UI 辅助函数 ───────────────────────────────────────────────────────
+  const mkText = (text, size, weight, color, opts = {}) => ({
+    type: "text",
+    text: String(text ?? ""),
+    font: { size, weight, ...(opts.family ? { family: opts.family } : {}) },
+    textColor: color,
+    ...opts
+  });
+
+  const mkRow = (children, gap = 4, opts = {}) => ({
+    type: "stack", direction: "row", alignItems: "center", gap, children, ...opts
+  });
+
+  const mkIcon = (src, color, size = 13) => ({
+    type: "image", src: `sf-symbol:${src}`, color, width: size, height: size
+  });
+
+  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
+
   const buildPriceCard = (item, config) => ({
-    type: "stack", direction: "column", alignItems: "center", flex: 1, backgroundColor: C.card, borderRadius: config.radius, padding: config.padding,
+    type: "stack", direction: "column", alignItems: "center", flex: 1,
+    backgroundColor: C.card, borderRadius: config.radius, padding: config.padding,
     children: [
       mkSpacer(),
       mkText(item.label, config.labelFz, config.labelWeight, item.color),
@@ -164,44 +204,29 @@ export default async function (ctx) {
     ]
   });
 
-  // ── UI 统一构建器 ──────────────────────────────
-  const mkText = (text, size, weight, color, opts = {}) => {
-    const { family: fontFamily, ...restOpts } = opts;
-    return {
-      type: "text",
-      text: String(text ?? ""),
-      font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
-      textColor: color,
-      ...restOpts
-    };
-  };
-  const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
-  const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
-  const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
   const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
-  // ── 视图渲染 (小号尺寸) ──────────────────────────────────────────────────
+  // ── 小号视图 ───────────────────────────────────────────────────────────
   if (isSmall) {
     const cardCfg = { radius: 10, padding: [6, 2, 6, 2], labelFz: 10, labelWeight: "bold", valFz: 15, innerGap: 3 };
     return {
       type: "widget", padding: 12, url: "hellobike://", backgroundGradient,
       children: [
-        mkRow([
-          mkIcon("fuelpump.circle.fill", C.main, 13), mkSpacer(4),
-          mkText(`${regionName}油价`, 13, "heavy", C.main, { maxLines: 1, minScale: 0.8 }), mkSpacer()
-        ], 0),
+        mkRow([mkIcon("fuelpump.circle.fill", C.main, 13), mkSpacer(4),
+               mkText(`${regionName}油价`, 13, "heavy", C.main, { maxLines: 1, minScale: 0.8 }), mkSpacer()], 0),
         mkSpacer(10),
         { type: "stack", direction: "column", gap: 8, flex: 1, children: [
           mkRow(PRICE_ITEMS.slice(0, 2).map(item => buildPriceCard(item, cardCfg)), 8, { flex: 1 }),
           mkRow(PRICE_ITEMS.slice(2, 4).map(item => buildPriceCard(item, cardCfg)), 8, { flex: 1 })
         ]},
         mkSpacer(10),
-        mkRow([ mkSpacer(), mkIcon("clock.fill", nextAdjust.isUrgent ? C.red : C.muted, 9), mkSpacer(3), mkText(`调价: ${nextAdjust.dateStr}`, 9, "bold", nextAdjust.isUrgent ? C.red : C.muted) ], 0)
+        mkRow([ mkSpacer(), mkIcon("clock.fill", nextAdjust.isUrgent ? C.red : C.muted, 9),
+                mkSpacer(3), mkText(`调价: ${nextAdjust.dateStr}`, 9, "bold", nextAdjust.isUrgent ? C.red : C.muted) ], 0)
       ]
     };
   }
 
-  // ── 视图渲染 (大号尺寸) ──────────────────────────────────────────────────
+  // ── 大号视图 ───────────────────────────────────────────────────────────
   if (isLarge) {
     const cardCfg = { radius: 16, padding: [0, 0, 0, 0], labelFz: 16, labelWeight: "heavy", valFz: 28, innerGap: 10 };
     const infoColor = nextAdjust.isUrgent ? C.red : C.gold;
@@ -209,7 +234,8 @@ export default async function (ctx) {
       type: "widget", padding: 16, url: "hellobike://", backgroundGradient,
       children: [
         mkRow([
-          mkIcon("fuelpump.circle.fill", C.main, 18), mkSpacer(4), mkText(`${regionName}油价`, 17, "heavy", C.main), mkSpacer(),
+          mkIcon("fuelpump.circle.fill", C.main, 18), mkSpacer(4),
+          mkText(`${regionName}油价`, 17, "heavy", C.main), mkSpacer(),
           mkText("下轮调价: ", 12, "medium", infoColor, { minScale: 0.8 }),
           mkText(nextAdjust.dateStr, 12, "bold", infoColor, { minScale: 0.8 }),
           mkText(` ${nextAdjust.countdown}`, 12, "bold", infoColor, { minScale: 0.8 })
@@ -225,29 +251,26 @@ export default async function (ctx) {
         mkSpacer(12),
 
         mkRow([
-          mkRow([
-            mkIcon("arrow.triangle.2.circlepath", C.muted, 13),
-            mkSpacer(4),
-            mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" })
-          ], 0),
+          mkRow([mkIcon("arrow.triangle.2.circlepath", C.muted, 13), mkSpacer(4),
+                 mkText(updateTimeStr, 11, "bold", C.muted, { family: "Menlo" })], 0),
           mkSpacer(),
-          mkRow([
-              mkText(trendLabel, 12, "medium", C.muted),
-              mkText(trendInfo, 12, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
-          ], 2)
+          mkRow([mkText(trendLabel, 12, "medium", C.muted),
+                 mkText(trendInfo, 12, "bold", trendColor, { maxLines: 1, minScale: 0.7 })], 2)
         ], 0)
       ]
     };
   }
 
-  // ── 视图渲染 (中号默认尺寸) ──────────────────────────────────────────────
+  // ── 中号视图（默认） ───────────────────────────────────────────────────
   const cardCfgMed = { radius: 13, padding: [12, 6, 12, 6], labelFz: 11, labelWeight: "bold", valFz: 18, innerGap: 6 };
   const infoColorMed = nextAdjust.isUrgent ? C.red : C.gold;
+
   return {
     type: "widget", padding: 12, url: "hellobike://", backgroundGradient,
     children: [
       mkRow([
-        mkIcon("fuelpump.circle.fill", C.main, 16), mkSpacer(2), mkText(`${regionName}油价`, 15, "heavy", C.main), mkSpacer(),
+        mkIcon("fuelpump.circle.fill", C.main, 16), mkSpacer(2),
+        mkText(`${regionName}油价`, 15, "heavy", C.main), mkSpacer(),
         mkText("下轮调价: ", 11, "medium", infoColorMed),
         mkText(nextAdjust.dateStr, 11, "bold", infoColorMed),
         mkText(` ${nextAdjust.countdown}`, 11, "bold", infoColorMed)
@@ -260,15 +283,11 @@ export default async function (ctx) {
       mkSpacer(8),
 
       mkRow([
-        mkRow([
-          mkIcon("arrow.triangle.2.circlepath", C.muted, 11),
-          mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" })
-        ], 4),
+        mkRow([mkIcon("arrow.triangle.2.circlepath", C.muted, 11),
+               mkText(updateTimeStr, 9, "bold", C.muted, { family: "Menlo" })], 4),
         mkSpacer(),
-        mkRow([
-            mkText(trendLabel, 11, "medium", C.muted),
-            mkText(trendInfo, 11, "bold", trendColor, { maxLines: 1, minScale: 0.7 })
-        ], 2)
+        mkRow([mkText(trendLabel, 11, "medium", C.muted),
+               mkText(trendInfo, 11, "bold", trendColor, { maxLines: 1, minScale: 0.7 })], 2)
       ], 0)
     ]
   };
