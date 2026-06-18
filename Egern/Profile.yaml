@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.18 09:00
+# ⏱️ 更新时间: 2026.06.18 09:20
 # ==========================================
 
 # 基本配置
@@ -183,7 +183,7 @@ policy_groups:
       name: 其他节点
       policies: [代理节点]
       flatten: true
-      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\\b(?:US|United\\s*States|America)\\b|🇹🇼|台湾|\\b(?:TW|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
+      filter: (?i)^(?!.*(?:🇭🇰|香港|\b(?:HK|Hong)\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\b(?:US|United\s*States|America)\b|🇹🇼|台湾|\b(?:TW|Tai|Taiwan)\b|🇯🇵|日本|东京|大阪|\b(?:JP|Japan)\b|🇸🇬|新加坡|狮城|\b(?:SG|Singapore)\b|\bSG|SG\b|🇰🇷|韩国|首尔|仁川|\b(?:KR|KOR|Korea)\b)).*$
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 
   - select:
