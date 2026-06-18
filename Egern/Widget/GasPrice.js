@@ -12,7 +12,7 @@
  * * 🔧 【环境变量】
  * GAS_REGION — 城市全拼音 (默认: sichuan/chengdu)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.06.17 18:00
+ * * ⏱️ 更新时间 2026.06.19 06:45
  * ==========================================
  */
 
@@ -97,43 +97,48 @@ export default async function (ctx) {
       const [, timeText, priceText] = tm;
       const rd = timeText.match(/(\d{1,2})月(\d{1,2})日(\d{1,2})时/);
       
-      // ★★★ 核心修正：优先使用网页中的调价日期，覆盖硬编码日历 ★★★
-      if (rd) {
-        const targetMonth = parseInt(rd[1]);
-        const targetDay   = parseInt(rd[2]);
-        const targetHour  = parseInt(rd[3]);
-        // 构造目标日期（年份与当前一致，假设调价日不会跨年）
-        const target = new Date(Y, targetMonth - 1, targetDay, targetHour, 0, 0);
-        if (target.getTime() > now.getTime()) {
-          const totalHours = Math.floor((target.getTime() - now.getTime()) / 3600000);
-          const days = Math.floor(totalHours / 24);
-          const hours = totalHours % 24;
-          nextAdjust = {
-            dateStr:   `${P(targetMonth)}.${P(targetDay)} ${P(targetHour)}:00`,
-            countdown: `(${days}d${hours}h后)`,
-            isUrgent:  totalHours < 72,
-            daysLeft:  days
-          };
-        }
-      }
-
-      // 解析涨跌趋势信息（保持原有逻辑）
+      // 提前解析涨跌幅文本
       const isUp   = /上调|上涨|涨/.test(priceText);
       const isDown = /下调|下跌|降|跌/.test(priceText);
       const amounts = (priceText.match(/[\d.]+\s*元\/升/g) || []).map(p => p.match(/[\d.]+/)[0]);
       const amountStr = amounts.length >= 2 ? `${amounts[0]}-${amounts[1]}¥/L` : (amounts[0] ? `${amounts[0]}¥/L` : "");
 
-      // 根据距离调价天数决定显示“下轮预测”还是“本轮调价”
-      if (nextAdjust.daysLeft <= 4) {
-        trendLabel = "下轮预测: ";
-        trendColor = isUp ? C.red : isDown ? C.teal : C.muted;
+      // ★★★ 核心修正：分离过期数据的处理逻辑 ★★★
+      if (rd) {
+        const targetMonth = parseInt(rd[1]);
+        const targetDay   = parseInt(rd[2]);
+        const targetHour  = parseInt(rd[3]);
+        // 构造目标日期
+        const target = new Date(Y, targetMonth - 1, targetDay, targetHour, 0, 0);
+        const totalHours = Math.floor((target.getTime() - now.getTime()) / 3600000);
+        const rawDateStr = `${P(targetMonth)}.${P(targetDay)} ${P(targetHour)}:00`;
+
+        if (totalHours >= 0) {
+          // 情况 A：网页数据在未来（网站已更新） -> 正常作为下轮调价
+          const days = Math.floor(totalHours / 24);
+          const hours = totalHours % 24;
+          nextAdjust = {
+            dateStr:   rawDateStr,
+            countdown: `(${days}d${hours}h后)`,
+            isUrgent:  totalHours < 72,
+            daysLeft:  days
+          };
+          trendLabel = days <= 4 ? "下轮预测: " : "本轮调价: ";
+          trendColor = days <= 4 ? (isUp ? C.red : isDown ? C.teal : C.muted) : C.muted;
+          trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
+        } else {
+          // 情况 B：网页数据已过期（网站还没更新下一轮） 
+          // -> 顶部保持 fallback 到日历，底部明确标注这是“已调价”的旧数据避免误导
+          trendLabel = "上轮已调: ";
+          trendColor = C.muted; // 过期数据置灰
+          trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
+        }
       } else {
-        trendLabel = "本轮调价: ";
-        trendColor = C.muted;
+        // 情况 C：没匹配到具体日期的兜底
+        trendLabel = nextAdjust.daysLeft <= 4 ? "下轮预测: " : "本轮调价: ";
+        trendColor = nextAdjust.daysLeft <= 4 ? (isUp ? C.red : isDown ? C.teal : C.muted) : C.muted;
+        trendInfo = `未知时间, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
       }
-      // 组装趋势信息（使用网页中的原始日期和幅度）
-      const rawDateStr = rd ? `${P(rd[1])}.${P(rd[2])} ${P(rd[3])}:00` : "未知时间";
-      trendInfo = `${rawDateStr}, ${isUp ? "↑" : isDown ? "↓" : "-"} ${amountStr}`.trim();
     }
   } catch (_) {
     // 网络失败时保留后备日历数据，趋势信息保持默认
