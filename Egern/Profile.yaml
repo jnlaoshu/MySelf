@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.18 09:20
+# ⏱️ 更新时间: 2026.06.19 09:00
 # ==========================================
 
 # 基本配置
@@ -23,6 +23,8 @@ vif_excluded_routes:
 real_ip_domains:
   - "*.lan"
   - "*.push.apple.com"
+  - "*.apple.com"
+  - "*.icloud.com"
   - "router.asus.com"
   - "*.battle.net"
   - "*.blzstatic.cn"
@@ -36,6 +38,8 @@ real_ip_domains:
   - "*.msftconnecttest.com"
   - msftncsi.com
   - msftconnecttest.com
+  - "*.epicgames.com"
+  - "*.riotgames.com"
 
 # DNS 劫持
 hijack_dns:
@@ -304,28 +308,40 @@ policy_groups:
 
 # ==================== 路由规则 ====================
 rules:
+  # 1. 本地网络（最高优先级）
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
       update_interval: 604800
 
+  # 2. 广告拦截
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
       update_interval: 604800
 
-  - domain_keyword: { match: apple.com, policy: DIRECT }
-  - domain_keyword: { match: icloud.com, policy: DIRECT }
-  - domain_keyword: { match: microsoft.com, policy: DIRECT }
-  - domain_keyword: { match: windowsupdate.com, policy: DIRECT }
-  - domain_keyword: { match: apple-cloudkit.com, policy: DIRECT }
+  # 3. Apple 全家桶扩展版
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+      policy: DIRECT
+      update_interval: 604800
 
-  - domain_keyword: { match: google.com, policy: Google }
-  - domain_keyword: { match: youtube.com, policy: YouTube }
-  - domain_keyword: { match: github.com, policy: GitHub }
-  - domain_keyword: { match: telegram.org, policy: Telegram }
-  - domain_keyword: { match: openai.com, policy: AIGC }
+  # 4. 关键词快速匹配（高频兜底）
+  - domain_keyword: { match: apple, policy: DIRECT }
+  - domain_keyword: { match: icloud, policy: DIRECT }
+  - domain_keyword: { match: microsoft, policy: DIRECT }
+  - domain_keyword: { match: windowsupdate, policy: DIRECT }
+  - domain_keyword: { match: apple-cloudkit, policy: DIRECT }
 
+  # 5. 主流服务关键词快速匹配
+  - domain_keyword: { match: google, policy: Google }
+  - domain_keyword: { match: youtube, policy: YouTube }
+  - domain_keyword: { match: github, policy: GitHub }
+  - domain_keyword: { match: openai, policy: AIGC }
+  - domain_keyword: { match: chatgpt, policy: AIGC }
+  - domain_keyword: { match: telegram, policy: Telegram }
+
+  # 6. 第三方规则集
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
       policy: DIRECT
@@ -403,11 +419,13 @@ rules:
       policy: DIRECT
       update_interval: 86400
 
+  # 国内直连
   - geoip:
       match: CN
       policy: DIRECT
       no_resolve: true
 
+  # 最终兜底
   - default:
       policy: 自选策略
 
