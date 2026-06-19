@@ -1,10 +1,10 @@
 #!name=音乐流媒体净化
-#!desc=2026.06.01 22:36 更新 | 酷狗/酷我/波点/Spotify/YTM/网易云/汽水/QQ音乐/喜马拉雅/蜻蜓/猫耳
-#!author=AI整合优化 | 奶思, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, WeiGiegie 等
+#!desc=2026.06.18 更新 | 酷狗/酷我/波点/Spotify/YTM/网易云/汽水/QQ音乐/喜马拉雅/蜻蜓/猫耳 等主流音乐平台去广告
+#!author=AI整合优化 | 奶思, Yu9191, Yuheng0101, Maasea, ddgksf2013, app2smile, WeiGiegie, laoshu
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
 
 [Rule]
-# ── HTTPDNS 阻断 (防止 App 绕过代理获取广告 IP) ──
+# ── HTTPDNS 阻断 (防止绕过代理) ──
 DOMAIN,httpdns.n.netease.com,REJECT
 DOMAIN,httpdns.music.163.com,REJECT
 DOMAIN,httpdns.yunxindns.com,REJECT
@@ -34,8 +34,7 @@ DOMAIN,iadmat.nosdn.127.net,REJECT
 DOMAIN,iadmusicmat.music.126.net,REJECT
 DOMAIN,iadmusicmatvideo.music.126.net,REJECT
 DOMAIN,iadmatapk.nosdn.127.net,REJECT
-DOMAIN,ipv4.music.163.com,REJECT
-DOMAIN,ipv6.music.163.com,REJECT
+# ipv4.music.163.com 和 ipv6.music.163.com 已移除，避免核心播放受影响
 
 # ── QQ音乐 ──
 DOMAIN,tmead.y.qq.com,REJECT
@@ -70,33 +69,18 @@ DOMAIN,adlaunch.qtfm.cn,REJECT
 # ── 猫耳FM ──
 DOMAIN,ad.missevan.com,REJECT
 
+# ── 汽水音乐 ──
+DOMAIN,beta-luna.douyin.com,REJECT
+DOMAIN,api.qishui.com,REJECT
+
 [Rewrite]
-# 酷狗 & 酷我 URL 拦截
+# URL 快速拦截
 ^https?:\/\/ads\.kugou\.com\/.* reject
 ^https?:\/\/splash\.kugou\.com\/.* reject
 ^https?:\/\/.*\.kuwo\.cn\/openapi\/v1\/app\/pasterAd reject
 ^https?:\/\/rich\.kuwo\.cn\/AdService reject
-
-# 喜马拉雅 URL 拦截
-^https?:\/\/passport\.ximalaya\.com\/friendship-mobile\/v1\/findFriendsBanner\/show\/ reject
-^https?:\/\/xdcs-collector\.ximalaya\.com\/api\/v1\/realtime reject
+^https?:\/\/ad\.(ximalaya|qtfm)\.com reject
 ^https?:\/\/adse\.(wsa\.)?ximalaya\.com reject
-^https?:\/\/ad\.ximalaya\.com reject
-^https?:\/\/ulogs\.umeng\.com\/unify_logs reject
-^https?:\/\/.+ximalaya\.com\/x-web-activity\/signIn\/getHomePageSignInInfo\/ reject-200
-^https?:\/\/.+ximalaya\.com\/product\/promotion\/v1\/album\/price reject-200
-^https?:\/\/mobile\.ximalaya\.com\/business-sale-promotion-guide-mobile-web\/popup\/info\/ reject
-
-# 蜻蜓FM & 猫耳FM URL 拦截
-^https:\/\/app\.qtfm\.cn\/recommendapi\/v\d\/emotion$ reject
-^https:\/\/search\.qtfm\.cn\/v\d\/keyword\/default$ reject
-^https:\/\/app\.missevan\.com\/x\/recommend\/get-popup$ reject-200
-^https:\/\/data\.missevan\.com\/site\/ad-track$ reject-200
-
-# Spotify
-^https:\/\/spclient\.wg\.spotify\.com\/bootstrap\/v1\/bootstrap$ request-header-del if-none-match
-^https:\/\/spclient\.wg\.spotify\.com\/user-customization-service\/v1\/customize$ request-header-del if-none-match
-^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone reject
 
 # ================= Body JQ 深度净化 =================
 # 汽水音乐
@@ -105,91 +89,34 @@ http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/car
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/search-block 'del(.search_chart_block)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/activities 'del(.activity_map)'
 http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/feed\/song-tab '.items |= map(select(.type == "track"))'
-http-response-jq ^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/more-panel\? 'del(.blocks[1])'
 
-# 喜马拉雅 (主页及服务模块精简)
+# 喜马拉雅
 http-response-jq ^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/mobile-user\/v\d\/homePage\/ 'del(.data.freeListenV2) | if .data.serviceModule.entrances then .data.serviceModule.entrances |= map(select(.name == "全部服务")) else . end'
 
 # 蜻蜓FM
 http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/signin\/show_homepage_icon$ 'if (getpath(["data"]) | has("display_icon")) then (setpath(["data","display_icon"]; false)) else . end'
 http-response-jq ^https:\/\/app\.qtfm\.cn\/recommendapi\/v\d\/hotpage\? '.data.head |= map(select(.type == "IconGrid")) | .data.feeds |= map(select(.type == "Channel" or .type == "Radio" or .type == "ListenListChannel"))'
-http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/channel\/\d{6}\/playpage\/\d{8} 'delpaths([["data","related_recommend"],["data","recommend_bar"]])'
-http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/mylistenpage 'delpaths([["data","banner"]])'
-http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/subscribed_channels\? 'delpaths([["data","recommends"]])'
-http-response-jq ^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/channelpage\/\d+$ 'delpaths([["data","vip_recommend"],["data","recommend_delivery"]])'
 
 # 猫耳FM
 http-response-jq ^https:\/\/app\.missevan\.com\/site\/launch\? 'delpaths([["info","splash"],["info","splash_ready"]])'
 http-response-jq ^https:\/\/app\.missevan\.com\/site\/config$ 'delpaths([["info","tab_bar_live"],["info","enable_tab_bar_live_notice"],["info","teenager_popup_mode"],["info","httpdns"],["info","homepage_top_task_button"]]) | .info.cronet |= (fromjson | .quic=false | tojson)'
-http-response-jq ^https:\/\/app\.missevan\.com\/site\/tabs\? '.info.tabs |= map(select(.title as $t | ["直播", "发现", "广播剧", "听书", "分类"] | index($t) != null))'
-http-response-jq ^https:\/\/app\.missevan\.com\/site\/icons\? '.info.icons |= map(select(.title as $t | $t == "直播" or $t == "必听剧" or $t == "免费榜" or $t == "夜猫子" or $t == "启动音"))'
-http-response-jq ^https:\/\/app\.missevan\.com\/discovery\/list$ '.info |= map(map(select(.title != "免流服务")))'
-http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info","search_words"]])'
 
 [Map Local]
-# YouTube Music
+# YouTube Music / Spotify / 波点 等
 ^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain"
-
-# Spotify
 ^https?:\/\/.*spotify\.com\/pendragon\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 波点音乐
 ^https?:\/\/tmeadcomm\.y\.qq\.com\/ data-type=text data=" " status-code=200
 ^https?:\/\/bd-api\.kuwo\.cn\/api\/service\/finds\/module\?moduleId data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/bd-api\.kuwo\.cn\/api\/service\/banner\/myPage\?uid data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/bd-api\.kuwo\.cn\/api\/play\/listening\/entrance\/music\?musicId data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/h5app\.kuwo\.cn\/m\/(kwtemplatePage|bdvipact2205)\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/bodianimgcdn\.kuwo\.cn\/images\/(0e83c1821cd2681de08e20bec73d1e75|198c0b313fe9e53b03240c7b30b4acc9) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 网易云音乐
+# 网易云音乐（核心净化）
 ^https?:\/\/interface\d?\.music\.163\.com\/eapi\/(delivery\/(batch-)?deliver|moment\/tab\/info\/|side-bar\/mini-program\/music-service\/account|yunbei\/account\/entrance\/|community\/friends\/fans-group\/artist\/group\/|mine\/applet\/redpoint|music\/songshare\/text\/recommend\/|resniche\/position\/play\/new\/|resniche\/tspopup\/show|resource\/comments?\/musiciansaid\/|user\/sub\/artist|ios\/version|mlivestream\/entrance\/playpage\/|link\/position\/show\/strategy|link\/scene\/show\/resource|v1\/content\/exposure\/comment\/banner\/) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/interface\d?\.music\.163\.com\/w?eapi\/(activity\/bonus\/playpage\/time\/query|resource-exposure\/|search\/(chart\/|rcmd\/keyword\/|specialkeyword\/)) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/interface\d\.music\.163\.com\/eapi\/my\/podcast\/tab\/recommend data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/interface\d?\.music\.163\.com\/e?api\/(ocpc\/)?ad\/ data-type=text data="" status-code=200 header="Content-Type:text/plain"
-^https?:\/\/interface\d?\.music\.163\.com\/w?e?api\/search\/default data-type=text data="" status-code=200 header="Content-Type:text/plain"
-^https?:\/\/interface(?:\d)?\.music\.163\.com\/e?api\/content\/activity\/music\/jar\/template\/list data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/interface(?:\d)?\.music\.163\.com\/e?api\/sp\/flow\/popup\/query data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# QQ音乐
+# QQ音乐 / 汽水 / 酷我 等（保留主要）
 ^https?:\/\/us\.l\.qq\.com\/exapp data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/y\.gtimg\.cn\/music\/common\/upload\/(t_splash_info|targeted_ads|kg_ad) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 汽水音乐
-^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce\/v2\/commerce_info|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/location\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 酷我
-^https?:\/\/mobilead\.kuwo\.cn\/EcomResourceServer\/(getIOSIsHideAd|getMotor)\.do data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/rich\.kuwo\.cn\/(AdService|ecom)\/kaiping\/ad[iI]nfo data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/user\/adVip\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/wapi\.kuwo\.cn\/openapi\/v1\/operate\/(adVip|freeMode\/h5)?\/?text data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https?:\/\/abt-kuwo\.tencentmusic\.com\/kuwo\/ui\/info data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 蜻蜓FM
-^https:\/\/app\.qtfm\.cn\/recommendapi\/v8\/ai_assistant_point$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/signin\/show_homepage_icon$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/app\.qtfm\.cn\/m-bff\/v1\/user\/task\/play$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/app\.qtfm\.cn\/m-bff\/v\d\/i_listen\/guess_you_like\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/recpage-c\.qtfm\.cn\/v\d\/favorites$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/user\.qtfm\.cn\/u\d\/api\/v\d\/user\/following_podcaster\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/entry\.qtfm\.cn\/api\/v\d\/personal\/\?carrier data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/search\.qtfm\.cn\/v3\/entry$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/woqt2\.qtfm\.cn\/v2\/userConfig\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 猫耳FM
-^https:\/\/data\.missevan\.com\/site\/ad-track$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/app\.missevan\.com\/x\/recommend\/get-popup$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/fm\.missevan\.com\/api\/v2\/meta\/banner$ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/fm\.missevan\.com\/api\/v2\/recommended\/top\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/fm\.missevan\.com\/api\/v2\/chatroom\/sound\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-
-# 喜马拉雅
-^https:\/\/(search|searchwsa)\.ximalaya\.com\/hub\/(guideWord|hotWord)V\d\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(m|mwsa)\.ximalaya\.com\/x-web-activity\/signIn\/getHomePageSignInInfo\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/mobile-playpage\/playpage\/recommendContentV\d\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/mobile-playpage\/playpage\/recommend\/resource\/allocation\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/business-sale-promotion-guide-mobile-web\/popup\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/app-skin-service\/skin\/setting\/info\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https?:\/\/(beta-luna\.douyin\.com|api\.qishui\.com)\/luna\/(media_ads|ads|commerce\/v2\/commerce_info|hashtag\/recommend) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
 # 酷狗 / 酷我
@@ -199,18 +126,9 @@ http-response-jq ^https:\/\/app\.missevan\.com\/site\/get-top$ 'delpaths([["info
 # 波点音乐
 波点音乐_增强 = type=http-response, pattern=^https?:\/\/(?:(?:bd-api|h5app|bodianyin|ab-bodian)\.kuwo\.cn\/(?:api\/(?:ucenter\/users\/(?:pub|login)|play\/(?:music\/v2\/(?:audioUrl|checkRight)|advert\/info)|service\/(?:music\/(?:info|download\/(?:info|config))|home\/module|global\/config\/(?:scene|vipEnter)|banner\/positions|advert\/config)|search\/topic\/word\/list|pay\/(?:vip\/(?:invitation\/(?:assist\/popup|swell)|lowPriceText)|sp\/actVip|audition\/url)|advert\/free\/config|popup\/start\/info|abtest\/ui\/info|rec\/feed)|abtest\/ui\/info)|us\.l\.qq\.com\/exapp|xs\.gdt\.qq\.com\/style_factory\/template_list), requires-body=true, max-size=-1, timeout=60, script-path=https://raw.githubusercontent.com/WeiGiegie/666/main/bdyy.js
 
-# Spotify
+# Spotify（Protobuf + JSON）
 Spotify_去广告_Proto = type=http-response, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
 Spotify_去广告_Request = type=http-request, pattern=^https:\/\/(spclient\.wg\.spotify\.com|.*-spclient\.spotify\.com(:443)?)\/(?:artistview\/v1\/artist|album-entity-view\/v2\/album)\/, requires-body=false, timeout=20, script-path=https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
-
-# Spotify 歌词增强
-Spotify_Tracks增强 = type=http-response, pattern=^https:\/\/api\.spotify\.com\/v1\/tracks, requires-body=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
-Spotify_歌词请求JSON = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+format=json, requires-body=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
-Spotify_歌词请求Proto = type=http-request, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
-Spotify_翻译歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=Translate, requires-body=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
-Spotify_翻译歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
-Spotify_External歌词JSON = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=External, requires-body=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
-Spotify_External歌词Proto = type=http-response, pattern=^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
 
 # YouTube Music
 YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
@@ -218,7 +136,7 @@ YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/
 
 # 网易云 & 喜马拉雅
 网易云_核心净化 = type=http-response, pattern=^https?:\/\/interface(\d)?\.music\.163\.com\/e?api\/(link|ad|search|vipnewcenter|side-bar|vip)\/.*, requires-body=true, script-path=https://gist.githubusercontent.com/ddgksf2013/4f53b7c6083678df25fecc8ff68b52c4/raw/netease.adblock.js
-喜马拉雅_核心净化 = type=http-response, pattern=^https?:\/\/.+((ximalaya)|(xmcdn)).+(mobile-user\/v2\/homePage|product\/detail\/v1|v1\/album\/track\/ts|mobile-playpage\/track\/v4\/baseInfo\/ts|mobile-playpage\/playpage\/tabs\/v2|mobile-playpage\/playpage\/track\/qualityAndEffect|mobile\/download\/v2\/track|mobile-user-grade\/decoratorV2\/decorationDetails\/page|mobile-album\/album\/plant\/grass), requires-body=true, script-path=https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js
+喜马拉雅_核心净化 = type=http-response, pattern=^https?:\/\/.+((ximalaya)|(xmcdn)).+(mobile-user\/v2\/homePage|product\/detail\/v1|v1\/album\/track\/ts|mobile-playpage\/playpage\/tabs\/v2|mobile-playpage\/playpage\/track\/qualityAndEffect|mobile\/download\/v2\/track|mobile-user-grade\/decoratorV2\/decorationDetails\/page|mobile-album\/album\/plant\/grass), requires-body=true, script-path=https://raw.githubusercontent.com/WeiGiegie/666/main/ximalaya.js
 
 [MITM]
-hostname = %APPEND% *.kugou.com, *.kuwo.cn, youtubei.googleapis.com, *.googlevideo.com, interface*.music.163.com, *.music.126.net, *.y.qq.com, tmeadcomm.y.qq.com, *.tencentmusic.com, y.gtimg.cn, xs.gdt.qq.com, *.ximalaya.com, *.xmcdn.com, app.qtfm.cn, entry.qtfm.cn, recpage-c.qtfm.cn, user.qtfm.cn, search.qtfm.cn, woqt2.qtfm.cn, app.missevan.com, data.missevan.com, fm.missevan.com, beta-luna.douyin.com, api.qishui.com, gae2-spclient.spotify.com, httpdns.n.netease.com
+hostname = %APPEND% *.kugou.com, *.kuwo.cn, *.music.163.com, *.music.126.net, *.y.qq.com, *.tencentmusic.com, *.ximalaya.com, *.xmcdn.com, app.qtfm.cn, *.missevan.com, beta-luna.douyin.com, api.qishui.com, *.spotify.com, youtubei.googleapis.com
