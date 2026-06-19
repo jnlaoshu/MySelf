@@ -1,10 +1,10 @@
 #!name=综合电商去广告
-#!desc=2026.05.04 09:55 更新。拼多多、京东(含京喜)、淘宝、闲鱼、美团、抖音、快手、小红书等
-#!author=AI优化, ZenmoFeiShi, 可莉🅥, QingRex, RuCu6, Maasea, fmz200, zirawell
+#!desc=2026.06.18 更新 | 覆盖拼多多、京东(含京喜)、淘宝/闲鱼、美团、抖音、快手、小红书、得物、苏宁等主流电商
+#!author=AI优化, ZenmoFeiShi, 可莉🅥, QingRex, RuCu6, Maasea, fmz200, zirawell, laoshu
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
 
 [Rule]
-# Douyin & Kuaishou
+# ==================== 抖音 & 快手 ====================
 DOMAIN,ad.douyin.com,REJECT
 DOMAIN,pangolin.snssdk.com,REJECT
 DOMAIN,toblog.snssdk.com,REJECT
@@ -13,8 +13,10 @@ DOMAIN,e.kuaishou.com,REJECT
 DOMAIN,js-ad.a.yximgs.com,REJECT
 DOMAIN,open.e.kuaishou.com,REJECT
 DOMAIN,api.e.kuaishou.com,REJECT
+DOMAIN,ad.kuaishou.com,REJECT
+DOMAIN,adver.kuaishou.com,REJECT
 
-# Pinduoduo
+# ==================== 拼多多（已移除核心域名拦截） ====================
 DOMAIN,titan.pinduoduo.com,REJECT
 DOMAIN,xg.pinduoduo.com,REJECT
 DOMAIN,apm.pinduoduo.com,REJECT
@@ -29,19 +31,24 @@ DOMAIN,cdl-1.pddpic.com,REJECT
 DOMAIN,cd-1.pddpic.com,REJECT
 DOMAIN,cdl-p2.pddpic.com,REJECT
 
-# JD
+# ==================== 京东 ====================
 URL-REGEX,^http://\w{32}\.jddebug\.com/diagnose\?,REJECT
+DOMAIN,ad.3.cn,REJECT
+DOMAIN,ad.jd.com,REJECT
+DOMAIN,static.360buyimg.com,REJECT
 
-# Taobao & Fliggy
+# ==================== 淘宝 & 闲鱼 & 飞猪 ====================
 DOMAIN,adashx.m.taobao.com,REJECT
 DOMAIN,ossgw.alicdn.com,REJECT
 DOMAIN,ems.youku.com,REJECT
 DOMAIN,hudong.alicdn.com,REJECT
 DOMAIN,h-adashx.ut.taobao.com,REJECT
 DOMAIN,ut.taobao.com,REJECT
+DOMAIN,acs.m.taobao.com,REJECT
+DOMAIN,acs.m.tmall.com,REJECT
 URL-REGEX,^https://acs\.m\.tmall\.com/gw/mtop\.(alibaba\.advertisementservice|alimama\.etao|film\.mtopadvertise|o2o\.ad),REJECT
 
-# Meituan & Dianping
+# ==================== 美团 & 大众点评 ====================
 DOMAIN,portal-portm.meituan.com,REJECT
 DOMAIN,metrics-picture.d.meituan.net,REJECT
 DOMAIN,maplocatesdksnapshot.d.meituan.net,REJECT
@@ -49,127 +56,44 @@ DOMAIN,catdot.dianping.com,REJECT
 DOMAIN,catfront.dianping.com,REJECT
 DOMAIN,www.dpfile.com,REJECT
 
-# Eleme
+# ==================== 饿了么 ====================
 DOMAIN,nr-op.elemecdn.com,REJECT
 
-# Vipshop
-DOMAIN,b.appsimg.com,REJECT
+# ==================== 其他电商 ====================
+DOMAIN,b.appsimg.com,REJECT                     # 唯品会
+DOMAIN-SUFFIX,poizon.com,REJECT                 # 得物
+DOMAIN,ad.suning.com,REJECT                     # 苏宁
+DOMAIN,edith.xiaohongshu.com,REJECT             # 小红书
+DOMAIN,app.dewu.com,REJECT                      # 得物备用
 
-# Poizon
-DOMAIN-SUFFIX,poizon.com,REJECT
-
-# Suning
-DOMAIN,ad.suning.com,REJECT
-
-# Global
+# ==================== 全局兜底 ====================
 IP-CIDR,103.37.155.60/32,REJECT
 
 [Rewrite]
-# ================= JQ Data Processing =================
-# Kuaishou
+# ================= JQ 数据处理 =================
+# 快手
 http-response-jq ^https:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/(reskinConfig|sidebarExSquareStyle) 'delpaths([["reskinConfig"],["sidebarExSquareStyle","moreList"],["sidebarExSquareStyle","topList"]]) | .data.sidebarExSquareStyle.commonlyUsedList? |= map(select(.title as $t | $t != "设置" and $t != "历史记录" and $t != "草稿箱" and $t != "我的钱包" and $t != "小程序" and $t != "未成年人模式" and $t != "官方客服" and $t != "内容偏好" and $t != "离线模式" and $t != "稍后再看" and $t != "举报中心" and $t != "挂件"))'
 http-response-jq ^https:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/live\/feed\/square\/refresh 'del(.data.banners)'
 http-response-jq ^https:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/feed\/(selection|selectionFast) '.data.items? |= map(select(.ad != true))'
 http-response-jq ^https:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/user\/profile\/v2 'del(.data.postRecommends)'
-http-response-jq ^https:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/im\/wd\/top\/navigation\/getRecommendedSession 'del(.data.operationRecommendationList)'
 
-# Pinduoduo
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","dy_module","irregular_banner_dy"],["result","icon_set"],["result","search_bar_hot_query"]]) | .result.bottom_tabs? |= map(select(.link | IN("index.html", "chat_list.html", "personal.html"))) | .result.buffer_bottom_tabs? |= map(select(.link | IN("index.html", "chat_list.html", "personal.html"))) | .result.all_top_opts? |= map(del(.selected_image, .image, .height, .width))'
+# 拼多多
+http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/alexa\/homepage\/hub\? 'delpaths([["result","dy_module","irregular_banner_dy"],["result","icon_set"],["result","search_bar_hot_query"]]) | .result.bottom_tabs? |= map(select(.link | IN("index.html", "chat_list.html", "personal.html")))'
 http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/philo\/personal\/hub\? 'delpaths([["monthly_card_entrance"],["personal_center_style_v2_vo"],["icon_set","icons"],["icon_set","top_personal_icons"]])'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/search\? 'delpaths([["expansion"]])'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/oak\/integration\/render\? 'delpaths([["bottom_section_list"],["ui","bottom_section"],["ui","live_section","float_info"]])'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/order\/ 'delpaths([["marketing_banner_vo"],["shipping","banner_above_recommend"]])'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/caterham\/v3\/query\/order_detail_group\? 'delpaths([["data","goods_list"]])'
-http-response-jq ^https:\/\/api\.pinduoduo\.com\/api\/aristotle\/order_list_v4\? '.orders? |= map(.order_buttons? |= map(del(.order_growth_tip)))'
 
-# JD
-http-response-jq ^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=basicConfig '(if (getpath(["data","JDMessage","socketmonitor"]) | has("isSocketEstablishedAhead")) then setpath(["data","JDMessage","socketmonitor","isSocketEstablishedAhead"]; 0) else . end) | (if (getpath(["data","JDMessage","socketmonitor"]) | has("isSocketReport")) then setpath(["data","JDMessage","socketmonitor","isSocketReport"]; 0) else . end) | (if (getpath(["data","JDHttpToolKit","httpdns"]) | has("httpdns")) then setpath(["data","JDHttpToolKit","httpdns","httpdns"]; 0) else . end)'
+# 闲鱼
+http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.home\.nextfresh\/ '.data.homeTopList |= map(select(.sectionType == "kingkongDo")) | .data.sections |= map(select((.data.clickParam.args.cardType as $ct | $ct != "homeMultiBanner" and $ct != "mamaAD")))'
 
-# Xianyu
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.home\.nextfresh\/ '.data.homeTopList |= map(select(.sectionType == "kingkongDo")) | .data.sections |= map(select((.data.clickParam.args.cardType as $ct | $ct != "homeMultiBanner" and $ct != "mamaAD") and (.template.name|type=="string") and (.template.name == "idlefish_home_new_commodity_card" or (.template.name|contains("fish_home_tags_item_card")))))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.widget\.refresh\.get\/ '.data.homeTopList |= map(select(.sectionType == "kingkongDo"))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.home\.whale\.modulet\/ '.data.container.sections |= map(select(.template.name == "fish_home_miniapp"))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.fun\.follow\.feed\.list\/ '.data.sections|=map(select(.cardType==2001))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.home\.community\/ '.data.feedsList |= map(select(.template.name == "idlefish_home_new_commodity_card" or .template.name == "idlefish_home_new_content_card"))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idlehome\.home\.newitem\.page\/ '.data.sections |= map(select(.data.clickParam.args.cardType as $ct | $ct != "banner" and $ct != "mamaAD"))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.flow\.plat\.section\/ '.data.data.components |= map(select(.data and (.data|type=="object") and .data.template and (.data.template|type=="object") and .data.template.name and (.data.template.name|type=="string") and (.data.template.name|contains("fish_city_kingkong"))))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.home\.top\/ '.data.data.components |= map(select(.key == "fish_home_second_stage_top_cardV3"))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.taobao\.idle\.local\.home\/ '.data.sections |= map(select((.template.cardEnum != "ads") and (.cardType == "common")))'
-http-response-jq ^https:\/\/acs\.m\.goofish\.com\/gw\/mtop\.idle\.user\.page\.my\.adapter\/ '.data.container.sections |= map(select(.template.name | test("^my_fy[0-9]+_(header|user_info|trade|appraise|tools)$")) | .item |= (if .level and .level.exContent and (.level.exContent | has("tips")) then del(.level) else . end))'
-
-# Meituan
+# 美团
 http-response-jq ^https:\/\/rms\.meituan\.com\/api\/v\d\/rmsmina\/c\/queryShopPortalInfo\? 'delpaths([["data","popUpWindows"]])'
 
-# ================= Native Reject-Dict =================
-# Native reject-dict is much faster in Rust than Map Local with string construction.
-
-# Kuaishou
-^https?:\/\/.*\.(ksapisrv|gifshow)\.com\/rest\/n\/(nearby\/widget\/info|taskCenter\/task\/report|ad\/|live\/feed\/info\/simplelive\/card) reject-dict
-^https?:\/\/.*\.gifshow\.com\/rest\/(n\/)?(ad|splash|commercial)\/.* reject-dict
-
-# Pinduoduo
-^https:\/\/api\.pinduoduo\.com\/search_hotquery\? reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/(aristotle\/(unrated_order_for_unreceived_tab|query_order_list_tabs_element)|aquarius\/hungary\/global\/homepage|caterham\/v3\/query\/(order_express_group|new_chat_group|personal|my_order_group|likes)) reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/(zaire_biz\/chat\/resource\/get_list_data|alexa\/goods\/back_up|brand-olay\/goods_detail\/bybt_guide|engels\/reviews\/require\/append|engels\/wait\/receive\/review) reject-dict
-^https:\/\/api\.pinduoduo\.com\/api\/(phantom\/gbdbpdv\/extra|manufacturer\/cross\/shortcut\/list|dunkirk\/liveactivity\/push\/create\/url\/report|growth\/nagato\/app\/index\/gather|buffon\/nasus\/recommend) reject-dict
-
-# JD
-^https:\/\/api\.m\.jd\.com\/client\.action\?functionId=(searchBoxWord|stationPullService|uniformRecommend[06]) reject-dict
-^https:\/\/jxapi\.m\.jd\.com\/client\.action\?functionId=(jx_.*(ad|splash|pop|banner)|pg_.*) reject-dict
-
-# Taobao & Fliggy
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.fliggy\.crm\.screen\.(allresource|predict) reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.alibaba\.advertisementservice\.getadv reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.alimama\.etao\.config\.query\/.+?etao_advertise reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.alimusic\.common\.mobileservice\.startinit reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.etao\.noah\.query\/.+tao_splash reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.film\.mtopadvertiseapi\.queryadvertise reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.o2o\.ad\.gateway\.get reject-dict
-^https:\/\/acs\.m\.taobao\.com\/gw\/mtop\.trip\.activity\.querytmsresources reject-dict
-^https:\/\/(?:gw|heic)\.alicdn\.com\/imgextra\/i\d\/\d*\/?[\w!]+-\d-(?:octopus|tps)-(?:1080|1125)-\d{4}\.(?:jpg|png)_(?:1\d{3}|9\d{2})x(?:\d|1\d{3}|9\d{2})q[59]0 reject-dict
-^https:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.taobao\.(volvo\.secondfloor\.getconfig|wireless\.home\.newface\.awesome\.get) reject-dict
-^https?:\/\/acs\.m\.fliggy\.com\/gw\/mtop\.fliggy\.crm\.screen\..* reject-dict
-
-# Meituan & Dianping
-^https?:\/\/wmapi\.meituan\.com\/api\/v\d\/(loadInfo|openscreen|startpicture)\? reject-dict
-^https?:\/\/(s3plus|flowplus)\.meituan\.net\/v\d\/\w+\/linglong\/\w+\.(gif|jpg|mp4) reject-dict
-^https?:\/\/img\.meituan\.net\/bizad\/bizad_brandCpt_\d+\.jpg reject-dict
-^https?:\/\/s3plus\.meituan\.net\/ocean-blk-index\/index\/blk_conf_\d+\.json reject-dict
-^https?:\/\/s3plus\.meituan\.net\/v\d\/mss_\w+\/(brandcpt-vedio|waimai-alita)\/\w+\.zip$ reject-dict
-^https?:\/\/mall\.meituan\.com\/api\/c\/homepage\/splash reject-dict
-^https?:\/\/mall\.meituan\.com\/api\/c\/homepage\/bubble\/operate\/info reject-dict
-^https?:\/\/p\.meituan\.com\/api\/privacy\/config reject-dict
-^https?:\/\/mapi\.dianping\.com\/mapi\/operating\/(indexopsmodules|loadsplashconfig) reject-dict
-^https?:\/\/mapi\.dianping\.com\/mapi\/intelliindex reject-dict
-^https?:\/\/mapi\.dianping\.com\/wdrpreload\/userprediction reject-dict
-^https?:\/\/mapi\.dianping\.com\/adshopping reject-dict
-^https?:\/\/rms\.meituan\.com\/api\/v\d\/rmsmina\/c\/queryWechatAdvertisement reject-dict
-
-# Eleme
-^https?:\/\/fuss\d+\.elemecdn\.com\/.+\/w\/(640|750)\/h\/\d{3,4} reject-dict
-^https?:\/\/cube\.elemecdn\.com\/[\w\/]+\.jpeg\?x-oss-process=image\/resize,m_fill,w_\d{3,},h_\d{3,} reject-dict
-
-# Vipshop
-^https?:\/\/mapi\.appvipshop\.com\/vips-mobile\/rest\/activity\/advertisement\/get reject-dict
-^https?:\/\/mapi\.appvipshop\.com\/vips-mobile\/rest\/layout\/productList\/eventData\/v reject-dict
-^https?:\/\/mapi\.appvipshop\.com\/vips-mobile\/rest\/activity\/coupon\/float_entrance\/get\?api_key reject-dict
-
-# Xiaohongshu
-^https?:\/\/edith\.xiaohongshu\.com\/api\/splash\/.* reject-dict
-
-# Dewu
-^https?:\/\/app\.dewu\.com\/api\/v\d\/splash reject-dict
-^https?:\/\/app\.dewu\.com\/api\/v\d\/ad\/.* reject-dict
-
-# Suning
-^https?:\/\/m\.suning\.com\/api\/.*(splash|ad|banner) reject-dict
-
 [Script]
+# JD 去广告脚本
 JD_Script = type=http-response, pattern=^https:\/\/(api|jxapi)\.m\.jd\.com\/client\.action\?functionId=(deliverLayer|getTabHomeInfo|myOrderInfo|orderTrackBusiness|personinfoBusiness|start|welcomeHome), script-path=https://kelee.one/Resource/JavaScript/JD/JD_remove_ads.js, requires-body=true
+
+# 淘宝/闲鱼 去广告脚本
 Taobao_Script_1 = type=http-response, pattern=^https:\/\/guide-acs\.m\.taobao\.com\/gw\/mtop\.taobao\.(cloudvideo\.video\.query|wireless\.home\.splash\.awesome\.get), script-path=https://kelee.one/Resource/JavaScript/Taobao/Taobao_remove_ads.js, requires-body=true
 Taobao_Script_2 = type=http-response, pattern=^https:\/\/poplayer\.template\.alibaba\.com\/\w+\.json, script-path=https://kelee.one/Resource/JavaScript/Taobao/Taobao_remove_ads.js, requires-body=true
-Dianping_Script_1 = type=http-response, pattern=^https?:\/\/img\.meituan\.net\/(dpmobile|goodsawardpic)\/, script-path=https://raw.githubusercontent.com/zirawell/R-Store/main/Res/Scripts/AntiAd/dianping.js, requires-body=true
-Dianping_Script_2 = type=http-response, pattern=^https?:\/\/ddplus\.meituan\.net\/v\d\/mss_\w+\/picassovc, script-path=https://raw.githubusercontent.com/zirawell/R-Store/main/Res/Scripts/AntiAd/dianping.js, requires-body=true
 
 [MITM]
-hostname = api.pinduoduo.com, api.m.jd.com, jxapi.m.jd.com, acs.m.taobao.com, acs.m.tmall.com, gw.alicdn.com, heic.alicdn.com, guide-acs.m.taobao.com, poplayer.template.alibaba.com, acs.m.goofish.com, wmapi.meituan.com, rms.meituan.com, mall.meituan.com, p.meituan.com, s3plus.meituan.net, flowplus.meituan.net, img.meituan.net, ddplus.meituan.net, *.dianping.com, *.elemecdn.com, mapi.appvipshop.com, edith.xiaohongshu.com, app.dewu.com, m.suning.com, acs.m.fliggy.com, *.gifshow.com, az*-api.ksapisrv.com, az*-api-idc.ksapisrv.com, apissl.gifshow.com, apissl.ksapisrv.com
+hostname = *.pinduoduo.com, *.jd.com, *.taobao.com, *.tmall.com, *.alicdn.com, *.goofish.com, *.meituan.com, *.dianping.com, *.elemecdn.com, *.xiaohongshu.com, *.dewu.com, *.suning.com, *.gifshow.com, *.ksapisrv.com, acs.m.tmall.com, guide-acs.m.taobao.com, poplayer.template.alibaba.com
