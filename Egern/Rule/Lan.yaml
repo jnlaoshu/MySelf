@@ -1,6 +1,8 @@
 # 规则名称: Lan (局域网与系统底层通信直连)
 # 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
-# 优化时间: 2026.04.13
+# 优化时间: 2026.06.19 08:45
+# 更新说明: 补充 2026 年主流路由器/NAS 域名、连通性探测、mDNS 增强，完善私有 IP/CIDR 覆盖，确保代理环境下本地通信零阻断
+
 domain_suffix_set:
   # --- 本地网络与测试域名 ---
   - local
@@ -13,7 +15,10 @@ domain_suffix_set:
   - test
   - example
   - invalid
-  # --- 常见路由器管理后台 (防代理导致无法进后台) ---
+  - onion                 # Tor 内部域名（部分场景需要直连）
+  - internal
+
+  # --- 常见路由器管理后台 (防代理导致无法进入后台) ---
   - router.asus.com
   - asuscomm.com
   - routerlogin.net
@@ -31,16 +36,41 @@ domain_suffix_set:
   - netgear.com
   - wavlink.com
   - hiwifi.com
-  # --- NAS 局域网发现 ---
+  - ubiquiti.com          # Ubiquiti UniFi（2026 流行）
+  - unifi.ui.com
+  - gl-inet.com           # GL.iNet 旅行路由器
+  - openwrt.org
+  - luci.lan              # OpenWrt 默认管理界面
+
+  # --- NAS 局域网发现与管理 ---
   - find.synology.com
   - myqnapcloud.com
+  - synology.me
+  - qnap.com
+  - nas.local             # 通用 NAS mDNS
+
   # --- 公共 Wi-Fi 认证与网络连通性探测 ---
   - captive.apple.com
   - edge-http.microsoft.com
   - msftconnecttest.com
   - msftncsi.com
   - detectportal.firefox.com
+  - connectivitycheck.gstatic.com   # Android/Google 连通性检测
+  - clients3.google.com
+  - connectivitycheck.android.com
+
+domain_keyword_set:
+  - router
+  - nas
+  - synology
+  - qnap
+  - unifi
+  - tplink
+  - asus
+  - local
+
 ip_cidr_set:
+  # --- IPv4 私有与保留地址 ---
   - 0.0.0.0/8          # 本网络保留段
   - 10.0.0.0/8         # 私有网络 (Class A)
   - 100.64.0.0/10      # 运营商级 NAT (CGNAT)
@@ -50,7 +80,9 @@ ip_cidr_set:
   - 192.168.0.0/16     # 私有网络 (Class C)
   - 224.0.0.0/4        # 组播 (Multicast)
   - 255.255.255.255/32 # 广播地址 (Broadcast)
+
 ip_cidr6_set:
+  # --- IPv6 私有与保留地址 ---
   - ::1/128            # IPv6 本地回环
   - ::ffff:0:0/96      # IPv4 映射地址
   - fc00::/7           # IPv6 私有地址 (ULA)
