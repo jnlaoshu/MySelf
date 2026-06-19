@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.19 09:00
+# ⏱️ 更新时间: 2026.06.19 10:30
 # ==========================================
 
 # 基本配置
@@ -314,7 +314,7 @@ rules:
       policy: DIRECT
       update_interval: 604800
 
-  # 2. 广告拦截
+  # 2. 广告拦截主规则
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
@@ -341,7 +341,7 @@ rules:
   - domain_keyword: { match: chatgpt, policy: AIGC }
   - domain_keyword: { match: telegram, policy: Telegram }
 
-  # 6. 第三方规则集
+  # 6. 第三方规则集 & 专用模块
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
       policy: DIRECT
@@ -350,6 +350,22 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
       update_interval: 604800
+
+  # 电商、视频、音乐去广告模块
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
+      policy: 猎杀广告
+      update_interval: 604800
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
+      policy: 猎杀广告
+      update_interval: 604800
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
+      policy: 猎杀广告
+      update_interval: 604800
+
+  # 其他黑矩阵服务规则集（保持原有）
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
       policy: Bing
