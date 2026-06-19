@@ -1,33 +1,40 @@
 # 规则名称: Apple
-# Apple 系统级服务增强规则
-# https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-# 更新时间 2026.02.09
+# 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+# 优化时间: 2026.06.19 08:38
+# 更新说明: 去除冗余、补全 TestFlight / Apple Pay / Find My / Private Relay 2026 隐藏通道，实现 Apple 生态近乎“无阻断”体验
 
 payload:
-
-  # 一 Apple ID 核心鉴权与设备校验
+  # 一、Apple ID 核心鉴权与设备校验
   - DOMAIN,appleid.apple.com
   - DOMAIN,account.apple.com
   - DOMAIN,gs.apple.com
+  - DOMAIN,gsa.apple.com
   - DOMAIN,deviceenrollment.apple.com
   - DOMAIN,mdmenrollment.apple.com
   - DOMAIN,setup.apple.com
+  - DOMAIN,gsas.apple.com
+  - DOMAIN,idms.apple.com
 
-  # 二 系统激活 校验 与安全服务
+  # 二、系统激活、校验与安全服务 (OCSP)
   - DOMAIN,albert.apple.com
   - DOMAIN,identity.apple.com
   - DOMAIN,lockdown.apple.com
   - DOMAIN,ocsp.apple.com
   - DOMAIN,ocsp2.apple.com
   - DOMAIN,valid.apple.com
+  - DOMAIN,humb.apple.com
 
-  # 三 APNs 推送 iMessage FaceTime 基础设施
+  # 三、APNs 推送、iMessage 与 FaceTime 基础设施
   - DOMAIN,push.apple.com
   - DOMAIN,api.push.apple.com
   - DOMAIN,apns.apple.com
   - DOMAIN-SUFFIX,push.apple.com
+  - DOMAIN,courier.push.apple.com
+  - DOMAIN,api.sandbox.push.apple.com
+  - DOMAIN,1-courier.push.apple.com
+  - DOMAIN,1-courier.sandbox.push.apple.com
 
-  # 四 系统更新 固件 下载 扫描
+  # 四、系统更新与固件下载
   - DOMAIN,swscan.apple.com
   - DOMAIN,su.itunes.apple.com
   - DOMAIN,swcdn.apple.com
@@ -35,27 +42,80 @@ payload:
   - DOMAIN,fwdownload.apple.com
   - DOMAIN,updates-http.cdn-apple.com
   - DOMAIN,updates.cdn-apple.com
+  - DOMAIN,mesu.apple.com
+  - DOMAIN,gdmf.apple.com
+  - DOMAIN,skl.apple.com
+  - DOMAIN,suconfig.apple.com
+  - DOMAIN,lcdn-registration.apple.com
 
-  # 五 时间同步 定位 传感器与系统支持
+  # 五、时间同步、定位与系统配置
   - DOMAIN,time.apple.com
   - DOMAIN,ntp.apple.com
   - DOMAIN,locationd.apple.com
   - DOMAIN,gs-loc.apple.com
+  - DOMAIN,gspe1-ssl.ls.apple.com
+  - DOMAIN,gspe35-ssl.ls.apple.com
+  - DOMAIN,configuration.ls.apple.com
 
-  # 六 地图 天气 Siri 系统级接口
+  # 六、地图、天气与 Siri 接口
   - DOMAIN,maps.apple.com
   - DOMAIN,weatherkit.apple.com
   - DOMAIN,siri.apple.com
   - DOMAIN-SUFFIX,geo.apple.com
   - DOMAIN-SUFFIX,weather.apple.com
 
-  # 七 系统日志 诊断 性能统计
+  # 七、系统日志、诊断与 Telemetry
   - DOMAIN,metrics.apple.com
   - DOMAIN,diagnostics.apple.com
   - DOMAIN,analytics.apple.com
   - DOMAIN,crashlytics.apple.com
+  - DOMAIN,pancake.apple.com
+  - DOMAIN,xp.apple.com
+  - DOMAIN,fbs.smoot.apple.com
 
-  # 八 系统级 CDN 与公共接口兜底
+  # 八、iCloud 全家桶与 Find My (照片/云盘/邮件/查找)
+  - DOMAIN-SUFFIX,icloud.com
+  - DOMAIN-SUFFIX,icloud-content.com
+  - DOMAIN-SUFFIX,apple-cloudkit.com
+  - DOMAIN,api.apple-cloudkit.com
+  - DOMAIN,gateway.icloud.com
+  - DOMAIN,setup.icloud.com
+  - DOMAIN,icloud.apple.com
+  - DOMAIN,fmip.icloud.com            # Find My 查找服务关键域名
+
+  # 九、iCloud Private Relay & 隐私保护 (2026 增强)
+  - DOMAIN,private.icloud.com         # 隐藏邮件/Apple登录/专用代理统一入口
+  - DOMAIN,mask-api.icloud.com
+  - DOMAIN,mask.icloud.com
+  - DOMAIN,mask-h2.icloud.com
+  - DOMAIN,mask-t.apple-dns.net       # 2026 Private Relay 重要通道
+  - DOMAIN,apple-relay.cloudflare.com
+
+  # 十、Apple Music / Apple TV+ / App Store 媒体服务
+  - DOMAIN,music.apple.com
+  - DOMAIN,tv.apple.com
+  - DOMAIN,applemusic.com
+  - DOMAIN,appletv.com
+  - DOMAIN,itunes.apple.com
+  - DOMAIN,appstore.com
+  - DOMAIN,apps.apple.com
+  - DOMAIN,play.itunes.apple.com
+  - DOMAIN,store.apple.com
+  - DOMAIN,amp-api-edge.apps.apple.com
+  - DOMAIN,api-edge.apps.apple.com
+  - DOMAIN,bag.itunes.apple.com
+  - DOMAIN,init.itunes.apple.com
+  - DOMAIN,testflight.apple.com       # TestFlight 开发者测试平台
+
+  # 十一、Apple Pay 与 钱包金融服务
+  - DOMAIN,wallet.apple.com           # 钱包与绑卡核心鉴权
+  - DOMAIN-SUFFIX,apple-pay.com       # Apple Pay 专属域名
+
+  # 十二、系统级 CDN 与大类兜底
+  - DOMAIN,static.ips.apple.com
+  - DOMAIN,configuration.apple.com
   - DOMAIN-SUFFIX,cdn.apple.com
   - DOMAIN-SUFFIX,cdn-apple.com
-  - DOMAIN-SUFFIX,apple.com
+  - DOMAIN-SUFFIX,aaplimg.com
+  - DOMAIN-SUFFIX,apple-dns.net
+  - DOMAIN-SUFFIX,apple.com           # 全局顶级域名兜底（放在最后）
