@@ -1,29 +1,31 @@
-# 规则名称: AIGC (人工智能生成内容)
+# 规则名称: AIGC (人工智能生成内容) 终极全家桶版
 # 链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 优化时间: 2026.04.13 16:50
+# 优化时间: 2026.06.19 08:35
+# 更新说明: 完整收录 40+ 主流平台，校准 Google Vertex / GitHub Copilot / Kiro 等关键域名，消除潜在遗漏
+
 domain_suffix_set:
-  # --- OpenAI (ChatGPT / Sora / DALL-E) ---
+  # --- 1. OpenAI (ChatGPT / Sora / DALL-E) ---
   - chatgpt.com
   - chat.com
   - openai.com
   - oaistatic.com
   - oaiusercontent.com
+  - openaiusercontent.com
   - sora.com
   - ai.com
-
-  # --- OpenAI 基础设施 (语音/实验/遥测) ---
   - statsigapi.net
   - featuregates.org
-  - livekit.cloud             # OpenAI 实时语音 WebRTC 通信
+  - livekit.cloud             # 实时语音 WebRTC 通信
 
-  # --- Anthropic (Claude) ---
+  # --- 2. Anthropic (Claude) ---
   - anthropic.com
   - claude.ai
   - claude.com
   - claudeusercontent.com
-  - auth0.com               # Claude iOS App 登录鉴权依赖
+  - auth0.com                 # App 登录鉴权依赖
 
-  # --- Google (Gemini / Bard / NotebookLM) ---
+  # --- 3. Google (Gemini / Vertex AI / Antigravity) ---
+  - gemini.google
   - gemini.google.com
   - deepmind.com
   - deepmind.google
@@ -32,55 +34,98 @@ domain_suffix_set:
   - proactivebackend-pa.googleapis.com
   - aistudio.google.com
   - notebooklm.google.com
+  - aiplatform.googleapis.com # Vertex AI 核心 API（企业/开发者高频）
 
-  # --- Microsoft (Copilot) ---
+  # --- 4. Microsoft & GitHub (Copilot / Models) ---
   - copilot.microsoft.com
   - edgeservices.bing.com
-  - sydney.bing.com           # [按需保留] 部分旧版 Copilot 或特定环境的 WebSocket 通信
+  - sydney.bing.com
+  - githubcopilot.com
+  - copilot-proxy.githubusercontent.com
+  - copilot-telemetry.githubusercontent.com   # Copilot telemetry 关键域名
 
-  # --- xAI (Grok) ---
-  - grok.com
-  - x.ai
+  # --- 5. 代码助手 (Cursor / Trae / JetBrains AI / Kiro) ---
+  - cursor.com
+  - cursor.sh
+  - trae.ai
+  - jetbrains.ai
+  - kiro.dev                  # Kiro（AWS 2026 主流 agentic IDE）
 
-  # --- Meta AI ---
-  - meta.ai
-  - imagine.meta.com
-
-  # --- AI 搜索、聊天与垂直大模型 ---
+  # --- 6. AI 搜索、聊天与综合入口 ---
   - perplexity.ai
   - pplx.ai
-  - poe.com
+  - grok.com
+  - x.ai
+  - grok.x.ai
+  - console.grok.com
+  - meta.ai
+  - imagine.meta.com
   - mistral.ai
-  - groq.com
-  - huggingface.co
-  - stability.ai
+  - poe.com
   - phind.com
   - you.com
   - character.ai
-  - cohere.com
-  - leonardo.ai
-  - civitai.com
   - deepseek.com
-  - cursor.com                # AI 代码编辑器
-  - cursor.sh                 # Cursor 早期域名及部分 CDN 下载链接
-  - replicate.com             # AI 模型托管与云端运行平台
 
-  # --- AI 音视频与多媒体 ---
+  # --- 7. 低延迟推理、云端算力与模型托管 ---
+  - openrouter.ai
+  - groq.com
+  - together.ai
+  - fireworks.ai
+  - hyperbolic.xyz
+  - cerebras.ai
+  - replicate.com
+  - huggingface.co
+  - build.nvidia.com
+  - tokenflux.ai
+
+  # --- 8. 向量、检索与混合模型管理 (RAG 依赖) ---
+  - jina.ai
+  - voyageai.com
+  - gpustack.ai
+  - cohere.com
+
+  # --- 9. 前端与应用层 AI 生成 ---
+  - v0.dev                    # Vercel AI UI 生成
+  - sdk.vercel.ai
+
+  # --- 10. 图像、视频、音频与 3D 多媒体平台 ---
+  - midjourney.com
+  - mj.run
   - suno.com
   - suno.ai
   - udio.com
   - runwayml.com
   - lumalabs.ai
+  - dream-machine.lumalabs.ai
   - pika.art
   - elevenlabs.io
   - klingai.com
   - heygen.com
-  - haiper.ai                 # 视频生成
-  - krea.ai                   # 实时渲染与图像增强
+  - haiper.ai
+  - krea.ai
+  - ideogram.ai
+  - pixverse.ai
+  - app.pixverse.ai
+  - platform.pixverse.ai
+  - higgsfield.ai
+  - getimg.ai
+  - viggle.ai                 # 动作捕捉与角色替换
+  - domoai.app
+  - tripo3d.ai                # 3D 生成
+  - meshy.ai                  # 3D 生成
+  - leonardo.ai
+  - civitai.com
 
-  # --- Midjourney ---
-  - midjourney.com
-  - mj.run
+  # --- 11. 国内大模型出海/国际版 ---
+  - hailuoai.video            # MiniMax / Hailuo（2026 视频生成热门）
+  - hailuoai.com
+  - minimax.ai
+  - hub.minimax.io
+  - chatglm.cn                # 智谱国际 / 清言
+  - bigmodel.cn               # 智谱 AI 开放平台（含 open.bigmodel.cn）
+  - miku.com                  # 小米出海
+  - kiro.ai                   # Kiro 备用域名（若有）
 
 domain_keyword_set:
   - openai
@@ -89,3 +134,30 @@ domain_keyword_set:
   - claude
   - midjourney
   - perplexity
+  - hailuo
+  - minimax
+  - ideogram
+  - pixverse
+  - luma
+  - grok
+  - gemini
+  - suno
+  - udio
+  - runway
+  - trae
+  - githubcopilot
+  - openrouter
+  - fireworks
+  - hyperbolic
+  - cerebras
+  - voyageai
+  - jina
+  - gpustack
+  - vertexai
+  - tokenflux
+  - groq
+  - mistral
+  - kiro
+  - viggle
+  - meshy
+  - tripo
