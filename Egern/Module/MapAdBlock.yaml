@@ -1,5 +1,5 @@
 name: "地图三合一去广告"
-description: "2026.06.18 加强版 | 高德、百度、腾讯地图 去广告（效果接近原 Surge 版）"
+description: "2026.06.18 08:56 加强版 | 高德、百度、腾讯地图首页广告重点优化"
 author: "AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥, laoshu"
 homepage: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml"
 
@@ -44,31 +44,38 @@ rules:
       policy: REJECT
 
 body_rewrites:
-  # 高德地图 - 加强
+  # 高德地图 - 首页加强
   - response_jq:
       match: "^https://m5\\.amap\\.com/ws/.*"
-      filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"],["data","operation"],["data","banner"],["data","popup"],["data","float"],["data","ad"]])'
+      filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"],["data","operation"],["data","banner"],["data","popup"],["data","float"],["data","ad"],["data","recommend"],["data","homePage"],["data","mainPage"]])'
   - response_jq:
       match: "^https://m5-zb\\.amap\\.com/ws/.*"
-      filter: 'delpaths([["data","carTips","data","popupInfo"],["data","ad_info"]])'
+      filter: 'delpaths([["data","carTips","data","popupInfo"],["data","ad_info"],["data","operation"],["data","banner"]])'
 
-  # 百度地图 - 加强
+  # 百度地图 - 首页重点加强
   - response_jq:
       match: "^https?://newclient\\.map\\.baidu\\.com/.*"
-      filter: 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card, .data.ads, .data.promotion, .data.banner, .data.popup, .data.float_card, .data.ad_info)'
+      filter: 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card, .data.ads, .data.promotion, .data.banner, .data.popup, .data.float_card, .data.ad_info, .data.recommend, .data.hot_words, .data.operation)'
 
-  # 腾讯地图 - 加强
+  # 腾讯地图
   - response_jq:
       match: "^https?://sv\\.map\\.qq\\.com/txmap/.*"
       filter: 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"],["data","popup"],["data","banner"]]) | if .result then .result.adInfo=[] else . end'
 
 map_locals:
-  # 高德 + 腾讯 更多兜底
-  - match: "^https://m5.*\\.amap\\.com/ws/.*(ad|banner|popup|recommend|operation|tips)"
+  # 高德首页兜底
+  - match: "^https://m5.*\\.amap\\.com/ws/.*(home|main|recommend|operation|banner|popup|ad)"
     status_code: 200
     headers:
       Content-Type: application/json
     body: '{}'
+  # 百度首页兜底
+  - match: "^https?://newclient\\.map\\.baidu\\.com/.*(home|recommend|operation|banner|popup|ad)"
+    status_code: 200
+    headers:
+      Content-Type: application/json
+    body: '{}'
+  # 腾讯地图
   - match: "^https://sv\\.map\\.qq\\.com/txmap/.*(ad|banner|popup|operation)"
     status_code: 200
     headers:
