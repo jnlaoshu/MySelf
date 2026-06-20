@@ -7,9 +7,8 @@
  * • 农历引擎：本地计算干支、生肖、农历日期及二十四节气（完美修复跨时区及当月首节气匹配漏洞）。
  * • 远程数据：请求 openApiData 获取宜忌、冲煞及运势评分，网络异常时支持本地容错降级。
  * • 顶部角标：支持「星座」与「周次」双模式切换。星座模式可附带教学周进度，周次模式纯净显示年/周次及年内天数。
- *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Almanac.js
- * ⏱️ 更新时间: 2026.04.13 15:00
+ * ⏱️ 更新时间: 2026.06.20 21:50
  * ==========================================
  */
 
@@ -84,7 +83,6 @@ export default async function(ctx) {
         [0,21208,42467,63836,85337,107014,128867,150921,173149,195551,218072,240693,263343,285989,308563,331033,353350,375494,397447,419210,440795,462224,483532,504758][n - 1] * 60000 +
         Date.UTC(1900, 0, 6, 2, 5)
       );
-      // 修复：原先的 t.getTime() + 8 * 3600000 会导致时区加算两次，部分节气推迟一天
       return t.getUTCDate();
     },
     parse(y, m, d) {
@@ -264,49 +262,60 @@ export default async function(ctx) {
     };
   }
 
-  // ── 中大号公用布局参数调度 ──────────────────────────────────────────────
-  const isLg = isLarge;
-  const layoutConfig = {
-    fz: isLg ? 14 : 12,
-    icz: isLg ? 15 : 13,
-    lw: isLg ? 60 : 52,
-    maxW: isLg ? 38 : 52,
-    headerFz: isLg ? 17 : 15,
-    topIconFz: isLg ? 12 : 11,
-    gap: isLg ? 8 : 6
+  // ── 中号 & 大号独立布局参数 ──────────────────────────────────────────────
+  const mediumConfig = {
+    fz: 12,
+    icz: 13,
+    lw: 52,
+    maxW: 48,
+    headerFz: 15,
+    topIconFz: 11,
+    gap: 6
   };
 
-  const buildRows = createRowFactory(layoutConfig);
+  const largeConfig = {
+    fz: 14,
+    icz: 15,
+    lw: 60,
+    maxW: 38,
+    headerFz: 17,
+    topIconFz: 12,
+    gap: 8
+  };
+
+  const config = isLarge ? largeConfig : mediumConfig;
+
+  const buildRows = createRowFactory(config);
   const yiJiRows = [
     ...buildRows(rawYi, 'checkmark.circle.fill', C.yi, '宜'),
     ...buildRows(rawJi, 'xmark.circle.fill', C.ji, '忌'),
     ...buildRows(`${chongshaInfo}  |  运势: ${starStr}`, 'shield.lefthalf.filled', C.gold, '冲煞'),
-    ...buildRows((isLg ? upcomingTermsLarge : upcomingTerms).join("，"), 'leaf.arrow.circlepath', C.term, '节气', C.term)
+    ...buildRows((isLarge ? upcomingTermsLarge : upcomingTerms).join("，"), 'leaf.arrow.circlepath', C.term, '节气', C.term)
   ];
 
   return {
-    type: 'widget', padding: isLg ? 16 : 12, url: 'calshow://',
+    type: 'widget', padding: isLarge ? 16 : 12, url: 'calshow://',
     backgroundGradient: { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } },
     children: [
       mkRow([
-        mkIcon('calendar', C.main, isLg ? 18 : 16),
-        mkText(`${Y}年${M}月${D}日 星期${WEEK}`, layoutConfig.headerFz, "heavy", C.main, { maxLines: 1, minScale: 0.65 }),
+        mkIcon('calendar', C.main, isLarge ? 18 : 16),
+        mkText(`${Y}年${M}月${D}日 星期${WEEK}`, config.headerFz, "heavy", C.main, { maxLines: 1, minScale: 0.65 }),
         mkSpacer(),
         mkRow([
           ...(teachingWeekStr ? [
-            mkIcon('book.closed', C.muted, layoutConfig.topIconFz),
-            mkText(teachingWeekStr, layoutConfig.topIconFz, "bold", C.muted),
-            mkText('·', layoutConfig.topIconFz, "bold", C.divider, { padding: [0, 2] })
+            mkIcon('book.closed', C.muted, config.topIconFz),
+            mkText(teachingWeekStr, config.topIconFz, "bold", C.muted),
+            mkText('·', config.topIconFz, "bold", C.divider, { padding: [0, 2] })
           ] : []),
-          mkIcon(topIcon, C.gold, layoutConfig.topIconFz + 1),
-          mkText(topText, layoutConfig.topIconFz, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
-        ], isLg ? 4 : 3)
+          mkIcon(topIcon, C.gold, config.topIconFz + 1),
+          mkText(topText, config.topIconFz, "bold", C.muted, { maxLines: 1, minScale: 0.8 })
+        ], isLarge ? 4 : 3)
       ], 6),
 
-      mkSpacer(isLg ? 12 : 6),
+      mkSpacer(isLarge ? 12 : 6),
 
-      { type: 'stack', direction: 'column', alignItems: 'start', gap: layoutConfig.gap, children: [
-        mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, isLg ? 14 : 13, "bold", C.gold),
+      { type: 'stack', direction: 'column', alignItems: 'start', gap: config.gap, children: [
+        mkText(`${obj.gz}(${obj.ani})年 ${obj.cn} ${shichenStr}${obj.term ? ` · 今日${obj.term}` : ""}`, isLarge ? 14 : 13, "bold", C.gold),
         ...yiJiRows
       ]},
 
