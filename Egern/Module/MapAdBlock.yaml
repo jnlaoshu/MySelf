@@ -1,10 +1,10 @@
 name: "地图三合一去广告"
-description: "2026.06.18 更新 | 高德、百度、腾讯地图 去广告"
+description: "2026.06.18 加强版 | 高德、百度、腾讯地图 去广告（效果接近原 Surge 版）"
 author: "AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥, laoshu"
 homepage: "https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml"
 
 rules:
-  # ==================== 高德地图 ====================
+  # 高德地图
   - domain:
       match: "amap-aos-info-nogw.amap.com"
       policy: REJECT
@@ -15,7 +15,7 @@ rules:
       match: "v.smtcdns.com"
       policy: REJECT
 
-  # ==================== 百度地图 ====================
+  # 百度地图
   - domain:
       match: "httpdns.baidubce.com"
       policy: REJECT
@@ -35,7 +35,7 @@ rules:
       match: "gss0.bdstatic.com"
       policy: REJECT
 
-  # ==================== 腾讯地图 ====================
+  # 腾讯地图
   - domain:
       match: "adstats.map.qq.com"
       policy: REJECT
@@ -44,81 +44,38 @@ rules:
       policy: REJECT
 
 body_rewrites:
-  # 高德地图
+  # 高德地图 - 加强
   - response_jq:
-      match: "^https://m5\\.amap\\.com/ws/shield/.*"
-      filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
+      match: "^https://m5\\.amap\\.com/ws/.*"
+      filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"],["data","operation"],["data","banner"],["data","popup"],["data","float"],["data","ad"]])'
   - response_jq:
-      match: "^https://m5-zb\\.amap\\.com/ws/sharedtrip/taxi/order_detail_car_tips\\?"
-      filter: 'delpaths([["data","carTips","data","popupInfo"]])'
-  - response_jq:
-      match: "^https://m5\\.amap\\.com/ws/shield/search_business/process/marketingOperationStructured\\?"
-      filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
-  - response_jq:
-      match: "^https://m5\\.amap\\.com/ws/shield/search_poi/homepage\\?"
-      filter: 'delpaths([["history_tags"]])'
+      match: "^https://m5-zb\\.amap\\.com/ws/.*"
+      filter: 'delpaths([["data","carTips","data","popupInfo"],["data","ad_info"]])'
 
-  # 百度地图
+  # 百度地图 - 加强
   - response_jq:
-      match: "^https?://newclient\\.map\\.baidu\\.com/usercenter/mine/page"
-      filter: 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
-  - response_jq:
-      match: "^https?://newclient\\.map\\.baidu\\.com/living/nearby/hot-words\\?"
-      filter: 'if .Result then .Result.data=[] else . end'
-  - response_jq:
-      match: "^https?://newclient\\.map\\.baidu\\.com/client/phpui\\d*/"
-      filter: 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
+      match: "^https?://newclient\\.map\\.baidu\\.com/.*"
+      filter: 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card, .data.ads, .data.promotion, .data.banner, .data.popup, .data.float_card, .data.ad_info)'
 
-  # 腾讯地图
+  # 腾讯地图 - 加强
   - response_jq:
-      match: "^https?://sv\\.map\\.qq\\.com/txmap/home/"
-      filter: 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
-  - response_jq:
-      match: "^https?://sv\\.map\\.qq\\.com/txmap/search/"
-      filter: 'if .result then .result.adInfo=[] else . end'
+      match: "^https?://sv\\.map\\.qq\\.com/txmap/.*"
+      filter: 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"],["data","popup"],["data","banner"]]) | if .result then .result.adInfo=[] else . end'
 
 map_locals:
-  # 高德地图
-  - match: "^https://m5-zb\\.amap\\.com/ws/ride/home/page/get_commuting_card\\?"
+  # 高德 + 腾讯 更多兜底
+  - match: "^https://m5.*\\.amap\\.com/ws/.*(ad|banner|popup|recommend|operation|tips)"
     status_code: 200
     headers:
       Content-Type: application/json
     body: '{}'
-  - match: "^https://m5\\.amap\\.com/ws/shield/search_business/process/orderList\\?"
-    status_code: 200
-    headers:
-      Content-Type: application/json
-    body: '{}'
-  - match: "^https://m5\\.amap\\.com/ws/shield/search/new_hotword\\?"
-    status_code: 200
-    headers:
-      Content-Type: application/json
-    body: '{}'
-  - match: "^https://m5\\.amap\\.com/ws/shield/search_poi/tips_adv\\?"
-    status_code: 200
-    headers:
-      Content-Type: application/json
-    body: '{}'
-  - match: "^https://m5\\.amap\\.com/ws/shield/scene/recommend\\?"
-    status_code: 200
-    headers:
-      Content-Type: application/json
-    body: '{}'
-
-  # 腾讯地图
-  - match: "^https://sv\\.map\\.qq\\.com/txmap/ad/"
-    status_code: 200
-    headers:
-      Content-Type: application/json
-    body: '{}'
-  - match: "^https://sv\\.map\\.qq\\.com/txmap/home/operations\\?"
+  - match: "^https://sv\\.map\\.qq\\.com/txmap/.*(ad|banner|popup|operation)"
     status_code: 200
     headers:
       Content-Type: application/json
     body: '{}'
 
 scriptings:
-  # 高德地图
   - http_response:
       name: "高德广告清理_m5"
       match: "^https://m5\\.amap\\.com/ws/.*"
@@ -129,11 +86,9 @@ scriptings:
       match: "^https://m5-zb\\.amap\\.com/ws/.*"
       script_url: "https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js"
       body_required: true
-
-  # 百度地图
   - http_response:
       name: "百度地图核心净化"
-      match: "^https?://newclient\\.map\\.baidu\\.com/(client/phpui\\d*/\\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client/crossmarketing|client/(usersystem/home/dynamic|msgcenter/pull)|operation/activity)"
+      match: "^https?://newclient\\.map\\.baidu\\.com/.*"
       script_url: "https://ddgksf2013.top/scripts/bdmap.ads.js"
       body_required: true
 
