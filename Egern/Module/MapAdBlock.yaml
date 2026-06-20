@@ -1,7 +1,6 @@
 #!name=地图三合一去广告
-#!desc=2026.05.03 10:55 更新。 高德、百度、腾讯地图
+#!desc=2026.06.20 11:00
 #!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
-#!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
 [Rule]
 # 高德地图
@@ -11,17 +10,13 @@ DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
 
 # 百度地图
 DOMAIN,httpdns.baidubce.com,REJECT
-DOMAIN,dss0.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,tb1.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,tb2.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,ss0.bdstatic.com,REJECT,extended-matching,pre-matching
-DOMAIN,gss0.bdstatic.com,REJECT,extended-matching,pre-matching
+DOMAIN-SUFFIX,bdstatic.com,REJECT,extended-matching,pre-matching
 
 # 腾讯地图
 DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 
-https://monica.im/en/tools/rewrite-text
+[URL Rewrite]
 # 百度地图
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) _ reject
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ _ reject-200
@@ -37,9 +32,6 @@ https://monica.im/en/tools/rewrite-text
 
 [Body Rewrite]
 # 高德地图
-http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/.* 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
-http-response-jq ^https:\/\/m5-zb\.amap\.com\/ws\/sharedtrip\/taxi\/order_detail_car_tips\? 'delpaths([["data","carTips","data","popupInfo"]])'
-http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/marketingOperationStructured\? 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"]])'
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
 
 # 百度地图
@@ -56,21 +48,13 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 [Map Local]
 # 高德地图
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search_business\/process\/orderList\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search\/new_hotword\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/tips_adv\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/(shield\/(search_business\/process\/orderList|search\/new_hotword|search_poi\/tips_adv|scene\/recommend)|aos\/main\/page\/product\/list|valueadded\/weather\/v2)\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-(car-end|route-plan)|main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/shield\/scene\/recommend\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/card-service-(?:car-end|route-plan) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/aos\/main\/page\/product\/list\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(?:main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/m5\.amap\.com\/ws\/valueadded\/weather\/v2\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 # 腾讯地图
-^https:\/\/sv\.map\.qq\.com\/txmap\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
-^https:\/\/sv\.map\.qq\.com\/txmap\/message\/pull\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
+^https:\/\/sv\.map\.qq\.com\/txmap\/(ad\/|home\/operations\?|message\/pull\?) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
 # 高德地图
@@ -81,4 +65,4 @@ http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then 
 百度地图核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-hostname = *.amap.com, m5.amap.com, m5-zb.amap.com, center.amap.com, ai.amap.com, newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com, ss0.bdstatic.com, gss0.bdstatic.com, sv.map.qq.com, *.map.qq.com, adstats.map.qq.com
+hostname = *.amap.com, newclient.map.baidu.com, *.bdstatic.com, *.map.qq.com
