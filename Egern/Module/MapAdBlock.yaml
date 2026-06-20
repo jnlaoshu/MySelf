@@ -44,7 +44,7 @@ rules:
       policy: REJECT
 
 body_rewrites:
-  # ---- 高德地图 ----
+  # 高德地图
   - response_jq:
       match: "^https://m5\\.amap\\.com/ws/shield/.*"
       filter: 'delpaths([["data","commonMaterial"],["data","tipsOperationLocation"],["data","resourcePlacement"],["history_tags"]])'
@@ -58,7 +58,7 @@ body_rewrites:
       match: "^https://m5\\.amap\\.com/ws/shield/search_poi/homepage\\?"
       filter: 'delpaths([["history_tags"]])'
 
-  # ---- 百度地图 ----
+  # 百度地图
   - response_jq:
       match: "^https?://newclient\\.map\\.baidu\\.com/usercenter/mine/page"
       filter: 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
@@ -69,7 +69,7 @@ body_rewrites:
       match: "^https?://newclient\\.map\\.baidu\\.com/client/phpui\\d*/"
       filter: 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
 
-  # ---- 腾讯地图 ----
+  # 腾讯地图
   - response_jq:
       match: "^https?://sv\\.map\\.qq\\.com/txmap/home/"
       filter: 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
@@ -78,7 +78,7 @@ body_rewrites:
       filter: 'if .result then .result.adInfo=[] else . end'
 
 map_locals:
-  # ---- 高德地图 ----
+  # 高德地图
   - match: "^https://m5-zb\\.amap\\.com/ws/ride/home/page/get_commuting_card\\?"
     status_code: 200
     headers:
@@ -105,7 +105,7 @@ map_locals:
       Content-Type: application/json
     body: '{}'
 
-  # ---- 腾讯地图 ----
+  # 腾讯地图
   - match: "^https://sv\\.map\\.qq\\.com/txmap/ad/"
     status_code: 200
     headers:
@@ -118,7 +118,7 @@ map_locals:
     body: '{}'
 
 scriptings:
-  # ---- 高德地图 ----
+  # 高德地图
   - http_response:
       name: "高德广告清理_m5"
       match: "^https://m5\\.amap\\.com/ws/.*"
@@ -130,7 +130,7 @@ scriptings:
       script_url: "https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js"
       body_required: true
 
-  # ---- 百度地图 ----
+  # 百度地图
   - http_response:
       name: "百度地图核心净化"
       match: "^https?://newclient\\.map\\.baidu\\.com/(client/phpui\\d*/\\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client/crossmarketing|client/(usersystem/home/dynamic|msgcenter/pull)|operation/activity)"
@@ -142,9 +142,5 @@ mitm:
     includes:
       - "*.amap.com"
       - "newclient.map.baidu.com"
-      - "dss0.bdstatic.com"
-      - "tb1.bdstatic.com"
-      - "tb2.bdstatic.com"
-      - "ss0.bdstatic.com"
-      - "gss0.bdstatic.com"
+      - "*.bdstatic.com"
       - "*.map.qq.com"
