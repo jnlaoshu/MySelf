@@ -11,7 +11,7 @@
  * • 状态响应：根据工作日、周末、节假日当天状态切换背景渐变色；当天节日提示于中大号标题栏显示，小号于分类行内显示。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Countdown.js
- * ⏱️ 更新时间: 2026.06.16 23:12
+ * ⏱️ 更新时间: 2026.06.21 09:25
  * ==========================================
  */
 
@@ -62,7 +62,7 @@ export default async function (ctx) {
   const autumnDateStr   = getStr("AUTUMN_BREAK_DATE");
   const qingmingDateStr = getStr("QINGMING_DATE", "4/4");
 
-  const pinnedHolidays = getStr("PINNED_HOLIDAY", "高考").split(",").map(s => s.trim()).filter(Boolean);
+  const pinnedHolidays = getStr("PINNED_HOLIDAY").split(",").map(s => s.trim()).filter(Boolean);
 
   const customDays = [1,2,3,4,5,6].map(i => ({
     name: getStr(`EXCLUSIVE_NAME_${i}`, i === 1 ? getStr("EXCLUSIVE_NAME", "我的生日") : ""),
@@ -183,8 +183,7 @@ export default async function (ctx) {
     }
 
     const exclusive = [
-      ...customDays.map(item => [item.name, getCustomDate(y, item.date), 1, "custom"]),
-      ["高考", YMD(y, 6, 7), 2, "fixed"]
+      ...customDays.map(item => [item.name, getCustomDate(y, item.date), 1, "custom"])
     ];
 
     return {
@@ -211,7 +210,7 @@ export default async function (ctx) {
 
   // ── 优先级运算系统 ───────────────────────────────────────────────────────
   const basePriority    = { legal: 3, folk: 2, intl: 1, exclusive: 2 };
-  const specialPriority = { 春节: 10, 国庆节: 9, 高考: 9, 交割: 8, 行权: 8, 元旦: 7, 清明节: 7, 端午节: 7, 中秋节: 7, 春假: 6, 秋假: 6, 除夕: 6 };
+  const specialPriority = { 春节: 10, 国庆节: 9, 交割: 8, 行权: 8, 元旦: 7, 清明节: 7, 端午节: 7, 中秋节: 7, 春假: 6, 秋假: 6, 除夕: 6 };
 
   const getPriority = (name, cat, sourceKind) => {
     if (!enablePrioritySort) return 1;
