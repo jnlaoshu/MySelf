@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.21 22:09
+# ⏱️ 更新时间: 2026.06.22 07:45
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -196,9 +196,10 @@ policy_groups:
       name: 狮城节点
       policies: [代理节点]
       flatten: true
-      filter: "(?i)(?:🇸|新加坡|狮城|\\b(?:SG|Singapore)\\b)"
+      filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b)"
       interval: 300
       tolerance: 50
+      latency_test_url: http://www.gstatic.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
 
   - smart:
