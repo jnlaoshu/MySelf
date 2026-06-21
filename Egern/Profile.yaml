@@ -1,10 +1,10 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.19 10:30
+# ⏱️ 更新时间: 2026.06.21 13:14
 # ==========================================
 
-# 基本配置
+# ==================== 基本配置 ====================
 ipv6: false
 http_port: 3080
 socks_port: 3090
@@ -13,7 +13,7 @@ vif_only: true
 hide_vpn_icon: false
 block_quic: true
 
-# 排除与真实 IP 配置
+# ==================== IP 与路由排除 ====================
 vif_excluded_routes:
   - 10.0.0.0/8
   - 172.16.0.0/12
@@ -31,38 +31,35 @@ real_ip_domains:
   - "*.battlenet.com"
   - "*.battlenet.com.cn"
   - "*.xboxlive.com"
-  - xbox.*.microsoft.com
+  - "xbox.*.microsoft.com"
   - "*.stun.playstation.net"
   - "*.srv.nintendo.net"
   - "*.msftncsi.com"
   - "*.msftconnecttest.com"
-  - msftncsi.com
-  - msftconnecttest.com
+  - "msftncsi.com"
+  - "msftconnecttest.com"
   - "*.epicgames.com"
   - "*.riotgames.com"
 
-# DNS 劫持
+# ==================== DNS 配置 ====================
 hijack_dns:
-  - '*:53'
+  - "*:53"
 
-# 规则数据库
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
 asn_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/GeoLite2-ASN.mmdb
 
-# 全局测速 URL
 proxy_latency_test_url: http://www.gstatic.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
-# DNS 配置
 dns:
   cache_size: 2048
   cache_min_ttl: 300
   cache_max_ttl: 3600
   strategy: concurrent
+  public_ip_lookup_url: https://ifconfig.me/ip
   hosts:
     iosapps.itunes.apple.com:
-    - iosapps.itunes.apple.com.download.ks-cdn.com
-  public_ip_lookup_url: https://ifconfig.me/ip
+      - iosapps.itunes.apple.com.download.ks-cdn.com
   bootstrap:
     - system
     - 223.5.5.5
@@ -82,6 +79,7 @@ dns:
       - https://doh.pub/dns-query
       - tcp://8.8.8.8:53
   forward:
+    # 阿里系
     - domain_suffix: { match: alibaba.com, value: AliDNS }
     - domain_suffix: { match: alipay.com, value: AliDNS }
     - domain_suffix: { match: alipayobjects.com, value: AliDNS }
@@ -92,24 +90,35 @@ dns:
     - domain_suffix: { match: tmall.com, value: AliDNS }
     - domain_suffix: { match: amap.com, value: AliDNS }
     - domain_suffix: { match: ele.me, value: AliDNS }
+    # 腾讯系
     - domain_suffix: { match: qq.com, value: DNSPod }
     - domain_suffix: { match: wechat.com, value: DNSPod }
     - domain_suffix: { match: weixin.com, value: DNSPod }
     - domain_suffix: { match: tencent.com, value: DNSPod }
+    # 局域网及本地
     - domain_suffix: { match: local, value: system }
     - domain_suffix: { match: lan, value: system }
     - domain_suffix: { match: arpa, value: system }
     - domain_suffix: { match: in-addr.arpa, value: system }
+    # Google
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
         value: Google
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
         value: Google
-    - wildcard: { match: '*', value: Default }
+    # 默认兜底
+    - wildcard: { match: "*", value: Default }
+
+  # 代理节点域名解析专用 DNS
+  proxy_nameservers:
+    - 119.29.29.29
+    - 223.5.5.5
+    - 1.12.12.12
 
 # ==================== 策略组 ====================
 policy_groups:
+  # 隐藏的底层测速策略
   - auto_test:
       name: 代理节点
       policies: [全部节点]
@@ -127,6 +136,7 @@ policy_groups:
       icon: 🌹
       hidden: true
 
+  # 地区优选策略组
   - smart:
       name: 香港节点
       policies: [代理节点]
@@ -187,15 +197,16 @@ policy_groups:
       name: 其他节点
       policies: [代理节点]
       flatten: true
-      filter: (?i)^(?!.*(?:🇭🇰|香港|\b(?:HK|Hong)\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\b(?:US|United\s*States|America)\b|🇹🇼|台湾|\b(?:TW|Tai|Taiwan)\b|🇯🇵|日本|东京|大阪|\b(?:JP|Japan)\b|🇸🇬|新加坡|狮城|\b(?:SG|Singapore)\b|\bSG|SG\b|🇰🇷|韩国|首尔|仁川|\b(?:KR|KOR|Korea)\b)).*$
+      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\\b(?:US|United\\s*States|America)\\b|🇹🇼|台湾|\\b(?:TW|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b|\\bSG|SG\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 
+  # 主控选择策略
   - select:
       name: 自选策略
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
       icon: 😜
 
-  # 业务分流策略
+  # 业务分流策略组
   - select:
       name: AIGC
       policies: [美国节点, 自选策略]
@@ -308,7 +319,7 @@ policy_groups:
 
 # ==================== 路由规则 ====================
 rules:
-  # 1. 本地网络（最高优先级）
+  # 1. 本地网络
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
@@ -320,20 +331,26 @@ rules:
       policy: 猎杀广告
       update_interval: 604800
 
-  # 3. Apple 全家桶扩展版
+  # 3. 苹果生态与系统级应用
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
       policy: DIRECT
       update_interval: 604800
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
+      policy: DIRECT
+      update_interval: 86400
+  - rule_set:
+      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
+      policy: DIRECT
+      update_interval: 86400
 
-  # 4. 关键词快速匹配（高频兜底）
+  # 4. 高频域名与关键词快速匹配（快速放行/分流兜底）
   - domain_keyword: { match: apple, policy: DIRECT }
   - domain_keyword: { match: icloud, policy: DIRECT }
   - domain_keyword: { match: microsoft, policy: DIRECT }
   - domain_keyword: { match: windowsupdate, policy: DIRECT }
   - domain_keyword: { match: apple-cloudkit, policy: DIRECT }
-
-  # 5. 主流服务关键词快速匹配
   - domain_keyword: { match: google, policy: Google }
   - domain_keyword: { match: youtube, policy: YouTube }
   - domain_keyword: { match: github, policy: GitHub }
@@ -341,31 +358,11 @@ rules:
   - domain_keyword: { match: chatgpt, policy: AIGC }
   - domain_keyword: { match: telegram, policy: Telegram }
 
-  # 6. 第三方规则集 & 专用模块
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
-      policy: DIRECT
-      update_interval: 86400
+  # 5. AIGC 与海外流媒体及常用服务分流
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
       update_interval: 604800
-
-  # 电商、视频、音乐去广告模块
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
-      policy: 猎杀广告
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
-      policy: 猎杀广告
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
-      policy: 猎杀广告
-      update_interval: 604800
-
-  # 其他黑矩阵服务规则集（保持原有）
   - rule_set:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list
       policy: Bing
@@ -430,22 +427,18 @@ rules:
       match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Instagram/Instagram.list
       policy: Instagram
       update_interval: 86400
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-      policy: DIRECT
-      update_interval: 86400
 
-  # 国内直连
+  # 6. 国内 IP 直连兜底
   - geoip:
       match: CN
       policy: DIRECT
       no_resolve: true
 
-  # 最终兜底
+  # 7. 最终兜底
   - default:
       policy: 自选策略
 
-# MITM 配置
+# ==================== MITM 配置 ====================
 mitm:
   ca_p12: egern.p12
   ca_passphrase: egern
