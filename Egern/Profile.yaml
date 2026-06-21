@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.21 13:14
+# ⏱️ 更新时间: 2026.06.21 22:09
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -40,6 +40,10 @@ real_ip_domains:
   - "msftconnecttest.com"
   - "*.epicgames.com"
   - "*.riotgames.com"
+  - "*.steampowered.com"
+  - "*.steamcommunity.com"
+  - "*.steamstatic.com"
+  - "*.nvidia.com"
 
 # ==================== DNS 配置 ====================
 hijack_dns:
@@ -52,18 +56,28 @@ proxy_latency_test_url: http://www.gstatic.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 
 dns:
-  cache_size: 2048
-  cache_min_ttl: 300
-  cache_max_ttl: 3600
-  strategy: concurrent
   public_ip_lookup_url: https://ifconfig.me/ip
+
+  # 防 DNS 投毒：过滤内网/广播/环回段的虚假应答
+  block_ips:
+    - 0.0.0.0/8
+    - 10.0.0.0/8
+    - 127.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 224.0.0.0/4
+    - ::/128
+    - ::1/128
+
   hosts:
     iosapps.itunes.apple.com:
       - iosapps.itunes.apple.com.download.ks-cdn.com
+
   bootstrap:
     - system
     - 223.5.5.5
     - 119.29.29.29
+
   upstreams:
     AliDNS:
       - h3://dns.alidns.com/dns-query
@@ -78,6 +92,7 @@ dns:
       - h3://dns.alidns.com/dns-query
       - https://doh.pub/dns-query
       - tcp://8.8.8.8:53
+
   forward:
     # 阿里系
     - domain_suffix: { match: alibaba.com, value: AliDNS }
@@ -100,6 +115,8 @@ dns:
     - domain_suffix: { match: lan, value: system }
     - domain_suffix: { match: arpa, value: system }
     - domain_suffix: { match: in-addr.arpa, value: system }
+    # 国内域名优先走系统解析
+    - domain_suffix: { match: cn, value: bootstrap }
     # Google
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
@@ -108,7 +125,7 @@ dns:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
         value: Google
     # 默认兜底
-    - wildcard: { match: "*", value: Default }
+    - domain_wildcard: { match: "*", value: Default }
 
   # 代理节点域名解析专用 DNS
   proxy_nameservers:
@@ -179,7 +196,7 @@ policy_groups:
       name: 狮城节点
       policies: [代理节点]
       flatten: true
-      filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b)"
+      filter: "(?i)(?:🇸|新加坡|狮城|\\b(?:SG|Singapore)\\b)"
       interval: 300
       tolerance: 50
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
@@ -202,113 +219,113 @@ policy_groups:
 
   # 主控选择策略
   - select:
-      name: 自选策略
+      name: Proxy
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
       icon: 😜
 
   # 业务分流策略组
   - select:
       name: AIGC
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       latency_test_url: https://ios.chat.openai.com/public-api/ping
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
 
   - select:
       name: Bing
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
 
   - select:
       name: Disney
-      policies: [狮城节点, 自选策略]
+      policies: [狮城节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
 
   - select:
       name: HBO
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
 
   - select:
       name: Netflix
-      policies: [狮城节点, 自选策略]
+      policies: [狮城节点, Proxy]
       flatten: true
       latency_test_url: https://www.netflix.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
 
   - select:
       name: Spotify
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
 
   - select:
       name: TikTok
-      policies: [日本节点, 自选策略]
+      policies: [日本节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
 
   - select:
       name: YouTubeMusic
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
 
   - select:
       name: YouTube
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, Proxy]
       flatten: true
       latency_test_url: https://www.youtube.com/generate_204
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
 
   - select:
       name: GitHub
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
 
   - select:
       name: Google
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
 
   - select:
       name: Microsoft
-      policies: [DIRECT, 自选策略]
+      policies: [DIRECT, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
 
   - select:
       name: PayPal
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
 
   - select:
       name: Telegram
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
 
   - select:
       name: Twitter
-      policies: [香港节点, 自选策略]
+      policies: [香港节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
 
   - select:
       name: WeChat
-      policies: [DIRECT, 自选策略]
+      policies: [DIRECT, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
 
   - select:
       name: Instagram
-      policies: [美国节点, 自选策略]
+      policies: [美国节点, Proxy]
       flatten: true
       icon: https://raw.githubusercontent.com/Orz-3/mini/master/Color/Instagram.png
 
@@ -436,7 +453,7 @@ rules:
 
   # 7. 最终兜底
   - default:
-      policy: 自选策略
+      policy: Proxy
 
 # ==================== MITM 配置 ====================
 mitm:
