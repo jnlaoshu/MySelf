@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.22 07:45
+# ⏱️ 更新时间: 2026.06.23 05:30
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -13,15 +13,27 @@ vif_only: true
 hide_vpn_icon: false
 block_quic: true
 
-# ==================== IP 与路由排除 ====================
+# ==================== IP 与路由排除  ====================
 vif_excluded_routes:
   - 10.0.0.0/8
   - 172.16.0.0/12
   - 192.168.0.0/16
+  - 100.64.0.0/10      # 排除运营商 NAT 流量
+  - 169.254.0.0/16     # 排除链路本地发现
+  - 224.0.0.0/4        # 排除组播 (AirPlay/投屏极速响应)
   - fc00::/7
+  - fe80::/10          # 排除 IPv6 链路本地
+  - ff00::/8           # 排除 IPv6 组播
 
 real_ip_domains:
   - "*.lan"
+  - "*.local"
+  - "find.synology.com"
+  - "*.synology.me"
+  - "*.myqnapcloud.com"
+  - "*.routerlogin.net"
+  - "*.unifi.ui.com"
+  - "*.gl-inet.com"
   - "*.push.apple.com"
   - "*.apple.com"
   - "*.icloud.com"
@@ -58,7 +70,7 @@ direct_latency_test_url: http://www.apple.com/library/test/success.html
 dns:
   public_ip_lookup_url: https://ifconfig.me/ip
 
-  # 防 DNS 投毒：过滤内网/广播/环回段的虚假应答
+  # 防 DNS 投毒
   block_ips:
     - 0.0.0.0/8
     - 10.0.0.0/8
@@ -110,24 +122,24 @@ dns:
     - domain_suffix: { match: wechat.com, value: DNSPod }
     - domain_suffix: { match: weixin.com, value: DNSPod }
     - domain_suffix: { match: tencent.com, value: DNSPod }
-    # 局域网及本地
+    # 局域网及本地兜底
     - domain_suffix: { match: local, value: system }
     - domain_suffix: { match: lan, value: system }
     - domain_suffix: { match: arpa, value: system }
     - domain_suffix: { match: in-addr.arpa, value: system }
-    # 国内域名优先走系统解析
+    - domain_suffix: { match: internal, value: system }
+    - domain_suffix: { match: test, value: system }
+    # 国内域名优先
     - domain_suffix: { match: cn, value: bootstrap }
-    # Google
+    # Google 分流
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list
         value: Google
     - proxy_rule_set:
         match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list
         value: Google
-    # 默认兜底
     - domain_wildcard: { match: "*", value: Default }
 
-  # 代理节点域名解析专用 DNS
   proxy_nameservers:
     - 119.29.29.29
     - 223.5.5.5
@@ -135,7 +147,6 @@ dns:
 
 # ==================== 策略组 ====================
 policy_groups:
-  # 隐藏的底层测速策略
   - auto_test:
       name: 代理节点
       policies: [全部节点]
@@ -153,7 +164,6 @@ policy_groups:
       icon: 🌹
       hidden: true
 
-  # 地区优选策略组
   - smart:
       name: 香港节点
       policies: [代理节点]
@@ -218,13 +228,11 @@ policy_groups:
       filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|\\b(?:US|United\\s*States|America)\\b|🇹🇼|台湾|\\b(?:TW|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|Singapore)\\b|\\bSG|SG\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
 
-  # 主控选择策略
   - select:
       name: Proxy
       policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点, 全部节点, DIRECT]
       icon: 😜
 
-  # 业务分流策略组
   - select:
       name: AIGC
       policies: [美国节点, Proxy]
@@ -347,34 +355,32 @@ rules:
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
-      update_interval: 604800
-
-  # 3. 苹果生态与系统级应用
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-      policy: DIRECT
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Apple/Apple.list
-      policy: DIRECT
-      update_interval: 86400
-  - rule_set:
-      match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/TestFlight/TestFlight.list
-      policy: DIRECT
       update_interval: 86400
 
-  # 4. 高频域名与关键词快速匹配（快速放行/分流兜底）
-  - domain_keyword: { match: apple, policy: DIRECT }
-  - domain_keyword: { match: icloud, policy: DIRECT }
-  - domain_keyword: { match: microsoft, policy: DIRECT }
+  # 3. 核心分流放行
+  - domain_keyword: { match: copilot, policy: AIGC }
+  - domain_keyword: { match: bing, policy: Bing }
+  - domain_keyword: { match: snssdk, policy: DIRECT }
+  - domain_keyword: { match: aweme, policy: DIRECT }
+  - domain_keyword: { match: amemv, policy: DIRECT }
+  - domain_keyword: { match: bytecdn, policy: DIRECT }
+  - domain_keyword: { match: toutiao, policy: DIRECT }
+  - domain_keyword: { match: douyin, policy: DIRECT }
+  - domain_keyword: { match: pstatp, policy: DIRECT }
   - domain_keyword: { match: windowsupdate, policy: DIRECT }
-  - domain_keyword: { match: apple-cloudkit, policy: DIRECT }
+  - domain_keyword: { match: microsoft, policy: DIRECT }
   - domain_keyword: { match: google, policy: Google }
   - domain_keyword: { match: youtube, policy: YouTube }
   - domain_keyword: { match: github, policy: GitHub }
   - domain_keyword: { match: openai, policy: AIGC }
   - domain_keyword: { match: chatgpt, policy: AIGC }
   - domain_keyword: { match: telegram, policy: Telegram }
+
+  # 4. 苹果生态与系统级应用
+  - rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+      policy: DIRECT
+      update_interval: 604800
 
   # 5. AIGC 与海外流媒体及常用服务分流
   - rule_set:
