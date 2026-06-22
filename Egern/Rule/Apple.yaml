@@ -120,3 +120,7 @@ payload:
   - DOMAIN-SUFFIX,apple-dns.net
   - DOMAIN-SUFFIX,apple.com           # 全局顶级域名兜底（放在最后）
   - IP-CIDR,17.0.0.0/8,no-resolve     # Apple 专属 ASN IP 段兜底
+
+  # === 全局高频关键词 ===
+  - DOMAIN-KEYWORD,apple
+  - DOMAIN-KEYWORD,icloud
