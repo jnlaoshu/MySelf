@@ -9,9 +9,8 @@
  * • 防缓存机制：内置强制时间戳防缓存逻辑，确保小组件刷新时获取到最新的解锁状态。
  * • 状态提示：通过颜色（绿/黄/红）区分延迟等级，并在组件内直观反馈解锁与否。
  *
- * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetStatus
-.js
- * ⏱️ 更新时间: 2026.06.23 23:25
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetStatus.js
+ * ⏱️ 更新时间: 2026.06.23 23:58
  * ==========================================
  */
 
@@ -145,18 +144,51 @@ export default async function(ctx) {
   };
 
   // ==========================================
-  // 📱 小号布局 (仅显示列表名称及状态)
+  // 📱 小号布局 (支持图标显示)
   // ==========================================
   const renderSmall = () => {
-    // 渲染单行服务状态的组件
+    
+    // 服务图标映射
+    const getServiceIcon = (name) => {
+      switch(name) {
+        case 'YouTube':  return 'play.rectangle.fill';
+        case 'Netflix':  return 'n.square.fill';
+        case 'Disney+':  return 'd.square.fill';
+        case 'ChatGPT':  return 'sparkles';
+        case 'Claude':   return 'brain.head.profile';
+        case 'Gemini':   return 'sparkle';
+        default:         return 'circle';
+      }
+    };
+
     const SmallServiceRow = (item) => ({
       type: 'stack',
       direction: 'row',
       alignItems: 'center',
+      spacing: 6,
       children: [
-        { type: 'text', text: item.name, font: { size: 12, weight: 'bold' }, textColor: C.text, maxLines: 1 },
+        { 
+          type: 'image', 
+          src: `sf-symbol:${getServiceIcon(item.name)}`, 
+          width: 15, 
+          height: 15, 
+          color: C.text 
+        },
+        { 
+          type: 'text', 
+          text: item.name, 
+          font: { size: 12, weight: 'bold' }, 
+          textColor: C.text, 
+          maxLines: 1 
+        },
         { type: 'spacer' },
-        { type: 'stack', width: 7, height: 7, borderRadius: 3.5, backgroundColor: item.info.available ? C.ok : C.fail }
+        { 
+          type: 'stack', 
+          width: 7, 
+          height: 7, 
+          borderRadius: 3.5, 
+          backgroundColor: item.info.available ? C.ok : C.fail 
+        }
       ]
     });
 
@@ -165,19 +197,17 @@ export default async function(ctx) {
       backgroundColor: C.bg,
       padding: [14, 16, 14, 16],
       children: [
-        // 顶部精简标题栏
         {
           type: 'stack',
           direction: 'row',
           alignItems: 'center',
-          padding: [0, 0, 6, 0], // 给列表留出间距
+          padding: [0, 0, 6, 0],
           children: [
             { type: 'text', text: '解锁状态', font: { size: 11, weight: 'bold' }, textColor: C.dim },
             { type: 'spacer' },
             { type: 'text', text: `${okCount}/6`, font: { size: 11, weight: 'bold', design: 'monospaced' }, textColor: lockedCount === 0 ? C.ok : C.fail }
           ]
         },
-        // 利用 flex 自动均分剩余空间，列出所有 6 个服务
         {
           type: 'stack',
           direction: 'column',
@@ -250,7 +280,7 @@ export default async function(ctx) {
         direction: 'column',
         backgroundColor: C.panel,
         borderRadius: 14,
-        padding: [16, 12, 16, 12],
+        padding: [14, 10, 14, 10], 
         gap: 8,
         flex: 1,
         children: [
@@ -259,7 +289,7 @@ export default async function(ctx) {
             direction: 'row',
             alignItems: 'center',
             children: [
-              { type: 'text', text: item.name, font: { size: 14, weight: 'bold' }, textColor: C.text, flex: 1, maxLines: 1 },
+              { type: 'text', text: item.name, font: { size: 13, weight: 'bold' }, textColor: C.text, flex: 1, maxLines: 1 },
               { type: 'stack', width: 8, height: 8, borderRadius: 4, backgroundColor: item.info.available ? C.ok : C.fail }
             ]
           },
@@ -285,8 +315,8 @@ export default async function(ctx) {
     };
 
     const gridRows = [
-      { type: 'stack', direction: 'row', gap: 12, flex: 1, children: [LargeServiceBlock(streaming[0]), LargeServiceBlock(streaming[1]), LargeServiceBlock(streaming[2])] },
-      { type: 'stack', direction: 'row', gap: 12, flex: 1, children: [LargeServiceBlock(ai[0]), LargeServiceBlock(ai[1]), LargeServiceBlock(ai[2])] }
+      { type: 'stack', direction: 'row', gap: 8, flex: 1, children: [LargeServiceBlock(streaming[0]), LargeServiceBlock(streaming[1]), LargeServiceBlock(streaming[2])] },
+      { type: 'stack', direction: 'row', gap: 8, flex: 1, children: [LargeServiceBlock(ai[0]), LargeServiceBlock(ai[1]), LargeServiceBlock(ai[2])] }
     ];
 
     const isAllOk = lockedCount === 0;
