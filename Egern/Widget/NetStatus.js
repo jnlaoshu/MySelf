@@ -9,7 +9,8 @@
  * • 防缓存机制：内置强制时间戳防缓存逻辑，确保小组件刷新时获取到最新的解锁状态。
  * • 状态提示：通过颜色（绿/黄/红）区分延迟等级，并在组件内直观反馈解锁与否。
  *
- * 🔗 引用链接: https://github.com/your-repo-link
+ * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetStatus
+.js
  * ⏱️ 更新时间: 2026.06.23 23:25
  * ==========================================
  */
