@@ -2,11 +2,11 @@
 # 📌 模块名称: Egern 桌面小组件合集
 # ✨ 主要功能: 提供全套小组件的全局可视化配置入口。完美适配最新版底层 JS 的各项高阶能力，包含黄历定制、时光倒数（防调休）、专属纪念日、全国油价定位及高可用多节点 SSH 服务器监控。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.06.16 22:21
+# ⏱️ 更新时间: 2026.06.27 11:27
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络信息、全国油价、服务器监控、世界杯赛程"
+description: "包含：岁时黄历、时光倒数、网络信息、网络服务解锁、全国油价、服务器监控、世界杯赛程"
 
 auto_update:
   interval: 43200
@@ -266,6 +266,10 @@ scriptings:
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
       timeout: 5
   - generic:
+      name: 网络服务解锁
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetStatus.js
+      timeout: 8
+  - generic:
       name: 全国油价
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
       timeout: 5
@@ -286,6 +290,8 @@ widgets:
     script_name: 时光倒数
   - name: 网络信息
     script_name: 网络信息
+  - name: 网络服务解锁
+    script_name: 网络服务解锁
   - name: 全国油价
     script_name: 全国油价
   - name: 服务器监控
