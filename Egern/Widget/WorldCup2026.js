@@ -9,7 +9,7 @@
  * • 汉化字典：内置百余个国家队中英汉化与国旗字典库，智能翻转主客队国旗位置以实现视觉上的完美对称对齐。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/WorldCup2026.js
- * ⏱️ 更新时间: 2026.06.16 18:05
+ * ⏱️ 更新时间: 2026.06.27 13:05
  * ==========================================
  */
 
@@ -50,7 +50,7 @@ const teamNamesCN = {
   "Saudi Arabia": "🇸🇦 沙特阿拉伯", "Australia": "🇦🇺 澳大利亚", "Qatar": "🇶🇦 卡塔尔", "United Arab Emirates": "🇦🇪 阿联酋",
   "UAE": "🇦🇪 阿联酋", "Iraq": "🇮🇶 伊拉克", "Oman": "🇴🇲 阿曼", "China PR": "🇨🇳 中国", "China": "🇨🇳 中国",
   "Syria": "🇸🇾 叙利亚", "Uzbekistan": "🇺🇿 乌兹别克斯坦", "Jordan": "🇯🇴 约旦", "Bahrain": "🇧🇭 巴林",
-  "Palestine": "🇵🇸 巴勒斯坦", "Indonesia": "🇮🇩 印尼", "Vietnam": "🇻🇳 越南", "Thailand": "🇹🇭 泰国",
+  "Palestine": "🇵🇸 巴勒斯坦", "Indonesia": "🇮🇩 印尼", "Vietnam": "🇻ナン 越南", "Thailand": "🇹🇭 泰国",
   "North Korea": "🇰🇵 朝鲜", "Korea DPR": "🇰🇵 朝鲜", "Lebanon": "🇱🇧 黎巴嫩", "Kuwait": "🇰🇼 科威特",
   "New Zealand": "🇳🇿 新西兰", "Fiji": "🇫🇯 斐济", "Solomon Islands": "🇸🇧 所罗门群岛"
 };
@@ -249,8 +249,6 @@ export default async function(ctx) {
   });
 
   // ---- 渲染每日卡片 ----
-  const MAX_PER_DAY = 5;
-
   for (let dIndex = 0; dIndex < dayConfig.length; dIndex++) {
     const { key, label, month, date, cardBg, labelColor, dateColor } = dayConfig[dIndex];
     const dayMatches = groupedMatches[key];
@@ -284,9 +282,8 @@ export default async function(ctx) {
       });
     }
 
-    const renderCount = Math.min(dayMatches.length, MAX_PER_DAY);
-
-    for (let i = 0; i < renderCount; i++) {
+    // 直接循环渲染当天所有场次
+    for (let i = 0; i < dayMatches.length; i++) {
       const m = dayMatches[i];
 
       // 传入 true 表示左侧主队，国旗将自动翻转到名称后面
@@ -368,17 +365,9 @@ export default async function(ctx) {
 
       matchRows.push(row);
 
-      if (i < renderCount - 1) {
+      if (i < dayMatches.length - 1) {
         matchRows.push({ type: "spacer", length: 6 });
       }
-    }
-
-    if (dayMatches.length > MAX_PER_DAY) {
-      matchRows.push({ type: "spacer", length: 4 });
-      matchRows.push({
-        type: "text", text: `… 还有 ${dayMatches.length - MAX_PER_DAY} 场`,
-        font: { size: 11 }, textColor: T.ellipsis
-      });
     }
 
     const rightColumn = {
