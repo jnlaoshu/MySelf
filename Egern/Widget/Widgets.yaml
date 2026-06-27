@@ -264,7 +264,7 @@ scriptings:
   - generic:
       name: 网络信息
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
-      timeout: 5
+      timeout: 10
   - generic:
       name: 网络服务解锁
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetStatus.js
