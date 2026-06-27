@@ -3,13 +3,13 @@
  * 📌 2026世界杯赛程 (WorldCup2026) 小组件
  *
  * 【功能说明】
- * • 布局排版：针对小尺寸屏幕深度优化，采用左侧日期栏与右侧赛事列表的对齐分栏结构，防止内容溢出截断。
- * • 赛事引擎：实时调用 ESPN API 获取昨天、今天、明天的赛事日程及比分，网络异常时提供容错提示。
- * • 状态展示：精确区分并高亮未开赛、进行中（含动态比赛时间）、已结束等状态，全面支持深浅色模式自适应。
- * • 汉化字典：内置百余个国家队中英汉化与国旗字典库，智能翻转主客队国旗位置以实现视觉上的完美对称对齐。
+ * • 尺寸自适应：全面支持小号(紧凑型)、中号(今日完美布局)、大号(今明两日赛程)的三种独立布局。
+ * • 布局排版：中号/大号采用左侧日期与右侧赛事的对齐结构；小号采用三列固定宽度强制对齐布局。
+ * • 赛事引擎：实时调用 ESPN API 获取赛事日程及比分，网络异常提供容错。
+ * • 汉化字典：内置百余个国家队中英汉化与国旗字典库，智能翻转主客队国旗以保持视觉完美对称。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/WorldCup2026.js
- * ⏱️ 更新时间: 2026.06.27 13:05
+ * ⏱️ 更新时间: 2026.06.27 21:12
  * ==========================================
  */
 
@@ -17,6 +17,14 @@
 // 全局样式微调参数
 // ---------------------------
 const CARD_CORNER_RADIUS = 12;
+
+// 小号三列固定宽度
+const SMALL_COL_HOME  = 50;
+const SMALL_COL_SCORE = 30;
+const SMALL_COL_AWAY  = 50;
+
+// 小号行间距
+const SMALL_ROW_GAP = 3;
 
 // ---------------------------
 // 终极汉化与国旗字典库
@@ -50,46 +58,54 @@ const teamNamesCN = {
   "Saudi Arabia": "🇸🇦 沙特阿拉伯", "Australia": "🇦🇺 澳大利亚", "Qatar": "🇶🇦 卡塔尔", "United Arab Emirates": "🇦🇪 阿联酋",
   "UAE": "🇦🇪 阿联酋", "Iraq": "🇮🇶 伊拉克", "Oman": "🇴🇲 阿曼", "China PR": "🇨🇳 中国", "China": "🇨🇳 中国",
   "Syria": "🇸🇾 叙利亚", "Uzbekistan": "🇺🇿 乌兹别克斯坦", "Jordan": "🇯🇴 约旦", "Bahrain": "🇧🇭 巴林",
-  "Palestine": "🇵🇸 巴勒斯坦", "Indonesia": "🇮🇩 印尼", "Vietnam": "🇻ナン 越南", "Thailand": "🇹🇭 泰国",
+  "Palestine": "🇵🇸 巴勒斯坦", "Indonesia": "🇮🇩 印尼", "Vietnam": "🇻🇳 越南", "Thailand": "🇹🇭 泰国",
   "North Korea": "🇰🇵 朝鲜", "Korea DPR": "🇰🇵 朝鲜", "Lebanon": "🇱🇧 黎巴嫩", "Kuwait": "🇰🇼 科威特",
   "New Zealand": "🇳🇿 新西兰", "Fiji": "🇫🇯 斐济", "Solomon Islands": "🇸🇧 所罗门群岛"
 };
 
+// 完整队名（不截断）
 function translateTeam(englishName, isHome = false) {
   if (!englishName) return isHome ? "未知 🏳️" : "🏳️ 未知";
   let name = englishName.replace(/ national (football|soccer) team/i, "").trim();
   name = name.replace(/ men's/i, "").trim();
   const defaultStr = teamNamesCN[name] || `🏳️ ${name}`;
-  
-  // 如果是左侧主队，将 "国旗 国家" 翻转为 "国家 国旗"，以保持两边对称贴近比分
+  let result = defaultStr;
   if (isHome) {
     const parts = defaultStr.split(" ");
     if (parts.length >= 2) {
-      const flag = parts[0];
-      const text = parts.slice(1).join(" ");
-      return `${text} ${flag}`;
+      result = `${parts.slice(1).join(" ")} ${parts[0]}`;
     }
   }
-  return defaultStr;
+  return result;
+}
+
+// 小号专用：完整队名
+function translateTeamPlain(englishName) {
+  if (!englishName) return "未知";
+  let name = englishName.replace(/ national (football|soccer) team/i, "").trim();
+  name = name.replace(/ men's/i, "").trim();
+  const full = teamNamesCN[name];
+  if (full) {
+    const parts = full.split(" ");
+    return parts.length >= 2 ? parts.slice(1).join(" ") : full;
+  }
+  return name;
 }
 
 // ---------------------------
-// 列宽参数
+// 列宽参数（中号/大号）
 // ---------------------------
-const COL_WIDTH_LEFT   = 36;  // 左侧日期列
-const COL_WIDTH_TIME   = 34;  // 时间列
-const COL_WIDTH_STATUS = 40;  // 状态列
-const COL_WIDTH_TEAM   = 84;  // 队名列
-const COL_WIDTH_SCORE  = 30;  // 比分列
+const COL_WIDTH_LEFT   = 36;
+const COL_WIDTH_TIME   = 34;
+const COL_WIDTH_STATUS = 40;
+const COL_WIDTH_TEAM   = 88;
+const COL_WIDTH_SCORE  = 30;
 
 // ---------------------------
 // 自适应配色系统
 // ---------------------------
 const T = {
   widgetBg:        { light: "#F2F2F7",  dark: "#161618" },
-  yesterdayCardBg: { light: "#EBEBF0",  dark: "#1C1C1E" },
-  yesterdayLabel:  { light: "#6C6C70",  dark: "#8E8E93" },
-  yesterdayDate:   { light: "#9A9A9E",  dark: "#6E6E73" },
   todayCardBg:     { light: "#D6F5E3",  dark: "#0D2016" },
   todayLabel:      { light: "#1A7F3C",  dark: "#30D158" },
   todayDate:       { light: "#3DA85A",  dark: "#248A3D" },
@@ -99,16 +115,14 @@ const T = {
   updateTime:      { light: "#AAAAAA",  dark: "#666666" },
   matchTime:       { light: "#555555",  dark: "#AEAEB2" },
   teamName:        { light: "#111111",  dark: "#FFFFFF" },
-  teamNameDim:     { light: "#999999",  dark: "#636366" },
   statusFinished:  { light: "#999999",  dark: "#8E8E93" },
   statusLive:      { light: "#D0021B",  dark: "#FF453A" },
   statusPending:   { light: "#999999",  dark: "#636366" },
-  scoreNormal:     { light: "#111111",  dark: "#FFFFFF" },
   scoreLive:       { light: "#D0021B",  dark: "#FF453A" },
   scoreFinished:   { light: "#333333",  dark: "#EBEBEB" },
   vs:              { light: "#AAAAAA",  dark: "#636366" },
   noMatch:         { light: "#AAAAAA",  dark: "#636366" },
-  ellipsis:        { light: "#AAAAAA",  dark: "#636366" },
+  divider:         { light: "#D0D0D5",  dark: "#2C2C2E" },
 };
 
 // ---------------------------
@@ -130,10 +144,18 @@ function getBjDateParts(ts) {
 // Egern 小组件主入口
 // ---------------------------
 export default async function(ctx) {
+  let family = "medium";
+  const rawFamily = ctx.family || ctx.widgetFamily || "medium";
+  const fStr = String(rawFamily).toLowerCase();
+  if (fStr.includes("small") || fStr === "0") {
+    family = "small";
+  } else if (fStr.includes("large") || fStr === "2") {
+    family = "large";
+  }
+
   const now   = new Date();
   const nowTs = now.getTime();
 
-  // 拉取前后2天数据
   const fetchStart = new Date(nowTs - 2 * 24 * 60 * 60 * 1000);
   const fetchEnd   = new Date(nowTs + 2 * 24 * 60 * 60 * 1000);
 
@@ -144,26 +166,28 @@ export default async function(ctx) {
     return `${yyyy}${mm}${dd}`;
   };
 
-  const yParts   = getBjDateParts(nowTs - 24 * 60 * 60 * 1000);
   const todParts = getBjDateParts(nowTs);
   const tomParts = getBjDateParts(nowTs + 24 * 60 * 60 * 1000);
 
-  const dayConfig = [
-    {
-      key: "昨天", label: "昨天", dateStr: yParts.str,
-      month: yParts.month, date: yParts.date, week: yParts.week,
-      cardBg: T.yesterdayCardBg, labelColor: T.yesterdayLabel, dateColor: T.yesterdayDate
-    },
+  const dayConfigLarge = [
     {
       key: "今天", label: "今天", dateStr: todParts.str,
       month: todParts.month, date: todParts.date, week: todParts.week,
-      cardBg: T.todayCardBg, labelColor: T.todayLabel, dateColor: T.todayDate
+      labelColor: T.todayLabel, dateColor: T.todayDate, cardBg: T.todayCardBg
     },
     {
       key: "明天", label: "明天", dateStr: tomParts.str,
       month: tomParts.month, date: tomParts.date, week: tomParts.week,
-      cardBg: T.tomorrowCardBg, labelColor: T.tomorrowLabel, dateColor: T.tomorrowDate
-    },
+      labelColor: T.tomorrowLabel, dateColor: T.tomorrowDate, cardBg: T.tomorrowCardBg
+    }
+  ];
+
+  const dayConfigMedium = [
+    {
+      key: "今天", label: "今天", dateStr: todParts.str,
+      month: todParts.month, date: todParts.date, week: todParts.week,
+      labelColor: T.todayLabel, dateColor: T.todayDate
+    }
   ];
 
   const url = `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${getApiDateStr(fetchStart)}-${getApiDateStr(fetchEnd)}`;
@@ -179,52 +203,26 @@ export default async function(ctx) {
         fetchSuccess = true;
         break;
       }
-    } catch (e) { /* 自动重试 */ }
+    } catch (e) { }
   }
 
-  // ---- 顶部标题行 ----
-  const updateStr = `更新 ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  const headerRow = {
-    type: "stack", direction: "row", alignItems: "center",
-    children: [
-      { type: "spacer", length: 4 }, // 左侧稍微缩进以对齐下方卡片内容
-      { type: "text", text: "🏆", font: { size: 15 } },
-      { type: "spacer", length: 6 },
-      { type: "text", text: "世界杯赛程", font: { size: 16, weight: "bold" }, textColor: T.teamName },
-      { type: "spacer" },
-      { type: "text", text: updateStr, font: { size: 11 }, textColor: T.updateTime },
-      { type: "spacer", length: 8 } // 右侧增加间距，使更新时间与下方卡片内边距对齐
-    ]
-  };
+  const updateStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-  let widgetChildren = [headerRow, { type: "spacer", length: 10 }];
-
-  if (!fetchSuccess) {
-    widgetChildren.push({ type: "spacer" });
-    widgetChildren.push({
-      type: "text", text: "⚠️ 数据拉取失败，请检查网络。",
-      textColor: "#FF3B30", font: { size: 14 }
-    });
-    widgetChildren.push({ type: "spacer" });
-    return {
-      type: "widget",
-      backgroundColor: T.widgetBg,
-      padding: 12,
-      children: widgetChildren
-    };
-  }
-
-  // ---- 分组比赛数据 ----
-  const groupedMatches = { "昨天": [], "今天": [], "明天": [] };
+  const groupedMatches = { "今天": [], "明天": [] };
 
   matches.forEach(match => {
     const matchTimestamp = new Date(match.date).getTime();
     const bjMatch        = new Date(matchTimestamp + 8 * 60 * 60 * 1000);
     const matchDateStr   = getBjDateParts(matchTimestamp).str;
 
-    const comp     = match.competitions[0];
-    const homeCmp  = comp.competitors.find(c => c.homeAway === 'home');
-    const awayCmp  = comp.competitors.find(c => c.homeAway === 'away');
+    let targetKey = null;
+    if (matchDateStr === todParts.str) targetKey = "今天";
+    else if (matchDateStr === tomParts.str) targetKey = "明天";
+    if (!targetKey) return;
+
+    const comp        = match.competitions[0];
+    const homeCmp     = comp.competitors.find(c => c.homeAway === 'home');
+    const awayCmp     = comp.competitors.find(c => c.homeAway === 'away');
     const statusState = match.status.type.state;
     const statusDesc  = match.status.type.shortDetail || match.status.type.description || "";
 
@@ -232,67 +230,203 @@ export default async function(ctx) {
     if (statusState === "post") {
       statusText = "已结束";
     } else if (statusState === "in") {
-      const detail = statusDesc.replace("'", "'");
-      statusText = detail || "进行中";
+      statusText = statusDesc.replace("'", "'") || "进行中";
     }
 
-    const info = {
+    groupedMatches[targetKey].push({
       time:       `${String(bjMatch.getUTCHours()).padStart(2,'0')}:${String(bjMatch.getUTCMinutes()).padStart(2,'0')}`,
       home:       homeCmp,
       away:       awayCmp,
       status:     statusState,
       statusText: statusText,
-    };
-
-    const cfg = dayConfig.find(d => d.dateStr === matchDateStr);
-    if (cfg) groupedMatches[cfg.key].push(info);
+    });
   });
 
-  // ---- 渲染每日卡片 ----
-  for (let dIndex = 0; dIndex < dayConfig.length; dIndex++) {
-    const { key, label, month, date, cardBg, labelColor, dateColor } = dayConfig[dIndex];
-    const dayMatches = groupedMatches[key];
+  // 统一标题栏顶部距离为 2
+  const TITLE_TOP_SPACER = 2;
 
-    if (dayMatches.length === 0 && key !== "今天") continue;
+  /**
+   * ======================================
+   * 👑 小号模式 (Small)
+   * ======================================
+   */
+  if (family === "small") {
+    const todayMatches = groupedMatches["今天"] || [];
 
-    // ---- 左侧日期标签列 ----
-    const count       = dayMatches.length;
-    const dateLabel   = `${String(month).padStart(2,'0')}/${String(date).padStart(2,'0')}`;
-    const countLabel  = `${count}场`;
+    const smallHeader = {
+      type: "stack", direction: "row", alignItems: "center",
+      children: [
+        { type: "text", text: "🏆", font: { size: 13 } },
+        { type: "spacer", length: 4 },
+        { type: "text", text: "今日赛程", font: { size: 13, weight: "bold" }, textColor: T.teamName },
+        { type: "spacer" },
+        { type: "text", text: updateStr, font: { size: 9 }, textColor: T.updateTime }
+      ]
+    };
+
+    let smallChildren = [
+      { type: "spacer", length: TITLE_TOP_SPACER },
+      smallHeader,
+      { type: "spacer", length: SMALL_ROW_GAP + 1 },
+      { type: "stack", direction: "row", backgroundColor: T.divider, height: 0.5, children: [] },
+      { type: "spacer", length: SMALL_ROW_GAP }
+    ];
+
+    if (!fetchSuccess) {
+      smallChildren.push({ type: "spacer" });
+      smallChildren.push({ type: "text", text: "⚠️ 网络异常，数据加载失败", font: { size: 11 }, textColor: T.statusLive });
+      smallChildren.push({ type: "spacer" });
+    } else if (todayMatches.length === 0) {
+      smallChildren.push({ type: "spacer" });
+      smallChildren.push({ type: "text", text: "今日暂无赛事", font: { size: 12 }, textColor: T.noMatch });
+      smallChildren.push({ type: "spacer" });
+    } else {
+      for (let i = 0; i < todayMatches.length; i++) {
+        const m = todayMatches[i];
+
+        const homeName = translateTeamPlain(m.home.team.name || m.home.team.shortDisplayName);
+        const awayName = translateTeamPlain(m.away.team.name || m.away.team.shortDisplayName);
+
+        let scoreStr   = "vs";
+        let scoreColor = T.vs;
+        let scoreFont  = { size: 11, weight: "medium" };
+        if (m.status === "post" || m.status === "in") {
+          scoreStr   = `${m.home.score}-${m.away.score}`;
+          scoreColor = m.status === "in" ? T.scoreLive : T.scoreFinished;
+          scoreFont  = { size: 11, weight: "bold" };
+        }
+
+        const matchRow = {
+          type: "stack", direction: "row", alignItems: "center",
+          children: [
+            {
+              type: "stack", direction: "row", width: SMALL_COL_HOME, alignItems: "center",
+              children: [
+                { type: "spacer" },
+                { type: "text", text: homeName, font: { size: 10, weight: "medium" }, textColor: T.teamName }
+              ]
+            },
+            {
+              type: "stack", direction: "row", width: SMALL_COL_SCORE, alignItems: "center",
+              children: [
+                { type: "spacer" },
+                { type: "text", text: scoreStr, font: scoreFont, textColor: scoreColor },
+                { type: "spacer" }
+              ]
+            },
+            {
+              type: "stack", direction: "row", width: SMALL_COL_AWAY, alignItems: "center",
+              children: [
+                { type: "text", text: awayName, font: { size: 10, weight: "medium" }, textColor: T.teamName },
+                { type: "spacer" }
+              ]
+            }
+          ]
+        };
+
+        smallChildren.push(matchRow);
+
+        if (i < todayMatches.length - 1) {
+          smallChildren.push({ type: "spacer", length: SMALL_ROW_GAP });
+          smallChildren.push({ type: "stack", direction: "row", backgroundColor: T.divider, height: 0.5, children: [] });
+          smallChildren.push({ type: "spacer", length: SMALL_ROW_GAP });
+        }
+      }
+    }
+
+    smallChildren.push({ type: "spacer" });
+
+    return {
+      type: "widget",
+      backgroundColor: T.widgetBg,
+      padding: 12,
+      children: smallChildren
+    };
+  }
+
+  /**
+   * ======================================
+   * 👑 中号 (Medium) 与大号 (Large)
+   * ======================================
+   */
+  const headerRow = {
+    type: "stack", direction: "row", alignItems: "center",
+    children: [
+      { type: "spacer", length: 4 },
+      { type: "text", text: "🏆", font: { size: 15 } },
+      { type: "spacer", length: 6 },
+      { type: "text", text: "世界杯赛程", font: { size: 16, weight: "bold" }, textColor: T.teamName },
+      { type: "spacer" },
+      { type: "text", text: updateStr, font: { size: 11 }, textColor: T.updateTime },
+      { type: "spacer", length: 8 }
+    ]
+  };
+
+  let activeDayConfigs = [];
+  let widgetChildren   = [];
+
+  if (family === "medium") {
+    activeDayConfigs = dayConfigMedium;
+    widgetChildren = [
+      { type: "spacer", length: 2 },
+      headerRow,
+      { type: "spacer", length: 3 }
+    ];
+  } else {
+    activeDayConfigs = dayConfigLarge;
+    widgetChildren = [
+      { type: "spacer", length: 2 },
+      headerRow,
+      { type: "spacer", length: 6 }
+    ];
+  }
+
+  if (!fetchSuccess) {
+    widgetChildren.push({
+      type: "text", text: "⚠️ 数据拉取失败，请检查网络。",
+      textColor: "#FF3B30", font: { size: 14 }
+    });
+    widgetChildren.push({ type: "spacer" });
+    return { type: "widget", backgroundColor: T.widgetBg, padding: 12, children: widgetChildren };
+  }
+
+  for (let dIndex = 0; dIndex < activeDayConfigs.length; dIndex++) {
+    const cfg        = activeDayConfigs[dIndex];
+    const dayMatches = groupedMatches[cfg.key];
+
+    if (dayMatches.length === 0 && cfg.key !== "今天") continue;
+
+    const count      = dayMatches.length;
+    const dateLabel  = `${String(cfg.month).padStart(2,'0')}/${String(cfg.date).padStart(2,'0')}`;
+    const countLabel = `${count}场`;
 
     const leftColumn = {
       type: "stack", direction: "column", alignItems: "center",
       width: COL_WIDTH_LEFT,
       children: [
-        { type: "text", text: label,      font: { size: 13, weight: "bold" }, textColor: labelColor },
+        { type: "text", text: cfg.label,  font: { size: 13, weight: "bold" }, textColor: cfg.labelColor },
         { type: "spacer", length: 4 },
-        { type: "text", text: dateLabel,  font: { size: 10, weight: "medium" }, textColor: dateColor },
+        { type: "text", text: dateLabel,  font: { size: 10, weight: "medium" }, textColor: cfg.dateColor },
         { type: "spacer", length: 2 },
-        { type: "text", text: countLabel, font: { size: 10 }, textColor: dateColor },
+        { type: "text", text: countLabel, font: { size: 10 }, textColor: cfg.dateColor },
       ]
     };
 
-    // ---- 右侧赛事列表列 ----
     let matchRows = [];
-
-    if (dayMatches.length === 0 && key === "今天") {
+    if (dayMatches.length === 0) {
       matchRows.push({
         type: "text", text: "当天暂无赛事",
         font: { size: 12 }, textColor: T.noMatch
       });
     }
 
-    // 直接循环渲染当天所有场次
     for (let i = 0; i < dayMatches.length; i++) {
       const m = dayMatches[i];
 
-      // 传入 true 表示左侧主队，国旗将自动翻转到名称后面
       const homeName  = translateTeam(m.home.team.name || m.home.team.shortDisplayName, true);
       const awayName  = translateTeam(m.away.team.name || m.away.team.shortDisplayName, false);
-      const isDim     = (key === "昨天");
-      const nameColor = isDim ? T.teamNameDim : T.teamName;
+      const nameColor = T.teamName;
 
-      // 状态文字与颜色
       let statusColor = T.statusPending;
       let statusFont  = { size: 10 };
       if (m.status === "post") {
@@ -302,7 +436,6 @@ export default async function(ctx) {
         statusFont  = { size: 10, weight: "semibold" };
       }
 
-      // 比分文字与颜色
       let scoreStr   = "vs";
       let scoreColor = T.vs;
       let scoreFont  = { size: 12, weight: "medium" };
@@ -319,44 +452,39 @@ export default async function(ctx) {
       const row = {
         type: "stack", direction: "row", alignItems: "center",
         children: [
-          // 时间列
           {
             type: "stack", direction: "row", width: COL_WIDTH_TIME,
             children: [
-              { type: "text", text: m.time, font: { size: 11 }, textColor: T.matchTime, lineLimit: 1 },
+              { type: "text", text: m.time, font: { size: 11 }, textColor: T.matchTime },
               { type: "spacer" }
             ]
           },
-          // 状态列
           {
             type: "stack", direction: "row", width: COL_WIDTH_STATUS,
             children: [
-              { type: "text", text: m.statusText, font: statusFont, textColor: statusColor, lineLimit: 1 },
+              { type: "text", text: m.statusText, font: statusFont, textColor: statusColor },
               { type: "spacer" }
             ]
           },
-          // 主队列（右对齐）
           {
             type: "stack", direction: "row", width: COL_WIDTH_TEAM,
             children: [
               { type: "spacer" },
-              { type: "text", text: homeName, font: { size: 12, weight: "medium" }, textColor: nameColor } 
+              { type: "text", text: homeName, font: { size: 11.5, weight: "medium" }, textColor: nameColor }
             ]
           },
-          // 比分列（居中）
           {
             type: "stack", direction: "row", width: COL_WIDTH_SCORE,
             children: [
               { type: "spacer" },
-              { type: "text", text: scoreStr, font: scoreFont, textColor: scoreColor, lineLimit: 1 },
+              { type: "text", text: scoreStr, font: scoreFont, textColor: scoreColor },
               { type: "spacer" }
             ]
           },
-          // 客队列（左对齐）
           {
             type: "stack", direction: "row", width: COL_WIDTH_TEAM,
             children: [
-              { type: "text", text: awayName, font: { size: 12, weight: "medium" }, textColor: nameColor },
+              { type: "text", text: awayName, font: { size: 11.5, weight: "medium" }, textColor: nameColor },
               { type: "spacer" }
             ]
           }
@@ -366,7 +494,7 @@ export default async function(ctx) {
       matchRows.push(row);
 
       if (i < dayMatches.length - 1) {
-        matchRows.push({ type: "spacer", length: 6 });
+        matchRows.push({ type: "spacer", length: family === "large" ? 8 : 5 });
       }
     }
 
@@ -375,7 +503,6 @@ export default async function(ctx) {
       children: matchRows
     };
 
-    // ---- 左右合并为卡片内容行 ----
     const cardContentRow = {
       type: "stack", direction: "row", alignItems: "center",
       children: [
@@ -385,19 +512,23 @@ export default async function(ctx) {
       ]
     };
 
-    // ---- 卡片容器 ----
-    widgetChildren.push({
+    const containerConfig = {
       type: "stack", direction: "column",
-      backgroundColor: cardBg,
       cornerRadius:  CARD_CORNER_RADIUS,
       borderRadius:  CARD_CORNER_RADIUS,
       clipToBounds:  true,
       masksToBounds: true,
       padding:       8,
       children: [cardContentRow]
-    });
+    };
 
-    if (dIndex < dayConfig.length - 1) {
+    if (family === "large" && cfg.cardBg) {
+      containerConfig.backgroundColor = cfg.cardBg;
+    }
+
+    widgetChildren.push(containerConfig);
+
+    if (family === "large" && dIndex < activeDayConfigs.length - 1) {
       widgetChildren.push({ type: "spacer", length: 8 });
     }
   }
