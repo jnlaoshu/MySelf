@@ -87,7 +87,6 @@ dns:
       - iosapps.itunes.apple.com.download.ks-cdn.com
 
   bootstrap:
-    - system
     - 223.5.5.5
     - 119.29.29.29
 
@@ -494,7 +493,7 @@ modules:
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
     env:
       TEACHING_WEEK_START: 2026/03/02
-      EXCLUSIVE_NAME_2: 上班
+      EXCLUSIVE_NAME_2: 0828
       EXCLUSIVE_DATE_2: 08/28
     enabled: true
     update_interval: 86400
