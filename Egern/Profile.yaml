@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.06.23 05:30
+# ⏱️ 更新时间: 2026.07.04 18:00
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -12,6 +12,7 @@ allow_external_connections: true
 vif_only: true
 hide_vpn_icon: false
 block_quic: true
+close_connections_on_policy_change: true
 
 # ==================== IP 与路由排除  ====================
 vif_excluded_routes:
@@ -161,6 +162,7 @@ policy_groups:
       name: 全部节点
       type: select
       urls: [https://sub.store/download/collection/AllServer?target=Egern]
+      ip_version: dual_stack  # 新增：节点级 IP 版本策略（可选：dual_stack, ipv4_only, ipv6_only, ipv4_prefer, ipv6_prefer）
       icon: 🌹
       hidden: true
 
@@ -492,8 +494,8 @@ modules:
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
     env:
       TEACHING_WEEK_START: 2026/03/02
-      EXCLUSIVE_NAME_2: 暑假
-      EXCLUSIVE_DATE_2: 07/04
+      EXCLUSIVE_NAME_2: 上班
+      EXCLUSIVE_DATE_2: 08/28
     enabled: true
     update_interval: 86400
 
