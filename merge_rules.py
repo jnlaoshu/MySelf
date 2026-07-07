@@ -31,9 +31,10 @@ def parse_repcz(content):
     if not content: return
     try:
         data = yaml.safe_load(content)
-        if isinstance(data, dict) and 'payload' in data:
+        if isinstance(data, dict) and isinstance(data.get('payload'), list):
             for domain in data['payload']:
-                unique_domains.add(domain.strip())
+                if isinstance(domain, str):
+                    unique_domains.add(domain.strip())
             print(f"  - Repcz: Parsed {len(data['payload'])} domains")
     except Exception as e:
         print(f"  - Repcz Error: {e}")
@@ -46,10 +47,10 @@ def parse_adrules(content):
         if not line or line.startswith('!') or line.startswith('['): continue
         
         domain = ""
-        if line.startswith('||') and line.endswith('^'):
-            domain = line[2:-1]
-        elif line.startswith('||'):
+        if line.startswith('||'):
             domain = line[2:]
+            if '^' in domain:
+                domain = domain.split('^')[0]
             
         if domain and '/' not in domain and '*' not in domain:
             unique_domains.add(domain)
@@ -65,10 +66,12 @@ def parse_anti_ad(content):
         
         parts = line.split(',')
         if len(parts) >= 2:
-            domain = parts[1].strip()
-            if '.' in domain:
-                unique_domains.add(domain)
-                count += 1
+            rule_type = parts[0].strip().upper()
+            if rule_type in ('DOMAIN', 'DOMAIN-SUFFIX'):
+                domain = parts[1].strip()
+                if '.' in domain and '/' not in domain:
+                    unique_domains.add(domain)
+                    count += 1
     print(f"  - Anti-AD: Parsed {count} domains")
 
 def main():
