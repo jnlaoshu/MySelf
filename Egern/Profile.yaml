@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.07.04 18:00
+# ⏱️ 更新时间: 2026.07.07 18:30
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -492,7 +492,7 @@ modules:
   - name: 常用小组件
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
     env:
-      TEACHING_WEEK_START: 2026/03/02
+      TEACHING_WEEK_START: 2026/08/31
       EXCLUSIVE_NAME_2: 0828
       EXCLUSIVE_DATE_2: 08/28
     enabled: true
