@@ -11,18 +11,24 @@
  * • 稳健防护：3000ms 严格并发超时熔断机制，拒绝无效等待，杜绝小组件假死白屏。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetRadar.js
- * ⏱️ 更新时间: 2026.07.07 19:20
+ * ⏱️ 更新时间: 2026.07.08 12:10
  * ==========================================
  */
 
-
 export default async function (ctx) {
-  // ── 尺寸侦测 (全局) ──────────────────────────────────────────────────
   const widgetFamily = ctx.widgetFamily || ctx.family || (ctx.widget && ctx.widget.family) || 'large';
   const familyStr = String(widgetFamily).toLowerCase();
   const isSmall = familyStr.includes('small') || widgetFamily === 0;
   const isLarge = familyStr.includes('large') || widgetFamily === 2;
   const isMedium = !isSmall && !isLarge;
+
+  const TIMEOUT_MS = 3000;
+  const commonHeaders = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache'
+  };
 
   if (isSmall || isMedium) {
     // =========================================================================
@@ -32,79 +38,61 @@ export default async function (ctx) {
     const pad = n => String(n).padStart(2, "0");
     const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-    // ── 统一色彩令牌系统 ──
     const C = {
-      bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F2F2F7', dark: '#0C0C0E' }],
-      main:        { light: '#1C1C1E', dark: '#FFFFFF' },
-      sub:         { light: '#48484A', dark: '#D1D1D6' },
-      muted:       { light: '#8E8E93', dark: '#8E8E93' },
+      bg:          [{ light: '#FFFFFF', dark: '#1C1C1E' }, { light: '#F4F4F7', dark: '#0C0C0E' }],
+      main:        { light: '#111111', dark: '#FFFFFF' },
+      sub:         { light: '#555555', dark: '#D1D1D6' },
+      muted:       { light: '#8A8A8E', dark: '#8E8E93' },
       gold:        { light: '#B58A28', dark: '#D6A53A' },
-      red:         { light: '#CA3B32', dark: '#FF453A' },
-      teal:        { light: '#2E8045', dark: '#32D74B' },
-      blue:        { light: '#3A5F85', dark: '#5E8EB8' },
-      purple:      { light: '#6B4C9A', dark: '#8B6AA8' },
-      cyan:        { light: '#628C7B', dark: '#73A491' },
+      red:         { light: '#D70015', dark: '#FF453A' },
+      teal:        { light: '#006A60', dark: '#32D74B' },
+      blue:        { light: '#0040DD', dark: '#5E8EB8' },
+      purple:      { light: '#5E2CA5', dark: '#8B6AA8' },
+      cyan:        { light: '#2B7067', dark: '#73A491' },
       pingBg:      { light: '#F2F2F7', dark: '#2C2C2E' },
-      proxyGreen:  { light: '#2E8045', dark: '#32D74B' },
+      proxyGreen:  { light: '#248A3D', dark: '#32D74B' },
       divider:     { light: '#E5E5EA', dark: '#38383A' },
       transparent: '#00000000'
     };
 
-    // ── UI 统一构建器 ──
     const mkText = (text, size, weight, color, opts = {}) => {
       const { family: fontFamily, ...restOpts } = opts;
-      return {
-        type: "text",
-        text: String(text ?? ""),
-        font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) },
-        textColor: color,
-        ...restOpts
-      };
+      return { type: "text", text: String(text ?? ""), font: { size, weight, ...(fontFamily ? { family: fontFamily } : {}) }, textColor: color, ...restOpts };
     };
     const mkRow    = (children, gap = 4, opts = {}) => ({ type: "stack", direction: "row", alignItems: "center", gap, children, ...opts });
     const mkIcon   = (src, color, size = 13) => ({ type: "image", src: `sf-symbol:${src}`, color, width: size, height: size });
     const mkSpacer = (length) => length != null ? { type: "spacer", length } : { type: "spacer" };
     const backgroundGradient = { type: 'linear', colors: C.bg, startPoint: { x: 0, y: 0 }, endPoint: { x: 1, y: 1 } };
 
-    // ── 严格超时熔断请求包装 (3500ms) ──
-    const TIMEOUT_MS = 3500;
-    const commonHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-    };
-
     const httpGet = async (url) => {
       try {
         const start = Date.now();
-        const resp = await ctx.http.get(url, { headers: commonHeaders, timeout: TIMEOUT_MS });
+        const resp = await ctx.http.get(url, { headers: commonHeaders, timeout: 3500 });
         const text = await resp.text();
         const json = JSON.parse(text);
         return { data: json.data || json, ping: Date.now() - start };
       } catch (e) { return { data: {}, ping: 0 }; }
     };
 
-    async function timed(fn, timeoutMs = TIMEOUT_MS) {
+    async function timed(fn, timeoutMs = 3500) {
       const start = Date.now();
       try {
         const result = await Promise.race([
-          fn(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
+          fn(), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
         ]);
         return { ...result, ms: Date.now() - start };
       } catch { return { code: 'ERR', ms: 0 }; }
     }
 
-    // 中号/小号模式 媒体与AI解锁探测函数
-    async function checkYouTube() { const res = await ctx.http.get(`https://www.youtube.com/generate_204`, { timeout: TIMEOUT_MS, headers: commonHeaders }).catch(() => null); return { code: res?.status === 204 ? 'OK' : 'ERR' }; }
-    async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/title/81280792`, { timeout: 4000, headers: commonHeaders, followRedirect: true }).catch(() => null); return { code: res?.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status !== 403 ? 'OK' : 'ERR' }; }
-    async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403 && res.status !== 429) ? 'OK' : 'ERR' }; }
-    async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4000, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
-    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
+    async function checkYouTube() { const res = await ctx.http.get(`https://www.youtube.com/generate_204`, { timeout: 3500, headers: commonHeaders }).catch(() => null); return { code: res?.status === 204 ? 'OK' : 'ERR' }; }
+    async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/generate_204`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res?.status === 204 || res?.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403) ? 'OK' : 'ERR' }; }
+    async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
+    async function checkChatGPT() { const res = await ctx.http.get(`https://ios.chat.openai.com/public-api/ping`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
+    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
+    async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
-    // ── 格式化辅助 ──
     const getFlagEmoji = (cc) => {
       if (!cc || cc === '--' || cc === 'XX') return "";
       const str = String(cc).toUpperCase();
@@ -128,14 +116,7 @@ export default async function (ctx) {
         const p = ctx.proxy;
         if (!p) return "";
         const proto = p.protocol || p.type || p.proxyType || "";
-        if (!proto) return "";
-        const map = {
-          "shadowsocks": "SS",    "ss": "SS",         "vmess": "VMess",
-          "vless": "VLESS",       "trojan": "Trojan",  "hysteria": "Hysteria",
-          "hysteria2": "Hysteria2","tuic": "TUIC",     "wireguard": "WireGuard",
-          "http": "HTTP",          "https": "HTTPS",   "socks5": "SOCKS5",
-          "anytls": "AnyTLS"
-        };
+        const map = { "shadowsocks": "SS", "ss": "SS", "vmess": "VMess", "vless": "VLESS", "trojan": "Trojan", "hysteria": "Hysteria", "hysteria2": "Hysteria2","tuic": "TUIC", "wireguard": "WireGuard", "http": "HTTP", "https": "HTTPS", "socks5": "SOCKS5", "anytls": "AnyTLS" };
         return map[String(proto).toLowerCase()] || String(proto).toUpperCase();
       } catch (e) { return ""; }
     };
@@ -146,7 +127,6 @@ export default async function (ctx) {
         d.ipv4?.address, d.ipv6?.address, d.ipv4?.gateway, d.wifi?.ssid, d.cellular?.radio
       ];
 
-      // 并发基础数据请求
       const [localResp, nodeResp, pureResp, ipv6Resp] = await Promise.all([
         httpGet('https://myip.ipip.net/json'),
         httpGet(`http://ip-api.com/json/?lang=zh-CN&_t=${Date.now()}`),
@@ -154,19 +134,17 @@ export default async function (ctx) {
         httpGet('https://api64.ipify.org?format=json')
       ]);
 
-      // 若为中号或小号模式，均请求解锁检测
       let yt, nf, dp, sp, gpt, cl, gm, gk;
       if (isMedium || isSmall) {
         [yt, nf, dp, sp, gpt, cl, gm, gk] = await Promise.all([
-          timed(checkYouTube), timed(checkNetflix, 5000), timed(checkDisney), timed(checkSpotify),
-          timed(checkChatGPT), timed(checkClaude, 5000), timed(checkGemini), timed(checkGrok)
+          timed(checkYouTube, 3500), timed(checkNetflix, 3500), timed(checkDisney, 4500), timed(checkSpotify, 3500),
+          timed(checkChatGPT, 3500), timed(checkClaude, 4500), timed(checkGemini, 3500), timed(checkGrok, 3500)
         ]);
       }
 
       const { data: local, ping: localPing } = localResp;
       const { data: node,  ping: nodePing  } = nodeResp;
 
-      // 精准侦测当前网络 IP 类型 (IPv4 或 v4 / v6)
       const publicIPv6Raw = ipv6Resp.data?.ip || '';
       const publicIPv6    = publicIPv6Raw.includes(':') ? publicIPv6Raw : '';
       const hasLocalIPv6  = !!internalIPv6;
@@ -190,9 +168,8 @@ export default async function (ctx) {
       const isDnsLeak  = hasProxy && (localCountryRaw.includes("中国") || localCountryRaw.includes("China")) && nodeCountryCode === "CN";
       const leakLabel  = isDnsLeak ? "⚠️ 泄漏" : "";
 
-      // ── 数据拼装 (追加统一的 IP 类型) ──
       const r1Parts = [internalIP || "未连接", gatewayIP !== internalIP ? gatewayIP : null].filter(Boolean);
-      r1Parts.push(`[${currentIpType}]`); // 追加精确检测出的 IP 类型
+      r1Parts.push(`[${currentIpType}]`); 
       const r1Content = r1Parts.join(" / ");
 
       const locStr    = Array.isArray(local.location) ? local.location.slice(0, 3).join('').trim() : '';
@@ -202,7 +179,6 @@ export default async function (ctx) {
       const asnStr    = node.as ? String(node.as).split(' ')[0] : "";
       const r3Content = [node.query || node.ip || "获取中...", nodeLoc, asnStr, proxyProtocol].filter(Boolean).join(" / ");
 
-      // 策略与结果映射
       const POLICY_REGION = {
         'YouTube': 'HK', 'Netflix': 'SG', 'Disney+': 'SG', 'Spotify': 'US',
         'ChatGPT': 'US', 'Claude':  'US', 'Gemini':  'US', 'Grok':    'US'
@@ -216,7 +192,6 @@ export default async function (ctx) {
         return '🚫';
       };
 
-      // ── 小号专属布局渲染 ──
       if (isSmall) {
         const r1Line2       = [gatewayIP !== internalIP ? gatewayIP : null, `[${currentIpType}]`].filter(Boolean).join(" ");
         const r2SmallContent = local.ip || "获取中...";
@@ -235,9 +210,7 @@ export default async function (ctx) {
         pushSmallRow('location.circle.fill',   C.blue,   r2SmallContent);
         pushSmallRow('network',                C.purple,  r3SmallContent);
         
-        // 流媒体
         pushSmallRow('play.tv.fill', C.blue, `YT ${uf(yt, 'YouTube')} NF ${uf(nf, 'Netflix')} DP ${uf(dp, 'Disney+')} SP ${uf(sp, 'Spotify')}`);
-        // AI
         pushSmallRow('cpu', C.purple, `GPT ${uf(gpt, 'ChatGPT')} CL ${uf(cl, 'Claude')} GM ${uf(gm, 'Gemini')} GK ${uf(gk, 'Grok')}`);
 
         const smallTitleStr = currentISP ? `${currentISP} · ${wifiSsid || radioType || "未连接"}` : (wifiSsid || radioType || "未连接");
@@ -257,13 +230,7 @@ export default async function (ctx) {
         };
       }
 
-      // ── 中号专属布局渲染 ──
-      const layout = {
-        fz: 12, icz: 13, lw: 52,
-        titleFz: 15, titleIcz: 16,
-        pingFz: 10, gap: 11,
-        padding: 12, spacerTop: 12
-      };
+      const layout = { fz: 12, icz: 13, lw: 52, titleFz: 15, titleIcz: 16, pingFz: 10, gap: 11, padding: 12, spacerTop: 12 };
 
       const buildHeader = () => mkRow([
         mkIcon(wifiSsid ? 'wifi' : (cellularRadio ? 'antenna.radiowaves.left.and.right' : 'wifi.slash'), C.main, layout.titleIcz),
@@ -276,10 +243,7 @@ export default async function (ctx) {
           mkRow([ mkIcon('globe.fill', nodColor, layout.pingFz), mkText(nodePing > 0 ? `${nodePing}` : "-", layout.pingFz, "bold", nodColor, { family: 'Menlo' }) ], 2)
         ], 4, { padding: [3, 6], borderRadius: 6, backgroundColor: C.pingBg }),
         mkSpacer(4),
-        mkRow([
-          mkIcon('clock', C.muted, 10), 
-          mkText(timeStr, 10, "bold", C.muted, { family: 'Menlo' })
-        ], 2)
+        mkRow([ mkIcon('clock', C.muted, 10), mkText(timeStr, 10, "bold", C.muted, { family: 'Menlo' }) ], 2)
       ], 4);
 
       const buildContentRow = (icon, color, label, content, contentColor = C.sub) => mkRow([
@@ -290,8 +254,7 @@ export default async function (ctx) {
       return {
         type: 'widget', padding: layout.padding, url: jumpUrl || undefined, backgroundGradient,
         children: [
-          buildHeader(),
-          mkSpacer(layout.spacerTop),
+          buildHeader(), mkSpacer(layout.spacerTop),
           { type: 'stack', direction: 'column', alignItems: 'start', gap: layout.gap, flex: 1, children: [
             buildContentRow('house.fill',           C.teal,   '内网', r1Content),
             buildContentRow('location.circle.fill', C.blue,   '本地', r2Content),
@@ -301,15 +264,12 @@ export default async function (ctx) {
           ]}
         ]
       };
-
     } catch (err) {
       return {
         type: 'widget', padding: 12, backgroundGradient,
         children: [
-          mkText('网络面板崩溃或超时 ⚠️', 14, "heavy", C.red),
-          mkSpacer(4),
-          mkText(String(err.message || err), 11, "medium", C.muted, { maxLines: 5 }),
-          mkSpacer(),
+          mkText('网络面板崩溃或超时 ⚠️', 14, "heavy", C.red), mkSpacer(4),
+          mkText(String(err.message || err), 11, "medium", C.muted, { maxLines: 5 }), mkSpacer(),
           mkRow([ mkSpacer(), mkIcon('clock', C.muted, 10), mkSpacer(4), mkText(timeStr, 9, "bold", C.muted, { family: 'Menlo' }) ])
         ]
       };
@@ -320,15 +280,6 @@ export default async function (ctx) {
     // 🔴 大号模式
     // =========================================================================
     
-    // ── 基础工具与格式化 ──
-    const TIMEOUT_MS = 3000;
-    const commonHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache'
-    };
-
     const getFlagEmoji = (cc) => {
       if (!cc || cc === 'XX' || cc === '--' || cc === 'CN') return '🇨🇳';
       return cc.toUpperCase().replace(/./g, char => String.fromCodePoint(char.charCodeAt(0) + 127397));
@@ -352,9 +303,7 @@ export default async function (ctx) {
         if (!context) return mode;
         const p = context.proxy || context.node || context.policy || context.outbound || context.egern;
         if (typeof p === 'string') return p;
-        if (p && typeof p === 'object') {
-          return p.name || p.title || p.remark || p.policy || "Rule";
-        }
+        if (p && typeof p === 'object') return p.name || p.title || p.remark || p.policy || "Rule";
       } catch (e) {}
       return mode;
     };
@@ -362,23 +311,23 @@ export default async function (ctx) {
     const now = new Date();
     const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
-    // ── 色彩系统 (大号独立) ──
     const C = {
-      bg: { light: '#F2F2F7', dark: '#0A0C10' },
+      bg: { light: '#F9F9FB', dark: '#0A0C10' },
       cardBg: { light: '#FFFFFF', dark: '#12151D' },
-      cardBorder: { light: '#EAEAEF', dark: '#1F2430' },
-      textMain: { light: '#1C1C1E', dark: '#FFFFFF' },
-      textSub: { light: '#8E8E93', dark: '#8B949E' },
-      blue: { light: '#007AFF', dark: '#58A6FF' },
-      green: { light: '#2EA146', dark: '#3FB950' },
-      purple: { light: '#AF52DE', dark: '#BC8CFF' },
-      red: { light: '#FF3B30', dark: '#F85149' },
-      warn: { light: '#FF9500', dark: '#F5A623' },
-      badgeBg: { light: '#F4F5F8', dark: '#1C212B' },
+      cardBorder: { light: '#E8E8ED', dark: '#1F2430' },
+      textMain: { light: '#111111', dark: '#FFFFFF' },
+      textSub: { light: '#7C7C80', dark: '#8B949E' },
+      blue: { light: '#0066FF', dark: '#58A6FF' },
+      green: { light: '#248A3D', dark: '#3FB950' },
+      purple: { light: '#8C32E6', dark: '#BC8CFF' },
+      red: { light: '#E3241B', dark: '#F85149' },
+      warn: { light: '#E87D00', dark: '#F5A623' },
+      badgeBg: { light: '#F0F0F4', dark: '#1C212B' },
       greenBadge: { light: '#E8F5E9', dark: '#1A3320' }
     };
 
-    // ── 网络请求与检测逻辑 ──
+    const isDarkMode = ctx.device?.isDarkMode || false;
+
     const httpGet = async (url) => {
       const start = Date.now();
       try {
@@ -390,10 +339,7 @@ export default async function (ctx) {
     async function timed(fn, timeoutMs = TIMEOUT_MS) {
       const start = Date.now();
       try {
-        const result = await Promise.race([
-          fn(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs))
-        ]);
+        const result = await Promise.race([ fn(), new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), timeoutMs)) ]);
         return { ...result, ms: Date.now() - start };
       } catch { return { code: 'ERR', ms: 0 }; }
     }
@@ -403,36 +349,27 @@ export default async function (ctx) {
       const p1 = ctx.http.get('https://myip.ipip.net/json', { headers: commonHeaders, timeout: 2500 })
         .then(async r => { 
           const j = JSON.parse(await r.text()); 
-          if (j.data?.ip) {
-            const loc = j.data.location || [];
-            const foundIsp = loc.find(v => /(移动|联通|电信|广电)/.test(v)) || '';
-            return { ip: j.data.ip, loc, isp: foundIsp }; 
-          }
+          if (j.data?.ip) return { ip: j.data.ip, loc: j.data.location || [], isp: (j.data.location || []).find(v => /(移动|联通|电信|广电)/.test(v)) || '' }; 
           throw 1; 
         });
       const p2 = ctx.http.get('https://forge.speedtest.cn/api/location/info', { headers: commonHeaders, timeout: 2500 })
         .then(async r => { const j = JSON.parse(await r.text()); if (j.ip) return { ip: j.ip, loc: ["中国", j.province, j.city], isp: j.isp }; throw 1; });
-      const p3 = ctx.http.get('https://qifu-api.baidubce.com/ip/local/geo/v1/api', { headers: commonHeaders, timeout: 2500 })
-        .then(async r => { const j = JSON.parse(await r.text()); if (j.data?.ip) return { ip: j.data.ip, loc: ["中国", j.data.prov, j.data.city], isp: j.data.isp }; throw 1; });
-
+      
       return new Promise((resolve) => {
         let errs = 0;
-        const check = () => { if(++errs === 3) resolve({ data: {}, ping: 0 }); };
+        const check = () => { if(++errs === 2) resolve({ data: {}, ping: 0 }); };
         p1.then(d => resolve({ data: d, ping: Date.now() - start })).catch(check);
         p2.then(d => resolve({ data: d, ping: Date.now() - start })).catch(check);
-        p3.then(d => resolve({ data: d, ping: Date.now() - start })).catch(check);
       });
     };
 
+    // 🚀 核心替换：应用 Profile.yaml 中发现的无阻断接口
     async function checkYouTube() { const res = await ctx.http.get(`https://www.youtube.com/generate_204`, { timeout: TIMEOUT_MS, headers: commonHeaders }).catch(() => null); return { code: res?.status === 204 ? 'OK' : 'ERR' }; }
-    async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/title/81280792`, { timeout: 5000, headers: commonHeaders, followRedirect: true }).catch(() => null); return { code: res?.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status !== 403 ? 'OK' : 'ERR' }; }
+    async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/generate_204`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res?.status === 204 || res?.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403) ? 'OK' : 'ERR' }; }
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403 && res.status !== 429) ? 'OK' : 'ERR' }; }
-    async function checkClaude() { 
-      const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 5000, headers: commonHeaders, followRedirect: false }).catch(() => null); 
-      return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; 
-    }
+    async function checkChatGPT() { const res = await ctx.http.get(`https://ios.chat.openai.com/public-api/ping`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
     async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
@@ -442,20 +379,18 @@ export default async function (ctx) {
     const wifiSsid = d.wifi?.ssid;
     const cellularRadio = d.cellular?.radio;
     const hasLocalIPv6 = !!d.ipv6?.address;
-
     const currentPolicy = parseProxyMode(ctx); 
 
     const [
       localInfo, nodeInfo, pureInfo, ipv6Resp,
-      youtube, netflix, disney, spotify, 
-      chatgpt, claude, gemini, grok
+      youtube, netflix, disney, spotify, chatgpt, claude, gemini, grok
     ] = await Promise.all([
       fetchLocalInfo(),
       httpGet(`http://ip-api.com/json/?lang=zh-CN&_t=${Date.now()}`),
       httpGet('https://my.ippure.com/v1/info'),
       httpGet('https://api64.ipify.org?format=json'),
-      timed(checkYouTube), timed(checkNetflix, 5000), timed(checkDisney), timed(checkSpotify),
-      timed(checkChatGPT), timed(checkClaude, 5000), timed(checkGemini), timed(checkGrok)
+      timed(checkYouTube, TIMEOUT_MS), timed(checkNetflix, TIMEOUT_MS), timed(checkDisney, 4500), timed(checkSpotify, TIMEOUT_MS),
+      timed(checkChatGPT, TIMEOUT_MS), timed(checkClaude, 4500), timed(checkGemini, TIMEOUT_MS), timed(checkGrok, TIMEOUT_MS)
     ]);
 
     const local = localInfo.data || {};
@@ -465,35 +400,24 @@ export default async function (ctx) {
     const cc = (node.countryCode || "US").toUpperCase();
     const nodeIsp = node.isp || node.org || "未知ISP";
     
-    // 纯净度计算与颜色分级
     const riskScore = pureInfo.data?.fraudScore || 0;
     const pureScore = 100 - riskScore;
-    const pureColor = pureScore >= 80 ? C.green : (pureScore >= 50 ? C.warn : C.red);
+    const resolveThemeColor = (colorObj) => isDarkMode ? colorObj.dark : colorObj.light;
+    const activePureColorHex = pureScore >= 80 ? resolveThemeColor(C.green) : (pureScore >= 50 ? resolveThemeColor(C.warn) : resolveThemeColor(C.red));
     
     const isResidential = pureInfo.data?.isResidential;
+    const residentialColorHex = isResidential ? resolveThemeColor(C.green) : resolveThemeColor(C.red);
     const asnStr = node.as ? String(node.as).split(' ')[0] : "未知"; 
-
     const publicIPv6 = ipv6Resp.data?.ip?.includes(':') ? ipv6Resp.data.ip : '';
     const currentIpType = (hasLocalIPv6 || publicIPv6) ? 'v4 / v6' : 'IPv4';
-
     const locArr = Array.isArray(local.loc) ? local.loc : [];
     
     let sysCarrier = d.cellular?.carrier || "";
-    if (sysCarrier && (sysCarrier.toLowerCase() === 'unknown' || sysCarrier.includes('--') || sysCarrier === '未知')) {
-      sysCarrier = "";
-    }
+    if (sysCarrier && (sysCarrier.toLowerCase() === 'unknown' || sysCarrier.includes('--') || sysCarrier === '未知')) sysCarrier = "";
     
     let apiISP = local.isp || "";
-    if (apiISP && (apiISP.toLowerCase() === 'unknown' || apiISP.includes('--') || apiISP === '未知')) {
-      apiISP = "";
-    }
-    
-    if (!apiISP && locArr.length > 0) {
-      const locISP = locArr.find(v => /(移动|联通|电信|广电|mobile|telecom|unicom)/i.test(String(v)));
-      if (locISP) {
-        apiISP = locISP;
-      }
-    }
+    if (apiISP && (apiISP.toLowerCase() === 'unknown' || apiISP.includes('--') || apiISP === '未知')) apiISP = "";
+    if (!apiISP && locArr.length > 0) { const locISP = locArr.find(v => /(移动|联通|电信|广电|mobile|telecom|unicom)/i.test(String(v))); if (locISP) apiISP = locISP; }
     
     const rawISP = wifiSsid ? (apiISP || sysCarrier) : (sysCarrier || apiISP);
     const currentISP = fmtISP(rawISP);
@@ -501,13 +425,8 @@ export default async function (ctx) {
 
     let exactLocation = "未知";
     if (locArr.length > 0) {
-      let prov = locArr[1] || "";
-      let city = locArr[2] || "";
-      if (prov || city) {
-        exactLocation = (prov === city) ? prov : (prov + city); 
-      } else {
-        exactLocation = locArr[0] || "中国";
-      }
+      let prov = locArr[1] || ""; let city = locArr[2] || "";
+      exactLocation = (prov || city) ? (prov === city ? prov : (prov + city)) : (locArr[0] || "中国");
     }
     
     const rawRadio  = cellularRadio ? String(cellularRadio).toUpperCase().trim() : "";
@@ -534,7 +453,6 @@ export default async function (ctx) {
       { name: 'Gemini',  info: resultInfo(gemini, 'Gemini') }, { name: 'Grok',    info: resultInfo(grok, 'Grok') }
     ];
 
-    // ── UI 渲染辅助函数 ──
     const mkRow = (children, opts = {}) => ({ type: 'stack', direction: 'row', alignItems: 'center', ...opts, children });
     const mkCol = (children, opts = {}) => ({ type: 'stack', direction: 'column', ...opts, children });
     const mkText = (text, size, color, weight = 'regular', opts = {}) => ({ type: 'text', text: String(text), textColor: color, font: { size, weight }, ...opts });
@@ -543,12 +461,13 @@ export default async function (ctx) {
 
     const responseColor = (ms, available) => !available ? C.red : (ms >= 1500 ? C.warn : C.textSub);
 
-    const renderDataBlock = (icon, title, value, valColor = C.textMain) =>
-      mkCol([
+    const renderDataBlock = (icon, title, value, valColor = C.textMain) => {
+      return mkCol([
         mkRow([ mkIcon(icon, C.textSub, 9), mkSpacer(4), mkText(title, 9, C.textSub, 'bold') ], { justifyContent: 'center' }),
-        mkSpacer(4),
-        mkText(value, 10, valColor, 'regular', { maxLines: 1, minScale: 0.3 }) 
+        mkSpacer(5), 
+        mkText(value, 10, valColor, 'bold', { maxLines: 1, minScale: 0.3 })
       ], { alignItems: 'center', justifyContent: 'center', padding: [6, 4], backgroundColor: C.badgeBg, borderRadius: 6, flex: 1 });
+    };
 
     const ServiceBlock = (item) => {
       const isOk = item.info.available;
@@ -566,30 +485,21 @@ export default async function (ctx) {
       ], { backgroundColor: C.cardBg, borderRadius: 8, padding: [8, 8], flex: 1, borderWidth: 1, borderColor: C.cardBorder });
     };
 
-    // ── 共享组件定义 ──
     const headerRow = mkRow([
       mkIcon('waveform.path.ecg', C.blue, 12), mkSpacer(6),
       mkText('网络雷达', 12, C.textMain, 'bold'),
       mkSpacer(),
-      mkRow([
-        mkIcon('shield.fill', C.purple, 9), mkSpacer(4),
-        mkText(currentPolicy, 9, C.textMain, 'bold', { maxLines: 1 })
-      ], { padding: [3, 8], backgroundColor: C.badgeBg, borderRadius: 6 }),
+      mkRow([ mkIcon('shield.fill', C.purple, 9), mkSpacer(4), mkText(currentPolicy, 9, C.textMain, 'bold', { maxLines: 1 }) ], { padding: [3, 8], backgroundColor: C.badgeBg, borderRadius: 6 }),
       mkSpacer(8),
-      mkRow([
-        mkIcon('clock', C.textSub, 10), mkSpacer(3),
-        mkText(timeStr, 10, C.textSub, 'bold', { family: 'Menlo' })
-      ])
+      mkRow([ mkIcon('clock', C.textSub, 10), mkSpacer(3), mkText(timeStr, 10, C.textSub, 'bold', { family: 'Menlo' }) ])
     ]);
 
     const localBox = mkCol([
       mkRow([
         mkIcon(netIconName, C.blue, wifiSsid ? 26 : 22), mkSpacer(8),
         mkCol([
-          mkText(netTitle, 13, C.textMain, 'bold', { maxLines: 1, minScale: 0.3 }), 
-          mkSpacer(4),
-          mkRow([ mkIcon('iphone', C.textSub, 10), mkSpacer(4), mkText(localIP, 10, C.textSub, 'regular', { maxLines: 1 }) ]),
-          mkSpacer(2), 
+          mkText(netTitle, 13, C.textMain, 'bold', { maxLines: 1, minScale: 0.3 }), mkSpacer(4),
+          mkRow([ mkIcon('iphone', C.textSub, 10), mkSpacer(4), mkText(localIP, 10, C.textSub, 'regular', { maxLines: 1 }) ]), mkSpacer(2), 
           mkRow([ mkIcon('wifi.router', C.textSub, 11), mkSpacer(3), mkText(gatewayIP, 10, C.textSub, 'regular', { maxLines: 1 }) ])
         ], { alignItems: 'start', flex: 1 }) 
       ]),
@@ -598,7 +508,7 @@ export default async function (ctx) {
         renderDataBlock('network', '本地IP', local.ip || '获取中...'), mkSpacer(6), 
         renderDataBlock('stopwatch', '内网延迟', localInfo.ping ? `${localInfo.ping} ms` : '-- ms', C.green)
       ]),
-      mkSpacer(6),
+      mkSpacer(8), 
       mkRow([
         renderDataBlock('mappin.and.ellipse', '地理位置', exactLocation), mkSpacer(6), 
         renderDataBlock('globe', 'IP类型', currentIpType) 
@@ -609,37 +519,29 @@ export default async function (ctx) {
       mkRow([
         mkText(getFlagEmoji(cc), 26, C.textMain), mkSpacer(8),
         mkCol([
-          mkText(proxyIP, 13, C.textMain, 'bold', { maxLines: 1, minScale: 0.3 }),
-          mkSpacer(2),
-          mkRow([ mkIcon('building.2', C.textSub, 10), mkSpacer(4), mkText(nodeIsp, 10, C.textSub, 'regular', { maxLines: 1 }) ]), 
-          mkSpacer(2),
+          mkText(proxyIP, 13, C.textMain, 'bold', { maxLines: 1, minScale: 0.3 }), mkSpacer(2),
+          mkRow([ mkIcon('building.2', C.textSub, 10), mkSpacer(4), mkText(nodeIsp, 10, C.textSub, 'regular', { maxLines: 1 }) ]), mkSpacer(2),
           mkRow([ mkIcon('server.rack', C.textSub, 10), mkSpacer(4), mkText(asnStr, 9, C.textSub, 'regular', { maxLines: 1 }) ]) 
         ], { alignItems: 'start', flex: 1 })
       ]),
       mkSpacer(),
       mkRow([
-        renderDataBlock('building.2.fill', 'IP属性', isResidential ? '住宅IP' : '商业机房', C.green), mkSpacer(6),
+        renderDataBlock('building.2.fill', 'IP属性', isResidential ? '住宅IP' : '机房IP', residentialColorHex), mkSpacer(6),
         renderDataBlock('stopwatch', '节点延迟', nodeInfo.ping ? `${nodeInfo.ping} ms` : '-- ms', C.purple)
       ]),
-      mkSpacer(6),
+      mkSpacer(8), 
       mkRow([
-        renderDataBlock('checkmark.shield.fill', '原生IP', isResidential ? '原生' : '非原生', C.green), mkSpacer(6),
-        renderDataBlock('shield.checkerboard', '纯净评分', `${pureScore} / 100`, pureColor) 
+        renderDataBlock('checkmark.shield.fill', '原生状态', isResidential ? '原生' : '非原生', residentialColorHex), mkSpacer(6),
+        renderDataBlock('shield.checkerboard', '纯净评分', `${pureScore} / 100`, activePureColorHex) 
       ])
     ], { flex: 1, backgroundColor: C.cardBg, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: C.cardBorder });
 
-    // 返回大号模式原装拼图
     return {
-      type: 'widget',
-      backgroundColor: C.bg,
-      padding: 12,
+      type: 'widget', backgroundColor: C.bg, padding: 12,
       children: [
-        headerRow,
-        mkSpacer(10),
-        mkRow([ localBox, mkSpacer(8), proxyBox ], { flex: 1 }), 
-        mkSpacer(10),
-        mkRow(allServices.slice(0, 4).map(ServiceBlock), { gap: 8 }),
-        mkSpacer(8),
+        headerRow, mkSpacer(10),
+        mkRow([ localBox, mkSpacer(8), proxyBox ], { flex: 1 }), mkSpacer(10),
+        mkRow(allServices.slice(0, 4).map(ServiceBlock), { gap: 8 }), mkSpacer(8),
         mkRow(allServices.slice(4, 8).map(ServiceBlock), { gap: 8 })
       ]
     };
