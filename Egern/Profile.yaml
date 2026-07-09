@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.07.07 18:30
+# ⏱️ 更新时间: 2026.07.10 05:10
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -97,6 +97,9 @@ dns:
     DNSPod:
       - https://doh.pub/dns-query
       - https://sm2.doh.pub/dns-query
+    ByteDNS:
+      - udp://180.184.1.1:53
+      - udp://180.184.2.2:53
     Google:
       - https://8.8.8.8/dns-query
       - https://8.8.4.4/dns-query
@@ -122,6 +125,20 @@ dns:
     - domain_suffix: { match: wechat.com, value: DNSPod }
     - domain_suffix: { match: weixin.com, value: DNSPod }
     - domain_suffix: { match: tencent.com, value: DNSPod }
+    # 字节系
+    - domain_suffix: { match: bytedance.com, value: ByteDNS }
+    - domain_suffix: { match: bytecdn.com, value: ByteDNS }
+    - domain_suffix: { match: bytecdn.cn, value: ByteDNS }
+    - domain_suffix: { match: bytedns.net, value: ByteDNS }
+    - domain_suffix: { match: bytednsdoc.com, value: ByteDNS }
+    - domain_suffix: { match: douyin.com, value: ByteDNS }
+    - domain_suffix: { match: douyincdn.com, value: ByteDNS }
+    - domain_suffix: { match: douyinvod.com, value: ByteDNS }
+    - domain_suffix: { match: pstatp.com, value: ByteDNS }
+    - domain_suffix: { match: snssdk.com, value: ByteDNS }
+    - domain_suffix: { match: amemv.com, value: ByteDNS }
+    - domain_suffix: { match: toutiao.com, value: ByteDNS }
+    - domain_suffix: { match: ixigua.com, value: ByteDNS }
     # 局域网及本地兜底
     - domain_suffix: { match: local, value: system }
     - domain_suffix: { match: lan, value: system }
@@ -161,7 +178,7 @@ policy_groups:
       name: 全部节点
       type: select
       urls: [https://sub.store/download/collection/AllServer?target=Egern]
-      ip_version: dual_stack  # 新增：节点级 IP 版本策略（可选：dual_stack, ipv4_only, ipv6_only, ipv4_prefer, ipv6_prefer）
+      ip_version: dual_stack
       icon: 🌹
       hidden: true
 
