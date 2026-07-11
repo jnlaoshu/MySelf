@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.07.10 05:10
+# ⏱️ 更新时间: 2026.07.11 11:00
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -71,16 +71,28 @@ direct_latency_test_url: http://www.apple.com/library/test/success.html
 dns:
   public_ip_lookup_url: https://ifconfig.me/ip
 
-  # 防 DNS 投毒
+  # 防 DNS 投毒 (完整保留地址段)
   block_ips:
-    - 0.0.0.0/8
-    - 10.0.0.0/8
-    - 127.0.0.0/8
-    - 172.16.0.0/12
-    - 192.168.0.0/16
-    - 224.0.0.0/4
-    - ::/128
-    - ::1/128
+    - 0.0.0.0/8           # 本网段
+    - 10.0.0.0/8          # 私有网络 A 类
+    - 100.64.0.0/10       # 运营商 CGNAT
+    - 127.0.0.0/8         # 环回地址
+    - 169.254.0.0/16      # 链路本地
+    - 172.16.0.0/12       # 私有网络 B 类
+    - 192.0.0.0/24        # IETF 协议分配
+    - 192.0.2.0/24        # TEST-NET-1 文档地址
+    - 192.168.0.0/16      # 私有网络 C 类
+    - 198.18.0.0/15       # 基准测试
+    - 198.51.100.0/24     # TEST-NET-2 文档地址
+    - 203.0.113.0/24      # TEST-NET-3 文档地址
+    - 224.0.0.0/4         # 组播地址
+    - 240.0.0.0/4         # 保留地址
+    - 255.255.255.255/32  # 广播地址
+    - ::/128              # 未指定地址
+    - ::1/128             # 环回地址
+    - fc00::/7            # IPv6 私有地址
+    - fe80::/10           # IPv6 链路本地
+    - ff00::/8            # IPv6 组播
 
   hosts:
     iosapps.itunes.apple.com:
@@ -116,15 +128,20 @@ dns:
     - domain_suffix: { match: aliapp.org, value: AliDNS }
     - domain_suffix: { match: alicdn.com, value: AliDNS }
     - domain_suffix: { match: aliyun.com, value: AliDNS }
+    - domain_suffix: { match: aliyuncs.com, value: AliDNS }
     - domain_suffix: { match: taobao.com, value: AliDNS }
     - domain_suffix: { match: tmall.com, value: AliDNS }
     - domain_suffix: { match: amap.com, value: AliDNS }
     - domain_suffix: { match: ele.me, value: AliDNS }
+    - domain_suffix: { match: dingtalk.com, value: AliDNS }
     # 腾讯系
     - domain_suffix: { match: qq.com, value: DNSPod }
     - domain_suffix: { match: wechat.com, value: DNSPod }
     - domain_suffix: { match: weixin.com, value: DNSPod }
     - domain_suffix: { match: tencent.com, value: DNSPod }
+    - domain_suffix: { match: qcloud.com, value: DNSPod }
+    - domain_suffix: { match: myqcloud.com, value: DNSPod }
+    - domain_suffix: { match: tencdns.cn, value: DNSPod }
     # 字节系
     - domain_suffix: { match: bytedance.com, value: ByteDNS }
     - domain_suffix: { match: bytecdn.com, value: ByteDNS }
@@ -146,6 +163,8 @@ dns:
     - domain_suffix: { match: in-addr.arpa, value: system }
     - domain_suffix: { match: internal, value: system }
     - domain_suffix: { match: test, value: system }
+    - domain_suffix: { match: example, value: system }
+    - domain_suffix: { match: localhost, value: system }
     # 国内域名优先
     - domain_suffix: { match: cn, value: bootstrap }
     # Google 分流
