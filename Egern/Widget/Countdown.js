@@ -35,29 +35,34 @@ const Lunar = {
   mDays(y, m) { return (this.info[y - 1900] & (0x10000 >> m)) ? 30 : 29; }
 };
 
+// 增量更新的农历缓存
 let lunarCumulativeCache = null;
 function ensureLunarCumulative(maxYear) {
-  if (lunarCumulativeCache && lunarCumulativeCache.maxYear >= maxYear) return;
-  lunarCumulativeCache = { maxYear, off: new Map() };
-  let off = 0;
-  for (let i = 1900; i <= maxYear; i++) {
-    lunarCumulativeCache.off.set(i, off);
-    off += Lunar.lDays(i);
+  if (!lunarCumulativeCache) {
+    lunarCumulativeCache = { maxYear: 1899, off: new Map([[1899, 0]]) };
+  }
+  let y = lunarCumulativeCache.maxYear + 1;
+  while (y <= maxYear) {
+    const prevOff = lunarCumulativeCache.off.get(y - 1);
+    lunarCumulativeCache.off.set(y, prevOff + Lunar.lDays(y - 1));
+    lunarCumulativeCache.maxYear = y;
+    y++;
   }
 }
 
-function estimateCharWidth(ch) {
+// 字宽估算（小尺寸下英文系数适当调高，避免行数低估）
+function estimateCharWidth(ch, smallMode = false) {
   const code = ch.charCodeAt(0);
   if (code >= 0x4e00 && code <= 0x9fff) return 1;
   if (code >= 0x3000 && code <= 0x303f) return 1;
   if (code >= 0xff00 && code <= 0xffef) return 1;
-  return 0.55;
+  return smallMode ? 0.6 : 0.55;
 }
 
-function estimateTextLines(text, fontSize, availableWidth) {
+function estimateTextLines(text, fontSize, availableWidth, smallMode = false) {
   if (!text || availableWidth <= 0) return 1;
   let totalWidth = 0;
-  for (const ch of text) totalWidth += estimateCharWidth(ch) * fontSize;
+  for (const ch of text) totalWidth += estimateCharWidth(ch, smallMode) * fontSize;
   return Math.max(1, Math.ceil(totalWidth / availableWidth));
 }
 
@@ -126,6 +131,12 @@ export default async function (ctx) {
   const refreshTimeStr = `${pad(M)}.${pad(D)} ${pad(currentHour)}:${pad(bjDate.getUTCMinutes())}`;
   const smallRefreshTimeStr = `${pad(M)}.${pad(D)}`;
 
+  // 检查公历日期合法性
+  const isValidDate = (y, m, d) => {
+    const test = new Date(Date.UTC(y, m - 1, d));
+    return test.getUTCMonth() + 1 === m && test.getUTCDate() === d;
+  };
+
   const getFinanceDate = (y, monthIndex, nth, targetDow) => {
     const firstDow = new Date(Date.UTC(y, monthIndex, 1)).getUTCDay();
     let diff = targetDow - firstDow;
@@ -141,17 +152,19 @@ export default async function (ctx) {
     }
     return d;
   };
+
   const getCustomDate = (y, dateStr, fallbackFn) => {
     if (!dateStr || typeof dateStr !== 'string') return fallbackFn ? fallbackFn() : null;
     const parts = dateStr.split("/");
     if (parts.length !== 2) return fallbackFn ? fallbackFn() : null;
     const m = Number(parts[0]), d = Number(parts[1]);
-    if (!m || !d || m > 12 || d > 31) return fallbackFn ? fallbackFn() : null;
+    if (!m || !d || !isValidDate(y, m, d)) return fallbackFn ? fallbackFn() : null;
     return YMD(y, m, d);
   };
+
   const l2s = (y, m, d) => {
     ensureLunarCumulative(y + 1);
-    let off = (lunarCumulativeCache.off.get(y) ?? 0);
+    let off = lunarCumulativeCache.off.get(y) ?? 0;
     const lp = Lunar.info[y - 1900] & 0xf;
     for (let i = 1; i < m; i++) {
       off += Lunar.mDays(y, i);
@@ -160,6 +173,7 @@ export default async function (ctx) {
     const date = new Date(Date.UTC(1900, 0, 31) + (off + d - 1) * 86400000);
     return YMD(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
   };
+
   const getFests = (y) => {
     const term = n => {
       const t = Lunar.term(y, n);
@@ -185,6 +199,7 @@ export default async function (ctx) {
         return YMD(s.getUTCFullYear(), s.getUTCMonth() + 1, s.getUTCDate());
       });
       if (springDate) legal.push(["春假", springDate, 3]);
+      // 秋假默认：11月第二个星期三（若不符合预期，请在环境变量中直接指定 AUTUMN_BREAK_DATE）
       const autumnDate = getCustomDate(y, autumnDateStr, () => {
         const nov1 = new Date(Date.UTC(y, 10, 1));
         return YMD(y, 11, 1 + ((3 - nov1.getUTCDay() + 7) % 7) + 7);
@@ -255,6 +270,7 @@ export default async function (ctx) {
       const ms   = nextFinanceDate(nth, dow);
       const d    = new Date(ms);
       const diff = Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - todayMs) / 86400000);
+      // 当日15:00前显示为“今日”，15:00后视为已发生故消失
       if (diff <= 0 && diff > -1 && currentHour < 15) {
         todayFinance.add(name);
         if (isSmall) result.exclusive.set(name, { name, diff, priority: getPriority(name, "exclusive") + 100, cat: "exclusive" });
@@ -297,15 +313,20 @@ export default async function (ctx) {
     const fontSize = 12;
     const textAvailableWidth = widgetWidth - padding * 2;
     const lineHeight = fontSize * 1.5;
-    const lines = estimateTextLines(smallText, fontSize, textAvailableWidth);
+    // 小尺寸模式下英文宽度系数稍大，防止低估行数
+    let lines = estimateTextLines(smallText, fontSize, textAvailableWidth, true);
     const textAvailableHeight = widgetHeight - padding * 2 - titleHeight - gapTitleBody;
 
     let lineSpacing = 0;
     if (lines > 1) {
-      const idealSpacing = (textAvailableHeight - lineHeight * lines) / (lines - 1);
+      let idealSpacing = (textAvailableHeight - lineHeight * lines) / (lines - 1);
       const maxSpacing = lines <= 3 ? 14 : lines === 4 ? 12 : lines === 5 ? 10 : 8;
       lineSpacing = Math.min(idealSpacing, maxSpacing);
       lineSpacing = Math.max(0, lineSpacing);
+      // 复核总高度，若溢出则缩小行间距
+      while (lineSpacing > 0 && (lineHeight * lines + lineSpacing * (lines - 1)) > textAvailableHeight) {
+        lineSpacing = Math.max(0, lineSpacing - 1);
+      }
     }
 
     return {
@@ -385,6 +406,10 @@ export default async function (ctx) {
     const idealSpacing = (gridAvailableHeight - lineHeight * totalLines) / totalGaps;
     dynamicLineSpacing = Math.min(idealSpacing, totalLines <= 3 ? 14 : totalLines === 4 ? 12 : totalLines === 5 ? 10 : 8);
     dynamicLineSpacing = Math.max(0, dynamicLineSpacing);
+    // 溢出保护
+    while (dynamicLineSpacing > 0 && (lineHeight * totalLines + dynamicLineSpacing * totalGaps) > gridAvailableHeight) {
+      dynamicLineSpacing = Math.max(0, dynamicLineSpacing - 0.5);
+    }
   }
 
   const gridRows = textsWithMeta.map(({ cfg, rawText }) => {
