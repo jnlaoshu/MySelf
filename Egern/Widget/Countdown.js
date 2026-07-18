@@ -9,7 +9,7 @@
  * - 支持最多 6 个自定义纪念日，可单独配置清明节、春假、秋假日期。
  * - 支持节日按天数及优先级排序，并可将指定节日跨分类置顶显示。
  * - 根据工作日/周末/当天节日状态自动切换背景渐变色。
- * - 小号模式以连续文本流展示前 11 个节日，行间距动态优化；中大号模式按分类分组展示。
+ * - 小号模式以连续文本流展示前 11 个节日，行间距动态优化；中大号模式按分类分组展示，自动换行并智能裁剪条目以避免截断。
  *
  * 环境变量 (可选)：
  * - EXCLUSIVE_NAME_1~6 / EXCLUSIVE_DATE_1~6 : 自定义纪念日
@@ -353,16 +353,32 @@ export default async function (ctx) {
   const gapHeaderGrid = 14;
   const gridAvailableHeight = widgetHeight - padding * 2 - titleAreaHeight - gapHeaderGrid;
 
-  const textsWithMeta = CATEGORY_CONFIG.map(cfg => {
+  let textsWithMeta = CATEGORY_CONFIG.map(cfg => {
     const limit = cfg.key === "exclusive" ? (isLarge ? 7 : 6) : (isLarge ? 7 : 3);
     const rawText = formatStr(cfg.key, limit);
     if (!rawText) return null;
     const lines = estimateTextLines(rawText, layoutConfig.fz, widgetWidth - padding * 2 - layoutConfig.lw - 4);
-    return { cfg, rawText, lines };
+    return { cfg, rawText, lines, limit };
   }).filter(Boolean);
 
-  const totalLines = textsWithMeta.reduce((sum, m) => sum + m.lines, 0);
+  let totalLines = textsWithMeta.reduce((sum, m) => sum + m.lines, 0);
   const lineHeight = layoutConfig.fz * 1.5;
+
+  // 自动裁剪专属分类，确保所有文本不超出组件高度
+  const maxAttempts = 10;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    if (totalLines * lineHeight <= gridAvailableHeight) break;
+    const exclIdx = textsWithMeta.findIndex(m => m.cfg.key === 'exclusive');
+    if (exclIdx === -1) break;
+    const excl = textsWithMeta[exclIdx];
+    if (excl.limit <= 1) break;
+    excl.limit -= 1;
+    excl.rawText = formatStr('exclusive', excl.limit);
+    if (!excl.rawText) break;
+    excl.lines = estimateTextLines(excl.rawText, layoutConfig.fz, widgetWidth - padding * 2 - layoutConfig.lw - 4);
+    totalLines = textsWithMeta.reduce((sum, m) => sum + m.lines, 0);
+  }
+
   let dynamicLineSpacing = 0;
   if (totalLines > textsWithMeta.length) {
     const totalGaps = totalLines - textsWithMeta.length;
