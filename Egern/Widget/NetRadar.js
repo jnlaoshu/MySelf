@@ -1,17 +1,18 @@
 /**
  * ==========================================
  * 🌐 网络雷达 (NetRadar) 小组件
- * * ✨ 【功能概览】
+ * 
+ * ✨ 【功能概览】
  * • 三尺寸自适应独立排版：
- * - 小号：极简美学布局。标题单行自适应防换行；极限压缩信息行距；底部独创极简版媒体与 AI 解锁状态（简称+国旗）。
- * - 中号：清爽参数面板。时间指示器置顶右侧；完美拉大行间距提升呼吸感；精准呈现流媒体与 AI 解锁状况（全称+国旗）。
- * - 大号：沉浸式卡片网格。物理级隔离原版布局，全量展示节点深层数据与 8 通道并发解锁探测图谱。
- * • 核心引擎：内网/本地/节点精准 IP 穿透识别（新增精准 IPv4 / v6 双栈标识）及节点纯净度/风险评分探测。
+ *   - 小号：极简美学布局。标题单行自适应防换行；底部独创极简版媒体与 AI 解锁状态（简称+国旗）。
+ *   - 中号：清爽参数面板。时间指示器置顶右侧；完美拉大行间距提升呼吸感；精准呈现流媒体与 AI 解锁状况。
+ *   - 大号：沉浸式卡片网格。物理级隔离布局，全量展示节点深层数据与 8 通道并发解锁探测图谱。
+ * • 核心引擎：内网/本地/节点精准 IP 穿透识别（新增 IPv4 / v6 双栈标识）及节点风险/纯净评分探测。
  * • 智能解析：突破代理工具嵌套层级，精准获取节点协议；引入专属策略地图（POLICY_REGION）智能映射解锁国旗。
- * • 稳健防护：3000ms 严格并发超时熔断机制，拒绝无效等待，杜绝小组件假死白屏。
+ * • 稳健防护：针对 Fallback 策略组深度调优 AI 并发熔断机制，显著提升 ChatGPT 探测成功率。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetRadar.js
- * ⏱️ 更新时间: 2026.07.08 12:10
+ * ⏱️ 更新时间: 2026.07.18 14:30
  * ==========================================
  */
 
@@ -88,7 +89,7 @@ export default async function (ctx) {
     async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/generate_204`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res?.status === 204 || res?.status === 200) ? 'OK' : 'ERR' }; }
     async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403) ? 'OK' : 'ERR' }; }
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkChatGPT() { const res = await ctx.http.get(`https://ios.chat.openai.com/public-api/ping`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
     async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
@@ -138,7 +139,7 @@ export default async function (ctx) {
       if (isMedium || isSmall) {
         [yt, nf, dp, sp, gpt, cl, gm, gk] = await Promise.all([
           timed(checkYouTube, 3500), timed(checkNetflix, 3500), timed(checkDisney, 4500), timed(checkSpotify, 3500),
-          timed(checkChatGPT, 3500), timed(checkClaude, 4500), timed(checkGemini, 3500), timed(checkGrok, 3500)
+          timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, 3500), timed(checkGrok, 3500)
         ]);
       }
 
@@ -332,7 +333,9 @@ export default async function (ctx) {
       const start = Date.now();
       try {
         const resp = await ctx.http.get(url, { headers: commonHeaders, timeout: TIMEOUT_MS });
-        return { data: JSON.parse(await resp.text()), ping: Date.now() - start };
+        const text = await resp.text();
+        const json = JSON.parse(text);
+        return { data: json.data || json, ping: Date.now() - start };
       } catch (e) { return { data: {}, ping: 0 }; }
     };
 
@@ -344,30 +347,11 @@ export default async function (ctx) {
       } catch { return { code: 'ERR', ms: 0 }; }
     }
 
-    const fetchLocalInfo = async () => {
-      const start = Date.now();
-      const p1 = ctx.http.get('https://myip.ipip.net/json', { headers: commonHeaders, timeout: 2500 })
-        .then(async r => { 
-          const j = JSON.parse(await r.text()); 
-          if (j.data?.ip) return { ip: j.data.ip, loc: j.data.location || [], isp: (j.data.location || []).find(v => /(移动|联通|电信|广电)/.test(v)) || '' }; 
-          throw 1; 
-        });
-      const p2 = ctx.http.get('https://forge.speedtest.cn/api/location/info', { headers: commonHeaders, timeout: 2500 })
-        .then(async r => { const j = JSON.parse(await r.text()); if (j.ip) return { ip: j.ip, loc: ["中国", j.province, j.city], isp: j.isp }; throw 1; });
-      
-      return new Promise((resolve) => {
-        let errs = 0;
-        const check = () => { if(++errs === 2) resolve({ data: {}, ping: 0 }); };
-        p1.then(d => resolve({ data: d, ping: Date.now() - start })).catch(check);
-        p2.then(d => resolve({ data: d, ping: Date.now() - start })).catch(check);
-      });
-    };
-
     async function checkYouTube() { const res = await ctx.http.get(`https://www.youtube.com/generate_204`, { timeout: TIMEOUT_MS, headers: commonHeaders }).catch(() => null); return { code: res?.status === 204 ? 'OK' : 'ERR' }; }
     async function checkNetflix() { const res = await ctx.http.get(`https://www.netflix.com/generate_204`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res?.status === 204 || res?.status === 200) ? 'OK' : 'ERR' }; }
     async function checkDisney() { const res = await ctx.http.get(`https://www.disneyplus.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status !== 403) ? 'OK' : 'ERR' }; }
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
-    async function checkChatGPT() { const res = await ctx.http.get(`https://ios.chat.openai.com/public-api/ping`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && res.status === 200) ? 'OK' : 'ERR' }; }
+    async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
     async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
@@ -384,12 +368,12 @@ export default async function (ctx) {
       localInfo, nodeInfo, pureInfo, ipv6Resp,
       youtube, netflix, disney, spotify, chatgpt, claude, gemini, grok
     ] = await Promise.all([
-      fetchLocalInfo(),
+      httpGet('https://myip.ipip.net/json'),
       httpGet(`http://ip-api.com/json/?lang=zh-CN&_t=${Date.now()}`),
       httpGet('https://my.ippure.com/v1/info'),
       httpGet('https://api64.ipify.org?format=json'),
       timed(checkYouTube, TIMEOUT_MS), timed(checkNetflix, TIMEOUT_MS), timed(checkDisney, 4500), timed(checkSpotify, TIMEOUT_MS),
-      timed(checkChatGPT, TIMEOUT_MS), timed(checkClaude, 4500), timed(checkGemini, TIMEOUT_MS), timed(checkGrok, TIMEOUT_MS)
+      timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, TIMEOUT_MS), timed(checkGrok, TIMEOUT_MS)
     ]);
 
     const local = localInfo.data || {};
@@ -409,14 +393,13 @@ export default async function (ctx) {
     const asnStr = node.as ? String(node.as).split(' ')[0] : "未知"; 
     const publicIPv6 = ipv6Resp.data?.ip?.includes(':') ? ipv6Resp.data.ip : '';
     const currentIpType = (hasLocalIPv6 || publicIPv6) ? 'v4 / v6' : 'IPv4';
-    const locArr = Array.isArray(local.loc) ? local.loc : [];
+    const locArr = Array.isArray(local.location) ? local.location : [];
     
     let sysCarrier = d.cellular?.carrier || "";
     if (sysCarrier && (sysCarrier.toLowerCase() === 'unknown' || sysCarrier.includes('--') || sysCarrier === '未知')) sysCarrier = "";
     
-    let apiISP = local.isp || "";
+    let apiISP = (locArr.length > 0 ? locArr[locArr.length - 1] : "") || "";
     if (apiISP && (apiISP.toLowerCase() === 'unknown' || apiISP.includes('--') || apiISP === '未知')) apiISP = "";
-    if (!apiISP && locArr.length > 0) { const locISP = locArr.find(v => /(移动|联通|电信|广电|mobile|telecom|unicom)/i.test(String(v))); if (locISP) apiISP = locISP; }
     
     const rawISP = wifiSsid ? (apiISP || sysCarrier) : (sysCarrier || apiISP);
     const currentISP = fmtISP(rawISP);
@@ -505,7 +488,7 @@ export default async function (ctx) {
       mkSpacer(), 
       mkRow([
         renderDataBlock('network', '本地IP', local.ip || '获取中...'), mkSpacer(6), 
-        renderDataBlock('stopwatch', '内网延迟', localInfo.ping ? `${localInfo.ping} ms` : '-- ms', C.green)
+        renderDataBlock('stopwatch', '本地延迟', localInfo.ping ? `${localInfo.ping} ms` : '-- ms', C.green)
       ]),
       mkSpacer(8), 
       mkRow([
