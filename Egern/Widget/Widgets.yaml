@@ -2,11 +2,11 @@
 # 📌 模块名称: Egern 桌面小组件合集
 # ✨ 主要功能: 提供全套小组件的全局可视化配置入口。完美适配最新版底层 JS 的各项高阶能力，包含黄历定制、时光倒数（防调休）、专属纪念日、全国油价定位及高可用多节点 SSH 服务器监控。
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/Widgets.yaml
-# ⏱️ 更新时间: 2026.07.07 19:27
+# ⏱️ 更新时间: 2026.07.20 17:00
 # ==========================================
 
 name: "Egern 桌面小组件合集"
-description: "包含：岁时黄历、时光倒数、网络雷达、全国油价、服务器监控、世界杯赛程"
+description: "包含：岁时黄历、时光倒数、网络雷达、全国油价、服务器监控"
 
 auto_update:
   interval: 43200
@@ -136,10 +136,25 @@ env_schema:
     name: 📅 [纪念日] 专属日期 6
 
   # ── [全国油价] 配置区 ────────────────────────────────────────────────────
-  GAS_REGION:
-    name: 📍 [油价] 查询地区拼音
-    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
-    default_value: "sichuan/chengdu"
+  PROVINCE:
+    name: 📍 [油价] 省份名称/编码
+    description: "输入中文省份名（如 四川）或省份编码（如 51），不支持拼音"
+    default_value: "四川"
+
+  CITY:
+    name: 🏙️ [油价] 城市/地区名称
+    description: "输入中文城市或地区名称（如 成都），不支持拼音"
+    default_value: "成都"
+
+  AREA_INDEX:
+    name: 🔢 [油价] 区域索引（可选）
+    description: "多区域场景下的特殊索引，留空则按城市名自动匹配"
+    default_value: ""
+
+  OFFSET_SCALE:
+    name: 📊 [油价] 涨跌幅系数缩放
+    description: "涨跌幅数值的缩放系数，默认 1 即可"
+    default_value: "1"
 
   # ── [服务器监控] 轮播与容错区 ────────────────────────────────────────────
   SSH_CYCLE_DISABLED:
@@ -273,15 +288,10 @@ scriptings:
       name: 服务器监控
       script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/ServerMonitor.js
       timeout: 10
-  - generic:
-      name: 世界杯赛程
-      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/WorldCup2026.js
 
 widgets:
   - name: 岁时黄历
     script_name: 岁时黄历
-  - name: 世界杯赛程
-    script_name: 世界杯赛程
   - name: 时光倒数
     script_name: 时光倒数
   - name: 网络雷达
