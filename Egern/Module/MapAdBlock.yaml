@@ -1,68 +1,70 @@
 #!name=地图三合一去广告
-#!desc=2026.06.20 11:00
-#!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥
+#!desc=2026.07.20 更新 | 高德地图、百度地图、腾讯地图去广告与精简
+#!author=AI优化, RuCu6, ddgksf2013, fmz200, bai1zi, 可莉🅥, laoshu
+#!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
 
 [Rule]
-# 高德地图
+# ==================== 高德地图 ====================
 DOMAIN,amap-aos-info-nogw.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN,free-aos-cdn-image.amap.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,v.smtcdns.com,REJECT,extended-matching,pre-matching
 
-# 百度地图
+# ==================== 百度地图 ====================
 DOMAIN,httpdns.baidubce.com,REJECT
-DOMAIN-SUFFIX,bdstatic.com,REJECT,extended-matching,pre-matching
+# 已移除 bdstatic.com 的全局 REJECT，交由 URL Rewrite 精准处理避免误杀正常静态资源
 
-# 腾讯地图
+# ==================== 腾讯地图 ====================
 DOMAIN,adstats.map.qq.com,REJECT,extended-matching,pre-matching
 DOMAIN-SUFFIX,pgdt.gtimg.cn,REJECT,extended-matching,pre-matching
 
 [URL Rewrite]
-# 百度地图
+# ==================== 百度地图 ====================
 ^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) _ reject
 ^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ _ reject-200
 ^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) _ reject
 ^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ _ reject
 ^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump _ reject
-^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/.*qt=(ads|splash|startpage|openad) _ reject-dict
+# 已移除 qt=(ads|splash...) 的 reject-dict，统一交由 Script 处理
 
-# 腾讯地图
+# ==================== 腾讯地图 ====================
 ^https?:\/\/sv\.map\.qq\.com\/[^?]*\/(splash|adv|float_ad|banner|popup|operate)\/ _ reject
-^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:ad|recommend|promotion) _ reject
-^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/operations\? _ reject
+^https?:\/\/sv\.map\.qq\.com\/txmap\/(?:recommend|promotion) _ reject
+# 已移除对 ad 与 home/operations? 的 reject，统一交由 Map Local Mock 返回空数据，消除死代码冲突
 
 [Body Rewrite]
-# 高德地图
+# ==================== 高德地图 JQ ====================
 http-response-jq ^https:\/\/m5\.amap\.com\/ws\/shield\/search_poi\/homepage\? 'delpaths([["history_tags"]])'
 
-# 百度地图
+# ==================== 百度地图 JQ ====================
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
 http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
 http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
-http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.splash, .data.openad, .data.startpage, .data.ads, .data.hw, .data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
+# 保留针对非 qt 指定参数请求的泛用广告字段拦截（剔除与 Script 重复的 splash/openad/startpage/ads/hw）
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/client\/phpui\d*\/ 'del(.data.ad, .data.ad_info, .data.promotion, .data.banner, .data.popup, .data.float_card)'
 
-# 腾讯地图
+# ==================== 腾讯地图 JQ ====================
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/home\/ 'delpaths([["data","ad_info"],["data","recommend"],["data","operation"],["data","float_card"]])'
 http-response-jq ^https?:\/\/sv\.map\.qq\.com\/txmap\/search\/ 'if .result then .result.adInfo=[] else . end'
 
 [Map Local]
-# 高德地图
+# ==================== 高德地图 Mock ====================
 ^https:\/\/m5-zb\.amap\.com\/ws\/ride\/home\/page\/get_commuting_card\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/(shield\/(search_business\/process\/orderList|search\/new_hotword|search_poi\/tips_adv|scene\/recommend)|aos\/main\/page\/product\/list|valueadded\/weather\/v2)\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/m5\.amap\.com\/ws\/faas\/amap-navigation\/(card-service-(car-end|route-plan)|main-page-assets|main-page-location|ridewalk-end-fc|usr-profile-fc\/homeV2) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/ai\.amap\.com\/v1\/ai_rec\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https:\/\/sns\.amap\.com\/ws\/msgbox\/pull_mp\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 腾讯地图
+# ==================== 腾讯地图 Mock ====================
 ^https:\/\/sv\.map\.qq\.com\/txmap\/(ad\/|home\/operations\?|message\/pull\?) data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
 [Script]
-# 高德地图
-高德广告清理_m5 = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
-高德广告清理_m5zb = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/.*, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js, requires-body=true
+# ==================== 高德地图 脚本 ====================
+Amap_Remove_Ads_M5 = type=http-response, pattern=^https:\/\/m5\.amap\.com\/ws\/.*, requires-body=true, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js
+Amap_Remove_Ads_M5ZB = type=http-response, pattern=^https:\/\/m5-zb\.amap\.com\/ws\/.*, requires-body=true, script-path=https://kelee.one/Resource/JavaScript/Amap/Amap_remove_ads.js
 
-# 百度地图
-百度地图核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
+# ==================== 百度地图 脚本 ====================
+BaiduMap_Remove_Ads = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
 
 [MITM]
-hostname = *.amap.com, newclient.map.baidu.com, *.bdstatic.com, *.map.qq.com
+hostname = *.amap.com, *.bdstatic.com, *.map.qq.com, newclient.map.baidu.com
