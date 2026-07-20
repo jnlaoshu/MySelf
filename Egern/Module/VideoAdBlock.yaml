@@ -1,96 +1,108 @@
 #!name=流媒体去广告
-#!desc=2026.06.18 更新 | 爱奇艺、优酷、腾讯视频、芒果TV、B站、YouTube、Netflix、Disney+、Max 等主流视频平台去广告
+#!desc=2026.07.20 更新 | 爱奇艺、优酷、腾讯视频、芒果TV、B站、YouTube、Netflix、Disney+、HBO Max 等主流视频平台去广告
 #!author=AI优化, ddgksf2013, app2smile, Maasea, laoshu
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
 
 [Rule]
 # ==================== 腾讯视频 ====================
-DOMAIN,adsmind.gdtimg.com,REJECT
-DOMAIN,tmead.y.qq.com,REJECT
-DOMAIN,btrace.qq.com,REJECT
-DOMAIN,btrace.video.qq.com,REJECT
-DOMAIN,advideo.qq.com,REJECT
 DOMAIN,ad.qq.com,REJECT
 DOMAIN,ad.tencent.com,REJECT
+DOMAIN,adsmind.gdtimg.com,REJECT
+DOMAIN,advideo.qq.com,REJECT
+DOMAIN,btrace.qq.com,REJECT
+DOMAIN,btrace.video.qq.com,REJECT
+DOMAIN,tmead.y.qq.com,REJECT
 
 # ==================== 爱奇艺 ====================
-DOMAIN,t7z.cupid.iqiyi.com,REJECT
-DOMAIN,t7z.cupid.ptqy.gitv.tv,REJECT
-DOMAIN,msg.iqiyi.com,REJECT
-DOMAIN,cupid.iqiyi.com,REJECT
 DOMAIN,ad.iqiyi.com,REJECT
 DOMAIN,adq.iqiyi.com,REJECT
+DOMAIN,cupid.iqiyi.com,REJECT
+DOMAIN,msg.iqiyi.com,REJECT
+DOMAIN,t7z.cupid.iqiyi.com,REJECT
+DOMAIN,t7z.cupid.ptqy.gitv.tv,REJECT
 
 # ==================== 优酷 ====================
 DOMAIN,ad.m.youku.com,REJECT
-DOMAIN,val.youku.com,REJECT
 DOMAIN,lstat.youku.com,REJECT
+DOMAIN,val.youku.com,REJECT
 DOMAIN,ykad.youku.com,REJECT
 DOMAIN,youku-ad.youku.com,REJECT
 
 # ==================== 芒果TV ====================
+DOMAIN,ad.mgtv.com,REJECT
 DOMAIN,da.mgtv.com,REJECT
 DOMAIN,x-da.mgtv.com,REJECT
-DOMAIN,ad.mgtv.com,REJECT
 
 # ==================== B站 ====================
-DOMAIN,mall.bilibili.com,REJECT
 DOMAIN,cm.bilibili.com,REJECT
-# app.bilibili.com 和 api.bilibili.com 已删除，避免客户端全面瘫痪
+DOMAIN,mall.bilibili.com,REJECT
+# 注意：app.bilibili.com 与 api.bilibili.com 切勿直接 REJECT，否则会导致客户端崩溃
 
 # ==================== Netflix ====================
-DOMAIN,ichnaea.netflix.com,REJECT
-DOMAIN,beacon.netflix.com,REJECT
 DOMAIN,ads.netflix.com,REJECT
-DOMAIN,nubrid.netflix.com,REJECT
-DOMAIN,log.netflix.com,REJECT
-DOMAIN,telemetry.netflix.com,REJECT
 DOMAIN,analytics.netflix.com,REJECT
+DOMAIN,beacon.netflix.com,REJECT
 DOMAIN,events.netflix.com,REJECT
 DOMAIN,fls.netflix.com,REJECT
+DOMAIN,ichnaea.netflix.com,REJECT
+DOMAIN,log.netflix.com,REJECT
+DOMAIN,nubrid.netflix.com,REJECT
+DOMAIN,telemetry.netflix.com,REJECT
 
-# ==================== Disney+ & Max ====================
+# ==================== Disney+ ====================
 DOMAIN,ads.disneyplus.com,REJECT
-DOMAIN,disneyadvertising.com,REJECT
-DOMAIN,beacon.disneyplus.com,REJECT
-DOMAIN,log.disneyplus.com,REJECT
-DOMAIN,tracking.disneyplus.com,REJECT
 DOMAIN,analytics.disneyplus.com,REJECT
+DOMAIN,beacon.disneyplus.com,REJECT
+DOMAIN,disneyadvertising.com,REJECT
+DOMAIN,log.disneyplus.com,REJECT
 DOMAIN,telemetry.disneyplus.com,REJECT
+DOMAIN,tracking.disneyplus.com,REJECT
+
+# ==================== HBO Max (Max) ====================
 DOMAIN,ads.max.com,REJECT
 DOMAIN,beacon.max.com,REJECT
-DOMAIN,log.max.com,REJECT
-DOMAIN,tracking.max.com,REJECT
-DOMAIN,telemetry.max.com,REJECT
 DOMAIN,braze.max.com,REJECT
 DOMAIN,brightline.tv,REJECT
+DOMAIN,log.max.com,REJECT
+DOMAIN,telemetry.max.com,REJECT
+DOMAIN,tracking.max.com,REJECT
+# 兼容 HBOMax 域名结构
+DOMAIN,ads.hbomax.com,REJECT
+DOMAIN,beacon.hbomax.com,REJECT
+DOMAIN,braze.hbomax.com,REJECT
+DOMAIN,log.hbomax.com,REJECT
+DOMAIN,telemetry.hbomax.com,REJECT
+DOMAIN,tracking.hbomax.com,REJECT
 
 [Map Local]
-# 腾讯视频
+# ==================== 腾讯视频 Mock ====================
 ^https?:\/\/livew\.l\.qq\.com\/livemsg\? data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/ad\.qq\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 爱奇艺
+# ==================== 爱奇艺 Mock ====================
 ^https?:\/\/ifacelog\.iqiyi\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/dash-api\.iqiyi\.com\/mac\/api\/ad\/ data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 优酷
+# ==================== 优酷 Mock ====================
 ^https?:\/\/ykad-data\.youku\.com\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# 芒果TV
+# ==================== 芒果TV Mock ====================
 ^https?:\/\/app\.mgtv\.com\/v1\/splash\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
-# B站（开屏 & 青少年模式）
+# ==================== B站 Mock ====================
 ^https?:\/\/app\.bilibili\.com\/x\/v2\/splash\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 ^https?:\/\/app\.bilibili\.com\/x\/v2\/account\/teenagers\/.* data-type=text data="{}" status-code=200 header="Content-Type:application/json"
 
+# ==================== YouTube Mock ====================
+^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200 header="Content-Type:text/plain"
+
 [Script]
-# Youku 去广告
+# ==================== 优酷 脚本 ====================
 Youku_Script = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/(v3\/play\/ad|v5\/play\/ad|adn\/(p|x)lay|api\/ad|play\/preroll|live\/ad)\/.*, requires-body=true, max-size=-1, timeout=20, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
 
-# YouTube（Maasea Protobuf 重写脚本）
+# ==================== YouTube 脚本 (Maasea Protobuf) ====================
 YTM_Request = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|reel\/reel_watch_sequence)(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 YTM_Enhance = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":false,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
 
 [MITM]
-hostname = *.iqiyi.com, *.youku.com, *.mgtv.com, *.bilibili.com, *.qq.com, youtubei.googleapis.com, *.netflix.com, *.disneyplus.com, *.max.com, *.hbomax.com
+hostname = *.bilibili.com, *.disneyplus.com, *.googlevideo.com, *.hbomax.com, *.iqiyi.com, *.max.com, *.mgtv.com, *.netflix.com, *.qq.com, *.youku.com, youtubei.googleapis.com
