@@ -1,22 +1,20 @@
 #!name=综合电商去广告
-#!desc=2026.06.18 更新 | 覆盖拼多多、京东(含京喜)、淘宝/闲鱼、美团、抖音、快手、小红书、得物、苏宁等主流电商
-#!author=AI优化, ZenmoFeiShi, 可莉🅥, QingRex, RuCu6, Maasea, fmz200, zirawell, laoshu
+#!desc=2026.07.20 更新 | 覆盖拼多多、京东(含京喜)、淘宝/闲鱼、美团、抖音、快手、小红书、得物、苏宁等主流电商
+#!author=AI优化, ZenmoFeiShi, 可莉🅥, QingRex, RuCu6, Maasea, fmz200, zirawell
 #!homepage=https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
 
 [Rule]
 # ==================== 抖音 & 快手 ====================
-DOMAIN,ad.douyin.com,REJECT
-DOMAIN,pangolin.snssdk.com,REJECT
+DOMAIN-SUFFIX,ad.douyin.com,REJECT
+DOMAIN-SUFFIX,pangolin.snssdk.com,REJECT
 DOMAIN,toblog.snssdk.com,REJECT
-DOMAIN,api-ad.byteimg.com,REJECT
-DOMAIN,e.kuaishou.com,REJECT
+DOMAIN-SUFFIX,api-ad.byteimg.com,REJECT
+DOMAIN-SUFFIX,e.kuaishou.com,REJECT
 DOMAIN,js-ad.a.yximgs.com,REJECT
-DOMAIN,open.e.kuaishou.com,REJECT
-DOMAIN,api.e.kuaishou.com,REJECT
-DOMAIN,ad.kuaishou.com,REJECT
+DOMAIN-SUFFIX,ad.kuaishou.com,REJECT
 DOMAIN,adver.kuaishou.com,REJECT
 
-# ==================== 拼多多（已移除核心域名拦截） ====================
+# ==================== 拼多多 ====================
 DOMAIN,titan.pinduoduo.com,REJECT
 DOMAIN,xg.pinduoduo.com,REJECT
 DOMAIN,apm.pinduoduo.com,REJECT
@@ -35,7 +33,6 @@ DOMAIN,cdl-p2.pddpic.com,REJECT
 URL-REGEX,^http://\w{32}\.jddebug\.com/diagnose\?,REJECT
 DOMAIN,ad.3.cn,REJECT
 DOMAIN,ad.jd.com,REJECT
-DOMAIN,static.360buyimg.com,REJECT
 
 # ==================== 淘宝 & 闲鱼 & 飞猪 ====================
 DOMAIN,adashx.m.taobao.com,REJECT
@@ -61,10 +58,7 @@ DOMAIN,nr-op.elemecdn.com,REJECT
 
 # ==================== 其他电商 ====================
 DOMAIN,b.appsimg.com,REJECT                     # 唯品会
-DOMAIN-SUFFIX,poizon.com,REJECT                 # 得物
-DOMAIN,ad.suning.com,REJECT                     # 苏宁
-DOMAIN,edith.xiaohongshu.com,REJECT             # 小红书
-DOMAIN,app.dewu.com,REJECT                      # 得物备用
+DOMAIN-SUFFIX,ad.suning.com,REJECT              # 苏宁
 
 # ==================== 全局兜底 ====================
 IP-CIDR,103.37.155.60/32,REJECT
