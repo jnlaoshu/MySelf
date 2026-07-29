@@ -9,20 +9,32 @@
  * • 实时油价精准拉取：直连官方数据接口，支持 92#/95#/98#/柴油多型号及动态涨跌幅展示。
  * • 智能调价倒数引擎：内置 2026 年发改委法定调价日历，自动计算并渲染本轮调价倒计时。
  * • 动态视觉预警机制：调价临近（≤3天）自动触发红字高亮预警，涨跌红绿视觉色彩分明。
+ * • 临近提醒文案切换：调价前三天，左下角标签自动由"较上次调整"切换为"下轮预测"，
+ *   预测涨跌幅从汽油价格网(qiyoujiage.com)按当前省份实时抓取，抓取失败时自动回退为历史涨跌幅显示。
  * * 🔧 【环境变量】
  * PROVINCE     — 省份名称/编码 (默认: 51 或 四川)
  * CITY         — 城市或地区名称 (默认: 成都)
  * AREA_INDEX   — 多区域特殊索引 (数字，可选)
  * OFFSET_SCALE — 涨跌幅系数缩放 (默认: 1)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.07.18 11:23
+ * * ⏱️ 更新时间 2026.07.30 05:00
  * ==========================================
  */
 
 const BASE = 'https://cx.sinopecsales.com/yjkqiantai';
+const QYJ_BASE = 'http://m.qiyoujiage.com';
 
 const PROVINCES = {
   '11':'北京','12':'天津','13':'河北','14':'山西','41':'河南','37':'山东','31':'上海','32':'江苏','33':'浙江','34':'安徽','35':'福建','36':'江西','42':'湖北','43':'湖南','44':'广东','45':'广西','53':'云南','52':'贵州','46':'海南','50':'重庆','51':'四川','65':'新疆','15':'内蒙古','21':'辽宁','22':'吉林','64':'宁夏','61':'陕西','23':'黑龙江','54':'西藏','63':'青海','62':'甘肃'
+};
+
+// 省份代码 -> 汽油价格网 (qiyoujiage.com) 的省份拼音 slug，用于抓取调价预测
+const QYJ_SLUGS = {
+  '11':'beijing','12':'tianjin','13':'hebei','14':'shanxi','41':'henan','37':'shandong',
+  '31':'shanghai','32':'jiangsu','33':'zhejiang','34':'anhui','35':'fujian','36':'jiangxi',
+  '42':'hubei','43':'hunan','44':'guangdong','45':'guangxi','53':'yunnan','52':'guizhou',
+  '46':'hainan','50':'chongqing','51':'sichuan','65':'xinjiang','15':'neimenggu','21':'liaoning',
+  '22':'jilin','64':'ningxia','61':'shanxi-3','23':'heilongjiang','54':'xizang','63':'qinghai','62':'gansu'
 };
 
 const NAMES = [
@@ -132,6 +144,35 @@ async function loadData(ctx, province) {
   return { current, history };
 }
 
+// 从汽油价格网 (qiyoujiage.com) 按省份抓取"下轮调价预测"涨跌幅
+// 返回 { up: boolean, minV: number, maxV: number } 或 null（未抓到/无法解析）
+async function loadPrediction(ctx, provinceCode) {
+  const slug = QYJ_SLUGS[provinceCode];
+  if (!slug) return null;
+
+  const resp = await ctx.http.get(`${QYJ_BASE}/${slug}.shtml`, {
+    headers: {
+      'Accept': 'text/html,application/xhtml+xml,*/*',
+      'User-Agent': COMMON_HEADERS['User-Agent']
+    },
+    timeout: 10000
+  });
+  const html = await resp.text();
+
+  // 主格式："目前预计上调油价780元/吨(0.59元/升-0.70元/升)"
+  let m = html.match(/预计(上调|下调)(?:油价)?[\d.]+元\/吨\((\d+(?:\.\d+)?)元\/升-(\d+(?:\.\d+)?)元\/升\)/);
+  // 兜底格式："油价上涨0.32元/升-0.38元/升"
+  if (!m) m = html.match(/(上涨|上调|下调|下跌)(\d+(?:\.\d+)?)元\/升-(\d+(?:\.\d+)?)元\/升/);
+  if (!m) return null;
+
+  const up = m[1] === '上调' || m[1] === '上涨';
+  const minV = parseFloat(m[2]);
+  const maxV = parseFloat(m[3]);
+  if (!Number.isFinite(minV) || !Number.isFinite(maxV)) return null;
+
+  return { up, minV, maxV };
+}
+
 function resolveAreaIndex(current, cityName, explicitIndex) {
   if (explicitIndex != null && explicitIndex >= 0) return explicitIndex;
   const area = (current.data || current).area || [];
@@ -229,7 +270,8 @@ export default async function (ctx) {
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   const items  = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = cityName || "全国";
-  let trendLabel = "较上次调整: ";
+  // 调价临近（≤3天）时，左下角标签默认切换为"下轮预测"；若预测抓取失败则回退为"较上次调整"
+  let trendLabel = nextAdjust.isUrgent ? "下轮预测: " : "较上次调整: ";
   let trendInfo  = "";
   let trendColor = C.muted;
   let hasTrendData = false; 
@@ -269,6 +311,27 @@ export default async function (ctx) {
       const rangeStr = minAbs === maxAbs ? `${minAbs}¥/L` : `${minAbs}-${maxAbs}¥/L`;
       trendColor = overallUp ? C.red : C.teal;
       trendInfo  = `${overallUp ? "↑" : "↓"} ${rangeStr}`;
+    }
+
+    // 调价临近（≤3天）：尝试从汽油价格网抓取真实的下轮调价预测涨跌幅并覆盖显示
+    // 抓取失败时静默回退到上面算出的"较上次调整"历史涨跌幅，不影响整体渲染
+    if (nextAdjust.isUrgent) {
+      try {
+        const prediction = await loadPrediction(ctx, provinceCode);
+        if (prediction) {
+          const rangeStr = prediction.minV === prediction.maxV
+            ? `${prediction.minV.toFixed(2)}¥/L`
+            : `${prediction.minV.toFixed(2)}-${prediction.maxV.toFixed(2)}¥/L`;
+          trendLabel = "下轮预测: ";
+          trendColor = prediction.up ? C.red : C.teal;
+          trendInfo  = `${prediction.up ? "↑" : "↓"} ${rangeStr}`;
+          hasTrendData = true;
+        } else {
+          trendLabel = "较上次调整: ";
+        }
+      } catch (_) {
+        trendLabel = "较上次调整: ";
+      }
     }
   } catch (e) {
     fetchError = e && e.message ? e.message : String(e);
