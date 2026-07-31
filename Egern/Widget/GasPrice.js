@@ -8,6 +8,7 @@
  *   - 大号 (Large)  ：沉浸式 2x2 放大四宫格，独享油价历史走势折线图，字号间距完美扩容。
  * • 实时油价精准拉取：直连官方数据接口，支持 92#/95#/98#/柴油多型号及动态涨跌幅展示。
  * • 智能调价倒数引擎：内置 2026 年发改委法定调价日历，自动计算并渲染本轮调价倒计时。
+ *   不足 1 天时自动切换为"Xh Ym后"精确到分钟显示，不再显示"0d"。
  * • 动态视觉预警机制：调价临近（≤3天）自动触发红字高亮预警，涨跌红绿视觉色彩分明。
  * • 临近提醒文案切换：调价前三天，左下角标签自动由"较上次调整"切换为"下轮预测"，
  *   预测涨跌幅从汽油价格网(qiyoujiage.com)按当前省份实时抓取，抓取失败时自动回退为历史涨跌幅显示。
@@ -17,7 +18,7 @@
  * AREA_INDEX   — 多区域特殊索引 (数字，可选)
  * OFFSET_SCALE — 涨跌幅系数缩放 (默认: 1)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.07.30 05:00
+ * * ⏱️ 更新时间 2026.07.31 16:30
  * ==========================================
  */
 
@@ -256,13 +257,16 @@ export default async function (ctx) {
     const next = CALENDAR_2026.find(([m, d]) => new Date(Y, m - 1, d, 23, 59, 59).getTime() > now.getTime());
     if (!next) return { dateStr: "待更新", countdown: "", isUrgent: false };
     const targetDate = new Date(Y, next[0] - 1, next[1], 23, 59, 59);
-    const totalHours = Math.floor((targetDate.getTime() - now.getTime()) / 3600000);
-    const days  = Math.floor(totalHours / 24);
-    const hours = totalHours % 24;
+    const totalMinutes = Math.max(0, Math.floor((targetDate.getTime() - now.getTime()) / 60000));
+    const days    = Math.floor(totalMinutes / 1440);
+    const hours   = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    // 不足 1 天时不再显示 "0d"，改为精确到分钟的 "Xh Ym后"
+    const countdownBody = days > 0 ? `${days}d${hours}h后` : `${hours}h${minutes}m后`;
     return {
       dateStr:   `${P(targetDate.getMonth() + 1)}.${P(targetDate.getDate())} 24:00`,
-      countdown: `(${days}d${hours}h后)`,
-      isUrgent:  totalHours < 72
+      countdown: `(${countdownBody})`,
+      isUrgent:  totalMinutes < 72 * 60
     };
   };
   const nextAdjust = getNextAdjust();
