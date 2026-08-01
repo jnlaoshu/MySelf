@@ -105,12 +105,23 @@ DOMAIN,tracking.hbomax.com,REJECT
 # ==================== YouTube Mock ====================
 ^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&oad data-type=text data="" status-code=200
 
+[Rewrite]
+# ==================== YouTube ====================
+^https?:\/\/[\w-]+\.googlevideo\.com\/(?!dclk_video_ads).+?&ctier=L(&.+?),ctier,(.+) 302 https://$1$2$3
+^https?:\/\/[\w-]+\.googlevideo\.com\/(?!(dclk_video_ads|videoplayback\?)).+&oad reject-200
+^https?:\/\/(www|s)\.youtube\.com\/api\/stats\/ads reject-200
+^https?:\/\/(www|s)\.youtube\.com\/(pagead|ptracking) reject-200
+^https?:\/\/s\.youtube\.com\/api\/stats\/qoe\?adcontext reject-200
+
 [Script]
 # ==================== 优酷 脚本 ====================
 Youku_Script = type=http-response, pattern=^https?:\/\/.*\.youku\.com\/(v3\/play\/ad|v5\/play\/ad|adn\/(p|x)lay|api\/ad|play\/preroll|live\/ad)\/.*, requires-body=true, max-size=-1, timeout=20, script-path=https://gist.githubusercontent.com/ddgksf2013/5b431857f8b88acbc7ac2453a21e676a/raw/youku.adblock.js
 
-# ==================== YouTube 脚本 (Maasea 官方维护版本，覆盖 browse/next/player/search/reel/guide/get_setting/get_watch) ====================
-YTM_Response = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch))(\?(.*))?$, requires-body=true, binary-body-mode=true, max-size=-1, timeout=20, argument={"lyricLang":"off","captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":true,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
+# ==================== YouTube 脚本 ====================
+YouTube_Ezrea7 = type=http-response, pattern=^https?:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch), requires-body=true, binary-body-mode=true, timeout=60, script-path=https://raw.githubusercontent.com/Ezrea7/Rules/main/JS/YouTube/JS/JS-2/YouTube.js
+youtube.response = type=http-response, pattern=^https:\/\/youtubei\.googleapis\.com\/(youtubei\/v1\/(browse|next|player|search|reel\/reel_watch_sequence|guide|account\/get_setting|get_watch|log_event|config))(\?(.*))?$, requires-body=true, max-size=-1, binary-body-mode=true, timeout=20, argument={"captionLang":"off","blockUpload":true,"blockImmersive":true,"blockShorts":true,"debug":false}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.response.js
+youtube.request.init = type=http-request, pattern=^https?:\/\/[\w-]+\.googlevideo\.com\/initplayback.+&ack.*, requires-body=true, max-size=-1, binary-body-mode=true, timeout=20, argument={"captionLang":"off"}, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js
+youtube.request.log_event = type=http-request, pattern=^https:\/\/youtubei\.googleapis\.com\/youtubei\/v1\/log_event, requires-body=true, max-size=-1, binary-body-mode=true, timeout=20, script-path=https://raw.githubusercontent.com/Maasea/sgmodule/master/Script/Youtube/youtube.request.js
 
 [MITM]
-hostname = *.bilibili.com, *.disneyplus.com, *.googlevideo.com, *.hbomax.com, *.iqiyi.com, *.max.com, *.mgtv.com, *.netflix.com, *.qq.com, *.youku.com, youtubei.googleapis.com
+hostname = *.bilibili.com, *.disneyplus.com, *.googlevideo.com, redirector*.googlevideo.com, *.hbomax.com, *.iqiyi.com, *.max.com, *.mgtv.com, *.netflix.com, *.qq.com, *.youku.com, www.youtube.com, s.youtube.com, youtubei.googleapis.com
