@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.08.06 20:10
+# ⏱️ 更新时间: 2026.08.06 20:40
 # ==========================================
 
 # ==================== 自动更新 ====================
@@ -235,7 +235,7 @@ modules:
     enabled: true
     update_interval: 259200
   - name: WeatherKit
-    url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.yaml
+    url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
     enabled: true
     update_interval: 259200
   - name: 雪球去广告
