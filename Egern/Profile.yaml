@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.08.06 19:28
+# ⏱️ 更新时间: 2026.08.06 20:10
 # ==========================================
 
 # ==================== 自动更新 ====================
@@ -90,8 +90,10 @@ dns:
     - domain_suffix: { match: cn, value: DNSPod }
     - domain_wildcard: { match: "*", value: Default }
   proxy_nameservers:
-    - 223.5.5.5
-    - 119.29.29.29
+    - h3://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    - h3://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
 
 # ==================== 策略组 ====================
 policy_groups:
