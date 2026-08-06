@@ -223,7 +223,7 @@ modules:
     enabled: true
     update_interval: 86400
   - name: Sub-Store
-    url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/master/config/Egern.yaml
+    url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/refs/heads/master/config/Surge.sgmodule
     enabled: true
     update_interval: 259200
   - name: BoxJs
