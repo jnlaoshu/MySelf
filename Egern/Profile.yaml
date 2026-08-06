@@ -5,9 +5,9 @@
 # ==========================================
 
 # ==================== 自动更新 ====================
-# auto_update:
-#   url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-#   interval: 86400
+auto_update:
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
+  interval: 86400
 
 # ==================== 基本配置 ====================
 ipv6: false
