@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.08.06 08:00
+# ⏱️ 更新时间: 2026.08.06 18:11
 # ==========================================
 
 # ==================== 自动更新 ====================
@@ -32,14 +32,13 @@ direct_latency_test_url: http://www.apple.com/library/test/success.html
 dns:
   public_ip_lookup_url: https://ifconfig.me/ip
   block_ips: ["0.0.0.0/8", "10.0.0.0/8", "127.0.0.0/8", "169.254.0.0/16", "172.16.0.0/12", "192.0.0.0/24", "192.0.0.0/29", "192.0.2.0/24", "192.88.99.0/24", "192.168.0.0/16", "198.18.0.0/15", "198.51.100.0/24", "203.0.113.0/24", "224.0.0.0/4", "240.0.0.0/4", "255.255.255.255/32", "::/128", "::1/128", "ff00::/8"]
-  hosts: { iosapps.itunes.apple.com: [iosapps.itunes.apple.com.download.ks-cdn.com] }
   bootstrap: [223.5.5.5, 119.29.29.29]
   upstreams:
     AliDNS: [h3://dns.alidns.com/dns-query, https://dns.alidns.com/dns-query]
     DNSPod: [https://doh.pub/dns-query, https://sm2.doh.pub/dns-query]
     ByteDNS: [udp://180.184.1.1:53, udp://180.184.2.2:53]
-    Google: [https://dns.google/dns-query]
-    Default: [h3://dns.alidns.com/dns-query, https://doh.pub/dns-query, https://dns.google/dns-query]
+    Google: [h3://dns.google/dns-query, https://dns.google/dns-query]
+    Default: [h3://dns.google/dns-query, https://cloudflare-dns.com/dns-query]
   forward:
     - proxy_rule_set: { match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/reject.txt, value: reject, update_interval: 86400 }
     - domain_suffix: { match: alibaba.com, value: AliDNS }
@@ -90,27 +89,28 @@ dns:
     - proxy_rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list, value: Google }
     - domain_suffix: { match: cn, value: DNSPod }
     - domain_wildcard: { match: "*", value: Default }
-  proxy_nameservers: [h3://dns.google/dns-query, https://doh.pub/dns-query, h3://dns.alidns.com/dns-query]
+  proxy_nameservers:
+    - h3://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
 
 # ==================== 策略组 ====================
 policy_groups:
-  - auto_test: { name: 代理节点, urls: ["https://sub.store/download/collection/AllServer?target=Egern"], flatten: true, interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Global.png, hidden: true }
-  - smart: { name: 香港节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png }
-  - smart: { name: 美国节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png }
-  - smart: { name: 台湾节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png }
-  - smart: { name: 日本节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png }
-  - smart: { name: 狮城节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png }
-  - smart: { name: 韩国节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png }
+  - auto_test: { name: 代理节点, urls: ["https://sub.store/download/collection/AllServer?target=Egern"], flatten: true, interval: 1800, tolerance: 100, timeout: 5, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Global.png, hidden: true }
+  - smart: { name: 香港节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png }
+  - smart: { name: 美国节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png }
+  - smart: { name: 台湾节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png }
+  - smart: { name: 日本节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png }
+  - smart: { name: 狮城节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png }
+  - smart: { name: 韩国节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png }
   - select: { name: 其他节点, policies: [代理节点], flatten: true, filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b|🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$", icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png }
-  - select: { name: Proxy, policies: [香港节点, 美国节点, 狮城节点, 台湾节点, 日本节点, 韩国节点, 其他节点], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png }
+  - select: { name: Proxy, policies: [香港节点, 美国节点, 日本节点, 狮城节点, 台湾节点, 韩国节点, 其他节点], icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png }
+  - smart: { name: AIGC节点, policies: [代理节点], flatten: true, filter: "(?i)(?:GPT|Claude|OpenAI|Gemini|Native|Residential|Premium|原生|🇺🇸|美国|\\b(?:US|USA)\\b|🇯🇵|日本|\\b(?:JP|JPN)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|SGP)\\b)", latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png, hidden: true }
 
-  - smart: { name: AIGC节点, policies: [代理节点], flatten: true, filter: "(?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|\\b(?:US|USA)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|JPN)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|SGP)\\b)", interval: 600, tolerance: 100, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png, hidden: true }
-
-  # === 策略组===
-  - fallback: { name: AIGC, policies: [AIGC节点, Proxy], flatten: true, interval: 600, timeout: 8, block_quic: false, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png }
-  - select: { name: Google, policies: [Proxy], flatten: true, block_quic: false, latency_test_url: https://www.google.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png }
-  - select: { name: GitHub, policies: [Proxy], flatten: true, latency_test_url: https://github.com, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png }
-  - fallback: { name: Cloudflare, policies: [Proxy], flatten: true, interval: 600, timeout: 8, latency_test_url: http://www.gstatic.com/generate_204, block_quic: false, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Cloudflare.png }
+  # === 策略组 ===
+  - fallback: { name: AIGC, policies: [AIGC节点, Proxy], flatten: true, interval: 1800, timeout: 8, block_quic: false, latency_test_url: http://www.gstatic.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png }
+  - smart: { name: Google, policies: [Proxy], flatten: true, block_quic: false, latency_test_url: https://www.google.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png }
+  - smart: { name: GitHub, policies: [Proxy], flatten: true, latency_test_url: https://github.com, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png }
+  - fallback: { name: Cloudflare, policies: [Proxy], flatten: true, interval: 1800, timeout: 8, latency_test_url: http://www.gstatic.com/generate_204, block_quic: false, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Cloudflare.png }
   - select: { name: Microsoft, policies: [Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png }
   - select: { name: Bing, policies: [Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png }
   - select: { name: Apple, policies: [DIRECT, Proxy], flatten: true, icon: https://raw.githubusercontent.com/fmz200/wool_scripts/main/icons/apps/Apple_Classic.png }
@@ -118,7 +118,7 @@ policy_groups:
   - select: { name: HBO, policies: [Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png }
   - select: { name: Netflix, policies: [狮城节点, 日本节点, Proxy], flatten: true, block_quic: false, latency_test_url: https://www.netflix.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png }
   - select: { name: Spotify, policies: [Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png }
-  - select: { name: TikTok, policies: [日本节点, 美国节点, Proxy], flatten: true, block_quic: false, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png }
+  - select: { name: TikTok, policies: [日本节点, Proxy], flatten: true, block_quic: false, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png }
   - select: { name: YouTubeMusic, policies: [Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png }
   - select: { name: YouTube, policies: [Proxy], flatten: true, block_quic: false, latency_test_url: https://www.youtube.com/generate_204, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png }
   - select: { name: PayPal, policies: [美国节点, Proxy], flatten: true, icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png }
@@ -141,7 +141,12 @@ rules:
   # 1. 局域网直连
   - rule_set: { match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml, policy: DIRECT, update_interval: 604800 }
 
-  # 2. 常见国内 App 直连
+  # 2. 广告拦截 - 域名类
+  - rule_set: { match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml, policy: 猎杀广告, update_interval: 86400 }
+  - rule_set: { match: https://ruleset.skk.moe/List/non_ip/reject.conf, policy: 猎杀广告, update_interval: 86400 }
+  - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/BlockHttpDNS/BlockHttpDNS.list, policy: 猎杀广告, update_interval: 604800 }
+
+  # 3. 常见国内 App 直连
   - domain_keyword: { match: snssdk, policy: DIRECT }
   - domain_keyword: { match: aweme, policy: DIRECT }
   - domain_keyword: { match: amemv, policy: DIRECT }
@@ -155,7 +160,10 @@ rules:
   - domain_suffix: { match: edith.xiaohongshu.com, policy: DIRECT }
   - domain_suffix: { match: www.xiaohongshu.com, policy: DIRECT }
 
-  # 3. Apple 服务与隐私代理分流
+  # 4. 广告拦截 - IP 类
+  - rule_set: { match: https://ruleset.skk.moe/List/ip/reject.conf, policy: 猎杀广告, update_interval: 86400 }
+
+  # 5. Apple 服务与隐私代理分流
   - domain_suffix: { match: privatecloudcompute.apple.com, policy: Apple }
   - domain_suffix: { match: pcc.apple.com, policy: Apple }
   - domain_suffix: { match: private-relay.apple.com, policy: Apple }
@@ -165,17 +173,11 @@ rules:
   - domain_suffix: { match: mask.icloud.com, policy: Apple }
   - rule_set: { match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml, policy: Apple, update_interval: 604800 }
 
-  # 4. 广告拦截
-  - rule_set: { match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml, policy: 猎杀广告, update_interval: 86400 }
-  - rule_set: { match: https://ruleset.skk.moe/List/non_ip/reject.conf, policy: 猎杀广告, update_interval: 86400 }
-  - rule_set: { match: https://ruleset.skk.moe/List/ip/reject.conf, policy: 猎杀广告, update_interval: 86400 }
-  - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/BlockHttpDNS/BlockHttpDNS.list, policy: 猎杀广告, update_interval: 604800 }
-
-  # 5. AI 服务核心闭环
+  # 6. AI 服务核心闭环
   - rule_set: { match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml, policy: AIGC, update_interval: 604800 }
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Google/Google.list, policy: Google, update_interval: 604800 }
 
-  # 6. 微软 / GitHub / Bing / Windows Update
+  # 7. 微软 / GitHub / Bing / Windows Update
   - domain_suffix: { match: bing.com, policy: Bing }
   - domain_suffix: { match: bing.net, policy: Bing }
   - domain_suffix: { match: bingapis.com, policy: Bing }
@@ -186,11 +188,11 @@ rules:
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Bing/Bing.list, policy: Bing, update_interval: 604800 }
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/GitHub/GitHub.list, policy: GitHub, update_interval: 604800 }
 
-  # 7. Cloudflare Pages & Workers
+  # 8. Cloudflare Pages & Workers
   - domain_suffix: { match: workers.dev, policy: Cloudflare }
   - domain_suffix: { match: pages.dev, policy: Cloudflare }
 
-  # 8. 视频/音乐流媒体 / 社交平台
+  # 9. 视频/音乐流媒体 / 社交平台
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTubeMusic/YouTubeMusic.list, policy: YouTubeMusic, update_interval: 604800 }
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/YouTube/YouTube.list, policy: YouTube, update_interval: 604800 }
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Disney/Disney.list, policy: Disney, update_interval: 604800 }
@@ -204,11 +206,11 @@ rules:
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/WeChat/WeChat.list, policy: WeChat, update_interval: 604800 }
   - rule_set: { match: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Instagram/Instagram.list, policy: Instagram, update_interval: 604800 }
 
-  # 9. 国内规则与高性能 GeoIP 匹配前置
+  # 10. 国内规则与高性能 GeoIP 匹配前置
   - geoip: { match: CN, policy: DIRECT, no_resolve: true }
   - rule_set: { match: https://raw.githubusercontent.com/Loyalsoldier/surge-rules/release/ruleset/direct.txt, policy: DIRECT, update_interval: 604800 }
 
-  # 10. 终极兜底策略
+  # 11. 终极兜底策略
   - default: { policy: Proxy }
 
 # ==================== 模块配置 ====================
@@ -267,7 +269,7 @@ modules:
   - name: 国家电网 余量显示
     url: https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/95598/profiles/sgcc.surge.sgmodule
     compat_arguments:
-      USERNAME: 'YOUR_PHONE_NUMBER'
-      PASSWORD: 'YOUR_PASSWORD'
+      USERNAME: '账号'
+      PASSWORD: '密码'
     enabled: true
     update_interval: 86400
