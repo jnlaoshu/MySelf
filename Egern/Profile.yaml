@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.08.06 18:11
+# ⏱️ 更新时间: 2026.08.06 19:28
 # ==========================================
 
 # ==================== 自动更新 ====================
@@ -90,8 +90,8 @@ dns:
     - domain_suffix: { match: cn, value: DNSPod }
     - domain_wildcard: { match: "*", value: Default }
   proxy_nameservers:
-    - h3://dns.google/dns-query
-    - https://cloudflare-dns.com/dns-query
+    - 223.5.5.5
+    - 119.29.29.29
 
 # ==================== 策略组 ====================
 policy_groups:
@@ -264,12 +264,5 @@ modules:
     url: https://raw.githubusercontent.com/Nullwhy/Egern/main/Rewrite/NodeSeek.module
     compat_arguments: { MINUTE: '31', HOUR: '08' }
     env: { FIXED_LEGS: 'false', ENABLE_CAPTURE: 'false' }
-    enabled: true
-    update_interval: 86400
-  - name: 国家电网 余量显示
-    url: https://raw.githubusercontent.com/Yuheng0101/X/main/Tasks/95598/profiles/sgcc.surge.sgmodule
-    compat_arguments:
-      USERNAME: '账号'
-      PASSWORD: '密码'
     enabled: true
     update_interval: 86400
