@@ -1,0 +1,21 @@
+# ==========================================
+# 📌 模块名称: 网络信息 Widget
+# ✨ 主要功能: 实时网络防欺诈侦测，双轨测速胶囊，防假死时间戳水印。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.yaml
+# ⏱️ 2026.03.30 10:00
+# ==========================================
+
+name: "网络信息 Widget"
+description: "内网/本地/节点精准 IP 与原生住宅防欺诈侦测；独家双轨实时测速。"
+
+auto_update:
+  interval: 43200
+
+scriptings:
+  - generic:
+      name: 网络信息
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetworkInfo.js
+
+widgets:
+  - name: 网络信息
+    script_name: 网络信息

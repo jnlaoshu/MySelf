@@ -1,0 +1,372 @@
+# > 名称: Clash Party@laoshu 自用配置
+# > 功能: 六地区节点自动优选分流 · 大厂域名专属 DoH · 四层广告拦截 · AIGC/Apple 双轨路由 · TUN 透明代理 · Smart Core 就绪
+# > 引用: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Clash/ClashParty/Profile.yaml
+# > 更新: 2026.03.24 11:05
+
+# ── 锚点 ─────────────────────────────────────────────────────────────
+p: &p
+  type: http
+  interval: 86400
+  timeout: 15
+  health-check:
+    enable: true
+    url: https://www.google.com/generate_204
+    interval: 300
+    timeout: 5000
+
+pg_auto: &pg_auto
+  type: url-test
+  lazy: true
+  url: https://www.gstatic.com/generate_204
+  interval: 300
+  timeout: 3000
+  tolerance: 50
+  max-failed-times: 3
+  include-all: true
+
+c: &c {type: http, behavior: classical, format: yaml, interval: 86400}
+
+# ── 订阅节点 ─────────────────────────────────────────────────────────
+proxy-providers:
+  Subscribe:
+    url: http://127.0.0.1:38324/download/collection/AllServer
+    <<: *p
+
+# ── 基础参数 ─────────────────────────────────────────────────────────
+mode: rule
+mixed-port: 7893
+port: 7890
+socks-port: 7891
+redir-port: 7892
+tproxy-port: 7895
+ipv6: false
+allow-lan: true
+unified-delay: true
+tcp-concurrent: true
+log-level: warning
+bind-address: '*'
+find-process-mode: strict
+global-client-fingerprint: chrome
+
+# ── 性能参数 ─────────────────────────────────────────────────────────
+keep-alive-interval: 15
+keep-alive-idle: 600
+skip-auth-prefixes:
+  - 127.0.0.1/32
+  - ::1/128
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# ── 嗅探器 ───────────────────────────────────────────────────────────
+sniffer:
+  enable: true
+  override-destination: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  sniff:
+    HTTP:  {ports: [80, 8080-8880]}
+    TLS:   {ports: [443, 8443]}
+    QUIC:  {ports: [443, 8443]}
+
+# ── TUN 模式 ─────────────────────────────────────────────────────────
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  auto-redirect: true
+  auto-detect-interface: true
+  dns-hijack:
+    - "any:53"
+
+# ── DNS ──────────────────────────────────────────────────────────────
+dns:
+  enable: true
+  ipv6: false
+  cache-algorithm: arc
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+  nameserver:
+    - https://doh.pub/dns-query
+    - https://dns.alidns.com/dns-query
+  nameserver-policy:
+    "geosite:alibaba":   https://dns.alidns.com/dns-query
+    "geosite:tencent":   https://doh.pub/dns-query
+    "geosite:bytedance": [180.184.1.1, 180.184.2.2]
+    "geosite:cn":        [https://dns.alidns.com/dns-query, https://doh.pub/dns-query]
+  fake-ip-filter:
+    - "*"
+    - +.lan
+    - +.local
+    - time.*.com
+    - ntp.*.com
+    - +.ntp.org
+    - router.asus.com
+    - +.miwifi.com
+    - +.msftconnecttest.com
+    - +.msftncsi.com
+    - time.windows.com
+    - localhost.ptlogin2.qq.com
+    - localhost.sec.qq.com
+    - localhost.work.weixin.qq.com
+    - +.weixin.qq.com
+    - +.wechat.com
+
+# ── GeoData ──────────────────────────────────────────────────────────
+geo-auto-update: true
+geo-update-interval: 24
+geodata-mode: true
+geox-url:
+  geoip:   "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
+  geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  mmdb:    "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"
+  asn:     "https://testingcf.jsdelivr.net/gh/xishang0128/geoip@release/GeoLite2-ASN.mmdb"
+
+# ── 策略组 ───────────────────────────────────────────────────────────
+proxy-groups:
+
+  - name: 香港节点
+    <<: *pg_auto
+    filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+
+  - name: 美国节点
+    <<: *pg_auto
+    filter: "(?i)🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+
+  - name: 狮城节点
+    <<: *pg_auto
+    filter: "(?i)🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+
+  - name: 日本节点
+    <<: *pg_auto
+    filter: "(?i)🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+
+  - name: 台湾节点
+    <<: *pg_auto
+    filter: "(?i)🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+
+  - name: 韩国节点
+    <<: *pg_auto
+    filter: "(?i)🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+
+  - name: 其他节点
+    <<: *pg_auto
+    include-all: true
+    exclude-filter: "(?i)🇭🇰|香港|Hong\\s*Kong|\\bHKG?\\b|(?:深|沪|京|广)港|🇺🇸|美国|United\\s*States|America|\\bUSA?\\b|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|凤凰城|阿什本|纽约|迈阿密|波士顿|休斯顿|亚特兰大|拉斯维加斯|圣地亚哥|盐湖城|奥斯汀|波特兰|丹佛|奥克兰|安大略|圣安娜|\\b(?:LAX|SJC|SFO|SEA|ORD|JFK|DFW|IAD|PHX|ATL|BOS|MIA|EWR|LGA|IAH|HOU|DEN|OAK|ONT|SNA|LAS|PDX|DAL|SAN|SLC|MSP)\\b|🇸🇬|新加坡|狮城|Singapore|\\b(?:SGP?|SIN)\\b|🇯🇵|日本|东京|大阪|Japan|\\b(?:JPN?|NRT|HND|KIX|FUK|NGO|OSA|CTS|SDJ|OKA)\\b|🇹🇼|台湾|Taiwan|\\b(?:TWN?|TPE|Taipei)\\b|🇰🇷|韩国|首尔|仁川|Korea|South\\s*Korea|\\b(?:KOR|KR|ICN|SEL)\\b|倍率|剩余|到期|流量|官网|订阅|测试|有效|禁止|邮箱|客服|地址|网站|群组"
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
+  - name: Proxy
+    type: select
+    include-all: true
+    proxies: [香港节点, 美国节点, 狮城节点, 日本节点, 台湾节点, 韩国节点, 其他节点, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png
+
+  - name: AIGC
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+
+  - name: Bing
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
+
+  - name: Apple
+    type: select
+    proxies: [DIRECT, Proxy]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
+
+  - name: Disney
+    type: select
+    proxies: [狮城节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+
+  - name: Github
+    type: select
+    proxies: [香港节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
+
+  - name: Google
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
+
+  - name: HBO
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
+
+  - name: Microsoft
+    type: select
+    proxies: [DIRECT, Proxy]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+
+  - name: Netflix
+    type: select
+    proxies: [狮城节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
+
+  - name: OneDrive
+    type: select
+    proxies: [DIRECT, Proxy]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/OneDrive.png
+
+  - name: PayPal
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
+
+  - name: Spotify
+    type: select
+    proxies: [美国节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
+
+  - name: Telegram
+    type: select
+    proxies: [香港节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
+
+  - name: TikTok
+    type: select
+    proxies: [日本节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
+
+  - name: Twitter
+    type: select
+    proxies: [香港节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
+
+  - name: WeChat
+    type: select
+    proxies: [DIRECT, Proxy]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
+
+  - name: YouTube
+    type: select
+    proxies: [香港节点, Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+
+  - name: Final
+    type: select
+    proxies: [Proxy, DIRECT]
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Final.png
+
+  - name: GLOBAL
+    type: select
+    proxies:
+      - Proxy
+      - Final
+      - AIGC
+      - Bing
+      - Apple
+      - Disney
+      - Github
+      - Google
+      - HBO
+      - Microsoft
+      - Netflix
+      - OneDrive
+      - PayPal
+      - Spotify
+      - Telegram
+      - TikTok
+      - Twitter
+      - WeChat
+      - YouTube
+      - 香港节点
+      - 美国节点
+      - 狮城节点
+      - 日本节点
+      - 台湾节点
+      - 韩国节点
+      - 其他节点
+      - DIRECT
+
+# ── 规则集 ───────────────────────────────────────────────────────────
+rule-providers:
+
+  CustomReject: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml}
+  AppAdBlock:   {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/AppAdBlock.yaml}
+  MediaAdBlock: {<<: *c, url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/MediaAdBlock.yaml}
+  Reject:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Advertising/Advertising.yaml}
+
+  AIGC:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OpenAI/OpenAI.yaml}
+  Anthropic:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Anthropic/Anthropic.yaml}
+  Bing:         {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Bing/Bing.yaml}
+
+  AppleCN:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/AppleCN/AppleCN.yaml}
+  AppleProxy:   {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Apple/Apple.yaml}
+
+  Disney:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Disney/Disney.yaml}
+  HBO:          {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/HBO/HBO.yaml}
+  Netflix:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Netflix/Netflix.yaml}
+  Spotify:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Spotify/Spotify.yaml}
+  TikTok:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/TikTok/TikTok.yaml}
+  YouTube:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTube/YouTube.yaml}
+  YouTubeMusic: {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/YouTubeMusic/YouTubeMusic.yaml}
+
+  Github:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/GitHub/GitHub.yaml}
+  Google:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Google/Google.yaml}
+  Microsoft:    {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Microsoft/Microsoft.yaml}
+  OneDrive:     {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/OneDrive/OneDrive.yaml}
+  PayPal:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/PayPal/PayPal.yaml}
+  Telegram:     {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Telegram/Telegram.yaml}
+  Twitter:      {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Twitter/Twitter.yaml}
+  WeChat:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/WeChat/WeChat.yaml}
+
+  Proxy:        {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Proxy/Proxy_Classical_No_Resolve.yaml}
+  Direct:       {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Direct/Direct.yaml}
+  Lan:          {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/Lan/Lan.yaml}
+  China:        {<<: *c, url: https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Clash/ChinaMax/ChinaMax_Classical.yaml}
+
+# ── 规则 ─────────────────────────────────────────────────────────────
+rules:
+  - RULE-SET,Lan,DIRECT
+
+  - RULE-SET,AppAdBlock,REJECT
+  - RULE-SET,MediaAdBlock,REJECT
+  - RULE-SET,CustomReject,REJECT
+  - RULE-SET,Reject,REJECT
+
+  - GEOSITE,douyin,DIRECT
+
+  - RULE-SET,AIGC,AIGC
+  - RULE-SET,Anthropic,AIGC
+  - RULE-SET,Bing,Bing
+
+  - RULE-SET,AppleCN,DIRECT
+  - RULE-SET,AppleProxy,Apple
+
+  - RULE-SET,Disney,Disney
+  - RULE-SET,HBO,HBO
+  - RULE-SET,Netflix,Netflix
+  - RULE-SET,YouTubeMusic,YouTube
+  - RULE-SET,YouTube,YouTube
+  - RULE-SET,Spotify,Spotify
+  - RULE-SET,TikTok,TikTok
+
+  - RULE-SET,Github,Github
+  - RULE-SET,Google,Google
+  - RULE-SET,Microsoft,Microsoft
+  - RULE-SET,OneDrive,OneDrive
+  - RULE-SET,PayPal,PayPal
+  - RULE-SET,Telegram,Telegram
+  - RULE-SET,Twitter,Twitter
+  - RULE-SET,WeChat,WeChat
+
+  - RULE-SET,Proxy,Proxy
+  - RULE-SET,Direct,DIRECT
+  - RULE-SET,China,DIRECT
+  - GEOSITE,CN,DIRECT
+  - GEOIP,CN,DIRECT
+
+  - MATCH,Final

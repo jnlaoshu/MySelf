@@ -1,0 +1,580 @@
+# =============================================================================
+# 工作流名称：规则自动构建（只更新现有规则文件）
+# 更新时间：2026.08.13 19:00
+# 功能说明：
+#   1. 从多个上游源下载广告拦截规则，按照精确的域名提取逻辑生成 AdBlock.yaml
+#   2. 检测 Egern/Rule 下已有的 .yaml 文件，从 blackmatrix7 只下载对应同名规则
+#   3. 额外合并生成 Lan.yaml 和 AIGC.yaml（覆盖已有）
+#   4. 对所有规则文件进行格式清洗、排序、去重，输出 Egern 兼容的 YAML 格式
+#   5. 自动为每个规则文件添加/更新头部注释（规则名称、统计、规则来源、引用链接、更新时间）
+#   6. 仅在内容真正发生变化时提交更新，避免无效空提交
+# =============================================================================
+
+name: Build
+
+# -----------------------------------------------------------------------------
+# 触发条件
+# -----------------------------------------------------------------------------
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 0 * * *"
+
+# -----------------------------------------------------------------------------
+# 并发控制
+# -----------------------------------------------------------------------------
+concurrency:
+  group: build-egern-rules
+  cancel-in-progress: false
+
+# -----------------------------------------------------------------------------
+# 权限设置
+# -----------------------------------------------------------------------------
+permissions:
+  contents: write
+  actions: write
+
+# -----------------------------------------------------------------------------
+# 任务定义
+# -----------------------------------------------------------------------------
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    env:
+      TZ: "Asia/Shanghai"
+
+    steps:
+      # ================================================================
+      # Step 1: 检出仓库代码
+      # ================================================================
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ================================================================
+      # Step 2: 准备 Python 环境并安装依赖
+      # ================================================================
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python Dependencies
+        run: |
+          pip install requests pyyaml urllib3
+
+      # ================================================================
+      # Step 3: 构建 AdBlock.yaml（完整 Python 脚本）
+      # ================================================================
+      - name: Build AdBlock.yaml
+        run: |
+          python3 - << 'EOF'
+          import ipaddress
+          import os
+          import re
+          import tempfile
+          from datetime import datetime, timezone
+
+          import requests
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
+          import yaml
+
+          # =========================================================================
+          # Egern AdBlock Rule Builder
+          #
+          # 核心原则：
+          #   1. 只提取可以安全转换为"域名拦截"的规则；带修饰符/路径/正则的规则整条跳过，
+          #      不强行剥离修饰符转换为无条件域名封锁（避免扩大原规则的拦截范围）
+          #   2. 所有来源统一做域名合法性校验（标签格式、IDN、排除 IP/本地域名）
+          #   3. 按来源单独设最低阈值：哪个源异常，立刻能定位到具体是谁
+          #   4. 上游异常时保留现有 AdBlock.yaml，绝不用残缺结果覆盖
+          #   5. 生成内容不嵌入时间戳，域名集合真正变化时文件内容才变化，
+          #      避免"内容总在变 -> 天天空提交"
+          # =========================================================================
+
+          OUTPUT_FILE = "Egern/Rule/AdBlock.yaml"
+          REQUEST_TIMEOUT = 30
+          USER_AGENT = "Egern-AdBlock-Builder/1.0"
+          FINAL_MIN_DOMAINS = 100000
+
+          SOURCES = {
+              "AdGuard_Chinese": {
+                  "url": "https://filters.adtidy.org/extension/chromium/filters/224.txt",
+                  "parser": "adguard",
+                  "minimum": 2000,
+              },
+              "AdRules": {
+                  "url": "https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/dns.txt",
+                  "parser": "adguard",
+                  "minimum": 100000,
+              },
+              "Anti-AD": {
+                  "url": "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-surge.txt",
+                  "parser": "surge",
+                  "minimum": 60000,
+              },
+              "AWAvenue": {
+                  "url": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/AWAvenue-Ads-Rule.txt",
+                  "parser": "adguard",
+                  "minimum": 400,
+              },
+          }
+
+          DOMAIN_LABEL_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+
+
+          def normalize_domain(value):
+              if not isinstance(value, str):
+                  return None
+              domain = value.strip().lower()
+              if not domain:
+                  return None
+              if domain.startswith("||"):
+                  domain = domain[2:]
+              if domain.endswith("^"):
+                  domain = domain[:-1]
+              domain = domain.strip().rstrip(".")
+              if not domain:
+                  return None
+              if any(ch in domain for ch in ("*", "/", "\\", "^", "$", "?", "#", ":", "!", " ", "\t", ",")):
+                  return None
+              try:
+                  ipaddress.ip_address(domain)
+                  return None
+              except ValueError:
+                  pass
+              if "." not in domain or ".." in domain:
+                  return None
+              try:
+                  domain = domain.encode("idna").decode("ascii").lower()
+              except UnicodeError:
+                  return None
+              if len(domain) > 253:
+                  return None
+              labels = domain.split(".")
+              if len(labels) < 2:
+                  return None
+              for label in labels:
+                  if not DOMAIN_LABEL_RE.fullmatch(label):
+                      return None
+              if domain.endswith((".local", ".localhost", ".lan", ".internal")):
+                  return None
+              return domain
+
+
+          def create_session():
+              session = requests.Session()
+              retry = Retry(
+                  total=3,
+                  connect=3,
+                  read=3,
+                  backoff_factor=1,
+                  status_forcelist=(429, 500, 502, 503, 504),
+                  allowed_methods=frozenset(["GET"]),
+                  raise_on_status=False,
+              )
+              adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+              session.mount("https://", adapter)
+              session.mount("http://", adapter)
+              session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
+              return session
+
+
+          def fetch_text(session, name, url):
+              print(f"\nDownloading: {name}\n  {url}")
+              response = session.get(url, timeout=REQUEST_TIMEOUT)
+              response.raise_for_status()
+              content = response.text
+              if not content.strip():
+                  raise RuntimeError(f"{name}: downloaded content is empty")
+              print(f"  HTTP {response.status_code} | {len(content):,} bytes")
+              return content
+
+
+          PURE_ADGUARD_DOMAIN = re.compile(
+              r"^\|\|([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)\^$", re.IGNORECASE
+          )
+
+
+          def parse_adguard(content):
+              domains = set()
+              for raw_line in content.splitlines():
+                  line = raw_line.strip()
+                  if not line or line.startswith(("!", "#", "[", "@@")):
+                      continue
+                  match = PURE_ADGUARD_DOMAIN.fullmatch(line)
+                  if not match:
+                      continue
+                  domain = normalize_domain(match.group(1))
+                  if domain:
+                      domains.add(domain)
+              return domains
+
+
+          SURGE_DOMAIN = re.compile(r"^(?:DOMAIN|DOMAIN-SUFFIX),([^,\s]+)$", re.IGNORECASE)
+
+
+          def parse_surge(content):
+              domains = set()
+              for raw_line in content.splitlines():
+                  line = raw_line.strip()
+                  if not line or line.startswith(("#", "//", ";")):
+                      continue
+                  match = SURGE_DOMAIN.fullmatch(line)
+                  if not match:
+                      continue
+                  domain = normalize_domain(match.group(1))
+                  if domain:
+                      domains.add(domain)
+              return domains
+
+
+          def parse_source(parser, content):
+              if parser == "adguard":
+                  return parse_adguard(content)
+              if parser == "surge":
+                  return parse_surge(content)
+              raise ValueError(f"Unknown parser: {parser}")
+
+
+          def build_rules():
+              session = create_session()
+              merged = set()
+              stats = {}
+              for name, config in SOURCES.items():
+                  content = fetch_text(session, name, config["url"])
+                  domains = parse_source(config["parser"], content)
+                  count = len(domains)
+                  print(f"  Parsed valid domains: {count:,}")
+                  if count < config["minimum"]:
+                      raise RuntimeError(
+                          f"{name} failed safety check: {count:,} < minimum {config['minimum']:,}"
+                      )
+                  stats[name] = count
+                  merged.update(domains)
+
+              print("\n" + "=" * 60)
+              print("Source statistics")
+              print("=" * 60)
+              for name, count in stats.items():
+                  print(f"{name:<24} {count:>10,}")
+              print("-" * 60)
+              print(f"{'Unique merged domains':<24} {len(merged):>10,}")
+              return merged
+
+
+          def generate_yaml(domains):
+              domains = sorted(domains)
+              lines = [
+                  "# Egern AdBlock Rule (Merged)",
+                  f"# Total Domains: {len(domains)}",
+                  f"# Sources: {', '.join(SOURCES.keys())}",
+                  "# Generated by merge_rules.py",
+                  "",
+                  "payload:",
+              ]
+              lines.extend(f"  - {domain}" for domain in domains)
+              lines.append("")
+              return "\n".join(lines)
+
+
+          def validate_output(content):
+              data = yaml.safe_load(content)
+              if not isinstance(data, dict):
+                  raise RuntimeError("Generated YAML root is invalid")
+              payload = data.get("payload")
+              if not isinstance(payload, list) or not payload:
+                  raise RuntimeError("Generated YAML has no valid payload")
+              if len(payload) != len(set(payload)):
+                  raise RuntimeError("Duplicate domains detected")
+              for domain in payload:
+                  if normalize_domain(domain) != domain:
+                      raise RuntimeError(f"Invalid generated domain: {domain}")
+              return len(payload)
+
+
+          def write_if_changed(path, content):
+              old_content = None
+              if os.path.exists(path):
+                  with open(path, "r", encoding="utf-8") as f:
+                      old_content = f.read()
+              if old_content == content:
+                  print("\nNo changes detected.")
+                  return False
+
+              directory = os.path.dirname(path) or "."
+              os.makedirs(directory, exist_ok=True)
+              fd, temp_path = tempfile.mkstemp(prefix=".AdBlock.", suffix=".tmp", dir=directory, text=True)
+              try:
+                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+                      f.write(content)
+                  os.replace(temp_path, path)
+              except Exception:
+                  try:
+                      os.unlink(temp_path)
+                  except OSError:
+                      pass
+                  raise
+              return True
+
+
+          def main():
+              print("=" * 60)
+              print("Egern AdBlock Rule Builder")
+              print("Build time:", datetime.now(timezone.utc).isoformat())
+              print("=" * 60)
+              try:
+                  domains = build_rules()
+                  if len(domains) < FINAL_MIN_DOMAINS:
+                      raise RuntimeError(
+                          f"Final domain count is suspiciously low: "
+                          f"{len(domains):,} < {FINAL_MIN_DOMAINS:,}"
+                      )
+                  content = generate_yaml(domains)
+                  count = validate_output(content)
+                  changed = write_if_changed(OUTPUT_FILE, content)
+                  print("\n" + "=" * 60)
+                  print(f"SUCCESS: {count:,} domains {'generated' if changed else 'unchanged'}")
+                  print("=" * 60)
+              except Exception as exc:
+                  print("\n" + "=" * 60)
+                  print("BUILD FAILED")
+                  print(str(exc))
+                  print("Existing AdBlock.yaml was preserved.")
+                  print("=" * 60)
+                  raise SystemExit(1)
+
+
+          if __name__ == "__main__":
+              main()
+          EOF
+
+      # ================================================================
+      # Step 4: 只下载现有规则对应的 blackmatrix7 文件，并生成 Lan / AIGC
+      # ================================================================
+      - name: Download Existing Rules from blackmatrix7
+        run: |
+          set -euo pipefail
+
+          download_and_merge() {
+            local output="$1"
+            shift
+            : > "$output"
+            for url in "$@"; do
+              echo "Downloading: $url"
+              curl -f -L "$url" >> "$output" || { echo "Download Failed: $url"; exit 1; }
+              echo "" >> "$output"
+            done
+          }
+
+          mkdir -p Egern/Rule
+
+          existing_files=$(find Egern/Rule -maxdepth 1 -type f -name '*.yaml' ! -name 'AdBlock.yaml' -exec basename {} .yaml \;)
+          if [ -z "$existing_files" ]; then
+            echo "No existing rule files found (besides AdBlock.yaml). Skipping download from blackmatrix7."
+          else
+            echo "Existing rule files to update:"
+            echo "$existing_files"
+
+            echo "Cloning blackmatrix7/ios_rule_script..."
+            git clone --depth 1 https://github.com/blackmatrix7/ios_rule_script.git BM7_Tmp
+
+            for name in $existing_files; do
+              src="BM7_Tmp/rule/Surge/${name}.list"
+              if [ ! -f "$src" ]; then
+                found=$(find BM7_Tmp/rule/Surge -type f -name "${name}.list" | head -n1)
+                if [ -n "$found" ]; then
+                  src="$found"
+                fi
+              fi
+              dst="Egern/Rule/${name}.list"
+              if [ -f "$src" ]; then
+                echo "Copying ${name}.list from blackmatrix7 ($src)"
+                cp "$src" "$dst"
+              else
+                echo "⚠️  Warning: ${name}.list not found in blackmatrix7, skipping."
+              fi
+            done
+
+            rm -rf BM7_Tmp
+          fi
+
+          # ---- 合并生成 Lan.yaml ----
+          LAN_SOURCES=(
+            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list"
+            "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Lan.yaml"
+          )
+          download_and_merge "Egern/Rule/Lan.list" "${LAN_SOURCES[@]}"
+
+          # ---- 合并生成 AIGC.yaml ----
+          AIGC_SOURCES=(
+            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list"
+            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list"
+            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list"
+            "https://raw.githubusercontent.com/ConnersHua/RuleGo/master/Surge/Ruleset/Extra/AI.list"
+            "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AI.yaml"
+          )
+          download_and_merge "Egern/Rule/AIGC.list" "${AIGC_SOURCES[@]}"
+
+      # ================================================================
+      # Step 5: 将所有 .list 文件重命名为 .yaml
+      # ================================================================
+      - name: Rename .list to .yaml
+        run: |
+          cd Egern/Rule
+          find . -type f -name '*.list' -exec sh -c 'mv "$1" "${1%.list}.yaml"' sh {} \;
+
+      # ================================================================
+      # Step 6: 标准化处理（清理、排序、去重，跳过 AdBlock.yaml）
+      # ================================================================
+      - name: Normalize Rules
+        run: |
+          cd Egern/Rule
+          find . -type f -name '*.yaml' ! -name 'AdBlock.yaml' -print0 | while IFS= read -r -d $'\0' file; do
+            sed -i \
+              -e '/^PROCESS-NAME/d' \
+              -e '/^AND/d' \
+              -e '/^OR/d' \
+              -e '/^NOT/d' \
+              -e '/^\s*[#;]/d' \
+              -e '/^$/d' \
+              -e 's| //.*||' \
+              "$file"
+
+            awk '{
+              if ($0 ~ /^DOMAIN,/) print "00 " $0
+              else if ($0 ~ /^DOMAIN-SUFFIX,/) print "01 " $0
+              else if ($0 ~ /^DOMAIN-KEYWORD,/) print "02 " $0
+              else if ($0 ~ /^DOMAIN-WILDCARD,/) print "03 " $0
+              else if ($0 ~ /^IP-CIDR6,/) print "04 " $0
+              else if ($0 ~ /^IP-CIDR,/) print "05 " $0
+              else if ($0 ~ /^IP-ASN,/) print "06 " $0
+              else if ($0 ~ /^URL-REGEX,/) print "07 " $0
+              else if ($0 ~ /^USER-AGENT,/) print "08 " $0
+              else if ($0 ~ /^DEST-PORT,/) print "09 " $0
+              else if ($0 ~ /^GEOIP,/) print "10 " $0
+              else print "99 " $0
+            }' "$file" | sort -k1,1n -k2,2 | cut -d' ' -f2- > "${file}.sorted"
+
+            awk '!seen[tolower($0)]++' "${file}.sorted" > "${file}"
+            rm -f "${file}.sorted"
+          done
+
+      # ================================================================
+      # Step 7: 为每个 YAML 文件添加/更新头部注释（规则名称、统计、规则来源、引用链接、更新时间）
+      #         自动移除原有冗余注释（# Egern AdBlock Rule, # Total Domains, # Sources, # Generated 等）
+      #         头部与内容之间保留一个空行
+      #         来源映射：为所有可能出现的规则文件定义来源信息
+      # ================================================================
+      - name: Add Headers to YAML files
+        run: |
+          python3 - << 'EOF'
+          import os
+          import yaml
+          from pathlib import Path
+          from datetime import datetime, timezone, timedelta
+
+          rule_dir = Path("Egern/Rule")
+          repo = "jnlaoshu/MySelf"
+          branch = "main"
+
+          # 为所有可能出现的规则文件定义来源（文件名作为键）
+          # 对于未在此映射中的文件，将使用默认来源 "blackmatrix7/ios_rule_script"
+          source_map = {
+              "AdBlock": "AdGuard_Chinese, AdRules, Anti-AD, AWAvenue",
+              "Lan": "blackmatrix7, Repcz",
+              "AIGC": "blackmatrix7, ConnersHua, Repcz",
+          }
+          default_source = "blackmatrix7/ios_rule_script"
+
+          # 获取当前北京时间 (UTC+8)
+          now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
+          update_time = now.strftime("%Y-%m-%d %H:%M:%S +0800")
+
+          for yaml_file in rule_dir.glob("*.yaml"):
+              print(f"Processing {yaml_file.name}...")
+              with open(yaml_file, 'r', encoding='utf-8-sig') as f:
+                  content = f.read()
+
+              if not content.strip():
+                  print("  Skipping empty file.")
+                  continue
+
+              # 解析 YAML 获取 payload 长度
+              try:
+                  data = yaml.safe_load(content)
+                  if not data or 'payload' not in data:
+                      print("  No 'payload' field, skipping.")
+                      continue
+                  count = len(data['payload'])
+              except Exception as e:
+                  print(f"  YAML parse error: {e}, skipping.")
+                  continue
+
+              name = yaml_file.stem
+              url = f"https://raw.githubusercontent.com/{repo}/{branch}/Egern/Rule/{yaml_file.name}"
+
+              # 获取来源信息（如果不在映射中，使用默认来源）
+              source = source_map.get(name, default_source)
+
+              # 构建新头部
+              header_lines = [
+                  f"# 规则名称: {name}",
+                  f"# 规则统计: {count}",
+                  f"# 规则来源: {source}",
+                  f"# 引用链接: {url}",
+                  f"# 更新时间: {update_time}",
+                  ""  # 空行分隔头部和内容
+              ]
+              new_header = "\n".join(header_lines)
+
+              # 移除所有以特定前缀开头的行（旧头部和原始生成注释）
+              skip_prefixes = (
+                  "# 规则名称:", "# 规则统计:", "# 引用链接:", "# 更新时间:", "# 规则来源:",
+                  "# Egern AdBlock Rule", "# Total Domains", "# Sources", "# Generated"
+              )
+              keep_lines = []
+              for line in content.splitlines(keepends=False):
+                  stripped = line.strip()
+                  if stripped == '':
+                      # 保留空行（但后续会重新添加头部空行，这里保留内容部分的空行）
+                      keep_lines.append(line)
+                  elif any(stripped.startswith(prefix) for prefix in skip_prefixes):
+                      continue  # 跳过这些行
+                  else:
+                      keep_lines.append(line)
+
+              # 组合内容（移除头部后剩余部分）
+              body = "\n".join(keep_lines)
+              # 新内容 = 头部 + body（头部本身包含一个空行，所以不用额外加）
+              # 注意 new_header 末尾已有空行，所以 body 直接连接
+              if body:
+                  new_content = new_header + body
+              else:
+                  new_content = new_header
+
+              # 如果内容有变化才写入
+              if new_content != content:
+                  with open(yaml_file, 'w', encoding='utf-8') as f:
+                      f.write(new_content)
+                  print(f"  Headers updated for {yaml_file.name}")
+              else:
+                  print(f"  No change for {yaml_file.name}")
+          EOF
+
+      # ================================================================
+      # Step 8: 提交并推送变更
+      # ================================================================
+      - name: Commit and Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Egern/Rule/
+          if ! git diff --staged --quiet; then
+            git commit -m "update(rules): $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          else
+            echo "No changes to commit."
+          fi

@@ -1,0 +1,52 @@
+#!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐂𝐨𝐨𝐤𝐢𝐞获取
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.03.06 09:55
+#𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Cookie.sgmodule
+
+[Rule]
+DOMAIN,gslbali.ximalaya.com,REJECT
+DOMAIN,gslbtx.ximalaya.com,REJECT
+
+[Script]
+# > 爱奇艺   （passport.iqiyi.com） 登陆https://m.iqiyi.com/user.html
+爱奇艺获取 = type=http-request,pattern=^https:\/\/passport\.iqiyi\.com\/apis\/user\/info\.action,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/iQIYI-DailyBonus/iQIYI.js
+
+# > 哔哩哔哩 app.bilibili.com, m.bilibili.com,
+B站Cookie(APP) = type=http-request,pattern=^https?:\/\/app\.bilibili\.com\/x\/resource\/domain\?,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/BiliBili.js,requires-body=0
+B站Cookie(网页) = type=http-request,pattern=^https?:\/\/m.bilibili.com/$,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/BiliBili.js,requires-body=0
+
+# 饿了么 (h5.ele.me)
+http-request ^https:\/\/h5\.ele\.me\/restapi\/eus\/v\d\/current_user$ script-path=https://raw.githubusercontent.com/songyangzz/QuantumultX/master/elem/elemGetCookies.js, tag=elem
+
+# > 京东商城 （api.m.jd.com,ms.jr.jd.com, me-api.jd.com）
+# 京东登录 https://home.m.jd.com/myJd/newhome.action
+# 金融app获取
+获取京东Cookie = type=http-request,requires-body=1,pattern=^https:\/\/(api\.m|me-api|ms\.jr)\.jd\.com\/(client\.action\?functionId=signBean|user_new\/info\/GetJDUserInfoUnion\?|gw\/generic\/hy\/h5\/m\/appSign\?),script-path=https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js
+
+# 芒果TV
+芒果TV = script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/mgtv/mgtv.cookie.js,type=http-request,pattern=^https:\/\/credits.bz.mgtv.com\/user\/creditsTake
+
+# > 美团 （i.meituan.com）app获取
+美团获取 = script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/meituan/meituan.cookie.js,requires-body=true,type=http-request,pattern=^https:\/\/i.meituan.com\/evolve\/signin\/signpost\/
+
+# 腾讯视频 (iacc.rec.qq.com)
+腾讯视频Cookie = type=http-request,pattern=^https?:\/\/iacc\.rec\.qq\.com,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/videoqq.js,requires-body=0
+
+# > 网易云音乐  (music.163.com)
+#登录1 https://music.163.com/m/login
+#登陆2 https://music.163.com/#/user/level
+网易音乐 = type=http-request,pattern=^https:\/\/music.163.com\/weapi\/user\/level,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/neteasemusic/neteasemusic.cookie.js,script-update-interval=0
+
+# > 网易新闻 app获取
+网易新闻 = type=http-request,pattern=^https:\/\/(.*?)c\.m\.163\.com\/uc\/api\/sign\/v3\/commit,requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/neteasenews/neteasenews.cookie.js,script-update-interval=0
+
+# > 喜马拉雅 app获取 mobile.ximalaya.com, mobwsa.ximalaya.com, mobilehera.ximalaya.com,
+喜马拉雅Cookie = type=http-request,pattern=^https?:\/\/(mobile|mobilehera|mobwsa)\.ximalaya\.com\/app-skin-service\/skin\/,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/xmlySign.js,requires-body=0
+
+# > 微博推送 登陆https://m.weibo.cn获取
+微博推送 = type=http-request,pattern=^https:\/\/m\.weibo\.cn\/feed\/,script-path=https://raw.githubusercontent.com/zZPiglet/Task/master/Weibo/Weibo.js
+# > 新浪微博 app获取
+微博签到 = type=http-request,pattern=https:\/\/api\.weibo\.cn\/\d\/users\/show,script-path=https://raw.githubusercontent.com/Sunert/Script/master/Task/weibo.js
+微博签到 = type=http-request,pattern=https:\/\/m?api\.weibo\.c(n|om)\/\d\/users\/show,script-path=https://raw.githubusercontent.com/Sunert/Script/master/Task/weibo.js
+
+[MITM]
+hostname = %INSERT% passport.iqiyi.com, app.bilibili.com, m.bilibili.com, h5.ele.me,me-api.jd.com,jdjoy.jd.com, credits.bz.mgtv.com, i.meituan.com, iacc.rec.qq.com, music.163.com, *.m.163.com, mobile.ximalaya.com, mobwsa.ximalaya.com, mobilehera.ximalaya.com,api.weibo.cn, m.weibo.cn

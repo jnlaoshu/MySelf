@@ -1,0 +1,20 @@
+# =============================================================================
+# Dependabot 配置
+# 用途：自动更新 GitHub Actions 工作流中使用的第三方 Actions 版本
+# 策略：每日北京时间 08:00 检查更新，自动创建 Pull Request
+# =============================================================================
+
+version: 2
+
+updates:
+  # 针对 GitHub Actions 生态的依赖更新
+  - package-ecosystem: "github-actions"
+    # 配置文件所在目录（根目录）
+    directory: "/"
+    schedule:
+      interval: "daily"                # 每日检查
+      timezone: "Asia/Shanghai"        # 时区：北京时间
+      time: "08:00"                   # 每日 08:00 触发
+    # Pull Request 分支命名风格（使用 '-' 作为分隔符）
+    pull-request-branch-name:
+      separator: "-"

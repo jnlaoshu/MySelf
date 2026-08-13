@@ -1,0 +1,57 @@
+#!name=百度地图去广告
+#!desc=2026.04.03 18:27 更新
+#!author=AI, RuCu6, ddgksf2013, fmz200, bai1zi
+
+[Rule]
+# ===============================
+# 域名拦截 (Domain Rules)
+# ===============================
+# 说明：拦截 HTTPDNS，防止客户端绕过代理直连下载广告资源。
+DOMAIN,httpdns.baidubce.com,REJECT
+
+# ===============================
+# URL 拒绝请求 (URL Reject)
+# ===============================
+# 说明：直接丢弃广告相关的请求，阻断静态广告加载。
+
+# 拦截运营活动与推荐弹窗接口
+^https?:\/\/newclient\.map\.baidu\.com\/(contributor-bus\/bounty\/tips|skin\/center\/recommend|client\/promotion|operation\/(float|banner|popup)) - reject
+
+# 拦截开屏广告及相关 SDK 的 CDN 静态资源
+^https?:\/\/dss0\.bdstatic\.com\/-0U0bnSm1A5BphGlnYG\/ - reject
+^https?:\/\/dss0\.bdstatic\.com\/.+\/tam-ogel\/.+\.(jpe?g|png|gif|mp4|webp) - reject
+^https?:\/\/tb1\.bdstatic\.com\/tb\/cms\/ngmis\/adsense\/ - reject
+^https?:\/\/tb2\.bdstatic\.com\/tb\/mobile\/spb\/widget\/jump - reject
+
+[Body Rewrite]
+# ===============================
+# 响应体精简 (Body Rewrite - JQ)
+# ===============================
+# 说明：通过 JQ 语法移除 JSON 响应中的特定广告与推广节点。
+
+# 移除个人中心推广卡片
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/usercenter\/mine\/page 'del(.data.sport_card, .data.gold, .data.gold_coin_card, .data.shop, .data.usersystem_b_banner, .data.coupon_card, .data.merchant_card, .data.live_card, .data.task_card, .data.member_card, .data.nearby_card)'
+
+# 移除搜索栏热搜词与推荐
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/living\/nearby\/hot-words\? 'if .Result then .Result.data=[] else . end'
+
+# 移除发现页与周边的富媒体内容
+http-response-jq ^https?:\/\/(?:[^.]+\.)*map\.baidu\.com\/[^?]*govui\/rich_content '.data.posts.content=[]'
+
+# 移除语音包推荐列表
+http-response-jq ^https?:\/\/newclient\.map\.baidu\.com\/voice\/pack\/list 'del(.data.recommand_list)'
+
+[Script]
+# ===============================
+# 脚本处理 (Scripting)
+# ===============================
+# 说明：通过脚本动态剥离核心开屏与架构广告节点，避免直接返回空对象导致的缓存异常。
+# 作用范围：开屏广告、交叉营销、消息中心等。
+百度地图_核心净化 = type=http-response, pattern=^https?:\/\/newclient\.map\.baidu\.com\/(client\/phpui\d*\/\?([^#]*&)?qt=(ads|splash|startpage|openad|hw)|client\/crossmarketing|client\/(usersystem\/home\/dynamic|msgcenter\/pull)|operation\/activity), requires-body=true, script-path=https://ddgksf2013.top/scripts/bdmap.ads.js
+
+[MITM]
+# ===============================
+# 流量解密配置 (MITM Hostnames)
+# ===============================
+# 说明：解析以下域名的 HTTPS 流量，以确保上述拦截与重写规则生效。
+hostname = %APPEND% newclient.map.baidu.com, dss0.bdstatic.com, tb1.bdstatic.com, tb2.bdstatic.com
