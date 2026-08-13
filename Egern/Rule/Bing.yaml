@@ -1,9 +1,15 @@
-DOMAIN-SUFFIX,bing.com
-DOMAIN-SUFFIX,bing.com.cn
-DOMAIN-SUFFIX,bing.net
-DOMAIN-SUFFIX,bingads.com
-DOMAIN-SUFFIX,bingagencyawards.com
-DOMAIN-SUFFIX,bingapistatistics.com
-DOMAIN-SUFFIX,bingsandbox.com
-DOMAIN-SUFFIX,bingvisualsearch.com
-DOMAIN-SUFFIX,bingworld.com
+# 规则名称: Bing
+# 规则统计: 9
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+# 更新时间: 2026-08-14 07:50:37 +0800
+payload:
+- DOMAIN-SUFFIX,bing.com
+- DOMAIN-SUFFIX,bing.com.cn
+- DOMAIN-SUFFIX,bing.net
+- DOMAIN-SUFFIX,bingads.com
+- DOMAIN-SUFFIX,bingagencyawards.com
+- DOMAIN-SUFFIX,bingapistatistics.com
+- DOMAIN-SUFFIX,bingsandbox.com
+- DOMAIN-SUFFIX,bingvisualsearch.com
+- DOMAIN-SUFFIX,bingworld.com

@@ -1,5 +1,11 @@
-DOMAIN,music.youtube.com
-USER-AGENT,*YouTubeMusic*
-USER-AGENT,*com.google.ios.youtubemusic*
-USER-AGENT,YouTubeMusic*
-USER-AGENT,com.google.ios.youtubemusic*
+# 规则名称: YouTubeMusic
+# 规则统计: 5
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
+# 更新时间: 2026-08-14 07:50:37 +0800
+payload:
+- DOMAIN,music.youtube.com
+- USER-AGENT,*com.google.ios.youtubemusic*
+- USER-AGENT,*YouTubeMusic*
+- USER-AGENT,com.google.ios.youtubemusic*
+- USER-AGENT,YouTubeMusic*
