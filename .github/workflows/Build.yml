@@ -1,580 +1,2240 @@
 # =============================================================================
-# 工作流名称：规则自动构建（只更新现有规则文件）
-# 更新时间：2026.08.13 19:00
-# 功能说明：
-#   1. 从多个上游源下载广告拦截规则，按照精确的域名提取逻辑生成 AdBlock.yaml
-#   2. 检测 Egern/Rule 下已有的 .yaml 文件，从 blackmatrix7 只下载对应同名规则
-#   3. 额外合并生成 Lan.yaml 和 AIGC.yaml（覆盖已有）
-#   4. 对所有规则文件进行格式清洗、排序、去重，输出 Egern 兼容的 YAML 格式
-#   5. 自动为每个规则文件添加/更新头部注释（规则名称、统计、规则来源、引用链接、更新时间）
-#   6. 仅在内容真正发生变化时提交更新，避免无效空提交
+# 工作流名称：规则自动构建
+# 文件位置：.github/workflows/Build.yml
+#
+# 更新时间：2026.08.14 07:50
+#
+# 核心功能：
+#   1. 自动构建 Egern/Rule/AdBlock.yaml
+#   2. AdBlock 使用：
+#        - AdGuard DNS Filter
+#        - AdRules DNS
+#        - AWAvenue Ads Rule
+#   3. 不再叠加大型聚合源，降低重复规则与误杀风险
+#   4. 仅更新仓库中已经存在的 blackmatrix7 同名规则
+#   5. 自动构建 Lan.yaml
+#   6. 自动构建 AIGC.yaml
+#   7. 正确解析 Surge LIST 与 Egern YAML 两种输入格式
+#   8. 所有规则统一转换为 Egern payload YAML
+#   9. 对 AdBlock 执行严格纯域名提取
+#  10. 每个广告源独立执行最低数量安全检查
+#  11. 最终执行总量、重复、YAML、域名合法性检查
+#  12. 任意关键上游异常时，不覆盖现有 AdBlock.yaml
+#  13. 内容没有变化时不更新时间、不产生空提交
 # =============================================================================
 
 name: Build
 
-# -----------------------------------------------------------------------------
-# 触发条件
-# -----------------------------------------------------------------------------
 on:
   workflow_dispatch:
+
   schedule:
     - cron: "30 0 * * *"
 
-# -----------------------------------------------------------------------------
-# 并发控制
-# -----------------------------------------------------------------------------
 concurrency:
   group: build-egern-rules
   cancel-in-progress: false
 
-# -----------------------------------------------------------------------------
-# 权限设置
-# -----------------------------------------------------------------------------
 permissions:
   contents: write
   actions: write
 
-# -----------------------------------------------------------------------------
-# 任务定义
-# -----------------------------------------------------------------------------
 jobs:
+
   Build:
+
     runs-on: ubuntu-latest
+
     env:
       TZ: "Asia/Shanghai"
+      PYTHONUTF8: "1"
 
     steps:
-      # ================================================================
-      # Step 1: 检出仓库代码
-      # ================================================================
+
+      # =======================================================================
+      # Step 1：检出仓库
+      # =======================================================================
+
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # ================================================================
-      # Step 2: 准备 Python 环境并安装依赖
-      # ================================================================
+
+      # =======================================================================
+      # Step 2：准备 Python
+      # =======================================================================
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
 
       - name: Install Python Dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install requests pyyaml urllib3
 
-      # ================================================================
-      # Step 3: 构建 AdBlock.yaml（完整 Python 脚本）
-      # ================================================================
+
+      # =======================================================================
+      # Step 3：构建 AdBlock.yaml
+      #
+      # 核心广告源：
+      #
+      #   AdGuard DNS Filter
+      #   AdRules
+      #   AWAvenue
+      #
+      # 注意：
+      #
+      #   AdGuard DNS Filter 本身已经整合多个大型广告/隐私规则体系。
+      #   因此不再直接叠加 EasyList、EasyPrivacy、AdGuard Chinese、
+      #   Anti-AD、GOODBYEADS 等大型聚合源。
+      #
+      # =======================================================================
+
       - name: Build AdBlock.yaml
         run: |
-          python3 - << 'EOF'
+
+          python3 - << 'PY'
+
           import ipaddress
           import os
           import re
           import tempfile
+
           from datetime import datetime, timezone
 
           import requests
-          from requests.adapters import HTTPAdapter
-          from urllib3.util.retry import Retry
           import yaml
 
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
+
+
           # =========================================================================
-          # Egern AdBlock Rule Builder
-          #
-          # 核心原则：
-          #   1. 只提取可以安全转换为"域名拦截"的规则；带修饰符/路径/正则的规则整条跳过，
-          #      不强行剥离修饰符转换为无条件域名封锁（避免扩大原规则的拦截范围）
-          #   2. 所有来源统一做域名合法性校验（标签格式、IDN、排除 IP/本地域名）
-          #   3. 按来源单独设最低阈值：哪个源异常，立刻能定位到具体是谁
-          #   4. 上游异常时保留现有 AdBlock.yaml，绝不用残缺结果覆盖
-          #   5. 生成内容不嵌入时间戳，域名集合真正变化时文件内容才变化，
-          #      避免"内容总在变 -> 天天空提交"
+          # 基本配置
           # =========================================================================
 
           OUTPUT_FILE = "Egern/Rule/AdBlock.yaml"
+
           REQUEST_TIMEOUT = 30
-          USER_AGENT = "Egern-AdBlock-Builder/1.0"
+
+          USER_AGENT = "Egern-AdBlock-Builder/3.0"
+
+
+          # 最终最低安全阈值
           FINAL_MIN_DOMAINS = 100000
 
+
+          # =========================================================================
+          # 广告上游
+          # =========================================================================
+
           SOURCES = {
-              "AdGuard_Chinese": {
-                  "url": "https://filters.adtidy.org/extension/chromium/filters/224.txt",
+
+              "AdGuard_DNS": {
+                  "url": (
+                      "https://adguardteam.github.io/"
+                      "AdGuardSDNSFilter/Filters/filter.txt"
+                  ),
                   "parser": "adguard",
-                  "minimum": 2000,
+                  "minimum": 50000,
               },
+
               "AdRules": {
-                  "url": "https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/dns.txt",
+                  "url": (
+                      "https://raw.githubusercontent.com/"
+                      "Cats-Team/AdRules/main/dns.txt"
+                  ),
                   "parser": "adguard",
                   "minimum": 100000,
               },
-              "Anti-AD": {
-                  "url": "https://raw.githubusercontent.com/privacy-protection-tools/anti-AD/master/anti-ad-surge.txt",
-                  "parser": "surge",
-                  "minimum": 60000,
-              },
+
               "AWAvenue": {
-                  "url": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/AWAvenue-Ads-Rule.txt",
+                  "url": (
+                      "https://raw.githubusercontent.com/"
+                      "TG-Twilight/AWAvenue-Ads-Rule/main/"
+                      "AWAvenue-Ads-Rule.txt"
+                  ),
                   "parser": "adguard",
                   "minimum": 400,
               },
+
           }
 
-          DOMAIN_LABEL_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+
+          # =========================================================================
+          # 域名合法性
+          # =========================================================================
+
+          DOMAIN_LABEL_RE = re.compile(
+              r"^[a-z0-9]"
+              r"(?:[a-z0-9-]{0,61}[a-z0-9])?$",
+              re.IGNORECASE,
+          )
 
 
           def normalize_domain(value):
+
               if not isinstance(value, str):
                   return None
+
               domain = value.strip().lower()
+
               if not domain:
                   return None
+
               if domain.startswith("||"):
                   domain = domain[2:]
+
               if domain.endswith("^"):
                   domain = domain[:-1]
+
               domain = domain.strip().rstrip(".")
+
               if not domain:
                   return None
-              if any(ch in domain for ch in ("*", "/", "\\", "^", "$", "?", "#", ":", "!", " ", "\t", ",")):
+
+              # 只接受纯域名
+              forbidden = (
+                  "*",
+                  "/",
+                  "\\",
+                  "^",
+                  "$",
+                  "?",
+                  "#",
+                  ":",
+                  "!",
+                  " ",
+                  "\t",
+                  ",",
+                  "(",
+                  ")",
+                  "[",
+                  "]",
+                  "{",
+                  "}",
+              )
+
+              if any(
+                  char in domain
+                  for char in forbidden
+              ):
                   return None
+
+              # 排除 IPv4 / IPv6
               try:
                   ipaddress.ip_address(domain)
                   return None
               except ValueError:
                   pass
-              if "." not in domain or ".." in domain:
+
+              if "." not in domain:
                   return None
+
+              if ".." in domain:
+                  return None
+
+              # IDN 转换
               try:
-                  domain = domain.encode("idna").decode("ascii").lower()
+                  domain = (
+                      domain
+                      .encode("idna")
+                      .decode("ascii")
+                      .lower()
+                  )
               except UnicodeError:
                   return None
+
               if len(domain) > 253:
                   return None
+
               labels = domain.split(".")
+
               if len(labels) < 2:
                   return None
+
               for label in labels:
+
                   if not DOMAIN_LABEL_RE.fullmatch(label):
                       return None
-              if domain.endswith((".local", ".localhost", ".lan", ".internal")):
+
+              # 排除本地域名
+              if domain.endswith(
+                  (
+                      ".local",
+                      ".localhost",
+                      ".lan",
+                      ".internal",
+                  )
+              ):
                   return None
+
               return domain
 
 
+          # =========================================================================
+          # HTTP Session
+          # =========================================================================
+
           def create_session():
+
               session = requests.Session()
+
               retry = Retry(
+
                   total=3,
+
                   connect=3,
+
                   read=3,
+
                   backoff_factor=1,
-                  status_forcelist=(429, 500, 502, 503, 504),
-                  allowed_methods=frozenset(["GET"]),
+
+                  status_forcelist=(
+                      429,
+                      500,
+                      502,
+                      503,
+                      504,
+                  ),
+
+                  allowed_methods=frozenset(
+                      ["GET"]
+                  ),
+
                   raise_on_status=False,
               )
-              adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
-              session.mount("https://", adapter)
-              session.mount("http://", adapter)
-              session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
+
+              adapter = HTTPAdapter(
+
+                  max_retries=retry,
+
+                  pool_connections=10,
+
+                  pool_maxsize=10,
+              )
+
+              session.mount(
+                  "https://",
+                  adapter,
+              )
+
+              session.mount(
+                  "http://",
+                  adapter,
+              )
+
+              session.headers.update(
+                  {
+                      "User-Agent": USER_AGENT,
+                      "Accept": "*/*",
+                  }
+              )
+
               return session
 
 
-          def fetch_text(session, name, url):
-              print(f"\nDownloading: {name}\n  {url}")
-              response = session.get(url, timeout=REQUEST_TIMEOUT)
+          # =========================================================================
+          # 下载文本
+          # =========================================================================
+
+          def fetch_text(
+              session,
+              name,
+              url,
+          ):
+
+              print()
+              print("=" * 72)
+              print(f"Downloading: {name}")
+              print(f"URL: {url}")
+
+              response = session.get(
+                  url,
+                  timeout=REQUEST_TIMEOUT,
+              )
+
               response.raise_for_status()
+
               content = response.text
+
               if not content.strip():
-                  raise RuntimeError(f"{name}: downloaded content is empty")
-              print(f"  HTTP {response.status_code} | {len(content):,} bytes")
+                  raise RuntimeError(
+                      f"{name}: downloaded content is empty"
+                  )
+
+              # 防止 GitHub / CDN 异常返回 HTML
+              sample = content[:1500].lower()
+
+              if (
+                  "<html" in sample
+                  or "<!doctype" in sample
+              ):
+                  raise RuntimeError(
+                      f"{name}: downloaded content appears to be HTML"
+                  )
+
+              print(
+                  f"HTTP {response.status_code} | "
+                  f"{len(content):,} bytes | "
+                  f"{len(content.splitlines()):,} lines"
+              )
+
               return content
 
 
+          # =========================================================================
+          # AdGuard 纯域名规则
+          #
+          # 只接受：
+          #
+          #   ||example.com^
+          #
+          # 不接受：
+          #
+          #   ||example.com^$important
+          #   ||example.com/path
+          #   ||*.example.com^
+          #   /regex/
+          #   @@||example.com^
+          #
+          # 这样不会把带有额外条件的规则错误转换成无条件 DNS REJECT。
+          # =========================================================================
+
           PURE_ADGUARD_DOMAIN = re.compile(
-              r"^\|\|([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)\^$", re.IGNORECASE
+
+              r"^\|\|"
+
+              r"([a-z0-9]"
+              r"(?:[a-z0-9.-]{0,251}"
+              r"[a-z0-9])?)"
+
+              r"\^$",
+
+              re.IGNORECASE,
           )
 
 
           def parse_adguard(content):
+
               domains = set()
+
               for raw_line in content.splitlines():
+
                   line = raw_line.strip()
-                  if not line or line.startswith(("!", "#", "[", "@@")):
+
+                  if not line:
                       continue
-                  match = PURE_ADGUARD_DOMAIN.fullmatch(line)
+
+                  if line.startswith(
+                      (
+                          "!",
+                          "#",
+                          "[",
+                          "@@",
+                      )
+                  ):
+                      continue
+
+                  match = PURE_ADGUARD_DOMAIN.fullmatch(
+                      line
+                  )
+
                   if not match:
                       continue
-                  domain = normalize_domain(match.group(1))
+
+                  domain = normalize_domain(
+                      match.group(1)
+                  )
+
                   if domain:
                       domains.add(domain)
+
               return domains
 
 
-          SURGE_DOMAIN = re.compile(r"^(?:DOMAIN|DOMAIN-SUFFIX),([^,\s]+)$", re.IGNORECASE)
+          # =========================================================================
+          # Surge DOMAIN / DOMAIN-SUFFIX
+          #
+          # 这里只服务于可能需要 Surge 解析的规则源。
+          #
+          # 不处理：
+          #
+          #   DOMAIN-KEYWORD
+          #   DOMAIN-WILDCARD
+          #   IP-CIDR
+          #   GEOIP
+          #   PROCESS-NAME
+          #   URL-REGEX
+          #
+          # 因为 AdBlock.yaml 的目标是纯 DNS 域名集合。
+          # =========================================================================
+
+          SURGE_DOMAIN = re.compile(
+
+              r"^(?:DOMAIN|DOMAIN-SUFFIX),"
+
+              r"([^,\s]+)"
+
+              r"(?:,.*)?$",
+
+              re.IGNORECASE,
+          )
 
 
           def parse_surge(content):
+
               domains = set()
+
               for raw_line in content.splitlines():
+
                   line = raw_line.strip()
-                  if not line or line.startswith(("#", "//", ";")):
+
+                  if not line:
                       continue
-                  match = SURGE_DOMAIN.fullmatch(line)
+
+                  if line.startswith(
+                      (
+                          "#",
+                          "//",
+                          ";",
+                      )
+                  ):
+                      continue
+
+                  match = SURGE_DOMAIN.fullmatch(
+                      line
+                  )
+
                   if not match:
                       continue
-                  domain = normalize_domain(match.group(1))
+
+                  domain = normalize_domain(
+                      match.group(1)
+                  )
+
                   if domain:
                       domains.add(domain)
+
               return domains
 
 
-          def parse_source(parser, content):
-              if parser == "adguard":
-                  return parse_adguard(content)
-              if parser == "surge":
-                  return parse_surge(content)
-              raise ValueError(f"Unknown parser: {parser}")
-
+          # =========================================================================
+          # 构建
+          # =========================================================================
 
           def build_rules():
+
               session = create_session()
+
               merged = set()
+
               stats = {}
+
               for name, config in SOURCES.items():
-                  content = fetch_text(session, name, config["url"])
-                  domains = parse_source(config["parser"], content)
-                  count = len(domains)
-                  print(f"  Parsed valid domains: {count:,}")
-                  if count < config["minimum"]:
-                      raise RuntimeError(
-                          f"{name} failed safety check: {count:,} < minimum {config['minimum']:,}"
+
+                  content = fetch_text(
+                      session,
+                      name,
+                      config["url"],
+                  )
+
+                  if config["parser"] == "adguard":
+
+                      domains = parse_adguard(
+                          content
                       )
+
+                  elif config["parser"] == "surge":
+
+                      domains = parse_surge(
+                          content
+                      )
+
+                  else:
+
+                      raise RuntimeError(
+                          f"Unknown parser: "
+                          f"{config['parser']}"
+                      )
+
+                  count = len(domains)
+
+                  print(
+                      f"Parsed valid domains: "
+                      f"{count:,}"
+                  )
+
+                  minimum = config["minimum"]
+
+                  if count < minimum:
+
+                      raise RuntimeError(
+
+                          f"{name} failed safety check: "
+
+                          f"{count:,} < "
+
+                          f"{minimum:,}"
+                      )
+
                   stats[name] = count
+
                   merged.update(domains)
 
-              print("\n" + "=" * 60)
+              print()
+              print("=" * 72)
               print("Source statistics")
-              print("=" * 60)
+              print("=" * 72)
+
               for name, count in stats.items():
-                  print(f"{name:<24} {count:>10,}")
-              print("-" * 60)
-              print(f"{'Unique merged domains':<24} {len(merged):>10,}")
+
+                  print(
+                      f"{name:<24}"
+                      f"{count:>12,}"
+                  )
+
+              print("-" * 72)
+
+              print(
+                  f"{'Unique merged domains':<24}"
+                  f"{len(merged):>12,}"
+              )
+
               return merged
 
 
+          # =========================================================================
+          # 生成 AdBlock.yaml
+          # =========================================================================
+
           def generate_yaml(domains):
+
               domains = sorted(domains)
+
               lines = [
-                  "# Egern AdBlock Rule (Merged)",
+
+                  "# Egern AdBlock Rule",
                   f"# Total Domains: {len(domains)}",
-                  f"# Sources: {', '.join(SOURCES.keys())}",
-                  "# Generated by merge_rules.py",
+                  "# Sources: AdGuard_DNS, AdRules, AWAvenue",
+                  "# Generated by Egern AdBlock Builder",
                   "",
                   "payload:",
+
               ]
-              lines.extend(f"  - {domain}" for domain in domains)
+
+              lines.extend(
+                  f"  - {domain}"
+                  for domain in domains
+              )
+
               lines.append("")
+
               return "\n".join(lines)
 
 
+          # =========================================================================
+          # YAML 校验
+          # =========================================================================
+
           def validate_output(content):
+
               data = yaml.safe_load(content)
+
               if not isinstance(data, dict):
-                  raise RuntimeError("Generated YAML root is invalid")
-              payload = data.get("payload")
-              if not isinstance(payload, list) or not payload:
-                  raise RuntimeError("Generated YAML has no valid payload")
-              if len(payload) != len(set(payload)):
-                  raise RuntimeError("Duplicate domains detected")
+
+                  raise RuntimeError(
+                      "Generated YAML root is invalid"
+                  )
+
+              payload = data.get(
+                  "payload"
+              )
+
+              if not isinstance(
+                  payload,
+                  list,
+              ):
+
+                  raise RuntimeError(
+                      "Generated YAML payload is invalid"
+                  )
+
+              if not payload:
+
+                  raise RuntimeError(
+                      "Generated YAML has no payload"
+                  )
+
+              if len(payload) != len(
+                  set(payload)
+              ):
+
+                  raise RuntimeError(
+                      "Duplicate domains detected"
+                  )
+
               for domain in payload:
-                  if normalize_domain(domain) != domain:
-                      raise RuntimeError(f"Invalid generated domain: {domain}")
+
+                  if normalize_domain(
+                      domain
+                  ) != domain:
+
+                      raise RuntimeError(
+                          f"Invalid generated domain: "
+                          f"{domain}"
+                      )
+
               return len(payload)
 
 
-          def write_if_changed(path, content):
+          # =========================================================================
+          # 原子写入
+          # =========================================================================
+
+          def write_if_changed(
+              path,
+              content,
+          ):
+
               old_content = None
+
               if os.path.exists(path):
-                  with open(path, "r", encoding="utf-8") as f:
+
+                  with open(
+                      path,
+                      "r",
+                      encoding="utf-8",
+                  ) as f:
+
                       old_content = f.read()
+
               if old_content == content:
-                  print("\nNo changes detected.")
+
+                  print()
+                  print(
+                      "No changes detected."
+                  )
+
                   return False
 
-              directory = os.path.dirname(path) or "."
-              os.makedirs(directory, exist_ok=True)
-              fd, temp_path = tempfile.mkstemp(prefix=".AdBlock.", suffix=".tmp", dir=directory, text=True)
+              directory = (
+                  os.path.dirname(path)
+                  or "."
+              )
+
+              os.makedirs(
+                  directory,
+                  exist_ok=True,
+              )
+
+              fd, temp_path = tempfile.mkstemp(
+
+                  prefix=".AdBlock.",
+
+                  suffix=".tmp",
+
+                  dir=directory,
+
+                  text=True,
+              )
+
               try:
-                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+
+                  with os.fdopen(
+                      fd,
+                      "w",
+                      encoding="utf-8",
+                      newline="\n",
+                  ) as f:
+
                       f.write(content)
-                  os.replace(temp_path, path)
+
+                  os.replace(
+                      temp_path,
+                      path,
+                  )
+
               except Exception:
+
                   try:
-                      os.unlink(temp_path)
+                      os.unlink(
+                          temp_path
+                      )
                   except OSError:
                       pass
+
                   raise
+
               return True
 
 
+          # =========================================================================
+          # Main
+          # =========================================================================
+
           def main():
-              print("=" * 60)
-              print("Egern AdBlock Rule Builder")
-              print("Build time:", datetime.now(timezone.utc).isoformat())
-              print("=" * 60)
+
+              print("=" * 72)
+              print(
+                  "Egern AdBlock Rule Builder"
+              )
+              print("=" * 72)
+
               try:
+
                   domains = build_rules()
-                  if len(domains) < FINAL_MIN_DOMAINS:
+
+                  final_count = len(domains)
+
+                  if final_count < FINAL_MIN_DOMAINS:
+
                       raise RuntimeError(
-                          f"Final domain count is suspiciously low: "
-                          f"{len(domains):,} < {FINAL_MIN_DOMAINS:,}"
+
+                          "Final domain count is "
+                          "suspiciously low: "
+
+                          f"{final_count:,} < "
+
+                          f"{FINAL_MIN_DOMAINS:,}"
                       )
-                  content = generate_yaml(domains)
-                  count = validate_output(content)
-                  changed = write_if_changed(OUTPUT_FILE, content)
-                  print("\n" + "=" * 60)
-                  print(f"SUCCESS: {count:,} domains {'generated' if changed else 'unchanged'}")
-                  print("=" * 60)
+
+                  content = generate_yaml(
+                      domains
+                  )
+
+                  count = validate_output(
+                      content
+                  )
+
+                  changed = write_if_changed(
+                      OUTPUT_FILE,
+                      content,
+                  )
+
+                  print()
+                  print("=" * 72)
+
+                  print(
+                      f"SUCCESS: "
+                      f"{count:,} domains "
+                      f"{'generated' if changed else 'unchanged'}"
+                  )
+
+                  print("=" * 72)
+
               except Exception as exc:
-                  print("\n" + "=" * 60)
+
+                  print()
+                  print("=" * 72)
                   print("BUILD FAILED")
                   print(str(exc))
-                  print("Existing AdBlock.yaml was preserved.")
-                  print("=" * 60)
+                  print(
+                      "Existing AdBlock.yaml "
+                      "was preserved."
+                  )
+                  print("=" * 72)
+
                   raise SystemExit(1)
 
 
           if __name__ == "__main__":
               main()
-          EOF
 
-      # ================================================================
-      # Step 4: 只下载现有规则对应的 blackmatrix7 文件，并生成 Lan / AIGC
-      # ================================================================
+          PY
+
+
+      # =======================================================================
+      # Step 4：更新已有 blackmatrix7 规则
+      #
+      # 这里只更新当前 Egern/Rule 中已经存在的 YAML。
+      # 不会因为 blackmatrix7 新增规则而自动扩张你的规则目录。
+      #
+      # =======================================================================
+
       - name: Download Existing Rules from blackmatrix7
         run: |
-          set -euo pipefail
 
-          download_and_merge() {
-            local output="$1"
-            shift
-            : > "$output"
-            for url in "$@"; do
-              echo "Downloading: $url"
-              curl -f -L "$url" >> "$output" || { echo "Download Failed: $url"; exit 1; }
-              echo "" >> "$output"
-            done
-          }
+          set -euo pipefail
 
           mkdir -p Egern/Rule
 
-          existing_files=$(find Egern/Rule -maxdepth 1 -type f -name '*.yaml' ! -name 'AdBlock.yaml' -exec basename {} .yaml \;)
+          existing_files=$(
+            find Egern/Rule \
+              -maxdepth 1 \
+              -type f \
+              -name '*.yaml' \
+              ! -name 'AdBlock.yaml' \
+              -exec basename {} .yaml \; |
+            sort
+          )
+
           if [ -z "$existing_files" ]; then
-            echo "No existing rule files found (besides AdBlock.yaml). Skipping download from blackmatrix7."
+
+            echo "No existing rule files found."
+
           else
-            echo "Existing rule files to update:"
+
+            echo "Existing rule files:"
             echo "$existing_files"
 
-            echo "Cloning blackmatrix7/ios_rule_script..."
-            git clone --depth 1 https://github.com/blackmatrix7/ios_rule_script.git BM7_Tmp
+            rm -rf BM7_Tmp
 
-            for name in $existing_files; do
+            echo "Cloning blackmatrix7/ios_rule_script..."
+
+            git clone \
+              --depth 1 \
+              https://github.com/blackmatrix7/ios_rule_script.git \
+              BM7_Tmp
+
+            while IFS= read -r name; do
+
+              [ -z "$name" ] && continue
+
               src="BM7_Tmp/rule/Surge/${name}.list"
+
               if [ ! -f "$src" ]; then
-                found=$(find BM7_Tmp/rule/Surge -type f -name "${name}.list" | head -n1)
-                if [ -n "$found" ]; then
-                  src="$found"
-                fi
+
+                src=$(
+                  find BM7_Tmp/rule/Surge \
+                    -type f \
+                    -name "${name}.list" |
+                  head -n 1
+                )
+
               fi
-              dst="Egern/Rule/${name}.list"
-              if [ -f "$src" ]; then
-                echo "Copying ${name}.list from blackmatrix7 ($src)"
-                cp "$src" "$dst"
+
+              if [ -n "${src:-}" ] && [ -f "$src" ]; then
+
+                echo "Updating ${name}.list"
+
+                cp \
+                  "$src" \
+                  "Egern/Rule/${name}.list"
+
               else
-                echo "⚠️  Warning: ${name}.list not found in blackmatrix7, skipping."
+
+                echo "Warning: ${name}.list not found."
+
               fi
-            done
+
+            done <<< "$existing_files"
 
             rm -rf BM7_Tmp
+
           fi
 
-          # ---- 合并生成 Lan.yaml ----
-          LAN_SOURCES=(
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list"
-            "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Lan.yaml"
-          )
-          download_and_merge "Egern/Rule/Lan.list" "${LAN_SOURCES[@]}"
 
-          # ---- 合并生成 AIGC.yaml ----
-          AIGC_SOURCES=(
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list"
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list"
-            "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list"
-            "https://raw.githubusercontent.com/ConnersHua/RuleGo/master/Surge/Ruleset/Extra/AI.list"
-            "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AI.yaml"
-          )
-          download_and_merge "Egern/Rule/AIGC.list" "${AIGC_SOURCES[@]}"
+      # =======================================================================
+      # Step 5：下载并合并 Lan / AIGC
+      #
+      # 这里不再把 YAML 文件直接追加到 LIST。
+      #
+      # 所有来源先下载到临时目录，再由统一 Python 解析器读取。
+      #
+      # =======================================================================
 
-      # ================================================================
-      # Step 5: 将所有 .list 文件重命名为 .yaml
-      # ================================================================
-      - name: Rename .list to .yaml
+      - name: Build Lan and AIGC Rules
         run: |
-          cd Egern/Rule
-          find . -type f -name '*.list' -exec sh -c 'mv "$1" "${1%.list}.yaml"' sh {} \;
 
-      # ================================================================
-      # Step 6: 标准化处理（清理、排序、去重，跳过 AdBlock.yaml）
-      # ================================================================
-      - name: Normalize Rules
-        run: |
-          cd Egern/Rule
-          find . -type f -name '*.yaml' ! -name 'AdBlock.yaml' -print0 | while IFS= read -r -d $'\0' file; do
-            sed -i \
-              -e '/^PROCESS-NAME/d' \
-              -e '/^AND/d' \
-              -e '/^OR/d' \
-              -e '/^NOT/d' \
-              -e '/^\s*[#;]/d' \
-              -e '/^$/d' \
-              -e 's| //.*||' \
-              "$file"
+          python3 - << 'PY'
 
-            awk '{
-              if ($0 ~ /^DOMAIN,/) print "00 " $0
-              else if ($0 ~ /^DOMAIN-SUFFIX,/) print "01 " $0
-              else if ($0 ~ /^DOMAIN-KEYWORD,/) print "02 " $0
-              else if ($0 ~ /^DOMAIN-WILDCARD,/) print "03 " $0
-              else if ($0 ~ /^IP-CIDR6,/) print "04 " $0
-              else if ($0 ~ /^IP-CIDR,/) print "05 " $0
-              else if ($0 ~ /^IP-ASN,/) print "06 " $0
-              else if ($0 ~ /^URL-REGEX,/) print "07 " $0
-              else if ($0 ~ /^USER-AGENT,/) print "08 " $0
-              else if ($0 ~ /^DEST-PORT,/) print "09 " $0
-              else if ($0 ~ /^GEOIP,/) print "10 " $0
-              else print "99 " $0
-            }' "$file" | sort -k1,1n -k2,2 | cut -d' ' -f2- > "${file}.sorted"
-
-            awk '!seen[tolower($0)]++' "${file}.sorted" > "${file}"
-            rm -f "${file}.sorted"
-          done
-
-      # ================================================================
-      # Step 7: 为每个 YAML 文件添加/更新头部注释（规则名称、统计、规则来源、引用链接、更新时间）
-      #         自动移除原有冗余注释（# Egern AdBlock Rule, # Total Domains, # Sources, # Generated 等）
-      #         头部与内容之间保留一个空行
-      #         来源映射：为所有可能出现的规则文件定义来源信息
-      # ================================================================
-      - name: Add Headers to YAML files
-        run: |
-          python3 - << 'EOF'
-          import os
-          import yaml
           from pathlib import Path
-          from datetime import datetime, timezone, timedelta
+          import tempfile
 
-          rule_dir = Path("Egern/Rule")
-          repo = "jnlaoshu/MySelf"
-          branch = "main"
+          import requests
+          import yaml
 
-          # 为所有可能出现的规则文件定义来源（文件名作为键）
-          # 对于未在此映射中的文件，将使用默认来源 "blackmatrix7/ios_rule_script"
-          source_map = {
-              "AdBlock": "AdGuard_Chinese, AdRules, Anti-AD, AWAvenue",
-              "Lan": "blackmatrix7, Repcz",
-              "AIGC": "blackmatrix7, ConnersHua, Repcz",
-          }
-          default_source = "blackmatrix7/ios_rule_script"
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
 
-          # 获取当前北京时间 (UTC+8)
-          now = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
-          update_time = now.strftime("%Y-%m-%d %H:%M:%S +0800")
 
-          for yaml_file in rule_dir.glob("*.yaml"):
-              print(f"Processing {yaml_file.name}...")
-              with open(yaml_file, 'r', encoding='utf-8-sig') as f:
-                  content = f.read()
+          OUTPUT_DIR = Path(
+              "Egern/Rule"
+          )
+
+
+          REQUEST_TIMEOUT = 30
+
+
+          USER_AGENT = (
+              "Egern-Rule-Builder/3.0"
+          )
+
+
+          # =========================================================================
+          # HTTP
+          # =========================================================================
+
+          def create_session():
+
+              session = requests.Session()
+
+              retry = Retry(
+
+                  total=3,
+
+                  connect=3,
+
+                  read=3,
+
+                  backoff_factor=1,
+
+                  status_forcelist=(
+                      429,
+                      500,
+                      502,
+                      503,
+                      504,
+                  ),
+
+                  allowed_methods=frozenset(
+                      ["GET"]
+                  ),
+
+                  raise_on_status=False,
+              )
+
+              adapter = HTTPAdapter(
+                  max_retries=retry
+              )
+
+              session.mount(
+                  "https://",
+                  adapter
+              )
+
+              session.mount(
+                  "http://",
+                  adapter
+              )
+
+              session.headers.update(
+                  {
+                      "User-Agent": USER_AGENT,
+                      "Accept": "*/*",
+                  }
+              )
+
+              return session
+
+
+          # =========================================================================
+          # 下载
+          # =========================================================================
+
+          def download(
+              session,
+              url,
+          ):
+
+              print(
+                  f"Downloading: {url}"
+              )
+
+              response = session.get(
+                  url,
+                  timeout=REQUEST_TIMEOUT,
+              )
+
+              response.raise_for_status()
+
+              content = response.text
 
               if not content.strip():
-                  print("  Skipping empty file.")
+
+                  raise RuntimeError(
+                      f"Empty source: {url}"
+                  )
+
+              return content
+
+
+          # =========================================================================
+          # 解析 Surge LIST
+          #
+          # 保留所有合法的规则类型。
+          #
+          # 这里只负责生成 AIGC / Lan 等普通规则集。
+          #
+          # AdBlock.yaml 使用独立的严格域名解析器。
+          # =========================================================================
+
+          def parse_list(
+              content
+          ):
+
+              rules = set()
+
+              for raw in content.splitlines():
+
+                  line = raw.strip()
+
+                  if not line:
+                      continue
+
+                  if line.startswith(
+                      (
+                          "#",
+                          "//",
+                          ";",
+                          "!",
+                      )
+                  ):
+                      continue
+
+                  rules.add(line)
+
+              return rules
+
+
+          # =========================================================================
+          # 解析 Egern YAML
+          # =========================================================================
+
+          def parse_yaml(
+              content
+          ):
+
+              rules = set()
+
+              try:
+
+                  data = yaml.safe_load(
+                      content
+                  )
+
+              except Exception as exc:
+
+                  raise RuntimeError(
+                      f"Invalid YAML source: {exc}"
+                  )
+
+              if not isinstance(
+                  data,
+                  dict,
+              ):
+
+                  return rules
+
+              payload = data.get(
+                  "payload"
+              )
+
+              if not isinstance(
+                  payload,
+                  list,
+              ):
+
+                  return rules
+
+              for item in payload:
+
+                  if not isinstance(
+                      item,
+                      str,
+                  ):
+                      continue
+
+                  item = item.strip()
+
+                  if not item:
+                      continue
+
+                  if item.startswith(
+                      (
+                          "#",
+                          "//",
+                          ";",
+                          "!",
+                      )
+                  ):
+                      continue
+
+                  rules.add(item)
+
+              return rules
+
+
+          # =========================================================================
+          # 自动判断源格式
+          #
+          # 优先判断 YAML。
+          # 如果不是合法 YAML payload，则按 LIST 处理。
+          # =========================================================================
+
+          def parse_source(
+              content
+          ):
+
+              try:
+
+                  data = yaml.safe_load(
+                      content
+                  )
+
+                  if (
+                      isinstance(data, dict)
+                      and isinstance(
+                          data.get("payload"),
+                          list,
+                      )
+                  ):
+
+                      return parse_yaml(
+                          content
+                      )
+
+              except Exception:
+                  pass
+
+              return parse_list(
+                  content
+              )
+
+
+          # =========================================================================
+          # 构建一个规则文件
+          # =========================================================================
+
+          def build_rule_file(
+              session,
+              name,
+              urls,
+          ):
+
+              merged = set()
+
+              print()
+              print("=" * 72)
+              print(
+                  f"Building {name}.yaml"
+              )
+              print("=" * 72)
+
+              for url in urls:
+
+                  content = download(
+                      session,
+                      url,
+                  )
+
+                  rules = parse_source(
+                      content
+                  )
+
+                  print(
+                      f"  Parsed: "
+                      f"{len(rules):,}"
+                  )
+
+                  merged.update(
+                      rules
+                  )
+
+              if not merged:
+
+                  raise RuntimeError(
+                      f"{name}: no valid rules"
+                  )
+
+              output = {
+                  "payload": sorted(
+                      merged,
+                      key=lambda x: (
+                          x.split(
+                              ",",
+                              1
+                          )[0].upper(),
+                          x.lower(),
+                      ),
+                  )
+              }
+
+              output_file = (
+                  OUTPUT_DIR
+                  / f"{name}.yaml"
+              )
+
+              with open(
+                  output_file,
+                  "w",
+                  encoding="utf-8",
+                  newline="\n",
+              ) as f:
+
+                  yaml.safe_dump(
+                      output,
+                      f,
+                      allow_unicode=True,
+                      sort_keys=False,
+                      default_flow_style=False,
+                  )
+
+              print(
+                  f"  Unique rules: "
+                  f"{len(merged):,}"
+              )
+
+
+          # =========================================================================
+          # Sources
+          # =========================================================================
+
+          LAN_SOURCES = [
+
+              "https://raw.githubusercontent.com/"
+              "blackmatrix7/ios_rule_script/master/"
+              "rule/Surge/Lan/Lan.list",
+
+              "https://raw.githubusercontent.com/"
+              "Repcz/Tool/refs/heads/X/Egern/"
+              "Rules/Lan.yaml",
+
+          ]
+
+
+          AIGC_SOURCES = [
+
+              "https://raw.githubusercontent.com/"
+              "blackmatrix7/ios_rule_script/master/"
+              "rule/Surge/OpenAI/OpenAI.list",
+
+              "https://raw.githubusercontent.com/"
+              "blackmatrix7/ios_rule_script/master/"
+              "rule/Surge/Claude/Claude.list",
+
+              "https://raw.githubusercontent.com/"
+              "blackmatrix7/ios_rule_script/master/"
+              "rule/Surge/Gemini/Gemini.list",
+
+              "https://raw.githubusercontent.com/"
+              "ConnersHua/RuleGo/master/"
+              "Surge/Ruleset/Extra/AI.list",
+
+              "https://raw.githubusercontent.com/"
+              "Repcz/Tool/refs/heads/X/Egern/"
+              "Rules/AI.yaml",
+
+          ]
+
+
+          session = create_session()
+
+          build_rule_file(
+              session,
+              "Lan",
+              LAN_SOURCES,
+          )
+
+          build_rule_file(
+              session,
+              "AIGC",
+              AIGC_SOURCES,
+          )
+
+          PY
+
+
+      # =======================================================================
+      # Step 6：转换 blackmatrix7 .list
+      #
+      # 这里只处理 Step 4 下载的 .list。
+      #
+      # Lan / AIGC 已经在 Step 5 直接生成 YAML。
+      #
+      # =======================================================================
+
+      - name: Convert blackmatrix7 Lists to Egern YAML
+        run: |
+
+          python3 - << 'PY'
+
+          from pathlib import Path
+          import yaml
+
+
+          RULE_DIR = Path(
+              "Egern/Rule"
+          )
+
+
+          for list_file in sorted(
+              RULE_DIR.glob("*.list")
+          ):
+
+              yaml_file = (
+                  list_file.with_suffix(
+                      ".yaml"
+                  )
+              )
+
+              print(
+                  f"Converting "
+                  f"{list_file.name} "
+                  f"-> "
+                  f"{yaml_file.name}"
+              )
+
+              rules = set()
+
+              with open(
+                  list_file,
+                  "r",
+                  encoding="utf-8-sig",
+              ) as f:
+
+                  for raw in f:
+
+                      line = raw.strip()
+
+                      if not line:
+                          continue
+
+                      if line.startswith(
+                          (
+                              "#",
+                              "//",
+                              ";",
+                              "!",
+                          )
+                      ):
+                          continue
+
+                      rules.add(line)
+
+              output = {
+                  "payload": sorted(
+                      rules,
+                      key=lambda x: (
+                          x.split(
+                              ",",
+                              1
+                          )[0].upper(),
+                          x.lower(),
+                      ),
+                  )
+              }
+
+              with open(
+                  yaml_file,
+                  "w",
+                  encoding="utf-8",
+                  newline="\n",
+              ) as f:
+
+                  yaml.safe_dump(
+                      output,
+                      f,
+                      allow_unicode=True,
+                      sort_keys=False,
+                      default_flow_style=False,
+                  )
+
+              list_file.unlink()
+
+              print(
+                  f"  Rules: "
+                  f"{len(rules):,}"
+              )
+
+          PY
+
+
+      # =======================================================================
+      # Step 7：统一标准化
+      #
+      # 目标：
+      #   - 删除重复规则
+      #   - 忽略大小写重复
+      #   - 清理空行
+      #   - 保持 payload 结构
+      #   - 保持规则类型排序
+      #
+      # =======================================================================
+
+      - name: Normalize Rules
+        run: |
+
+          python3 - << 'PY'
+
+          from pathlib import Path
+
+          import yaml
+
+
+          RULE_DIR = Path(
+              "Egern/Rule"
+          )
+
+
+          TYPE_ORDER = {
+
+              "DOMAIN": 0,
+
+              "DOMAIN-SUFFIX": 1,
+
+              "DOMAIN-KEYWORD": 2,
+
+              "DOMAIN-WILDCARD": 3,
+
+              "IP-CIDR6": 4,
+
+              "IP-CIDR": 5,
+
+              "IP-ASN": 6,
+
+              "URL-REGEX": 7,
+
+              "USER-AGENT": 8,
+
+              "DEST-PORT": 9,
+
+              "GEOIP": 10,
+
+          }
+
+
+          def normalize_rule(
+              rule
+          ):
+
+              if not isinstance(
+                  rule,
+                  str,
+              ):
+                  return None
+
+              rule = rule.strip()
+
+              if not rule:
+                  return None
+
+              if rule.startswith(
+                  (
+                      "#",
+                      "//",
+                      ";",
+                      "!",
+                  )
+              ):
+                  return None
+
+              return rule
+
+
+          for yaml_file in sorted(
+              RULE_DIR.glob("*.yaml")
+          ):
+
+              if yaml_file.name == "AdBlock.yaml":
                   continue
 
-              # 解析 YAML 获取 payload 长度
-              try:
-                  data = yaml.safe_load(content)
-                  if not data or 'payload' not in data:
-                      print("  No 'payload' field, skipping.")
+              print(
+                  f"Normalizing "
+                  f"{yaml_file.name}"
+              )
+
+              with open(
+                  yaml_file,
+                  "r",
+                  encoding="utf-8-sig",
+              ) as f:
+
+                  data = yaml.safe_load(
+                      f
+                  )
+
+              if not isinstance(
+                  data,
+                  dict,
+              ):
+
+                  raise RuntimeError(
+                      f"{yaml_file.name}: "
+                      f"invalid YAML root"
+                  )
+
+              payload = data.get(
+                  "payload"
+              )
+
+              if not isinstance(
+                  payload,
+                  list,
+              ):
+
+                  raise RuntimeError(
+                      f"{yaml_file.name}: "
+                      f"missing payload"
+                  )
+
+              normalized = []
+
+              seen = set()
+
+              for item in payload:
+
+                  rule = normalize_rule(
+                      item
+                  )
+
+                  if rule is None:
                       continue
-                  count = len(data['payload'])
-              except Exception as e:
-                  print(f"  YAML parse error: {e}, skipping.")
+
+                  key = rule.lower()
+
+                  if key in seen:
+                      continue
+
+                  seen.add(key)
+
+                  normalized.append(
+                      rule
+                  )
+
+              def sort_key(
+                  rule
+              ):
+
+                  prefix = (
+                      rule
+                      .split(
+                          ",",
+                          1
+                      )[0]
+                      .upper()
+                  )
+
+                  return (
+                      TYPE_ORDER.get(
+                          prefix,
+                          99,
+                      ),
+                      rule.lower(),
+                  )
+
+              normalized.sort(
+                  key=sort_key
+              )
+
+              output = {
+                  "payload": normalized
+              }
+
+              with open(
+                  yaml_file,
+                  "w",
+                  encoding="utf-8",
+                  newline="\n",
+              ) as f:
+
+                  yaml.safe_dump(
+                      output,
+                      f,
+                      allow_unicode=True,
+                      sort_keys=False,
+                      default_flow_style=False,
+                  )
+
+              print(
+                  f"  Rules: "
+                  f"{len(normalized):,}"
+              )
+
+          PY
+
+
+      # =======================================================================
+      # Step 8：稳定 Header
+      #
+      # 关键：
+      #
+      #   payload 没变化
+      #       ↓
+      #   保留旧更新时间
+      #       ↓
+      #   文件内容保持不变
+      #       ↓
+      #   不产生 Git 变更
+      #
+      #   payload 发生变化
+      #       ↓
+      #   更新统计与更新时间
+      #
+      # =======================================================================
+
+      - name: Add Stable Headers
+        run: |
+
+          python3 - << 'PY'
+
+          from pathlib import Path
+
+          from datetime import (
+              datetime,
+              timezone,
+              timedelta,
+          )
+
+          import yaml
+
+
+          RULE_DIR = Path(
+              "Egern/Rule"
+          )
+
+
+          REPO = (
+              "jnlaoshu/MySelf"
+          )
+
+
+          BRANCH = "main"
+
+
+          SOURCE_MAP = {
+
+              "AdBlock":
+                  "AdGuard DNS Filter, "
+                  "AdRules, "
+                  "AWAvenue",
+
+              "Lan":
+                  "blackmatrix7, Repcz",
+
+              "AIGC":
+                  "blackmatrix7, "
+                  "ConnersHua, "
+                  "Repcz",
+
+          }
+
+
+          DEFAULT_SOURCE = (
+              "blackmatrix7/ios_rule_script"
+          )
+
+
+          def extract_old_time(
+              lines
+          ):
+
+              for line in lines:
+
+                  if line.startswith(
+                      "# 更新时间:"
+                  ):
+
+                      return line.split(
+                          ":",
+                          1
+                      )[1].strip()
+
+              return None
+
+
+          def strip_old_headers(
+              lines
+          ):
+
+              output = []
+
+              for line in lines:
+
+                  stripped = line.strip()
+
+                  if stripped.startswith(
+                      (
+                          "# 规则名称:",
+                          "# 规则统计:",
+                          "# 规则来源:",
+                          "# 引用链接:",
+                          "# 更新时间:",
+                          "# Egern AdBlock Rule",
+                          "# Total Domains:",
+                          "# Sources:",
+                          "# Generated by",
+                      )
+                  ):
+
+                      continue
+
+                  output.append(line)
+
+              return output
+
+
+          def get_payload(
+              content
+          ):
+
+              try:
+
+                  data = yaml.safe_load(
+                      content
+                  )
+
+              except Exception:
+                  return None
+
+              if not isinstance(
+                  data,
+                  dict,
+              ):
+
+                  return None
+
+              payload = data.get(
+                  "payload"
+              )
+
+              if not isinstance(
+                  payload,
+                  list,
+              ):
+
+                  return None
+
+              return [
+                  item.strip()
+                  for item in payload
+                  if isinstance(
+                      item,
+                      str,
+                  )
+                  and item.strip()
+              ]
+
+
+          now = (
+              datetime.now(
+                  timezone.utc
+              )
+              .astimezone(
+                  timezone(
+                      timedelta(
+                          hours=8
+                      )
+                  )
+              )
+          )
+
+
+          current_time = now.strftime(
+              "%Y-%m-%d %H:%M:%S +0800"
+          )
+
+
+          for yaml_file in sorted(
+              RULE_DIR.glob("*.yaml")
+          ):
+
+              print(
+                  f"Processing "
+                  f"{yaml_file.name}"
+              )
+
+              with open(
+                  yaml_file,
+                  "r",
+                  encoding="utf-8-sig",
+              ) as f:
+
+                  content = f.read()
+
+              payload = get_payload(
+                  content
+              )
+
+              if payload is None:
+
+                  print(
+                      "  Invalid payload, skipping."
+                  )
+
                   continue
+
+              # ---------------------------------------------------------------
+              # 当前规范 payload
+              # ---------------------------------------------------------------
+
+              canonical_body = (
+                  yaml.safe_dump(
+                      {
+                          "payload": payload
+                      },
+                      allow_unicode=True,
+                      sort_keys=False,
+                      default_flow_style=False,
+                  )
+                  .rstrip()
+              )
+
+              # ---------------------------------------------------------------
+              # 从当前文件读取旧 payload
+              #
+              # 注意：
+              # 即使 Header 改变，YAML parser 仍然能够正常读取 payload。
+              # ---------------------------------------------------------------
+
+              old_payload = get_payload(
+                  content
+              )
+
+              payload_changed = (
+                  old_payload != payload
+              )
+
+              old_lines = content.splitlines()
+
+              old_time = extract_old_time(
+                  old_lines
+              )
+
+              if (
+                  old_time
+                  and not payload_changed
+              ):
+
+                  update_time = old_time
+
+              else:
+
+                  update_time = current_time
 
               name = yaml_file.stem
-              url = f"https://raw.githubusercontent.com/{repo}/{branch}/Egern/Rule/{yaml_file.name}"
 
-              # 获取来源信息（如果不在映射中，使用默认来源）
-              source = source_map.get(name, default_source)
-
-              # 构建新头部
-              header_lines = [
-                  f"# 规则名称: {name}",
-                  f"# 规则统计: {count}",
-                  f"# 规则来源: {source}",
-                  f"# 引用链接: {url}",
-                  f"# 更新时间: {update_time}",
-                  ""  # 空行分隔头部和内容
-              ]
-              new_header = "\n".join(header_lines)
-
-              # 移除所有以特定前缀开头的行（旧头部和原始生成注释）
-              skip_prefixes = (
-                  "# 规则名称:", "# 规则统计:", "# 引用链接:", "# 更新时间:", "# 规则来源:",
-                  "# Egern AdBlock Rule", "# Total Domains", "# Sources", "# Generated"
+              source = SOURCE_MAP.get(
+                  name,
+                  DEFAULT_SOURCE,
               )
-              keep_lines = []
-              for line in content.splitlines(keepends=False):
-                  stripped = line.strip()
-                  if stripped == '':
-                      # 保留空行（但后续会重新添加头部空行，这里保留内容部分的空行）
-                      keep_lines.append(line)
-                  elif any(stripped.startswith(prefix) for prefix in skip_prefixes):
-                      continue  # 跳过这些行
-                  else:
-                      keep_lines.append(line)
 
-              # 组合内容（移除头部后剩余部分）
-              body = "\n".join(keep_lines)
-              # 新内容 = 头部 + body（头部本身包含一个空行，所以不用额外加）
-              # 注意 new_header 末尾已有空行，所以 body 直接连接
-              if body:
-                  new_content = new_header + body
-              else:
-                  new_content = new_header
+              url = (
+                  f"https://raw.githubusercontent.com/"
+                  f"{REPO}/{BRANCH}/"
+                  f"Egern/Rule/{yaml_file.name}"
+              )
 
-              # 如果内容有变化才写入
+              header = [
+
+                  f"# 规则名称: {name}",
+
+                  f"# 规则统计: "
+                  f"{len(payload)}",
+
+                  f"# 规则来源: {source}",
+
+                  f"# 引用链接: {url}",
+
+                  f"# 更新时间: {update_time}",
+
+                  "",
+
+              ]
+
+              new_content = (
+                  "\n".join(header)
+                  + canonical_body
+                  + "\n"
+              )
+
               if new_content != content:
-                  with open(yaml_file, 'w', encoding='utf-8') as f:
-                      f.write(new_content)
-                  print(f"  Headers updated for {yaml_file.name}")
-              else:
-                  print(f"  No change for {yaml_file.name}")
-          EOF
 
-      # ================================================================
-      # Step 8: 提交并推送变更
-      # ================================================================
+                  with open(
+                      yaml_file,
+                      "w",
+                      encoding="utf-8",
+                      newline="\n",
+                  ) as f:
+
+                      f.write(
+                          new_content
+                      )
+
+                  print(
+                      "  Updated"
+                  )
+
+              else:
+
+                  print(
+                      "  Unchanged"
+                  )
+
+          PY
+
+
+      # =======================================================================
+      # Step 9：最终全局安全检查
+      #
+      # AdBlock：
+      #   必须全部是合法纯域名。
+      #
+      # 其他规则：
+      #   必须全部是非空字符串。
+      #
+      # 所有文件：
+      #   payload 必须存在。
+      #   不允许重复。
+      #
+      # =======================================================================
+
+      - name: Validate All Rules
+        run: |
+
+          python3 - << 'PY'
+
+          from pathlib import Path
+
+          import ipaddress
+          import re
+
+          import yaml
+
+
+          RULE_DIR = Path(
+              "Egern/Rule"
+          )
+
+
+          DOMAIN_LABEL_RE = re.compile(
+
+              r"^[a-z0-9]"
+              r"(?:[a-z0-9-]{0,61}[a-z0-9])?$",
+
+              re.IGNORECASE,
+          )
+
+
+          def valid_domain(
+              domain
+          ):
+
+              if not isinstance(
+                  domain,
+                  str,
+              ):
+                  return False
+
+              domain = domain.strip().lower()
+
+              if (
+                  not domain
+                  or "." not in domain
+                  or ".." in domain
+              ):
+
+                  return False
+
+              forbidden = (
+                  "*",
+                  "/",
+                  "\\",
+                  "^",
+                  "$",
+                  "?",
+                  "#",
+                  ":",
+                  "!",
+                  " ",
+                  ",",
+              )
+
+              if any(
+                  char in domain
+                  for char in forbidden
+              ):
+
+                  return False
+
+              try:
+
+                  ipaddress.ip_address(
+                      domain
+                  )
+
+                  return False
+
+              except ValueError:
+                  pass
+
+              try:
+
+                  domain = (
+                      domain
+                      .encode("idna")
+                      .decode("ascii")
+                  )
+
+              except UnicodeError:
+
+                  return False
+
+              if len(domain) > 253:
+
+                  return False
+
+              labels = domain.split(".")
+
+              return all(
+                  DOMAIN_LABEL_RE.fullmatch(
+                      label
+                  )
+                  for label in labels
+              )
+
+
+          total_files = 0
+
+          total_rules = 0
+
+
+          for yaml_file in sorted(
+              RULE_DIR.glob("*.yaml")
+          ):
+
+              total_files += 1
+
+              with open(
+                  yaml_file,
+                  "r",
+                  encoding="utf-8-sig",
+              ) as f:
+
+                  data = yaml.safe_load(
+                      f
+                  )
+
+              if not isinstance(
+                  data,
+                  dict,
+              ):
+
+                  raise RuntimeError(
+                      f"{yaml_file.name}: "
+                      f"invalid YAML root"
+                  )
+
+              payload = data.get(
+                  "payload"
+              )
+
+              if not isinstance(
+                  payload,
+                  list,
+              ):
+
+                  raise RuntimeError(
+                      f"{yaml_file.name}: "
+                      f"invalid payload"
+                  )
+
+              if len(payload) != len(
+                  set(payload)
+              ):
+
+                  raise RuntimeError(
+                      f"{yaml_file.name}: "
+                      f"duplicate rules"
+                  )
+
+              for rule in payload:
+
+                  if not isinstance(
+                      rule,
+                      str,
+                  ):
+
+                      raise RuntimeError(
+                          f"{yaml_file.name}: "
+                          f"non-string rule"
+                      )
+
+                  if not rule.strip():
+
+                      raise RuntimeError(
+                          f"{yaml_file.name}: "
+                          f"empty rule"
+                      )
+
+                  if (
+                      yaml_file.name
+                      == "AdBlock.yaml"
+                  ):
+
+                      if not valid_domain(
+                          rule
+                      ):
+
+                          raise RuntimeError(
+                              "AdBlock.yaml: "
+                              "invalid domain: "
+                              f"{rule}"
+                          )
+
+              count = len(payload)
+
+              total_rules += count
+
+              print(
+                  f"{yaml_file.name:<32}"
+                  f"{count:>12,}"
+              )
+
+
+          print()
+          print("=" * 72)
+
+          print(
+              f"Rule files : "
+              f"{total_files:,}"
+          )
+
+          print(
+              f"Total rules: "
+              f"{total_rules:,}"
+          )
+
+          print("=" * 72)
+
+          PY
+
+
+      # =======================================================================
+      # Step 10：提交
+      # =======================================================================
+
       - name: Commit and Push
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+
+          set -euo pipefail
+
+          git config \
+            --local \
+            user.email \
+            "action@github.com"
+
+          git config \
+            --local \
+            user.name \
+            "GitHub Action"
+
           git add Egern/Rule/
+
           if ! git diff --staged --quiet; then
-            git commit -m "update(rules): $(date '+%Y-%m-%d %H:%M:%S')"
+
+            git commit \
+              -m "update(rules): $(date '+%Y-%m-%d %H:%M:%S')"
+
             git push
+
           else
+
             echo "No changes to commit."
+
           fi
