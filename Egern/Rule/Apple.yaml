@@ -1,0 +1,68 @@
+# 规则名称: Apple
+# 规则统计: 56
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+# 更新时间: 2026-08-14 17:16:24
+
+no_resolve: true
+domain_keyword_set:
+  - apple-support.akadns.net
+  - apple.com.akadns.net
+  - apple.com.edgekey.net
+  - buy.itunes.apple.com
+  - icloud.com.akadns.net
+  - smp-device
+  - testflight
+ip_cidr_set:
+  - 139.178.128.0/18
+  - 144.178.0.0/19
+  - 144.178.36.0/22
+  - 144.178.48.0/20
+  - 17.0.0.0/8
+  - 192.35.50.0/24
+  - 198.183.17.0/24
+  - 205.180.175.0/24
+  - 63.92.224.0/19
+  - 65.199.22.0/23
+ip_cidr6_set:
+  - "2403:300::/32"
+  - "2620:149::/32"
+  - "2a01:b740::/32"
+user_agent_set:
+  - "*FindMyiPhone?"
+  - "*Music?"
+  - "*WeatherFoundation*"
+  - "*com.apple.Maps?"
+  - "*com.apple.mobileme.fmip1"
+  - "AppleNews*"
+  - "AppleTV*"
+  - "FMDClient*"
+  - "FMFD*"
+  - "FindMyFriends*"
+  - "FindMyiPhone*"
+  - "Maps*"
+  - "Music*"
+  - "Wallet*"
+  - "com.apple.Maps"
+  - "com.apple.appstored*"
+  - "com.apple.news*"
+  - "com.apple.trustd*"
+  - "com.apple.tv*"
+  - "fmflocatord*"
+  - "geod*"
+  - "locationd*"
+  - "passd*"
+process_name_set:
+  - CoreLocationAgent
+  - LookupViewService
+  - Music
+  - TV
+  - WeatherWidget
+  - apsd
+  - com.apple.Maps
+  - com.apple.geod
+  - findmydevice-user-agent
+  - fmfd
+  - mapspushd
+  - netbiosd
+  - trustd

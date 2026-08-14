@@ -1,0 +1,153 @@
+#!name=Spotify净化增强版
+#!desc=去广告+Premium增强+歌词翻译+External支持+首页净化+追踪屏蔽+长期稳定
+#!author=VirgilClyne,001ProMax,app2smile，kelee
+#!date=2026.02.14 14:00
+
+############################
+# MITM 全覆盖
+############################
+mitm:
+  hostnames:
+    - api.spotify.com
+    - spclient.wg.spotify.com
+    - audio-spclient.spotify.com
+    - dealer.spotify.com
+    - gew-spclient.spotify.com
+    - "*-spclient.spotify.com"
+
+############################
+# 广告 / 追踪拦截
+############################
+rule:
+  - AND,((DOMAIN-SUFFIX,spotify.com),(PROTOCOL,QUIC)),REJECT
+  - DOMAIN-SUFFIX,ads.spotify.com,REJECT
+  - DOMAIN-SUFFIX,ad-analytics.spotify.com,REJECT
+  - DOMAIN-SUFFIX,analytics.spotify.com,REJECT
+  - DOMAIN-SUFFIX,log.spotify.com,REJECT
+  - DOMAIN-SUFFIX,events.spotify.com,REJECT
+  - DOMAIN-SUFFIX,tracking.spotify.com,REJECT
+
+############################
+# Header 防缓存
+############################
+header-rewrite:
+
+  - request:
+      pattern: ^https:\/\/.*spotify\.com\/bootstrap\/v1\/bootstrap
+      headers:
+        - del: if-none-match
+        - del: etag
+
+  - request:
+      pattern: ^https:\/\/.*spotify\.com\/user-customization-service\/v1\/customize
+      headers:
+        - del: if-none-match
+        - del: etag
+
+############################
+# URL 修复
+############################
+url-rewrite:
+
+  - ^https:\/\/(?:\w+-spclient|spclient\.wg)\.spotify\.com\/artistview\/v1\/artist\/(.*)&platform=iphone https://spclient.wg.spotify.com/artistview/v1/artist/$1&platform=ipad header
+
+############################
+# Map Local 清空广告配置
+############################
+map-local:
+
+  - match: ^https:\/\/.*spotify\.com\/pendragon\/
+    data: "{}"
+    status-code: 200
+    headers:
+      Content-Type: application/json
+
+############################
+# Script 核心体系
+############################
+script:
+
+  # Tracks增强
+  - match: ^https:\/\/api\.spotify\.com\/v1\/tracks
+    type: response
+    requires-body: true
+    timeout: 20
+    name: Tracks Enhance
+    url: https://kelee.one/Resource/JavaScript/Spotify/Spotify_response.js
+
+  # Lyrics 请求 JSON
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+format=json
+    type: request
+    requires-body: true
+    timeout: 20
+    name: Lyrics Request JSON
+    url: https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
+
+  # Lyrics 请求 Proto
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/
+    type: request
+    requires-body: true
+    binary-mode: true
+    timeout: 20
+    name: Lyrics Request Proto
+    url: https://kelee.one/Resource/JavaScript/Spotify/Spotify_request.js
+
+  # 翻译歌词 JSON
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=Translate
+    type: response
+    requires-body: true
+    timeout: 20
+    name: Lyrics Translate JSON
+    url: https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
+
+  # 翻译歌词 Proto
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/
+    type: response
+    requires-body: true
+    binary-mode: true
+    timeout: 20
+    name: Lyrics Translate Proto
+    url: https://kelee.one/Resource/JavaScript/Spotify/Translate_response.js
+
+  # External歌词 JSON
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/.+subtype=External
+    type: response
+    requires-body: true
+    timeout: 20
+    name: External Lyrics JSON
+    url: https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
+
+  # External歌词 Proto
+  - match: ^https:\/\/spclient\.wg\.spotify\.com\/color-lyrics\/v2\/track\/
+    type: response
+    requires-body: true
+    binary-mode: true
+    timeout: 20
+    name: External Lyrics Proto
+    url: https://kelee.one/Resource/JavaScript/Spotify/External_Lyrics_response.js
+
+  # Remove Ads 核心
+  - match: ^https:\/\/.*spotify\.com\/(bootstrap|user-customization-service)
+    type: response
+    requires-body: true
+    binary-mode: true
+    timeout: 20
+    name: Remove Ads Core
+    url: https://kelee.one/Resource/JavaScript/Spotify/Spotify_remove_ads.js
+    argument: "[false,true]"
+
+  # Premium JSON增强
+  - match: ^https:\/\/.*spotify\.com\/(artistview\/v1\/artist|album-entity-view\/v2\/album)
+    type: request
+    timeout: 20
+    name: Premium JSON Enhance
+    url: https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-json.js
+
+  # Premium Proto增强
+  - match: ^https:\/\/.*spotify\.com\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)
+    type: response
+    requires-body: true
+    binary-mode: true
+    timeout: 20
+    name: Premium Proto Enhance
+    url: https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js

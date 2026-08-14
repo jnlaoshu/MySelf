@@ -1,0 +1,43 @@
+#!name=𝐥𝐚𝐨𝐬𝐡𝐮@𝐒𝐮𝐫𝐠𝐞𝐏𝐫𝐨 𝐓𝐚𝐬𝐤定时脚本
+#!desc=𝐔𝐩𝐝𝐚𝐭𝐞: 2023.03.06 10:00
+# 𝑼𝑹𝑳: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Surge/Task.sgmodule
+
+[Script]
+# > 爱奇艺
+爱奇艺签到 = type=cron,cronexp=30 7 0 * * *,timeout=120,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/iQIYI-DailyBonus/iQIYI.js,wake-system=1,script-update-interval=0
+
+# > 哔哩哔哩
+哔哩哔哩 = type=cron,cronexp=30 6 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/bilibili/bilibili.js,script-update-interval=0
+哔哩哔哩大会员特权领取 = type=cron,cronexp="0 1 0 1 * ?",script-path=https://raw.githubusercontent.com/lowking/Scripts/master/bilibili/privilegeReceive.js,script-update-interval=0
+哔哩哔哩大会员特权领取cookie = type=http-request,pattern=https:\/\/data.bilibili.com\/log\/mobile,script-path=https://raw.githubusercontent.com/lowking/Scripts/master/bilibili/privilegeReceive.js
+
+# > 京东同步检测
+京东账号同步 = type=cron,cronexp="0 3 6,14,23 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/dompling/Script/master/jd/ql_sync_box.js,script-update-interval=0
+京东帐户检测 = type=cron,cronexp="0 5 6,14,23 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/dompling/Script/master/jd/jd_cookie_search.js,script-update-interval=0
+京东物流 = type=cron,cronexp=30 0 12 * * *,script-path=https://raw.githubusercontent.com/id77/QuantumultX/master/task/jdWuLiu%20copy.js,script-update-interval=0,wake-system=1
+//京东商城 = type=cron,cronexp=0 0 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/JD-DailyBonus/JD_DailyBonus.js,script-update-interval=0
+
+# > 芒果TV
+芒果TV = type=cron,cronexp="0 3 0 * * ?",wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/mgtv/mgtv.js,script-update-interval=0
+
+# > 美团
+美团签到 = type=cron,cronexp=0 2 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/meituan/meituan.js,script-update-interval=0
+
+# > 腾讯视频
+腾讯视频签到任务 = type=cron,cronexp=0 5 * * *,script-path=https://raw.githubusercontent.com/ClydeTime/Quantumult/main/Script/Task/videoqq.js,timeout=15,wake-system=1
+
+# > 网易云音乐
+网易音乐 = type=cron,cronexp=30 2 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/neteasemusic/neteasemusic.js,script-update-interval=0
+# > 网易新闻
+网易新闻 = type=cron,cronexp=0 3 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/neteasenews/neteasenews.js,script-update-interval=0
+
+# > 喜马拉雅
+喜马拉雅 = type=cron,cronexp=30 1 0 * * *,wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/ximalaya/ximalaya.js,script-update-interval=0
+
+# > 新浪微博
+微博签到 = type=cron,cronexp="50 4,6,23 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/Sunert/Script/master/Task/weibo.js,script-update-interval=0
+//微博推送= type=cron,cronexp="0 */30 9-21 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/zZPiglet/Task/master/Weibo/Weibo.js,script-update-interval=0
+微博超话-cookie = type=http-request,timeout=360,pattern=https:\/\/weibo\.com\/p\/aj\/general\/button\?ajwvr=6&api=http:\/\/i\.huati\.weibo\.com\/aj\/super\/checkin,script-path=https://raw.githubusercontent.com/lowking/Scripts/master/weibo/weiboSTCookie.js
+
+# > Boxjs会话
+// 切换会话 = type=cron,cronexp="0 10,20 0 * * *",wake-system=1,script-path=https://raw.githubusercontent.com/chavyleung/scripts/master/box/switcher/box.switcher.js,script-update-interval=0

@@ -1,0 +1,38 @@
+# 规则名称: TikTok
+# 规则统计: 32
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rules/TikTok.list
+# 更新时间: 2026-08-14 17:35:06
+
+DOMAIN,lf16-effectcdn.byteeffecttos-g.com
+DOMAIN,lf16-pkgcdn.pitaya-clientai.com
+DOMAIN,p16-tiktokcdn-com.akamaized.net
+DOMAIN,trae-api-sg.mchost.guru
+KEYWORD,musical.ly
+KEYWORD,tiktok
+SUFFIX,bytedapm.com
+SUFFIX,bytegecko-i18n.com
+SUFFIX,byteintlapi.com
+SUFFIX,byteoversea.com
+SUFFIX,capcut.com
+SUFFIX,ibytedtos.com
+SUFFIX,ibyteimg.com
+SUFFIX,ipstatp.com
+SUFFIX,isnssdk.com
+SUFFIX,marscode.com
+SUFFIX,muscdn.com
+SUFFIX,musical.ly
+SUFFIX,sgpstatp.com
+SUFFIX,snssdk.com
+SUFFIX,tik-tokapi.com
+SUFFIX,tiktok.com
+SUFFIX,tiktokcdn-us.com
+SUFFIX,tiktokcdn.com
+SUFFIX,tiktokd.net
+SUFFIX,tiktokd.org
+SUFFIX,tiktokmusic.app
+SUFFIX,tiktokv.com
+SUFFIX,tiktokv.us
+SUFFIX,trae.ai
+SUFFIX,ttwebview.com
+USER-AGENT,TikTok*

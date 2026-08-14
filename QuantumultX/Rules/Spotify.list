@@ -1,0 +1,38 @@
+# 规则名称: Spotify
+# 规则统计: 31
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rules/Spotify.list
+# 更新时间: 2026-08-14 17:35:06
+
+no_resolve: true
+DOMAIN,audio4-ak-spotify-com.akamaized.net
+DOMAIN,cdn-spotify-experiments.conductrics.com
+DOMAIN,heads-ak-spotify-com.akamaized.net
+DOMAIN,spotify.com.edgesuite.net
+DOMAIN,spotify.map.fastly.net
+DOMAIN,spotify.map.fastlylb.net
+IP-CIDR,104.154.127.126/32
+IP-CIDR,35.186.224.47/32
+KEYWORD,spotify
+SUFFIX,audio-ak-spotify-com.akamaized.net
+SUFFIX,byspotify.com
+SUFFIX,heads4-ak-spotify-com.akamaized.net
+SUFFIX,pscdn.co
+SUFFIX,scdn.co
+SUFFIX,spoti.fi
+SUFFIX,spotify-com.akamaized.net
+SUFFIX,spotify-everywhere.com
+SUFFIX,spotify.app.link
+SUFFIX,spotify.com
+SUFFIX,spotify.design
+SUFFIX,spotifycdn.com
+SUFFIX,spotifycdn.net
+SUFFIX,spotifycharts.com
+SUFFIX,spotifycodes.com
+SUFFIX,spotifyforbrands.com
+SUFFIX,spotifyjobs.com
+SUFFIX,spotifynewsroom.jp
+SUFFIX,spotilocal.com
+SUFFIX,tospotify.com
+USER-AGENT,Spotify*
+no_resolve: true

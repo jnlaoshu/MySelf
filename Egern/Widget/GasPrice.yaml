@@ -1,0 +1,27 @@
+# ==========================================
+# 📌 模块名称: 全国油价 Widget
+# ✨ 主要功能: 实时省市油价，等比例四宫格布局，内置历法精准倒数与趋势预判。
+# 🔗 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.yaml
+# ⏱️ 2026.03.30 10:00
+# ==========================================
+
+name: "全国油价 Widget"
+description: "实时抓取省市油价；深度结合第8/9工作日法则，智能切换本轮回顾与下轮趋势预测。"
+
+auto_update:
+  interval: 43200
+
+env_schema:
+  GAS_REGION:
+    name: 📍 油价查询地区
+    description: "直辖市输入拼音，其他省份输入省份/省会拼音"
+    default_value: "sichuan/chengdu"
+
+scriptings:
+  - generic:
+      name: 全国油价
+      script_url: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
+
+widgets:
+  - name: 全国油价
+    script_name: 全国油价

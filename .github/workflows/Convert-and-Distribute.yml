@@ -1,0 +1,459 @@
+# =============================================================================
+# 工作流：规则转换与多平台分发
+# 更新：2026.08.14 17:30
+#
+# 功能：
+#   - 读取本仓库 Egern/Rule 下的规则文件
+#   - 转换为各平台兼容格式，并分发到对应目录
+#   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX
+#   - 清理、去重、排序、校验规则
+#   - 仅在内容变化时提交，避免空提交
+# =============================================================================
+name: Convert and Distribute
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "40 0 * * *"
+
+concurrency:
+  group: convert-and-distribute-rules
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  Convert:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Asia/Shanghai
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Convert and Distribute Rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import os, re, tempfile
+          from pathlib import Path
+          import yaml
+          from datetime import datetime, timezone, timedelta
+
+          SOURCE_DIR = Path("Egern/Rule")
+
+          TARGET_CONFIG = {
+              "Surge": {"dir": "Surge/Rules", "ext": ".list"},
+              "Stash": {"dir": "Stash/Rules", "ext": ".yaml"},
+              "Loon": {"dir": "Loon/Rules", "ext": ".list"},
+              "Mihomo": {"dir": "Mihomo/Rules", "ext": ".yaml"},
+              "Shadowrocket": {"dir": "Shadowrocket/Rules", "ext": ".list"},
+              "QuantumultX": {"dir": "QuantumultX/Rules", "ext": ".list"},
+          }
+
+          SOURCE_MAP = {
+              "AdBlock": "AdGuard DNS Filter, AdRules, AWAvenue",
+              "Lan": "blackmatrix7, Repcz",
+              "AIGC": "blackmatrix7, ConnersHua, Repcz",
+              "Telegram": "blackmatrix7, SukkaW",
+          }
+          DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
+
+          PLATFORM_PREFIX_MAP = {
+              "Surge": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "domain_wildcard_set": "DOMAIN-WILDCARD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "url_regex_set": "URL-REGEX",
+                  "user_agent_set": "USER-AGENT",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+                  "process_name_set": "PROCESS-NAME",
+                  "and_set": "AND",
+                  "or_set": "OR",
+                  "not_set": "NOT",
+              },
+              "Stash": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "domain_wildcard_set": "DOMAIN-WILDCARD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+              },
+              "Loon": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "domain_wildcard_set": "DOMAIN-WILDCARD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "url_regex_set": "URL-REGEX",
+                  "user_agent_set": "USER-AGENT",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+              },
+              "Mihomo": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+              },
+              "Shadowrocket": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "domain_wildcard_set": "DOMAIN-WILDCARD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "url_regex_set": "URL-REGEX",
+                  "user_agent_set": "USER-AGENT",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+              },
+              "QuantumultX": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "SUFFIX",
+                  "domain_keyword_set": "KEYWORD",
+                  "domain_wildcard_set": "WILDCARD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "asn_set": "IP-ASN",
+                  "url_regex_set": "URL-REGEX",
+                  "user_agent_set": "USER-AGENT",
+                  "dest_port_set": "DEST-PORT",
+                  "geoip_set": "GEOIP",
+              },
+          }
+
+          PLATFORM_UNSUPPORTED = {
+              "Surge": set(),
+              "Stash": {"URL-REGEX", "USER-AGENT", "AND", "OR", "NOT", "PROCESS-NAME"},
+              "Loon": {"PROCESS-NAME", "AND", "OR", "NOT"},
+              "Mihomo": {"URL-REGEX", "USER-AGENT", "PROCESS-NAME", "DOMAIN-WILDCARD", "AND", "OR", "NOT"},
+              "Shadowrocket": {"PROCESS-NAME", "AND", "OR", "NOT"},
+              "QuantumultX": {"PROCESS-NAME", "AND", "OR", "NOT"},
+          }
+
+          def clean_rule_line(line):
+              line = line.strip()
+              if not line:
+                  return None
+              if line.startswith(("#", "//", ";", "!")):
+                  return None
+              if line.startswith("- "):
+                  line = line[2:].strip()
+              if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
+                  line = line[1:-1].strip()
+              line = re.sub(r"\s+#.*$", "", line).strip()
+              return line if line else None
+
+          def parse_egern_rule_file(file_path):
+              try:
+                  with open(file_path, "r", encoding="utf-8-sig") as f:
+                      data = yaml.safe_load(f)
+              except Exception as e:
+                  print(f"  Warning: Failed to parse {file_path.name}: {e}")
+                  return {}, False
+
+              if not isinstance(data, dict):
+                  return {}, False
+
+              no_resolve = data.get("no_resolve", False)
+
+              result = {}
+              for key, values in data.items():
+                  if key in ("no_resolve", "payload") or not isinstance(values, list):
+                      continue
+                  cleaned = []
+                  for item in values:
+                      if isinstance(item, str):
+                          cleaned.append(item.strip())
+                  if cleaned:
+                      result[key] = sorted(set(cleaned))
+              return result, no_resolve
+
+          def convert_to_platform_format(rule_data, platform):
+              prefix_map = PLATFORM_PREFIX_MAP.get(platform, {})
+              unsupported = PLATFORM_UNSUPPORTED.get(platform, set())
+
+              rules = []
+              for egern_type, values in rule_data.items():
+                  target_prefix = prefix_map.get(egern_type)
+                  if target_prefix is None:
+                      continue
+                  if egern_type in unsupported or target_prefix in unsupported:
+                      continue
+                  for value in values:
+                      if platform == "Mihomo" and egern_type == "domain_wildcard_set":
+                          if value.startswith("*."):
+                              value = value[2:]
+                              rules.append(f"DOMAIN-SUFFIX,{value}")
+                          continue
+                      rules.append(f"{target_prefix},{value}")
+              return rules
+
+          def write_rules_file(output_path, rules, rule_name, source, no_resolve):
+              if not rules:
+                  print(f"  Warning: No rules generated for {output_path}")
+                  return
+
+              unique_rules = {}
+              for rule in rules:
+                  unique_rules[rule.lower()] = rule
+              sorted_rules = sorted(unique_rules.values())
+
+              output_path.parent.mkdir(parents=True, exist_ok=True)
+
+              bj_time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
+              update_time = bj_time.strftime("%Y-%m-%d %H:%M:%S")
+              reference_url = f"https://raw.githubusercontent.com/jnlaoshu/MySelf/main/{output_path.as_posix()}"
+
+              fd, temp_path = tempfile.mkstemp(prefix=f".{output_path.stem}.", suffix=".tmp", dir=output_path.parent, text=True)
+              try:
+                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+                      f.write(f"# 规则名称: {rule_name}\n")
+                      f.write(f"# 规则统计: {len(sorted_rules)}\n")
+                      f.write(f"# 规则来源: {source}\n")
+                      f.write(f"# 引用链接: {reference_url}\n")
+                      f.write(f"# 更新时间: {update_time}\n")
+                      f.write("\n")
+                      if no_resolve:
+                          f.write(f"no_resolve: true\n")
+                      for rule in sorted_rules:
+                          f.write(f"{rule}\n")
+                  os.replace(temp_path, output_path)
+              except Exception:
+                  try:
+                      os.unlink(temp_path)
+                  except OSError:
+                      pass
+                  raise
+
+          print("=" * 72)
+          print("Rule Conversion and Distribution")
+          print("=" * 72)
+
+          for config in TARGET_CONFIG.values():
+              Path(config["dir"]).mkdir(parents=True, exist_ok=True)
+
+          source_files = sorted(SOURCE_DIR.glob("*.yaml"))
+          if not source_files:
+              print("No rule files found in Egern/Rule/")
+              exit(0)
+
+          for source_file in source_files:
+              rule_name = source_file.stem
+              print(f"\nProcessing: {rule_name}")
+
+              rule_data, no_resolve = parse_egern_rule_file(source_file)
+              if not rule_data:
+                  print(f"  Skipping {rule_name}: No valid rule data")
+                  continue
+
+              source = SOURCE_MAP.get(rule_name, DEFAULT_SOURCE)
+
+              for platform, config in TARGET_CONFIG.items():
+                  ext = config["ext"]
+                  output_path = Path(config["dir"]) / f"{rule_name}{ext}"
+                  rules = convert_to_platform_format(rule_data, platform)
+
+                  if not rules:
+                      print(f"  -> {platform}: No rules generated (unsupported types)")
+                      continue
+
+                  write_rules_file(output_path, rules, rule_name, source, no_resolve)
+                  print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
+
+          print("\n" + "=" * 72)
+          print("Conversion completed successfully.")
+          print("=" * 72)
+          PY
+
+      - name: Normalize Platform Rules
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 <<'PY'
+          import os, re, tempfile
+          from pathlib import Path
+          from datetime import datetime, timezone, timedelta
+
+          PLATFORM_CONFIG = {
+              "Surge": {"dir": "Surge/Rules", "ext": ".list"},
+              "Stash": {"dir": "Stash/Rules", "ext": ".yaml"},
+              "Loon": {"dir": "Loon/Rules", "ext": ".list"},
+              "Mihomo": {"dir": "Mihomo/Rules", "ext": ".yaml"},
+              "Shadowrocket": {"dir": "Shadowrocket/Rules", "ext": ".list"},
+              "QuantumultX": {"dir": "QuantumultX/Rules", "ext": ".list"},
+          }
+
+          EXTRA_REMOVE = {
+              "Stash": ["USER-AGENT", "URL-REGEX", "AND", "OR", "NOT", "PROCESS-NAME"],
+              "Loon": ["PROCESS-NAME", "AND", "OR", "NOT"],
+              "Mihomo": ["USER-AGENT", "URL-REGEX", "PROCESS-NAME", "AND", "OR", "NOT"],
+              "Shadowrocket": ["PROCESS-NAME", "AND", "OR", "NOT"],
+              "QuantumultX": ["PROCESS-NAME", "AND", "OR", "NOT"],
+          }
+
+          SOURCE_MAP = {
+              "AdBlock": "AdGuard DNS Filter, AdRules, AWAvenue",
+              "Lan": "blackmatrix7, Repcz",
+              "AIGC": "blackmatrix7, ConnersHua, Repcz",
+              "Telegram": "blackmatrix7, SukkaW",
+          }
+          DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
+
+          def parse_no_resolve(file_path):
+              try:
+                  with open(file_path, "r", encoding="utf-8") as f:
+                      for line in f:
+                          if line.startswith("no_resolve:"):
+                              return True
+                          if len(line) > 100:
+                              break
+              except Exception:
+                  pass
+              return False
+
+          for platform, config in PLATFORM_CONFIG.items():
+              rule_dir = Path(config["dir"])
+              if not rule_dir.exists():
+                  continue
+              ext = config["ext"]
+
+              remove_patterns = EXTRA_REMOVE.get(platform, [])
+              remove_prefixes = tuple(f"{p}," for p in remove_patterns)
+
+              for file_path in sorted(rule_dir.glob(f"*{ext}")):
+                  print(f"Normalizing {platform}/{file_path.name}...")
+
+                  with open(file_path, "r", encoding="utf-8") as f:
+                      lines = f.readlines()
+
+                  normalized = []
+                  for line in lines:
+                      stripped = line.strip()
+                      if not stripped:
+                          continue
+                      if stripped.startswith(("#", "//", ";")):
+                          continue
+                      if remove_prefixes and stripped.upper().startswith(remove_prefixes):
+                          continue
+                      if platform == "Mihomo" and stripped.upper().startswith("DOMAIN-WILDCARD,"):
+                          parts = stripped.split(",", 1)
+                          if len(parts) == 2 and parts[1].strip().startswith("*."):
+                              domain = parts[1].strip()[2:]
+                              normalized.append(f"DOMAIN-SUFFIX,{domain}")
+                          continue
+                      normalized.append(stripped)
+
+                  unique = {}
+                  for rule in normalized:
+                      unique[rule.lower()] = rule
+                  sorted_rules = sorted(unique.values())
+
+                  if sorted_rules:
+                      rule_name = file_path.stem
+                      source = SOURCE_MAP.get(rule_name, DEFAULT_SOURCE)
+                      reference_url = f"https://raw.githubusercontent.com/jnlaoshu/MySelf/main/{file_path.as_posix()}"
+                      no_resolve = parse_no_resolve(file_path)
+
+                      old_update_time = None
+                      for line in lines:
+                          if line.startswith("# 更新时间:"):
+                              old_update_time = line.split(":", 1)[1].strip()
+                              break
+
+                      if old_update_time:
+                          update_time = old_update_time
+                      else:
+                          bj_time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
+                          update_time = bj_time.strftime("%Y-%m-%d %H:%M:%S")
+
+                      header_lines = [
+                          f"# 规则名称: {rule_name}\n",
+                          f"# 规则统计: {len(sorted_rules)}\n",
+                          f"# 规则来源: {source}\n",
+                          f"# 引用链接: {reference_url}\n",
+                          f"# 更新时间: {update_time}\n",
+                          "\n",  # 更新时间与规则内容之间的空行
+                      ]
+                      if no_resolve:
+                          header_lines.append(f"no_resolve: true\n")
+                      # 不再添加额外空行，no_resolve 与规则紧挨
+
+                      fd, temp_path = tempfile.mkstemp(prefix=f".{file_path.stem}.", suffix=".tmp", dir=file_path.parent, text=True)
+                      try:
+                          with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+                              for h in header_lines:
+                                  f.write(h)
+                              for rule in sorted_rules:
+                                  f.write(f"{rule}\n")
+                          os.replace(temp_path, file_path)
+                      except Exception:
+                          try:
+                              os.unlink(temp_path)
+                          except OSError:
+                              pass
+                          raise
+
+                      print(f"  Updated: {len(sorted_rules)} rules")
+                  else:
+                      print(f"  Warning: No valid rules remaining")
+
+          print("\nNormalization completed.")
+          PY
+
+      - name: Commit and Push
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          for dir in Surge/Rules Stash/Rules Loon/Rules Mihomo/Rules Shadowrocket/Rules QuantumultX/Rules; do
+            if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+              git add "$dir/"
+            fi
+          done
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          echo "Changes detected:"
+          git diff --staged --stat
+          git commit -m "convert(rules): $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
