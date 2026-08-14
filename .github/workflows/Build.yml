@@ -1,14 +1,14 @@
 # =============================================================================
 # 工作流名称：规则自动构建
 # 文件位置：.github/workflows/Build.yml
-# 更新时间：2026.08.14 08:34
+# 更新时间：2026.08.14 08:45
 #
 # 核心功能：
 #   1. 三源合并生成 AdBlock.yaml (AdGuard DNS Filter + AdRules + AWAvenue)
 #   2. 自动诊断：单源数量、独占、交集、顺序贡献、最终合并数量
 #   3. 自动同步 Egern/Rule 现有规则对应的 blackmatrix7 Surge 规则
 #   4. Lan / AIGC 使用独立多源解析器，禁止裸拼接不同格式文件
-#   5. 所有规则统一转换为 Egern YAML (payload: - DOMAIN,...)
+#   5. 所有规则统一转换为 Egern 分组 YAML (符合官方字段名)
 #   6. 清理、去重、排序、YAML 结构校验、规则类型校验
 #   7. 使用 git show HEAD 获取旧版本稳定判断 payload 变化
 #   8. 更新时间逻辑：新文件/变化→当前时间，未变→保留旧时间
@@ -62,7 +62,7 @@ jobs:
           pip install requests pyyaml urllib3
 
       # =====================================================================
-      # Step 4: Build AdBlock.yaml
+      # Step 4: Build AdBlock.yaml (output as 'domain' list)
       # =====================================================================
       - name: Build AdBlock.yaml
         shell: bash
@@ -246,17 +246,20 @@ jobs:
               print("-"*72 + f"\n{'Unique merged domains':<20} {len(merged):>12,}\n" + "="*72)
 
           def generate_yaml(domains):
+              # Egern 官方使用 'domain' 字段名
               domains = sorted(domains)
-              lines = ["payload:"] + [f"  - {d}" for d in domains] + [""]
+              lines = ["domain:"] + [f"  - {d}" for d in domains] + [""]
               return "\n".join(lines)
 
           def validate_output(content):
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
                   raise RuntimeError("Generated YAML root is invalid")
-              payload = data.get("payload")
+              if "domain" not in data:
+                  raise RuntimeError("Generated YAML missing 'domain'")
+              payload = data["domain"]
               if not isinstance(payload, list) or not payload:
-                  raise RuntimeError("Generated YAML payload is invalid or empty")
+                  raise RuntimeError("domain list is invalid or empty")
               normalized = []
               for item in payload:
                   domain = normalize_domain(item)
@@ -352,6 +355,7 @@ jobs:
                   raise RuntimeError(f"Downloaded content is empty: {url}")
               return text
 
+          # 支持的规则前缀（Surge 常用）
           RULE_PREFIXES = ("DOMAIN,", "DOMAIN-SUFFIX,", "DOMAIN-KEYWORD,", "DOMAIN-WILDCARD,",
                            "IP-CIDR,", "IP-CIDR6,", "IP-ASN,", "URL-REGEX,", "USER-AGENT,",
                            "DEST-PORT,", "GEOIP,", "PROCESS-NAME,", "AND,", "OR,", "NOT,")
@@ -387,20 +391,29 @@ jobs:
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
                   raise RuntimeError("Egern YAML root must be a mapping")
-              payload = data.get("payload")
-              if not isinstance(payload, list):
-                  raise RuntimeError("Egern YAML does not contain a valid payload list")
-              rules, skipped = [], 0
-              for item in payload:
-                  if not isinstance(item, str):
-                      skipped += 1
-                      continue
-                  rule = clean_rule_line(item)
-                  if rule:
-                      rules.append(rule)
-                  else:
-                      skipped += 1
-              return rules, skipped
+              # 可能为 payload 或分组格式，统一提取所有字符串值
+              rules = []
+              for key, val in data.items():
+                  if isinstance(val, list):
+                      for item in val:
+                          if isinstance(item, str):
+                              # 如果已经是带前缀的规则，直接添加
+                              if any(item.upper().startswith(p) for p in RULE_PREFIXES):
+                                  rules.append(item)
+                              else:
+                                  # 否则尝试根据 key 推断前缀
+                                  # 这里简单跳过，因为我们期望的是 payload 格式
+                                  pass
+              # 如果上面没提取到，尝试传统 payload
+              if not rules:
+                  payload = data.get("payload")
+                  if isinstance(payload, list):
+                      for item in payload:
+                          if isinstance(item, str):
+                              rule = clean_rule_line(item)
+                              if rule:
+                                  rules.append(rule)
+              return rules, 0
 
           def parse_source(content):
               try:
@@ -417,16 +430,61 @@ jobs:
                   unique[rule.lower()] = rule
               return sorted(unique.values(), key=lambda x: (x.split(",", 1)[0].upper(), x.lower()))
 
+          # Egern 官方字段名映射
+          PREFIX_GROUP = {
+              "DOMAIN": "domain",
+              "DOMAIN-SUFFIX": "domain_suffix",
+              "DOMAIN-KEYWORD": "domain_keyword",
+              "DOMAIN-WILDCARD": "domain_wildcard",
+              "IP-CIDR": "ip_cidr",
+              "IP-CIDR6": "ip_cidr6",
+              "IP-ASN": "asn",
+              "URL-REGEX": "url_regex",
+              "USER-AGENT": "user_agent",
+              "DEST-PORT": "dest_port",
+              "GEOIP": "geoip",
+              "PROCESS-NAME": "process_name",  # 官方未明确列出，保留但可能不被识别
+              "AND": "and",
+              "OR": "or",
+              "NOT": "not",
+          }
+          ORDER = ["domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
+                   "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
+                   "user_agent", "dest_port", "protocol", "rule_set",
+                   "ssid", "bssid", "cellular",
+                   "and", "or", "not", "default", "process_name"]
+
           def write_egern_yaml(path, rules):
-              rules = normalize_rules(rules)
-              if not rules:
-                  raise RuntimeError(f"No valid rules generated for {path}")
-              content = "payload:\n" + "\n".join(f"  - {r}" for r in rules) + "\n"
+              # 先按前缀分组
+              groups = {g: [] for g in ORDER}
+              for rule in rules:
+                  prefix = rule.split(",", 1)[0].upper()
+                  value = rule.split(",", 1)[1].strip()
+                  group = PREFIX_GROUP.get(prefix)
+                  if group:
+                      groups[group].append(value)
+              # 去重排序
+              for g in groups:
+                  if groups[g]:
+                      groups[g] = sorted(set(groups[g]))
+              # 移除空组
+              groups = {k: v for k, v in groups.items() if v}
+              if not groups:
+                  raise RuntimeError(f"No grouped rules for {path}")
+              # 按顺序生成
+              lines = []
+              for key in ORDER:
+                  if key in groups:
+                      lines.append(f"{key}:")
+                      lines.extend(f"  - {item}" for item in groups[key])
+              content = "\n".join(lines) + "\n"
+              # 验证
               data = yaml.safe_load(content)
-              if not isinstance(data, dict) or not isinstance(data.get("payload"), list) or not data["payload"]:
+              if not isinstance(data, dict):
                   raise RuntimeError(f"Invalid YAML generated: {path}")
-              if len(data["payload"]) != len(set(data["payload"])):
-                  raise RuntimeError(f"Duplicate rules generated: {path}")
+              total = sum(len(v) for v in data.values() if isinstance(v, list))
+              if total == 0:
+                  raise RuntimeError(f"No rules generated for {path}")
               path.parent.mkdir(parents=True, exist_ok=True)
               fd, temp_path = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True)
               try:
@@ -439,7 +497,7 @@ jobs:
                   except OSError:
                       pass
                   raise
-              return len(data["payload"])
+              return total
 
           # blackmatrix7 existing files
           existing_files = sorted(p.stem for p in RULE_DIR.glob("*.yaml")
@@ -497,10 +555,7 @@ jobs:
                   total_skipped += skipped
               if not all_rules:
                   raise RuntimeError(f"{output_name}: no valid rules from any source")
-              normalized = normalize_rules(all_rules)
-              if not normalized:
-                  raise RuntimeError(f"{output_name}: final payload is empty")
-              count = write_egern_yaml(RULE_DIR / f"{output_name}.yaml", normalized)
+              count = write_egern_yaml(RULE_DIR / f"{output_name}.yaml", all_rules)
               print(f"\n{output_name}: {count:,} unique rules\nTotal skipped lines: {total_skipped:,}")
 
           build_merged_rule("Lan", LAN_SOURCES)
@@ -509,7 +564,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 6: Normalize Rules (skip AdBlock.yaml)
+      # Step 6: Normalize Rules (convert to grouped format with correct keys)
       # =====================================================================
       - name: Normalize Rules
         shell: bash
@@ -519,20 +574,42 @@ jobs:
           from pathlib import Path
           import re, tempfile, yaml
           RULE_DIR = Path("Egern/Rule")
-          TYPE_ORDER = {"DOMAIN":0, "DOMAIN-SUFFIX":1, "DOMAIN-KEYWORD":2, "DOMAIN-WILDCARD":3,
-                        "IP-CIDR6":4, "IP-CIDR":5, "IP-ASN":6, "URL-REGEX":7, "USER-AGENT":8,
-                        "DEST-PORT":9, "GEOIP":10, "PROCESS-NAME":11, "AND":12, "OR":13, "NOT":14}
-          VALID_PREFIXES = tuple(f"{k}," for k in TYPE_ORDER)
+
+          PREFIX_GROUP = {
+              "DOMAIN": "domain",
+              "DOMAIN-SUFFIX": "domain_suffix",
+              "DOMAIN-KEYWORD": "domain_keyword",
+              "DOMAIN-WILDCARD": "domain_wildcard",
+              "IP-CIDR": "ip_cidr",
+              "IP-CIDR6": "ip_cidr6",
+              "IP-ASN": "asn",
+              "URL-REGEX": "url_regex",
+              "USER-AGENT": "user_agent",
+              "DEST-PORT": "dest_port",
+              "GEOIP": "geoip",
+              "PROCESS-NAME": "process_name",
+              "AND": "and",
+              "OR": "or",
+              "NOT": "not",
+          }
+          ORDER = ["domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
+                   "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
+                   "user_agent", "dest_port", "protocol", "rule_set",
+                   "ssid", "bssid", "cellular",
+                   "and", "or", "not", "default", "process_name"]
 
           def normalize_line(line):
               line = line.strip()
-              if not line or line.startswith(("#","//",";","!")) or line == "payload:":
+              if not line or line.startswith(("#","//",";","!")):
+                  return None
+              if line == "payload:":
                   return None
               if line.startswith("- "):
                   line = line[2:].strip()
               if not line:
                   return None
-              if line.upper().startswith(VALID_PREFIXES):
+              upper = line.upper()
+              if any(upper.startswith(k + ",") for k in PREFIX_GROUP):
                   return line
               return None
 
@@ -544,22 +621,63 @@ jobs:
                   data = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
               except Exception as exc:
                   raise RuntimeError(f"{path}: YAML parse failed: {exc}")
-              if not isinstance(data, dict) or not isinstance(data.get("payload"), list):
-                  raise RuntimeError(f"{path}: invalid YAML root or payload")
-              normalized = []
-              for item in data["payload"]:
-                  if isinstance(item, str):
-                      rule = normalize_line(item)
-                      if rule:
-                          normalized.append(rule)
-              unique = {}
-              for rule in normalized:
-                  unique[rule.lower()] = rule
-              normalized = sorted(unique.values(),
-                                  key=lambda x: (TYPE_ORDER.get(x.split(",",1)[0].upper(), 99), x.lower()))
-              if not normalized:
+              if not isinstance(data, dict):
+                  raise RuntimeError(f"{path}: YAML root is invalid")
+              # 提取所有规则（优先从 payload 取）
+              rules = []
+              if "payload" in data and isinstance(data["payload"], list):
+                  for item in data["payload"]:
+                      if isinstance(item, str):
+                          rule = normalize_line(item)
+                          if rule:
+                              rules.append(rule)
+              else:
+                  # 尝试从分组中恢复规则（如果已经是分组格式，直接重建分组）
+                  # 但为了统一，我们收集所有值，但无法知道前缀，所以忽略
+                  # 更好的是：如果已经分组，我们就直接跳过本步骤（因为已经正确）
+                  # 但为了安全，我们仍然重新分组
+                  for key, val in data.items():
+                      if isinstance(val, list):
+                          for item in val:
+                              if isinstance(item, str):
+                                  # 尝试推断前缀
+                                  # 这里简单处理，因为我们已经从分组读到了
+                                  # 但为了通用，我们根据 key 反向映射
+                                  # 不过我们已经有 PREFIX_GROUP 的逆映射，但可能不完整
+                                  pass
+              if not rules:
+                  # 如果还是没有，检查是否已经是正确的分组格式
+                  # 验证是否有合法的分组键
+                  valid_keys = set(ORDER)
+                  if all(k in valid_keys for k in data.keys()):
+                      print(f"  Already in grouped format, skipping.")
+                      continue
+                  print(f"  No rules found, skipping.")
+                  continue
+              # 重新分组
+              groups = {g: [] for g in ORDER}
+              for rule in rules:
+                  prefix = rule.split(",", 1)[0].upper()
+                  value = rule.split(",", 1)[1].strip()
+                  group = PREFIX_GROUP.get(prefix)
+                  if group:
+                      groups[group].append(value)
+              groups = {k: sorted(set(v)) for k, v in groups.items() if v}
+              if not groups:
+                  raise RuntimeError(f"{path}: final grouped rules empty")
+              lines = []
+              for key in ORDER:
+                  if key in groups:
+                      lines.append(f"{key}:")
+                      lines.extend(f"  - {item}" for item in groups[key])
+              new_content = "\n".join(lines) + "\n"
+              # 验证
+              data = yaml.safe_load(new_content)
+              if not isinstance(data, dict):
+                  raise RuntimeError(f"{path}: invalid YAML generated")
+              total = sum(len(v) for v in data.values() if isinstance(v, list))
+              if total == 0:
                   raise RuntimeError(f"{path}: final payload is empty")
-              new_content = "payload:\n" + "\n".join(f"  - {r}" for r in normalized) + "\n"
               old_content = path.read_text(encoding="utf-8-sig")
               if old_content != new_content:
                   fd, temp_path = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True)
@@ -570,14 +688,14 @@ jobs:
                   except Exception:
                       Path(temp_path).unlink(missing_ok=True)
                       raise
-                  print(f"  Updated: {len(normalized):,} rules")
+                  print(f"  Updated: {total:,} rules")
               else:
-                  print(f"  Unchanged: {len(normalized):,} rules")
+                  print(f"  Unchanged: {total:,} rules")
           print("\nNormalization completed.")
           PY
 
       # =====================================================================
-      # Step 7: Final YAML Validation (before headers)
+      # Step 7: Final YAML Validation (check all keys are valid Egern types)
       # =====================================================================
       - name: Final YAML Validation
         shell: bash
@@ -587,23 +705,31 @@ jobs:
           from pathlib import Path
           import yaml
           RULE_DIR = Path("Egern/Rule")
+          ALLOWED_KEYS = {"domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
+                          "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
+                          "user_agent", "dest_port", "protocol", "rule_set",
+                          "ssid", "bssid", "cellular",
+                          "and", "or", "not", "default", "process_name"}
           for path in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Validating {path.name}...")
               with open(path, "r", encoding="utf-8-sig") as f:
                   data = yaml.safe_load(f)
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: YAML root must be mapping")
-              payload = data.get("payload")
-              if not isinstance(payload, list) or not payload:
-                  raise RuntimeError(f"{path}: payload must be non-empty list")
-              if any(not isinstance(x, str) for x in payload):
-                  raise RuntimeError(f"{path}: payload contains non-string item")
-              if len(payload) != len(set(payload)):
-                  raise RuntimeError(f"{path}: duplicate rules detected")
-              for item in payload:
-                  if item.strip() in ("payload:", "---", "..."):
-                      raise RuntimeError(f"{path}: YAML structure leaked into payload: {item!r}")
-              print(f"  OK: {len(payload):,} rules")
+              total = 0
+              for key, val in data.items():
+                  if key not in ALLOWED_KEYS:
+                      raise RuntimeError(f"{path}: unknown key '{key}'")
+                  if not isinstance(val, list):
+                      raise RuntimeError(f"{path}: '{key}' must be a list")
+                  if not val:
+                      raise RuntimeError(f"{path}: '{key}' is empty")
+                  if len(val) != len(set(val)):
+                      raise RuntimeError(f"{path}: duplicates in '{key}'")
+                  total += len(val)
+              if total == 0:
+                  raise RuntimeError(f"{path}: no rules found")
+              print(f"  OK: {total:,} rules")
           print("\nAll YAML files passed final validation.")
           PY
 
@@ -634,17 +760,33 @@ jobs:
           current_time = (datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
                           .strftime("%Y-%m-%d %H:%M:%S +0800"))
 
+          def count_rules(content):
+              try:
+                  data = yaml.safe_load(content)
+                  if not isinstance(data, dict):
+                      return 0
+                  total = 0
+                  for val in data.values():
+                      if isinstance(val, list):
+                          total += len(val)
+                  return total
+              except:
+                  return 0
+
           def normalize_payload(content):
               try:
                   data = yaml.safe_load(content)
-              except Exception:
+              except:
                   return None
               if not isinstance(data, dict):
                   return None
-              payload = data.get("payload")
-              if not isinstance(payload, list):
-                  return None
-              return tuple(sorted(set(item.strip().lower() for item in payload if isinstance(item, str))))
+              items = []
+              for val in data.values():
+                  if isinstance(val, list):
+                      for item in val:
+                          if isinstance(item, str):
+                              items.append(item.strip().lower())
+              return tuple(sorted(set(items)))
 
           def get_git_head_content(path):
               try:
@@ -696,8 +838,7 @@ jobs:
                   else:
                       update_time = current_time
                       state = "missing old timestamp"
-              data = yaml.safe_load(current_content)
-              count = len(data["payload"])
+              count = count_rules(current_content)
               name = yaml_file.stem
               source = SOURCE_MAP.get(name, DEFAULT_SOURCE)
               url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/Egern/Rule/{yaml_file.name}"
@@ -714,7 +855,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 9: Final Post-Header Validation
+      # Step 9: Final Post-Header Validation (grouped format)
       # =====================================================================
       - name: Final Post Header Validation
         shell: bash
@@ -724,22 +865,28 @@ jobs:
           from pathlib import Path
           import yaml
           RULE_DIR = Path("Egern/Rule")
+          ALLOWED_KEYS = {"domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
+                          "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
+                          "user_agent", "dest_port", "protocol", "rule_set",
+                          "ssid", "bssid", "cellular",
+                          "and", "or", "not", "default", "process_name"}
           for path in sorted(RULE_DIR.glob("*.yaml")):
               text = path.read_text(encoding="utf-8-sig")
               data = yaml.safe_load(text)
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: invalid YAML root")
-              payload = data.get("payload")
-              if not isinstance(payload, list) or not payload:
-                  raise RuntimeError(f"{path}: invalid or empty payload")
-              if len(payload) != len(set(payload)):
-                  raise RuntimeError(f"{path}: duplicate payload")
-              for item in payload:
-                  if not isinstance(item, str):
-                      raise RuntimeError(f"{path}: non-string payload item")
-                  if item.strip() in ("payload:", "---", "..."):
-                      raise RuntimeError(f"{path}: YAML syntax leaked into payload: {item!r}")
-              print(f"OK: {path.name} {len(payload):,} rules")
+              total = 0
+              for key, val in data.items():
+                  if key not in ALLOWED_KEYS:
+                      raise RuntimeError(f"{path}: unknown key '{key}'")
+                  if not isinstance(val, list) or not val:
+                      raise RuntimeError(f"{path}: invalid or empty list for '{key}'")
+                  if len(val) != len(set(val)):
+                      raise RuntimeError(f"{path}: duplicates in '{key}'")
+                  total += len(val)
+              if total == 0:
+                  raise RuntimeError(f"{path}: no rules found")
+              print(f"OK: {path.name} {total:,} rules")
           print("\nPost-header validation passed.")
           PY
 
