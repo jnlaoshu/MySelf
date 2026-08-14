@@ -35,7 +35,7 @@ jobs:
     steps:
       # 检出仓库（指定默认分支，请根据实际情况修改 ref）
       - name: Checkout Repository
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@v7
         with:
           ref: main   # 请将 main 替换为您的默认分支名称（如 master）
 
