@@ -62,4 +62,4 @@ jobs:
         uses: Mattraks/delete-workflow-runs@main
         with:
           retain_days: 0          # 保留天数（0 表示不保留任何历史）
-          keep_minimum_runs: 0    # 最少保留运行次数（0 表示全部删除）
+          keep_minimum_runs: 2    # 最少保留运行次数（0 表示全部删除）
