@@ -1,19 +1,13 @@
 # =============================================================================
-# 工作流名称：规则自动构建
-# 文件位置：.github/workflows/Build.yml
-# 更新时间：2026.08.14 08:48
+# 工作流：规则自动构建
+# 更新：2026.08.14 12:30
 #
-# 核心功能：
-#   1. 三源合并生成 AdBlock.yaml (AdGuard DNS Filter + AdRules + AWAvenue)
-#   2. 自动诊断：单源数量、独占、交集、顺序贡献、最终合并数量
-#   3. 自动同步 Egern/Rule 现有规则对应的 blackmatrix7 Surge 规则
-#   4. Lan / AIGC 使用独立多源解析器，禁止裸拼接不同格式文件
-#   5. 所有规则统一转换为 Egern 分组 YAML (符合官方字段名)
-#   6. 清理、去重、排序、YAML 结构校验、规则类型校验
-#   7. 使用 git show HEAD 获取旧版本稳定判断 payload 变化
-#   8. 更新时间逻辑：新文件/变化→当前时间，未变→保留旧时间
-#   9. 只有真实内容变化才提交 Git
-#  10. 任一核心数据源异常时构建失败，保留原文件，禁止残缺覆盖
+# 功能：
+#   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
+#   - 同步 blackmatrix7 现有规则，合并 Lan / AIGC / Telegram 多源
+#   - 输出符合 Egern 规则集格式 domain_set / domain_suffix_set 等
+#   - 清理、去重、排序、校验 YAML 结构
+#   - 仅在内容变化时提交，避免空提交
 # =============================================================================
 name: Build
 
@@ -36,6 +30,7 @@ jobs:
     env:
       TZ: Asia/Shanghai
       PYTHONUNBUFFERED: "1"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -53,7 +48,7 @@ jobs:
           pip install requests pyyaml urllib3
 
       # =====================================================================
-      # Step 4: Build AdBlock.yaml (output as 'domain' list)
+      # Step 4: 构建 AdBlock.yaml
       # =====================================================================
       - name: Build AdBlock.yaml
         shell: bash
@@ -238,19 +233,17 @@ jobs:
 
           def generate_yaml(domains):
               domains = sorted(domains)
-              # 使用单引号包裹每个域名，防止 YAML 解析错误
-              lines = ["domain:"] + [f"  - '{d}'" for d in domains] + [""]
-              return "\n".join(lines)
+              return "domain_set:\n" + "\n".join(f"  - \"{d}\"" for d in domains) + "\n"
 
           def validate_output(content):
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
                   raise RuntimeError("Generated YAML root is invalid")
-              if "domain" not in data:
-                  raise RuntimeError("Generated YAML missing 'domain'")
-              payload = data["domain"]
+              if "domain_set" not in data:
+                  raise RuntimeError("Generated YAML missing 'domain_set'")
+              payload = data["domain_set"]
               if not isinstance(payload, list) or not payload:
-                  raise RuntimeError("domain list is invalid or empty")
+                  raise RuntimeError("domain_set list is invalid or empty")
               normalized = []
               for item in payload:
                   domain = normalize_domain(item)
@@ -305,7 +298,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 5: Download and Convert Existing Rules (blackmatrix7 + Lan/AIGC)
+      # Step 5: 下载并转换现有规则
       # =====================================================================
       - name: Download and Convert Existing Rules
         shell: bash
@@ -358,7 +351,6 @@ jobs:
                   return None
               if line.startswith("- "):
                   line = line[2:].strip()
-              # 去除首尾引号（单引号或双引号）
               if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
                   line = line[1:-1].strip()
               line = re.sub(r"\s+#.*$", "", line).strip()
@@ -386,16 +378,8 @@ jobs:
               for key, val in data.items():
                   if isinstance(val, list):
                       for item in val:
-                          if isinstance(item, str):
-                              # 如果是带前缀的规则直接添加，否则尝试根据 key 推断（但这里保留）
-                              # 实际上 Egern YAML 分组中值不带前缀，但 Surge 转储时带前缀
-                              # 我们统一用 clean_rule_line 处理，它会处理带前缀的和不带前缀的
-                              # 不过 clean_rule_line 要求带前缀，所以如果 item 不带前缀，我们可以根据 key 补前缀
-                              if any(item.upper().startswith(p) for p in RULE_PREFIXES):
-                                  rules.append(item)
-                              else:
-                                  # 尝试根据 key 补前缀（但这里我们信任原始数据是 payload 格式）
-                                  pass
+                          if isinstance(item, str) and any(item.upper().startswith(p) for p in RULE_PREFIXES):
+                              rules.append(item)
               if not rules:
                   payload = data.get("payload")
                   if isinstance(payload, list):
@@ -422,27 +406,27 @@ jobs:
               return sorted(unique.values(), key=lambda x: (x.split(",", 1)[0].upper(), x.lower()))
 
           PREFIX_GROUP = {
-              "DOMAIN": "domain",
-              "DOMAIN-SUFFIX": "domain_suffix",
-              "DOMAIN-KEYWORD": "domain_keyword",
-              "DOMAIN-WILDCARD": "domain_wildcard",
-              "IP-CIDR": "ip_cidr",
-              "IP-CIDR6": "ip_cidr6",
-              "IP-ASN": "asn",
-              "URL-REGEX": "url_regex",
-              "USER-AGENT": "user_agent",
-              "DEST-PORT": "dest_port",
-              "GEOIP": "geoip",
-              "PROCESS-NAME": "process_name",
-              "AND": "and",
-              "OR": "or",
-              "NOT": "not",
+              "DOMAIN": "domain_set",
+              "DOMAIN-SUFFIX": "domain_suffix_set",
+              "DOMAIN-KEYWORD": "domain_keyword_set",
+              "DOMAIN-WILDCARD": "domain_wildcard_set",
+              "IP-CIDR": "ip_cidr_set",
+              "IP-CIDR6": "ip_cidr6_set",
+              "IP-ASN": "asn_set",
+              "URL-REGEX": "url_regex_set",
+              "USER-AGENT": "user_agent_set",
+              "DEST-PORT": "dest_port_set",
+              "GEOIP": "geoip_set",
+              "PROCESS-NAME": "process_name_set",
+              "AND": "and_set",
+              "OR": "or_set",
+              "NOT": "not_set",
           }
-          ORDER = ["domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
-                   "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
-                   "user_agent", "dest_port", "protocol", "rule_set",
-                   "ssid", "bssid", "cellular",
-                   "and", "or", "not", "default", "process_name"]
+          ORDER = ["domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
+                   "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
+                   "user_agent_set", "dest_port_set", "protocol_set",
+                   "ssid_set", "bssid_set", "cellular_set",
+                   "and_set", "or_set", "not_set", "default"]
 
           def write_egern_yaml(path, rules):
               groups = {g: [] for g in ORDER}
@@ -459,8 +443,7 @@ jobs:
               for key in ORDER:
                   if key in groups:
                       lines.append(f"{key}:")
-                      # 用单引号包裹每个值，避免 YAML 解析特殊字符
-                      lines.extend(f"  - '{item}'" for item in groups[key])
+                      lines.extend(f"  - \"{item}\"" for item in groups[key])
               content = "\n".join(lines) + "\n"
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
@@ -483,7 +466,7 @@ jobs:
               return total
 
           existing_files = sorted(p.stem for p in RULE_DIR.glob("*.yaml")
-                                  if p.name not in ("AdBlock.yaml", "Lan.yaml", "AIGC.yaml"))
+                                  if p.name not in ("AdBlock.yaml", "Lan.yaml", "AIGC.yaml", "Telegram.yaml"))
           print("\n" + "="*72 + "\nExisting rule files\n" + "="*72)
           if existing_files:
               for name in existing_files:
@@ -509,16 +492,31 @@ jobs:
                   count = write_egern_yaml(RULE_DIR / f"{name}.yaml", rules)
                   print(f"Valid rules: {count:,}\nSkipped lines: {skipped:,}")
 
+          # ---------------------------------------------------------------------
+          # Lan
+          # ---------------------------------------------------------------------
           LAN_SOURCES = [
               ("blackmatrix7", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list"),
               ("Repcz", "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Lan.yaml"),
           ]
+
+          # ---------------------------------------------------------------------
+          # AIGC
+          # ---------------------------------------------------------------------
           AIGC_SOURCES = [
               ("blackmatrix7/OpenAI", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list"),
               ("blackmatrix7/Claude", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list"),
               ("blackmatrix7/Gemini", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list"),
               ("ConnersHua", "https://raw.githubusercontent.com/ConnersHua/RuleGo/master/Surge/Ruleset/Extra/AI.list"),
               ("Repcz", "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AI.yaml"),
+          ]
+
+          # ---------------------------------------------------------------------
+          # Telegram
+          # ---------------------------------------------------------------------
+          TELEGRAM_SOURCES = [
+              ("blackmatrix7", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list"),
+              ("Repcz", "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Telegram.yaml"),
           ]
 
           def build_merged_rule(output_name, sources):
@@ -541,11 +539,13 @@ jobs:
 
           build_merged_rule("Lan", LAN_SOURCES)
           build_merged_rule("AIGC", AIGC_SOURCES)
+          build_merged_rule("Telegram", TELEGRAM_SOURCES)
+
           print("\n" + "="*72 + "\nRule conversion completed successfully.\n" + "="*72)
           PY
 
       # =====================================================================
-      # Step 6: Normalize Rules (convert to grouped format with correct keys)
+      # Step 6: 标准化规则
       # =====================================================================
       - name: Normalize Rules
         shell: bash
@@ -557,27 +557,27 @@ jobs:
           RULE_DIR = Path("Egern/Rule")
 
           PREFIX_GROUP = {
-              "DOMAIN": "domain",
-              "DOMAIN-SUFFIX": "domain_suffix",
-              "DOMAIN-KEYWORD": "domain_keyword",
-              "DOMAIN-WILDCARD": "domain_wildcard",
-              "IP-CIDR": "ip_cidr",
-              "IP-CIDR6": "ip_cidr6",
-              "IP-ASN": "asn",
-              "URL-REGEX": "url_regex",
-              "USER-AGENT": "user_agent",
-              "DEST-PORT": "dest_port",
-              "GEOIP": "geoip",
-              "PROCESS-NAME": "process_name",
-              "AND": "and",
-              "OR": "or",
-              "NOT": "not",
+              "DOMAIN": "domain_set",
+              "DOMAIN-SUFFIX": "domain_suffix_set",
+              "DOMAIN-KEYWORD": "domain_keyword_set",
+              "DOMAIN-WILDCARD": "domain_wildcard_set",
+              "IP-CIDR": "ip_cidr_set",
+              "IP-CIDR6": "ip_cidr6_set",
+              "IP-ASN": "asn_set",
+              "URL-REGEX": "url_regex_set",
+              "USER-AGENT": "user_agent_set",
+              "DEST-PORT": "dest_port_set",
+              "GEOIP": "geoip_set",
+              "PROCESS-NAME": "process_name_set",
+              "AND": "and_set",
+              "OR": "or_set",
+              "NOT": "not_set",
           }
-          ORDER = ["domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
-                   "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
-                   "user_agent", "dest_port", "protocol", "rule_set",
-                   "ssid", "bssid", "cellular",
-                   "and", "or", "not", "default", "process_name"]
+          ORDER = ["domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
+                   "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
+                   "user_agent_set", "dest_port_set", "protocol_set",
+                   "ssid_set", "bssid_set", "cellular_set",
+                   "and_set", "or_set", "not_set", "default"]
 
           def normalize_line(line):
               line = line.strip()
@@ -587,13 +587,11 @@ jobs:
                   return None
               if line.startswith("- "):
                   line = line[2:].strip()
-              # 去除引号
               if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
                   line = line[1:-1].strip()
               if not line:
                   return None
-              upper = line.upper()
-              if any(upper.startswith(k + ",") for k in PREFIX_GROUP):
+              if any(line.upper().startswith(k + ",") for k in PREFIX_GROUP):
                   return line
               return None
 
@@ -607,6 +605,7 @@ jobs:
                   raise RuntimeError(f"{path}: YAML parse failed: {exc}")
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: YAML root is invalid")
+
               rules = []
               if "payload" in data and isinstance(data["payload"], list):
                   for item in data["payload"]:
@@ -615,20 +614,15 @@ jobs:
                           if rule:
                               rules.append(rule)
               else:
-                  # 如果已经是分组格式，跳过（但我们仍会重新生成以确保引号）
-                  valid_keys = set(ORDER)
-                  if all(k in valid_keys for k in data.keys()):
-                      print(f"  Already in grouped format, re-generating with quoted values.")
-                      # 收集所有值，但需要知道前缀映射，但这里我们假定分组正确
-                      # 但为了统一，我们仍然从分组中提取值并重新按规则分组
-                      # 实际上我们应该直接读取分组值，但为了保留前缀，我们无法从分组键反向得到前缀
-                      # 所以我们直接跳过，因为已经符合格式
+                  if all(k in set(ORDER) for k in data.keys()):
+                      print(f"  Already in grouped format, skipping.")
                       continue
                   print(f"  No valid rules found, skipping.")
                   continue
               if not rules:
                   print(f"  No rules to normalize.")
                   continue
+
               groups = {g: [] for g in ORDER}
               for rule in rules:
                   prefix = rule.split(",", 1)[0].upper()
@@ -639,18 +633,21 @@ jobs:
               groups = {k: sorted(set(v)) for k, v in groups.items() if v}
               if not groups:
                   raise RuntimeError(f"{path}: final grouped rules empty")
+
               lines = []
               for key in ORDER:
                   if key in groups:
                       lines.append(f"{key}:")
-                      lines.extend(f"  - '{item}'" for item in groups[key])
+                      lines.extend(f"  - \"{item}\"" for item in groups[key])
               new_content = "\n".join(lines) + "\n"
+
               data = yaml.safe_load(new_content)
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: invalid YAML generated")
               total = sum(len(v) for v in data.values() if isinstance(v, list))
               if total == 0:
                   raise RuntimeError(f"{path}: final payload is empty")
+
               old_content = path.read_text(encoding="utf-8-sig")
               if old_content != new_content:
                   fd, temp_path = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True)
@@ -668,7 +665,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 7: Final YAML Validation (check all keys are valid Egern types)
+      # Step 7: 最终 YAML 校验
       # =====================================================================
       - name: Final YAML Validation
         shell: bash
@@ -678,11 +675,11 @@ jobs:
           from pathlib import Path
           import yaml
           RULE_DIR = Path("Egern/Rule")
-          ALLOWED_KEYS = {"domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
-                          "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
-                          "user_agent", "dest_port", "protocol", "rule_set",
-                          "ssid", "bssid", "cellular",
-                          "and", "or", "not", "default", "process_name"}
+          ALLOWED_KEYS = {"domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
+                          "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
+                          "user_agent_set", "dest_port_set", "protocol_set",
+                          "ssid_set", "bssid_set", "cellular_set",
+                          "and_set", "or_set", "not_set", "default"}
           for path in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Validating {path.name}...")
               with open(path, "r", encoding="utf-8-sig") as f:
@@ -707,7 +704,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 8: Add Stable Headers (using git show HEAD)
+      # Step 8: 添加稳定头部
       # =====================================================================
       - name: Add Stable Headers
         shell: bash
@@ -726,6 +723,7 @@ jobs:
               "AdBlock": "AdGuard DNS Filter, AdRules, AWAvenue",
               "Lan": "blackmatrix7, Repcz",
               "AIGC": "blackmatrix7, ConnersHua, Repcz",
+              "Telegram": "blackmatrix7, Repcz",
           }
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
           HEADER_PREFIXES = ("# 规则名称:", "# 规则统计:", "# 规则来源:", "# 引用链接:", "# 更新时间:")
@@ -738,11 +736,7 @@ jobs:
                   data = yaml.safe_load(content)
                   if not isinstance(data, dict):
                       return 0
-                  total = 0
-                  for val in data.values():
-                      if isinstance(val, list):
-                          total += len(val)
-                  return total
+                  return sum(len(v) for v in data.values() if isinstance(v, list))
               except:
                   return 0
 
@@ -795,6 +789,7 @@ jobs:
               current_payload = normalize_payload(current_content)
               if current_payload is None:
                   raise RuntimeError(f"{yaml_file}: current payload cannot be parsed")
+
               old_git_content = get_git_head_content(yaml_file)
               if not old_git_content:
                   update_time = current_time
@@ -811,6 +806,7 @@ jobs:
                   else:
                       update_time = current_time
                       state = "missing old timestamp"
+
               count = count_rules(current_content)
               name = yaml_file.stem
               source = SOURCE_MAP.get(name, DEFAULT_SOURCE)
@@ -818,6 +814,7 @@ jobs:
               body = remove_old_headers(current_content)
               header = f"# 规则名称: {name}\n# 规则统计: {count}\n# 规则来源: {source}\n# 引用链接: {url}\n# 更新时间: {update_time}\n\n"
               new_content = header + body + "\n"
+
               if new_content != current_content:
                   yaml_file.write_text(new_content, encoding="utf-8", newline="\n")
                   print("  Header updated")
@@ -828,7 +825,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 9: Final Post-Header Validation
+      # Step 9: 头部添加后最终校验
       # =====================================================================
       - name: Final Post Header Validation
         shell: bash
@@ -838,11 +835,11 @@ jobs:
           from pathlib import Path
           import yaml
           RULE_DIR = Path("Egern/Rule")
-          ALLOWED_KEYS = {"domain", "domain_suffix", "domain_keyword", "domain_regex", "domain_wildcard",
-                          "geoip", "ip_cidr", "ip_cidr6", "asn", "url_regex",
-                          "user_agent", "dest_port", "protocol", "rule_set",
-                          "ssid", "bssid", "cellular",
-                          "and", "or", "not", "default", "process_name"}
+          ALLOWED_KEYS = {"domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
+                          "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
+                          "user_agent_set", "dest_port_set", "protocol_set",
+                          "ssid_set", "bssid_set", "cellular_set",
+                          "and_set", "or_set", "not_set", "default"}
           for path in sorted(RULE_DIR.glob("*.yaml")):
               text = path.read_text(encoding="utf-8-sig")
               data = yaml.safe_load(text)
@@ -864,7 +861,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 10: Commit and Push
+      # Step 10: 提交并推送
       # =====================================================================
       - name: Commit and Push
         shell: bash
