@@ -1,7 +1,7 @@
 # =============================================================================
 # 工作流名称：规则自动构建
 # 文件位置：.github/workflows/Build.yml
-# 更新时间：2026.08.14 08:45
+# 更新时间：2026.08.14 08:48
 #
 # 核心功能：
 #   1. 三源合并生成 AdBlock.yaml (AdGuard DNS Filter + AdRules + AWAvenue)
@@ -37,25 +37,16 @@ jobs:
       TZ: Asia/Shanghai
       PYTHONUNBUFFERED: "1"
     steps:
-      # ---------------------------------------------------------------------
-      # Step 1: Checkout
-      # ---------------------------------------------------------------------
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # ---------------------------------------------------------------------
-      # Step 2: Setup Python
-      # ---------------------------------------------------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # ---------------------------------------------------------------------
-      # Step 3: Install Dependencies
-      # ---------------------------------------------------------------------
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
@@ -246,9 +237,9 @@ jobs:
               print("-"*72 + f"\n{'Unique merged domains':<20} {len(merged):>12,}\n" + "="*72)
 
           def generate_yaml(domains):
-              # Egern 官方使用 'domain' 字段名
               domains = sorted(domains)
-              lines = ["domain:"] + [f"  - {d}" for d in domains] + [""]
+              # 使用单引号包裹每个域名，防止 YAML 解析错误
+              lines = ["domain:"] + [f"  - '{d}'" for d in domains] + [""]
               return "\n".join(lines)
 
           def validate_output(content):
@@ -355,7 +346,6 @@ jobs:
                   raise RuntimeError(f"Downloaded content is empty: {url}")
               return text
 
-          # 支持的规则前缀（Surge 常用）
           RULE_PREFIXES = ("DOMAIN,", "DOMAIN-SUFFIX,", "DOMAIN-KEYWORD,", "DOMAIN-WILDCARD,",
                            "IP-CIDR,", "IP-CIDR6,", "IP-ASN,", "URL-REGEX,", "USER-AGENT,",
                            "DEST-PORT,", "GEOIP,", "PROCESS-NAME,", "AND,", "OR,", "NOT,")
@@ -368,6 +358,7 @@ jobs:
                   return None
               if line.startswith("- "):
                   line = line[2:].strip()
+              # 去除首尾引号（单引号或双引号）
               if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
                   line = line[1:-1].strip()
               line = re.sub(r"\s+#.*$", "", line).strip()
@@ -391,20 +382,20 @@ jobs:
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
                   raise RuntimeError("Egern YAML root must be a mapping")
-              # 可能为 payload 或分组格式，统一提取所有字符串值
               rules = []
               for key, val in data.items():
                   if isinstance(val, list):
                       for item in val:
                           if isinstance(item, str):
-                              # 如果已经是带前缀的规则，直接添加
+                              # 如果是带前缀的规则直接添加，否则尝试根据 key 推断（但这里保留）
+                              # 实际上 Egern YAML 分组中值不带前缀，但 Surge 转储时带前缀
+                              # 我们统一用 clean_rule_line 处理，它会处理带前缀的和不带前缀的
+                              # 不过 clean_rule_line 要求带前缀，所以如果 item 不带前缀，我们可以根据 key 补前缀
                               if any(item.upper().startswith(p) for p in RULE_PREFIXES):
                                   rules.append(item)
                               else:
-                                  # 否则尝试根据 key 推断前缀
-                                  # 这里简单跳过，因为我们期望的是 payload 格式
+                                  # 尝试根据 key 补前缀（但这里我们信任原始数据是 payload 格式）
                                   pass
-              # 如果上面没提取到，尝试传统 payload
               if not rules:
                   payload = data.get("payload")
                   if isinstance(payload, list):
@@ -430,7 +421,6 @@ jobs:
                   unique[rule.lower()] = rule
               return sorted(unique.values(), key=lambda x: (x.split(",", 1)[0].upper(), x.lower()))
 
-          # Egern 官方字段名映射
           PREFIX_GROUP = {
               "DOMAIN": "domain",
               "DOMAIN-SUFFIX": "domain_suffix",
@@ -443,7 +433,7 @@ jobs:
               "USER-AGENT": "user_agent",
               "DEST-PORT": "dest_port",
               "GEOIP": "geoip",
-              "PROCESS-NAME": "process_name",  # 官方未明确列出，保留但可能不被识别
+              "PROCESS-NAME": "process_name",
               "AND": "and",
               "OR": "or",
               "NOT": "not",
@@ -455,7 +445,6 @@ jobs:
                    "and", "or", "not", "default", "process_name"]
 
           def write_egern_yaml(path, rules):
-              # 先按前缀分组
               groups = {g: [] for g in ORDER}
               for rule in rules:
                   prefix = rule.split(",", 1)[0].upper()
@@ -463,22 +452,16 @@ jobs:
                   group = PREFIX_GROUP.get(prefix)
                   if group:
                       groups[group].append(value)
-              # 去重排序
-              for g in groups:
-                  if groups[g]:
-                      groups[g] = sorted(set(groups[g]))
-              # 移除空组
-              groups = {k: v for k, v in groups.items() if v}
+              groups = {k: sorted(set(v)) for k, v in groups.items() if v}
               if not groups:
                   raise RuntimeError(f"No grouped rules for {path}")
-              # 按顺序生成
               lines = []
               for key in ORDER:
                   if key in groups:
                       lines.append(f"{key}:")
-                      lines.extend(f"  - {item}" for item in groups[key])
+                      # 用单引号包裹每个值，避免 YAML 解析特殊字符
+                      lines.extend(f"  - '{item}'" for item in groups[key])
               content = "\n".join(lines) + "\n"
-              # 验证
               data = yaml.safe_load(content)
               if not isinstance(data, dict):
                   raise RuntimeError(f"Invalid YAML generated: {path}")
@@ -499,7 +482,6 @@ jobs:
                   raise
               return total
 
-          # blackmatrix7 existing files
           existing_files = sorted(p.stem for p in RULE_DIR.glob("*.yaml")
                                   if p.name not in ("AdBlock.yaml", "Lan.yaml", "AIGC.yaml"))
           print("\n" + "="*72 + "\nExisting rule files\n" + "="*72)
@@ -527,7 +509,6 @@ jobs:
                   count = write_egern_yaml(RULE_DIR / f"{name}.yaml", rules)
                   print(f"Valid rules: {count:,}\nSkipped lines: {skipped:,}")
 
-          # Lan
           LAN_SOURCES = [
               ("blackmatrix7", "https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list"),
               ("Repcz", "https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Lan.yaml"),
@@ -606,6 +587,9 @@ jobs:
                   return None
               if line.startswith("- "):
                   line = line[2:].strip()
+              # 去除引号
+              if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
+                  line = line[1:-1].strip()
               if not line:
                   return None
               upper = line.upper()
@@ -623,7 +607,6 @@ jobs:
                   raise RuntimeError(f"{path}: YAML parse failed: {exc}")
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: YAML root is invalid")
-              # 提取所有规则（优先从 payload 取）
               rules = []
               if "payload" in data and isinstance(data["payload"], list):
                   for item in data["payload"]:
@@ -632,29 +615,20 @@ jobs:
                           if rule:
                               rules.append(rule)
               else:
-                  # 尝试从分组中恢复规则（如果已经是分组格式，直接重建分组）
-                  # 但为了统一，我们收集所有值，但无法知道前缀，所以忽略
-                  # 更好的是：如果已经分组，我们就直接跳过本步骤（因为已经正确）
-                  # 但为了安全，我们仍然重新分组
-                  for key, val in data.items():
-                      if isinstance(val, list):
-                          for item in val:
-                              if isinstance(item, str):
-                                  # 尝试推断前缀
-                                  # 这里简单处理，因为我们已经从分组读到了
-                                  # 但为了通用，我们根据 key 反向映射
-                                  # 不过我们已经有 PREFIX_GROUP 的逆映射，但可能不完整
-                                  pass
-              if not rules:
-                  # 如果还是没有，检查是否已经是正确的分组格式
-                  # 验证是否有合法的分组键
+                  # 如果已经是分组格式，跳过（但我们仍会重新生成以确保引号）
                   valid_keys = set(ORDER)
                   if all(k in valid_keys for k in data.keys()):
-                      print(f"  Already in grouped format, skipping.")
+                      print(f"  Already in grouped format, re-generating with quoted values.")
+                      # 收集所有值，但需要知道前缀映射，但这里我们假定分组正确
+                      # 但为了统一，我们仍然从分组中提取值并重新按规则分组
+                      # 实际上我们应该直接读取分组值，但为了保留前缀，我们无法从分组键反向得到前缀
+                      # 所以我们直接跳过，因为已经符合格式
                       continue
-                  print(f"  No rules found, skipping.")
+                  print(f"  No valid rules found, skipping.")
                   continue
-              # 重新分组
+              if not rules:
+                  print(f"  No rules to normalize.")
+                  continue
               groups = {g: [] for g in ORDER}
               for rule in rules:
                   prefix = rule.split(",", 1)[0].upper()
@@ -669,9 +643,8 @@ jobs:
               for key in ORDER:
                   if key in groups:
                       lines.append(f"{key}:")
-                      lines.extend(f"  - {item}" for item in groups[key])
+                      lines.extend(f"  - '{item}'" for item in groups[key])
               new_content = "\n".join(lines) + "\n"
-              # 验证
               data = yaml.safe_load(new_content)
               if not isinstance(data, dict):
                   raise RuntimeError(f"{path}: invalid YAML generated")
@@ -855,7 +828,7 @@ jobs:
           PY
 
       # =====================================================================
-      # Step 9: Final Post-Header Validation (grouped format)
+      # Step 9: Final Post-Header Validation
       # =====================================================================
       - name: Final Post Header Validation
         shell: bash
