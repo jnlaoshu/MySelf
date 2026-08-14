@@ -1,6 +1,6 @@
 # =============================================================================
 # 工作流：规则转换与多平台分发
-# 更新：2026.08.14 17:30
+# 更新：2026.08.15 07:50
 #
 # 功能：
 #   - 读取本仓库 Egern/Rule 下的规则文件
@@ -60,12 +60,12 @@ jobs:
           SOURCE_DIR = Path("Egern/Rule")
 
           TARGET_CONFIG = {
-              "Surge": {"dir": "Surge/Rules", "ext": ".list"},
-              "Stash": {"dir": "Stash/Rules", "ext": ".yaml"},
-              "Loon": {"dir": "Loon/Rules", "ext": ".list"},
-              "Mihomo": {"dir": "Mihomo/Rules", "ext": ".yaml"},
-              "Shadowrocket": {"dir": "Shadowrocket/Rules", "ext": ".list"},
-              "QuantumultX": {"dir": "QuantumultX/Rules", "ext": ".list"},
+              "Surge": {"dir": "Surge/Rule", "ext": ".list"},
+              "Stash": {"dir": "Stash/Rule", "ext": ".yaml"},
+              "Loon": {"dir": "Loon/Rule", "ext": ".list"},
+              "Mihomo": {"dir": "Mihomo/Rule", "ext": ".yaml"},
+              "Shadowrocket": {"dir": "Shadowrocket/Rule", "ext": ".list"},
+              "QuantumultX": {"dir": "QuantumultX/Rule", "ext": ".list"},
           }
 
           SOURCE_MAP = {
@@ -310,12 +310,12 @@ jobs:
           from datetime import datetime, timezone, timedelta
 
           PLATFORM_CONFIG = {
-              "Surge": {"dir": "Surge/Rules", "ext": ".list"},
-              "Stash": {"dir": "Stash/Rules", "ext": ".yaml"},
-              "Loon": {"dir": "Loon/Rules", "ext": ".list"},
-              "Mihomo": {"dir": "Mihomo/Rules", "ext": ".yaml"},
-              "Shadowrocket": {"dir": "Shadowrocket/Rules", "ext": ".list"},
-              "QuantumultX": {"dir": "QuantumultX/Rules", "ext": ".list"},
+              "Surge": {"dir": "Surge/Rule", "ext": ".list"},
+              "Stash": {"dir": "Stash/Rule", "ext": ".yaml"},
+              "Loon": {"dir": "Loon/Rule", "ext": ".list"},
+              "Mihomo": {"dir": "Mihomo/Rule", "ext": ".yaml"},
+              "Shadowrocket": {"dir": "Shadowrocket/Rule", "ext": ".list"},
+              "QuantumultX": {"dir": "QuantumultX/Rule", "ext": ".list"},
           }
 
           EXTRA_REMOVE = {
@@ -407,11 +407,10 @@ jobs:
                           f"# 规则来源: {source}\n",
                           f"# 引用链接: {reference_url}\n",
                           f"# 更新时间: {update_time}\n",
-                          "\n",  # 更新时间与规则内容之间的空行
+                          "\n",
                       ]
                       if no_resolve:
                           header_lines.append(f"no_resolve: true\n")
-                      # 不再添加额外空行，no_resolve 与规则紧挨
 
                       fd, temp_path = tempfile.mkstemp(prefix=f".{file_path.stem}.", suffix=".tmp", dir=file_path.parent, text=True)
                       try:
@@ -442,7 +441,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          for dir in Surge/Rules Stash/Rules Loon/Rules Mihomo/Rules Shadowrocket/Rules QuantumultX/Rules; do
+          for dir in Surge/Rule Stash/Rule Loon/Rule Mihomo/Rule Shadowrocket/Rule QuantumultX/Rule; do
             if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
               git add "$dir/"
             fi
