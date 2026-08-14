@@ -2,37 +2,38 @@
 # 规则统计: 31
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/GitHub.yaml
-# 更新时间: 2026-08-14 07:50:37 +0800
+# 更新时间: 2026-08-14 08:49:37 +0800
 
-payload:
-  - DOMAIN-SUFFIX,atom.io
-  - DOMAIN-SUFFIX,dependabot.com
-  - DOMAIN-SUFFIX,ghcr.io
-  - DOMAIN-SUFFIX,git.io
-  - DOMAIN-SUFFIX,github-atom-io-herokuapp-com.freetls.fastly.net
-  - DOMAIN-SUFFIX,github-avatars.oss-cn-hongkong.aliyuncs.com
-  - DOMAIN-SUFFIX,github-cloud.s3.amazonaws.com
-  - DOMAIN-SUFFIX,github.blog
-  - DOMAIN-SUFFIX,github.com
-  - DOMAIN-SUFFIX,github.community
-  - DOMAIN-SUFFIX,github.dev
-  - DOMAIN-SUFFIX,github.io
-  - DOMAIN-SUFFIX,githubapp.com
-  - DOMAIN-SUFFIX,githubassets.com
-  - DOMAIN-SUFFIX,githubcopilot.com
-  - DOMAIN-SUFFIX,githubhackathon.com
-  - DOMAIN-SUFFIX,githubnext.com
-  - DOMAIN-SUFFIX,githubpreview.dev
-  - DOMAIN-SUFFIX,githubstatus.com
-  - DOMAIN-SUFFIX,githubuniverse.com
-  - DOMAIN-SUFFIX,githubusercontent.com
-  - DOMAIN-SUFFIX,myoctocat.com
-  - DOMAIN-SUFFIX,npm.community
-  - DOMAIN-SUFFIX,npmjs.com
-  - DOMAIN-SUFFIX,npmjs.org
-  - DOMAIN-SUFFIX,opensource.guide
-  - DOMAIN-SUFFIX,rawgit.com
-  - DOMAIN-SUFFIX,rawgithub.com
-  - DOMAIN-SUFFIX,repo.new
-  - DOMAIN-SUFFIX,thegithubshop.com
-  - DOMAIN-KEYWORD,github
+domain_suffix:
+  - 'atom.io'
+  - 'dependabot.com'
+  - 'ghcr.io'
+  - 'git.io'
+  - 'github-atom-io-herokuapp-com.freetls.fastly.net'
+  - 'github-avatars.oss-cn-hongkong.aliyuncs.com'
+  - 'github-cloud.s3.amazonaws.com'
+  - 'github.blog'
+  - 'github.com'
+  - 'github.community'
+  - 'github.dev'
+  - 'github.io'
+  - 'githubapp.com'
+  - 'githubassets.com'
+  - 'githubcopilot.com'
+  - 'githubhackathon.com'
+  - 'githubnext.com'
+  - 'githubpreview.dev'
+  - 'githubstatus.com'
+  - 'githubuniverse.com'
+  - 'githubusercontent.com'
+  - 'myoctocat.com'
+  - 'npm.community'
+  - 'npmjs.com'
+  - 'npmjs.org'
+  - 'opensource.guide'
+  - 'rawgit.com'
+  - 'rawgithub.com'
+  - 'repo.new'
+  - 'thegithubshop.com'
+domain_keyword:
+  - 'github'

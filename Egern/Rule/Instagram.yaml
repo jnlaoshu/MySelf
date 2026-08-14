@@ -2,10 +2,11 @@
 # 规则统计: 4
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Instagram.yaml
-# 更新时间: 2026-08-14 07:50:37 +0800
+# 更新时间: 2026-08-14 08:49:37 +0800
 
-payload:
-  - DOMAIN-SUFFIX,cdninstagram.com
-  - DOMAIN-SUFFIX,instagr.am
-  - DOMAIN-SUFFIX,instagram.com
-  - DOMAIN-KEYWORD,instagram
+domain_suffix:
+  - 'cdninstagram.com'
+  - 'instagr.am'
+  - 'instagram.com'
+domain_keyword:
+  - 'instagram'
