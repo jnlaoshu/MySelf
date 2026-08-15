@@ -489,6 +489,7 @@ jobs:
                       continue
 
                   if prefix in NO_RESOLVE_TYPES:
+                      # IP 类规则：剥离 no-resolve 和其他额外参数
                       value_parts = [p.strip() for p in value.split(",")]
                       filtered = [p for p in value_parts if p.lower() != "no-resolve"]
                       if len(filtered) != len(value_parts):
@@ -497,6 +498,12 @@ jobs:
                           print(f"  WARNING: Extra parameters dropped in {rule}")
                           filtered = filtered[:1]
                       value = ",".join(filtered)
+                  else:
+                      # 非 IP 类规则：如果包含额外参数（如 extended-matching），只保留第一个字段
+                      if "," in value:
+                          value_parts = [p.strip() for p in value.split(",")]
+                          value = value_parts[0]
+                          print(f"  WARNING: Extra parameters dropped in {rule}")
 
                   if not value:
                       continue
