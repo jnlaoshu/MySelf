@@ -1,18 +1,23 @@
 # =============================================================================
 # 工作流：Egern 规则自动构建
-# 更新：2026.08.15 12:38
+# 更新：2026.08.15 22:26
 #
 # 主要功能：
 #   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
-#   - 自动检测 Egern/Rule 目录下现有 YAML，同步 blackmatrix7 对应规则
+#   - 自动检测 Egern/Rule 目录下现有 YAML（排除 AdBlock / AIGC / Telegram），
+#     隐式认领并同步 blackmatrix7 对应规则
 #   - 多源合并 AIGC / Telegram
 #   - 支持 Manual/*.txt 手动追加规则，Manual/*.exclude.txt 排除规则
+#     （Manual/AdBlock.txt 只接受 DOMAIN,，其余类型直接报错）
 #   - 支持 Surge classical / payload YAML / Egern grouped Rule Set YAML
 #   - 输出符合 Egern Rule Set 格式的分组 YAML
-#   - 正确处理 no_resolve（含一致性检测与警告）
-#   - 上游异常、解析归零、最终归零均触发 CI 失败
+#   - 正确处理 no_resolve（含一致性检测；GEOIP 与其他 IP 类型统一清洗）
+#   - DOMAIN-SUFFIX 支持单标签后缀（如 com / net）
+#   - 上游异常、解析归零、最终归零、全局总量过低均触发 CI 失败
 #   - 两层最终 YAML 校验 + 稳定时间戳比较
+#     （语义比较仅对 domain 系字段大小写不敏感）
 #   - 内容未变化时不刷新更新时间，不提交
+#   - schedule 触发允许当天复用 cache；workflow_dispatch 手动触发强制绕过 cache
 # =============================================================================
 name: Build
 
@@ -64,6 +69,8 @@ jobs:
 
       - name: Build All Rules
         shell: bash
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
           mkdir -p Egern/Rule .build .cache/sources Manual
@@ -94,7 +101,10 @@ jobs:
           MANUAL_DIR = Path("Manual")
           CACHE_DIR = Path(".cache/sources")
           REQUEST_TIMEOUT = 45
-          USER_AGENT = "Egern-Rule-Builder/3.1"
+          USER_AGENT = "Egern-Rule-Builder/3.3"
+
+          # schedule 允许当天复用 cache；workflow_dispatch 强制绕过
+          USE_CACHE = os.environ.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
 
           ADBLOCK_SOURCES = OrderedDict({
               "AdGuard_DNS": {
@@ -114,6 +124,9 @@ jobs:
               },
           })
           ADBLOCK_FINAL_MIN = 100_000
+
+          # 全局总规则量安全阈值（AdBlock 已有 10 万下限，这里再加一层整体兜底）
+          FINAL_TOTAL_MIN = 105_000
 
           # AIGC / Telegram 多源合并
           MERGE_SOURCES = {
@@ -218,6 +231,8 @@ jobs:
                   if content.strip():
                       print(f"  Cache hit ({len(content):,} bytes)")
                       return content
+              elif not use_cache and cp.exists():
+                  print("  Cache bypassed (workflow_dispatch)")
 
               response = SESSION.get(url, timeout=REQUEST_TIMEOUT)
               response.raise_for_status()
@@ -228,16 +243,15 @@ jobs:
               if "<html" in sample or "<!doctype html" in sample:
                   raise RuntimeError(f"Downloaded content appears to be HTML: {url}")
 
-              # 写入缓存
               if use_cache:
                   cp.parent.mkdir(parents=True, exist_ok=True)
                   cp.write_text(content, encoding="utf-8")
               return content
 
           # ------------------------------------------------------------------
-          # Domain normalization
+          # Domain normalization（支持 allow_single_label）
           # ------------------------------------------------------------------
-          def normalize_domain(value: str) -> str | None:
+          def normalize_domain(value: str, allow_single_label: bool = False) -> str | None:
               if not isinstance(value, str):
                   return None
               domain = value.strip().lower()
@@ -258,7 +272,9 @@ jobs:
                   return None
               except ValueError:
                   pass
-              if "." not in domain or ".." in domain:
+              if ".." in domain:
+                  return None
+              if not allow_single_label and "." not in domain:
                   return None
               try:
                   domain = domain.encode("idna").decode("ascii").lower()
@@ -267,7 +283,7 @@ jobs:
               if len(domain) > 253:
                   return None
               labels = domain.split(".")
-              if len(labels) < 2:
+              if not allow_single_label and len(labels) < 2:
                   return None
               for label in labels:
                   if not DOMAIN_LABEL_RE.fullmatch(label):
@@ -286,14 +302,12 @@ jobs:
                   if not line or line.startswith(("!", "#", "[", "@@")):
                       continue
                   line = re.sub(r"\$.*$", "", line).strip()
-                  # 优先 hosts 格式
                   m = HOSTS_LINE.match(line)
                   if m:
                       d = normalize_domain(m.group(1))
                       if d:
                           domains.add(d)
                       continue
-                  # 再尝试 ||domain^ 格式
                   match = PURE_ADGUARD_DOMAIN.match(line)
                   if match:
                       d = normalize_domain(match.group(1))
@@ -481,27 +495,31 @@ jobs:
                       continue
 
                   if prefix in NO_RESOLVE_TYPES:
-                      # IP 类规则：剥离 no-resolve 和其他额外参数
                       value_parts = [p.strip() for p in value.split(",")]
                       filtered = [p for p in value_parts if p.lower() != "no-resolve"]
                       if len(filtered) != len(value_parts):
                           needs_no_resolve = True
-                      if prefix != "GEOIP" and len(filtered) > 1:
+                      if len(filtered) > 1:
                           print(f"  WARNING: Extra parameters dropped in {rule}")
                           filtered = filtered[:1]
                       value = ",".join(filtered)
                   else:
-                      # 非 IP 类规则：如果包含额外参数，只保留第一个字段
                       if "," in value:
                           value_parts = [p.strip() for p in value.split(",")]
                           value = value_parts[0]
                           print(f"  WARNING: Extra parameters dropped in {rule}")
 
-                  # 对域名类规则进行 normalize_domain 清洗
-                  if prefix in ("DOMAIN", "DOMAIN-SUFFIX"):
-                      normalized = normalize_domain(value)
+                  # 域名类规则清洗（DOMAIN-SUFFIX 允许单标签）
+                  if prefix == "DOMAIN":
+                      normalized = normalize_domain(value, allow_single_label=False)
                       if not normalized:
                           print(f"  WARNING: invalid domain skipped: {value}")
+                          continue
+                      value = normalized
+                  elif prefix == "DOMAIN-SUFFIX":
+                      normalized = normalize_domain(value, allow_single_label=True)
+                      if not normalized:
+                          print(f"  WARNING: invalid suffix skipped: {value}")
                           continue
                       value = normalized
 
@@ -517,7 +535,6 @@ jobs:
               if not groups:
                   raise RuntimeError(f"No grouped rules for {path}")
 
-              # 构建 YAML 数据，直接使用 safe_dump 生成
               yaml_data: dict[str, Any] = {}
               if needs_no_resolve:
                   yaml_data["no_resolve"] = True
@@ -534,7 +551,6 @@ jobs:
               if not content.endswith("\n"):
                   content += "\n"
 
-              # 验证生成的 YAML
               try:
                   data = yaml.safe_load(content)
               except Exception as exc:
@@ -579,7 +595,7 @@ jobs:
               return True
 
           # ------------------------------------------------------------------
-          # Manual rules（支持所有规则）
+          # Manual rules
           # ------------------------------------------------------------------
           def load_manual_additions(name: str) -> list[str]:
               path = MANUAL_DIR / f"{name}.txt"
@@ -591,14 +607,23 @@ jobs:
                   rule = clean_rule_line(line)
                   if not rule:
                       continue
-                  if rule.upper().startswith(("DOMAIN,", "DOMAIN-SUFFIX,")):
+                  if rule.upper().startswith("DOMAIN,"):
                       parts = rule.split(",", 1)
                       if len(parts) == 2:
-                          d = normalize_domain(parts[1])
+                          d = normalize_domain(parts[1], allow_single_label=False)
                           if d:
                               rule = f"{parts[0]},{d}"
                           else:
                               print(f"    WARNING: invalid domain skipped: {parts[1]}")
+                              continue
+                  elif rule.upper().startswith("DOMAIN-SUFFIX,"):
+                      parts = rule.split(",", 1)
+                      if len(parts) == 2:
+                          d = normalize_domain(parts[1], allow_single_label=True)
+                          if d:
+                              rule = f"{parts[0]},{d}"
+                          else:
+                              print(f"    WARNING: invalid suffix skipped: {parts[1]}")
                               continue
                   rules.append(rule)
               if rules:
@@ -634,7 +659,7 @@ jobs:
               merged: set[str] = set()
 
               for name, cfg in ADBLOCK_SOURCES.items():
-                  content = download(cfg["url"])
+                  content = download(cfg["url"], use_cache=USE_CACHE)
                   domains = parse_adguard(content)
                   count = len(domains)
                   print(f"  {name}: {count:,} domains")
@@ -658,10 +683,18 @@ jobs:
               extra = load_manual_additions("AdBlock")
               for r in extra:
                   upper = r.upper()
-                  if upper.startswith(("DOMAIN,", "DOMAIN-SUFFIX,")):
-                      d = normalize_domain(r.split(",", 1)[1])
+                  if upper.startswith("DOMAIN,"):
+                      d = normalize_domain(r.split(",", 1)[1], allow_single_label=False)
                       if d:
                           merged.add(d)
+                      else:
+                          print(f"  WARNING: invalid domain skipped: {r}")
+                  else:
+                      raise RuntimeError(
+                          f"Manual/AdBlock.txt contains unsupported rule type for "
+                          f"domain_set-only output: {r!r} "
+                          f"(only 'DOMAIN,' is allowed here)"
+                      )
 
               exclude_file = MANUAL_DIR / "AdBlock.exclude.txt"
               if exclude_file.exists():
@@ -686,7 +719,7 @@ jobs:
               print(f"\nAdBlock: {len(merged):,} domains → {state}")
 
           # ------------------------------------------------------------------
-          # 2. blackmatrix7 自动同步（根据现有文件检测，非显式列表）
+          # 2. blackmatrix7 自动同步（隐式认领）
           # ------------------------------------------------------------------
           def build_blackmatrix7() -> None:
               merge_names = set(MERGE_SOURCES)
@@ -695,7 +728,7 @@ jobs:
                   p.stem for p in RULE_DIR.glob("*.yaml") if p.stem not in excluded
               )
               print("\n" + "=" * 72)
-              print("Detected blackmatrix7 rules to sync (folder-based)")
+              print("Detected blackmatrix7 rules to sync (folder-based, implicit)")
               print("=" * 72)
               if not existing:
                   print("  (none)")
@@ -710,7 +743,7 @@ jobs:
                       f"master/rule/Surge/{name}/{name}.list"
                   )
                   try:
-                      content = download(raw_url)
+                      content = download(raw_url, use_cache=USE_CACHE)
                       print(f"\nProcessing {name} (Raw)")
                       rules, skipped = parse_source(content)
                       rules.extend(load_manual_additions(name))
@@ -760,7 +793,7 @@ jobs:
                   print(f"  → {count:,} rules (skipped {skipped})")
 
           # ------------------------------------------------------------------
-          # 3. Multi-source merges（仅 AIGC / Telegram）
+          # 3. Multi-source merges
           # ------------------------------------------------------------------
           def build_merged(name: str, sources: list[str]) -> None:
               print("\n" + "=" * 72)
@@ -771,7 +804,7 @@ jobs:
               for item in sources:
                   src_name, url = item.split("|", 1)
                   print(f"\n[{src_name}]")
-                  content = download(url)
+                  content = download(url, use_cache=USE_CACHE)
                   rules, skipped = parse_source(content)
                   if not rules:
                       raise RuntimeError(f"{name}/{src_name}: zero valid rules")
@@ -793,12 +826,31 @@ jobs:
               print("=" * 72)
               print("Egern Unified Rule Builder")
               print(f"Build time (UTC): {datetime.now(timezone.utc).isoformat()}")
+              print(f"Cache mode: {'enabled' if USE_CACHE else 'bypassed (workflow_dispatch)'}")
               print("=" * 72)
 
               build_adblock()
               build_blackmatrix7()
               for name, sources in MERGE_SOURCES.items():
                   build_merged(name, sources)
+
+              total_all = 0
+              for yaml_file in sorted(RULE_DIR.glob("*.yaml")):
+                  try:
+                      data = yaml.safe_load(yaml_file.read_text(encoding="utf-8-sig"))
+                  except Exception:
+                      continue
+                  if isinstance(data, dict):
+                      total_all += sum(
+                          len(v) for k, v in data.items()
+                          if k != "no_resolve" and isinstance(v, list)
+                      )
+              print(f"\nTotal rules across Egern/Rule: {total_all:,}")
+              if total_all < FINAL_TOTAL_MIN:
+                  raise RuntimeError(
+                      f"Global rule total too low: {total_all:,} < {FINAL_TOTAL_MIN:,} "
+                      f"(FINAL_TOTAL_MIN may need recalibration if this is a false positive)"
+                  )
 
               print("\n" + "=" * 72)
               print("All rules built successfully.")
@@ -853,6 +905,8 @@ jobs:
                   return False
               except ValueError:
                   pass
+              if not allow_single_label and "." not in value:
+                  return False
               if len(value) > 253:
                   return False
               labels = value.split(".")
@@ -997,6 +1051,12 @@ jobs:
                   if k != "no_resolve" and isinstance(v, list)
               )
 
+          CASE_INSENSITIVE_KEYS = {
+              "domain_set",
+              "domain_suffix_set",
+              "domain_keyword_set",
+          }
+
           def semantic_payload(content: str):
               try:
                   data = yaml.safe_load(content)
@@ -1011,10 +1071,10 @@ jobs:
                       continue
                   for value in values:
                       if isinstance(value, str):
-                          if key in ("domain_regex_set", "url_regex_set", "user_agent_set"):
-                              normalized = value.strip()
-                          else:
+                          if key in CASE_INSENSITIVE_KEYS:
                               normalized = value.strip().lower()
+                          else:
+                              normalized = value.strip()
                           items.append((key, normalized))
               return (no_resolve, tuple(sorted(set(items))))
 
@@ -1136,6 +1196,8 @@ jobs:
                   return False
               except ValueError:
                   pass
+              if not allow_single_label and "." not in value:
+                  return False
               if len(value) > 253:
                   return False
               labels = value.split(".")
@@ -1240,13 +1302,21 @@ jobs:
 
           git commit -m "update(rules): $(date '+%Y-%m-%d %H:%M:%S')"
 
+          rebase_ok=false
           for i in 1 2 3; do
             if git pull --rebase origin "${GITHUB_REF_NAME:-main}"; then
+              rebase_ok=true
               break
             fi
-            echo "Pull rebase failed (attempt $i), retrying..."
+            echo "Pull rebase failed (attempt $i), aborting and retrying..."
+            git rebase --abort || true
             sleep $((i * 3))
           done
+          if [ "$rebase_ok" != "true" ]; then
+            echo "Pull rebase ultimately failed after retries. Aborting push."
+            git rebase --abort || true
+            exit 1
+          fi
 
           for i in 1 2 3; do
             if git push --force-with-lease origin "${GITHUB_REF_NAME:-main}"; then
@@ -1259,7 +1329,9 @@ jobs:
               exit 0
             fi
             sleep $((i * 5))
-            git pull --rebase origin "${GITHUB_REF_NAME:-main}" || true
+            if ! git pull --rebase origin "${GITHUB_REF_NAME:-main}"; then
+              git rebase --abort || true
+            fi
           done
 
           echo "Push ultimately failed after retries."
