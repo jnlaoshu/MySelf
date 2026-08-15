@@ -1,17 +1,16 @@
 # =============================================================================
 # 工作流：Egern 规则自动构建
-# 更新：2026.08.15 11:30
+# 更新：2026.08.15 12:23
 #
 # 主要功能：
 #   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
 #   - 自动检测 Egern/Rule 目录下现有 YAML，同步 blackmatrix7 对应规则
-#   - 多源合并 AIGC / Telegram（Lan 已取消多源，走自动同步）
+#   - 多源合并 AIGC / Telegram
 #   - 支持 Manual/*.txt 手动追加规则，Manual/*.exclude.txt 排除规则
 #   - 支持 Surge classical / payload YAML / Egern grouped Rule Set YAML
 #   - 输出符合 Egern Rule Set 格式的分组 YAML
 #   - 正确处理 no_resolve（含一致性检测与警告）
 #   - 上游异常、解析归零、最终归零均触发 CI 失败
-#   - 特殊规则（如 CGB）强制生成
 #   - 两层最终 YAML 校验 + 稳定时间戳比较
 #   - 内容未变化时不刷新更新时间，不提交
 # =============================================================================
@@ -129,13 +128,6 @@ jobs:
                   "blackmatrix7|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list",
                   "SukkaW|https://ruleset.skk.moe/List/ip/telegram.conf",
               ],
-          }
-
-          SPECIAL_RULES = {
-              "CGB": {
-                  "no_resolve": True,
-                  "domain_set": ["unavailable.invalid"],
-              },
           }
 
           CLASSIFIED_PREFIX_MAP = {
@@ -686,35 +678,11 @@ jobs:
               print(f"\nAdBlock: {len(merged):,} domains → {state}")
 
           # ------------------------------------------------------------------
-          # 2. Special rules
-          # ------------------------------------------------------------------
-          def build_special() -> None:
-              for name, data in SPECIAL_RULES.items():
-                  path = RULE_DIR / f"{name}.yaml"
-                  rules: list[str] = []
-                  no_resolve = data.get("no_resolve", False)
-                  for key, values in data.items():
-                      if key == "no_resolve":
-                          continue
-                      if not isinstance(values, list):
-                          raise RuntimeError(f"{name}.{key} must be list")
-                      prefix = CLASSIFIED_PREFIX_MAP.get(key)
-                      if not prefix:
-                          raise RuntimeError(f"Unknown key in special rule: {key}")
-                      for v in values:
-                          rule = f"{prefix},{v}"
-                          if no_resolve and prefix in NO_RESOLVE_TYPES:
-                              rule = add_no_resolve(rule)
-                          rules.append(rule)
-                  count = write_egern_yaml(path, rules)
-                  print(f"Special rule {name}: {count} rules written")
-
-          # ------------------------------------------------------------------
-          # 3. blackmatrix7 自动同步（根据现有文件检测，非显式列表）
+          # 2. blackmatrix7 自动同步（根据现有文件检测，非显式列表）
           # ------------------------------------------------------------------
           def build_blackmatrix7() -> None:
               merge_names = set(MERGE_SOURCES)
-              excluded = merge_names | {"AdBlock"} | set(SPECIAL_RULES)
+              excluded = merge_names | {"AdBlock"}
               existing = sorted(
                   p.stem for p in RULE_DIR.glob("*.yaml") if p.stem not in excluded
               )
@@ -784,7 +752,7 @@ jobs:
                   print(f"  → {count:,} rules (skipped {skipped})")
 
           # ------------------------------------------------------------------
-          # 4. Multi-source merges（仅 AIGC / Telegram）
+          # 3. Multi-source merges（仅 AIGC / Telegram）
           # ------------------------------------------------------------------
           def build_merged(name: str, sources: list[str]) -> None:
               print("\n" + "=" * 72)
@@ -820,7 +788,6 @@ jobs:
               print("=" * 72)
 
               build_adblock()
-              build_special()
               build_blackmatrix7()
               for name, sources in MERGE_SOURCES.items():
                   build_merged(name, sources)
