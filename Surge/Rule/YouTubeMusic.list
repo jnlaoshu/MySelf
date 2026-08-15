@@ -1,0 +1,11 @@
+# 规则名称: YouTubeMusic
+# 规则统计: 5
+# 规则来源: blackmatrix7/ios_rule_script
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Rule/YouTubeMusic.list
+# 更新时间: 2026-08-15 10:03:58
+
+DOMAIN,music.youtube.com
+USER-AGENT,*YouTubeMusic*
+USER-AGENT,*com.google.ios.youtubemusic*
+USER-AGENT,YouTubeMusic*
+USER-AGENT,com.google.ios.youtubemusic*
