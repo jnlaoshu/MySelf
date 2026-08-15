@@ -1,6 +1,6 @@
 # =============================================================================
 # 工作流：Egern 规则自动构建
-# 更新：2026.08.15 12:23
+# 更新：2026.08.15 12:38
 #
 # 主要功能：
 #   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
@@ -491,11 +491,19 @@ jobs:
                           filtered = filtered[:1]
                       value = ",".join(filtered)
                   else:
-                      # 非 IP 类规则：如果包含额外参数（如 extended-matching），只保留第一个字段
+                      # 非 IP 类规则：如果包含额外参数，只保留第一个字段
                       if "," in value:
                           value_parts = [p.strip() for p in value.split(",")]
                           value = value_parts[0]
                           print(f"  WARNING: Extra parameters dropped in {rule}")
+
+                  # 对域名类规则进行 normalize_domain 清洗
+                  if prefix in ("DOMAIN", "DOMAIN-SUFFIX"):
+                      normalized = normalize_domain(value)
+                      if not normalized:
+                          print(f"  WARNING: invalid domain skipped: {value}")
+                          continue
+                      value = normalized
 
                   if not value:
                       continue
@@ -509,7 +517,7 @@ jobs:
               if not groups:
                   raise RuntimeError(f"No grouped rules for {path}")
 
-              # 构建 YAML 数据，直接使用 safe_dump 生成，避免手工拼接错误
+              # 构建 YAML 数据，直接使用 safe_dump 生成
               yaml_data: dict[str, Any] = {}
               if needs_no_resolve:
                   yaml_data["no_resolve"] = True
@@ -858,6 +866,20 @@ jobs:
               value = value.strip()
               return bool(value) and not any(c in value for c in ("\n", "\r", "\t", ","))
 
+          def validate_ip_cidr(value: str, version: int | None = None) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              if not value or "/" not in value:
+                  return False
+              try:
+                  network = ipaddress.ip_network(value, strict=False)
+                  if version is not None and network.version != version:
+                      return False
+                  return True
+              except ValueError:
+                  return False
+
           summary = []
           for path in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Validating {path.name}...")
@@ -902,6 +924,15 @@ jobs:
                       for v in values:
                           if not validate_keyword(v):
                               raise RuntimeError(f"{path}: invalid keyword: {v!r}")
+                  elif key == "ip_cidr_set":
+                      for v in values:
+                          if not validate_ip_cidr(v, version=4):
+                              raise RuntimeError(f"{path}: invalid IPv4 CIDR: {v!r}")
+                  elif key == "ip_cidr6_set":
+                      for v in values:
+                          if not validate_ip_cidr(v, version=6):
+                              raise RuntimeError(f"{path}: invalid IPv6 CIDR: {v!r}")
+
                   total += len(values)
 
               if total == 0:
@@ -1118,6 +1149,20 @@ jobs:
               value = value.strip()
               return bool(value) and not any(c in value for c in ("\n", "\r", "\t", ","))
 
+          def validate_ip_cidr(value: str, version: int | None = None) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              if not value or "/" not in value:
+                  return False
+              try:
+                  network = ipaddress.ip_network(value, strict=False)
+                  if version is not None and network.version != version:
+                      return False
+                  return True
+              except ValueError:
+                  return False
+
           for path in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Validating {path.name}...")
               text = path.read_text(encoding="utf-8-sig")
@@ -1159,6 +1204,15 @@ jobs:
                       for v in values:
                           if not validate_keyword(v):
                               raise RuntimeError(f"{path}: bad keyword {v!r}")
+                  elif key == "ip_cidr_set":
+                      for v in values:
+                          if not validate_ip_cidr(v, version=4):
+                              raise RuntimeError(f"{path}: bad IPv4 CIDR {v!r}")
+                  elif key == "ip_cidr6_set":
+                      for v in values:
+                          if not validate_ip_cidr(v, version=6):
+                              raise RuntimeError(f"{path}: bad IPv6 CIDR {v!r}")
+
                   total += len(values)
 
               if total == 0:
