@@ -1,10 +1,9 @@
 # 规则名称: Spotify
-# 规则统计: 31
+# 规则统计: 30
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Loon/Rule/Spotify.list
-# 更新时间: 2026-08-15 10:03:58
+# 更新时间: 2026-08-15 22:56:26
 
-no_resolve: true
 DOMAIN,audio4-ak-spotify-com.akamaized.net
 DOMAIN,cdn-spotify-experiments.conductrics.com
 DOMAIN,heads-ak-spotify-com.akamaized.net
@@ -32,7 +31,6 @@ DOMAIN-SUFFIX,spotifyjobs.com
 DOMAIN-SUFFIX,spotifynewsroom.jp
 DOMAIN-SUFFIX,spotilocal.com
 DOMAIN-SUFFIX,tospotify.com
-IP-CIDR,104.154.127.126/32
-IP-CIDR,35.186.224.47/32
+IP-CIDR,104.154.127.126/32,no-resolve
+IP-CIDR,35.186.224.47/32,no-resolve
 USER-AGENT,Spotify*
-no_resolve: true

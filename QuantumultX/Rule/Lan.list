@@ -1,10 +1,9 @@
 # 规则名称: Lan
-# 规则统计: 141
+# 规则统计: 140
 # 规则来源: blackmatrix7, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Lan.list
-# 更新时间: 2026-08-15 10:03:58
+# 更新时间: 2026-08-15 22:56:26
 
-no_resolve: true
 DOMAIN,asusrouter.com
 DOMAIN,instant.arubanetworks.com
 DOMAIN,local.adguard.org
@@ -12,24 +11,24 @@ DOMAIN,oasisauth.h3c.com
 DOMAIN,router.asus.com
 DOMAIN,setmeup.arubanetworks.com
 DOMAIN,www.asusrouter.com
-IP-CIDR,0.0.0.0/8
-IP-CIDR,10.0.0.0/8
-IP-CIDR,100.64.0.0/10
-IP-CIDR,127.0.0.0/8
-IP-CIDR,169.254.0.0/16
-IP-CIDR,172.16.0.0/12
-IP-CIDR,192.0.0.0/24
-IP-CIDR,192.0.2.0/24
-IP-CIDR,192.168.0.0/16
-IP-CIDR,192.88.99.0/24
-IP-CIDR,198.18.0.0/15
-IP-CIDR,198.51.100.0/24
-IP-CIDR,203.0.113.0/24
-IP-CIDR,224.0.0.0/3
-IP-CIDR6,::/127
-IP-CIDR6,fc00::/7
-IP-CIDR6,fe80::/10
-IP-CIDR6,ff00::/8
+IP-CIDR,0.0.0.0/8,no-resolve
+IP-CIDR,10.0.0.0/8,no-resolve
+IP-CIDR,100.64.0.0/10,no-resolve
+IP-CIDR,127.0.0.0/8,no-resolve
+IP-CIDR,169.254.0.0/16,no-resolve
+IP-CIDR,172.16.0.0/12,no-resolve
+IP-CIDR,192.0.0.0/24,no-resolve
+IP-CIDR,192.0.2.0/24,no-resolve
+IP-CIDR,192.168.0.0/16,no-resolve
+IP-CIDR,192.88.99.0/24,no-resolve
+IP-CIDR,198.18.0.0/15,no-resolve
+IP-CIDR,198.51.100.0/24,no-resolve
+IP-CIDR,203.0.113.0/24,no-resolve
+IP-CIDR,224.0.0.0/3,no-resolve
+IP-CIDR6,::/127,no-resolve
+IP-CIDR6,fc00::/7,no-resolve
+IP-CIDR6,fe80::/10,no-resolve
+IP-CIDR6,ff00::/8,no-resolve
 SUFFIX,1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa
 SUFFIX,10.in-addr.arpa
 SUFFIX,100.100.in-addr.arpa
@@ -145,4 +144,3 @@ SUFFIX,tplogin.cn
 SUFFIX,ts.net
 SUFFIX,wifi.cmcc
 SUFFIX,zte.home
-no_resolve: true

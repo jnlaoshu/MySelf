@@ -1,11 +1,12 @@
 # 规则名称: AIGC
-# 规则统计: 114
+# 规则统计: 136
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/AIGC.list
-# 更新时间: 2026-08-15 10:03:51
+# 更新时间: 2026-08-15 22:56:20
 
-no_resolve: true
 DOMAIN,ai.google.dev
+DOMAIN,aida.googleapis.com
+DOMAIN,aisandbox-pa.googleapis.com
 DOMAIN,aistudio.google.com
 DOMAIN,alkalicore-pa.clients6.google.com
 DOMAIN,alkalimakersuite-pa.clients6.google.com
@@ -15,6 +16,8 @@ DOMAIN,anthropic.com.cdn.cloudflare.net
 DOMAIN,antigravity-unleash.goog
 DOMAIN,antigravity.google
 DOMAIN,api-iam.intercom.io
+DOMAIN,api.github.com
+DOMAIN,api.jetbrains.ai
 DOMAIN,api.statsig.com
 DOMAIN,apple-relay.apple.com
 DOMAIN,apple-relay.cloudflare.com
@@ -25,26 +28,32 @@ DOMAIN,cdn.usefathom.com
 DOMAIN,chat.openai.com.cdn.cloudflare.net
 DOMAIN,copilot.microsoft.com
 DOMAIN,cp4.cloudflare.com
+DOMAIN,daily-cloudcode-pa.googleapis.com
+DOMAIN,file.oaiusercontent.com
 DOMAIN,gateway.ai.cloudflare.com
 DOMAIN,gemini.google.com
 DOMAIN,gspe1-ssl.ls.apple.com
 DOMAIN,guzzoni.apple.com
 DOMAIN,imagine.meta.com
+DOMAIN,jules.google.com
 DOMAIN,makersuite.google.com
 DOMAIN,o33249.ingest.sentry.io
 DOMAIN,openai-api.arkoselabs.com
 DOMAIN,openaiapi-site.azureedge.net
 DOMAIN,openaicom-api-bdcpf8c6d2e9atf6.z01.azurefd.net
 DOMAIN,openaicomproductionae4b.blob.core.windows.net
+DOMAIN,openrouter.ai
 DOMAIN,pplx-res.cloudinary.com
 DOMAIN,production-openaicom-storage.azureedge.net
+DOMAIN,robinfrontend-pa.googleapis.com
 DOMAIN,servd-anthropic-website.b-cdn.net
 DOMAIN,static.cloudflareinsights.com
 DOMAIN,sydney.bing.com
 DOMAIN,www.bing.com
-IP-ASN,20473
-IP-CIDR,24.199.123.28/32
-IP-CIDR,64.23.132.171/32
+IP-ASN,20473,no-resolve
+IP-CIDR,24.199.123.28/32,no-resolve
+IP-CIDR,64.23.132.171/32,no-resolve
+KEYWORD,alkalimakersuite-pa.clients6.google.com
 KEYWORD,colab
 KEYWORD,developerprofiles
 KEYWORD,generativelanguage
@@ -54,6 +63,7 @@ KEYWORD,openai
 KEYWORD,openaiapi
 KEYWORD,openaicom
 SUFFIX,ai.com
+SUFFIX,aistudio.google.com
 SUFFIX,algolia.net
 SUFFIX,anthropic.com
 SUFFIX,api.statsig.com
@@ -61,12 +71,13 @@ SUFFIX,apis.google.com
 SUFFIX,apps.mzstatic.com
 SUFFIX,auth0.com
 SUFFIX,bard.google.com
-SUFFIX,byteoversea.com,extended-matching
+SUFFIX,byteoversea.com
 SUFFIX,chat.com
 SUFFIX,chatgpt.com
 SUFFIX,chatgpt.livekit.cloud
-SUFFIX,cici.com,extended-matching
-SUFFIX,ciciai.com,extended-matching
+SUFFIX,chatgpt.site
+SUFFIX,cici.com
+SUFFIX,ciciai.com
 SUFFIX,clau.de
 SUFFIX,claude.ai
 SUFFIX,claude.com
@@ -74,17 +85,22 @@ SUFFIX,claudemcpclient.com
 SUFFIX,claudemcpcontent.com
 SUFFIX,claudeusercontent.com
 SUFFIX,client-api.arkoselabs.com
+SUFFIX,clipdrop.co
+SUFFIX,cloudcode-pa.googleapis.com
 SUFFIX,cursor-cdn.com
 SUFFIX,cursor.com
 SUFFIX,cursor.sh
 SUFFIX,cursorapi.com
 SUFFIX,deepmind.com
 SUFFIX,deepmind.google
-SUFFIX,dola.com,extended-matching
+SUFFIX,dify.ai
+SUFFIX,dola.com
 SUFFIX,events.statsigapi.net
 SUFFIX,featuregates.org
+SUFFIX,g.ai
 SUFFIX,gateway.icloud.com
 SUFFIX,geller-pa.googleapis.com
+SUFFIX,gemini.google
 SUFFIX,gemini.google.com
 SUFFIX,generativeai.google
 SUFFIX,generativelanguage.googleapis.com
@@ -96,18 +112,23 @@ SUFFIX,host.livekit.cloud
 SUFFIX,identrust.com
 SUFFIX,intercom.io
 SUFFIX,intercomcdn.com
+SUFFIX,jasper.ai
 SUFFIX,launchdarkly.com
 SUFFIX,livekit.cloud
 SUFFIX,makersuite.google.com
 SUFFIX,meta.ai
+SUFFIX,notebooklm.google
+SUFFIX,notebooklm.google.com
 SUFFIX,oaistatic.com
 SUFFIX,oaiusercontent.com
 SUFFIX,observeit.net
 SUFFIX,openai.com
 SUFFIX,openaiapi-site.azureedge.net
 SUFFIX,openaicom.imgix.net
+SUFFIX,openart.ai
 SUFFIX,openrouter.ai
 SUFFIX,perplexity.ai
+SUFFIX,poe.com
 SUFFIX,pplx.ai
 SUFFIX,proactivebackend-pa.googleapis.com
 SUFFIX,segment.io
@@ -118,4 +139,4 @@ SUFFIX,stripe.com
 SUFFIX,turn.livekit.cloud
 SUFFIX,x.ai
 SUFFIX,zed.dev
-no_resolve: true
+URL-REGEX,https://www\.google\.com/.*continue=https://gemini\.google\.com.+
