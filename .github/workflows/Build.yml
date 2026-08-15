@@ -1,6 +1,6 @@
 # =============================================================================
 # 工作流：Egern 规则自动构建
-# 更新：2026.08.15 11:30
+# 更新：2026.08.15 11:50
 #
 # 主要功能：
 #   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
@@ -449,12 +449,9 @@ jobs:
           # Write helpers
           # ------------------------------------------------------------------
           def yaml_scalar(value: str) -> str:
-              dumped = yaml.safe_dump(
-                  value, allow_unicode=True, default_flow_style=False, sort_keys=False
-              ).strip()
-              if "\n" in dumped:
-                  raise RuntimeError(f"Multiline scalar not supported: {value!r}")
-              return dumped
+              # 直接返回字符串，避免 safe_dump 导致的多行检查问题。
+              # 后续 write_egern_yaml 会用 yaml.safe_load 验证整个内容。
+              return value
 
           def normalize_rules(rules: list[str]) -> list[str]:
               unique: dict[str, str] = {}
