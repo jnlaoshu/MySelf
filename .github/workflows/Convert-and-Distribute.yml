@@ -1,11 +1,12 @@
 # =============================================================================
 # 工作流：规则转换与多平台分发
-# 更新：2026.08.15 07:50
+# 更新：2026.08.15 22:55
 #
 # 功能：
 #   - 读取本仓库 Egern/Rule 下的规则文件
 #   - 转换为各平台兼容格式，并分发到对应目录
 #   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX
+#   - Surge 除 AdBlock/AIGC/Telegram 三个整合源外，直接同步 blackmatrix7 原生列表
 #   - 清理、去重、排序、校验规则
 #   - 仅在内容变化时提交，避免空提交
 # =============================================================================
@@ -45,7 +46,7 @@ jobs:
       - name: Install Python Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml
+          pip install pyyaml requests
 
       - name: Convert and Distribute Rules
         shell: bash
@@ -56,6 +57,9 @@ jobs:
           from pathlib import Path
           import yaml
           from datetime import datetime, timezone, timedelta
+          import requests
+          from requests.adapters import HTTPAdapter
+          from urllib3.util.retry import Retry
 
           SOURCE_DIR = Path("Egern/Rule")
 
@@ -75,6 +79,9 @@ jobs:
               "Telegram": "blackmatrix7, SukkaW",
           }
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
+
+          # Surge 非整合源直接从 blackmatrix7 下载
+          SURGE_DIRECT_SKIP = {"AdBlock", "AIGC", "Telegram"}
 
           PLATFORM_PREFIX_MAP = {
               "Surge": {
@@ -165,6 +172,20 @@ jobs:
               "QuantumultX": {"PROCESS-NAME", "AND", "OR", "NOT"},
           }
 
+          IP_TYPES = {"IP-CIDR", "IP-CIDR6", "IP-ASN", "GEOIP"}
+
+          def create_session():
+              session = requests.Session()
+              retry = Retry(total=3, connect=3, read=3, backoff_factor=1,
+                            status_forcelist=(429, 500, 502, 503, 504))
+              adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
+              session.mount("https://", adapter)
+              session.mount("http://", adapter)
+              session.headers.update({"User-Agent": "Egern-Rule-Distributor/2.0"})
+              return session
+
+          SESSION = create_session()
+
           def clean_rule_line(line):
               line = line.strip()
               if not line:
@@ -203,10 +224,9 @@ jobs:
                       result[key] = sorted(set(cleaned))
               return result, no_resolve
 
-          def convert_to_platform_format(rule_data, platform):
+          def convert_to_platform_format(rule_data, platform, no_resolve=False):
               prefix_map = PLATFORM_PREFIX_MAP.get(platform, {})
               unsupported = PLATFORM_UNSUPPORTED.get(platform, set())
-
               rules = []
               for egern_type, values in rule_data.items():
                   target_prefix = prefix_map.get(egern_type)
@@ -220,10 +240,16 @@ jobs:
                               value = value[2:]
                               rules.append(f"DOMAIN-SUFFIX,{value}")
                           continue
-                      rules.append(f"{target_prefix},{value}")
+                      rule = f"{target_prefix},{value}"
+                      # classical 平台自动附加 no-resolve 到 IP 规则
+                      if (no_resolve and TARGET_CONFIG[platform]["ext"] == ".list"
+                              and target_prefix in IP_TYPES
+                              and "no-resolve" not in rule.lower()):
+                          rule += ",no-resolve"
+                      rules.append(rule)
               return rules
 
-          def write_rules_file(output_path, rules, rule_name, source, no_resolve):
+          def write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml):
               if not rules:
                   print(f"  Warning: No rules generated for {output_path}")
                   return
@@ -248,8 +274,54 @@ jobs:
                       f.write(f"# 引用链接: {reference_url}\n")
                       f.write(f"# 更新时间: {update_time}\n")
                       f.write("\n")
-                      if no_resolve:
-                          f.write(f"no_resolve: true\n")
+                      if is_yaml and no_resolve:
+                          f.write("no_resolve: true\n")
+                      for rule in sorted_rules:
+                          f.write(f"{rule}\n")
+                  os.replace(temp_path, output_path)
+              except Exception:
+                  try:
+                      os.unlink(temp_path)
+                  except OSError:
+                      pass
+                  raise
+
+          def download_surge_direct(rule_name, output_path):
+              """从 blackmatrix7 直接下载 Surge 原生列表"""
+              url = f"https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{rule_name}/{rule_name}.list"
+              print(f"  Downloading Surge direct: {url}")
+              response = SESSION.get(url, timeout=30)
+              response.raise_for_status()
+              raw_lines = response.text.splitlines()
+
+              rules = []
+              for line in raw_lines:
+                  cleaned = clean_rule_line(line)
+                  if cleaned:
+                      rules.append(cleaned)
+
+              unique_rules = {}
+              for rule in rules:
+                  unique_rules[rule.lower()] = rule
+              sorted_rules = sorted(unique_rules.values())
+
+              if not sorted_rules:
+                  raise ValueError("Downloaded Surge list is empty")
+
+              output_path.parent.mkdir(parents=True, exist_ok=True)
+              bj_time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
+              update_time = bj_time.strftime("%Y-%m-%d %H:%M:%S")
+              reference_url = f"https://raw.githubusercontent.com/jnlaoshu/MySelf/main/{output_path.as_posix()}"
+
+              fd, temp_path = tempfile.mkstemp(prefix=f".{output_path.stem}.", suffix=".tmp", dir=output_path.parent, text=True)
+              try:
+                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+                      f.write(f"# 规则名称: {rule_name}\n")
+                      f.write(f"# 规则统计: {len(sorted_rules)}\n")
+                      f.write(f"# 规则来源: {DEFAULT_SOURCE}\n")
+                      f.write(f"# 引用链接: {reference_url}\n")
+                      f.write(f"# 更新时间: {update_time}\n")
+                      f.write("\n")
                       for rule in sorted_rules:
                           f.write(f"{rule}\n")
                   os.replace(temp_path, output_path)
@@ -286,14 +358,26 @@ jobs:
               for platform, config in TARGET_CONFIG.items():
                   ext = config["ext"]
                   output_path = Path(config["dir"]) / f"{rule_name}{ext}"
-                  rules = convert_to_platform_format(rule_data, platform)
 
-                  if not rules:
-                      print(f"  -> {platform}: No rules generated (unsupported types)")
-                      continue
-
-                  write_rules_file(output_path, rules, rule_name, source, no_resolve)
-                  print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
+                  if platform == "Surge" and rule_name not in SURGE_DIRECT_SKIP:
+                      # Surge 非整合源直接下载
+                      try:
+                          download_surge_direct(rule_name, output_path)
+                          print(f"  -> Surge: direct download -> {output_path}")
+                      except Exception as e:
+                          print(f"  -> Surge direct download failed ({e}), falling back to conversion")
+                          rules = convert_to_platform_format(rule_data, platform, no_resolve)
+                          is_yaml = ext == ".yaml"
+                          write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
+                          print(f"  -> Surge: {len(rules)} rules converted -> {output_path}")
+                  else:
+                      rules = convert_to_platform_format(rule_data, platform, no_resolve)
+                      if not rules:
+                          print(f"  -> {platform}: No rules generated (unsupported types)")
+                          continue
+                      is_yaml = ext == ".yaml"
+                      write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
+                      print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
 
           print("\n" + "=" * 72)
           print("Conversion completed successfully.")
