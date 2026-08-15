@@ -1,73 +1,67 @@
 # 规则名称: Telegram
-# 规则统计: 58
+# 规则统计: 53
 # 规则来源: blackmatrix7, SukkaW
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
-# 更新时间: 2026-08-14 17:16:24
+# 更新时间: 2026-08-15 12:15:05
 
 no_resolve: true
 domain_set:
-  - 7h15.ru1353t.1s.m4d3.by.5ukk4w.skk.moe
-  - api.imem.app
-  - api.swiftgram.app
+- 7h15.ru1353t.1s.m4d3.by.5ukk4w.skk.moe
+- api.imem.app
+- api.swiftgram.app
 domain_suffix_set:
-  - cdn-telegram.org
-  - comments.app
-  - contest.com
-  - graph.org
-  - legra.ph
-  - mbrx.app
-  - quiz.directory
-  - stel.com
-  - t.me
-  - tdesktop.com
-  - telega.one
-  - telegra.ph
-  - telegram-cdn.org
-  - telegram.dog
-  - telegram.me
-  - telegram.org
-  - telegram.space
-  - telegramdownload.com
-  - telesco.pe
-  - tg.dev
-  - tx.me
-  - usercontent.dev
+- cdn-telegram.org
+- comments.app
+- contest.com
+- graph.org
+- legra.ph
+- mbrx.app
+- quiz.directory
+- stel.com
+- t.me
+- tdesktop.com
+- telega.one
+- telegra.ph
+- telegram-cdn.org
+- telegram.dog
+- telegram.me
+- telegram.org
+- telegram.space
+- telegramdownload.com
+- telesco.pe
+- tg.dev
+- tx.me
+- usercontent.dev
 domain_keyword_set:
-  - nicegram
+- nicegram
 ip_cidr_set:
-  - 109.239.140.0/24
-  - 139.59.210.98/32
-  - 149.154.160.0/20
-  - 185.76.151.0/24
-  - 194.221.250.50/32
-  - 196.55.216.167/32
-  - 5.28.192.0/18
-  - 91.105.192.0/23
-  - 91.108.0.0/16
-  - 91.108.16.0/21
-  - 91.108.4.0/22
-  - 91.108.56.0/22
-  - 91.108.8.0/21
-  - 95.161.64.0/20
+- 109.239.140.0/24
+- 139.59.210.98/32
+- 149.154.160.0/20
+- 185.76.151.0/24
+- 194.221.250.50/32
+- 196.55.216.167/32
+- 5.28.192.0/18
+- 91.105.192.0/23
+- 91.108.0.0/16
+- 91.108.16.0/21
+- 91.108.4.0/22
+- 91.108.56.0/22
+- 91.108.8.0/21
+- 95.161.64.0/20
 ip_cidr6_set:
-  - "2001:67c:4e8::/48"
-  - "2001:b28:f23c::/47"
-  - "2001:b28:f23c::/48"
-  - "2001:b28:f23d::/48"
-  - "2001:b28:f23f::/48"
-  - "2a0a:f280::/29"
-  - "2a0a:f280::/32"
+- 2001:67c:4e8::/48
+- 2001:b28:f23c::/47
+- 2001:b28:f23c::/48
+- 2001:b28:f23d::/48
+- 2001:b28:f23f::/48
+- 2a0a:f280::/29
+- 2a0a:f280::/32
 asn_set:
-  - "211157"
-  - "44907"
-  - "59930"
-  - "62014"
-  - "62041"
+- '211157'
+- '44907'
+- '59930'
+- '62014'
+- '62041'
 or_set:
-  - ((IP-ASN,44907,no-resolve),(IP-ASN,59930,no-resolve),(IP-ASN,62014,no-resolve),(IP-ASN,62041,no-resolve),(IP-ASN,211157,no-resolve))
-process_name_set:
-  - nekox.messenger
-  - org.telegram.messenger
-  - telegram-desktop
-  - tw.nekomimi.nekogram
-  - xyz.nextalone.nagram
+- ((IP-ASN

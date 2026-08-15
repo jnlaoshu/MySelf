@@ -1,44 +1,42 @@
 # 规则名称: TikTok
-# 规则统计: 33
+# 规则统计: 32
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
-# 更新时间: 2026-08-14 08:49:37 +0800
+# 更新时间: 2026-08-15 12:15:05
 
 domain_set:
-  - lf16-effectcdn.byteeffecttos-g.com
-  - lf16-pkgcdn.pitaya-clientai.com
-  - p16-tiktokcdn-com.akamaized.net
-  - trae-api-sg.mchost.guru
+- lf16-effectcdn.byteeffecttos-g.com
+- lf16-pkgcdn.pitaya-clientai.com
+- p16-tiktokcdn-com.akamaized.net
+- trae-api-sg.mchost.guru
 domain_suffix_set:
-  - bytedapm.com
-  - bytegecko-i18n.com
-  - byteintlapi.com
-  - byteoversea.com
-  - capcut.com
-  - ibytedtos.com
-  - ibyteimg.com
-  - ipstatp.com
-  - isnssdk.com
-  - marscode.com
-  - muscdn.com
-  - musical.ly
-  - sgpstatp.com
-  - snssdk.com
-  - tik-tokapi.com
-  - tiktok.com
-  - tiktokcdn-us.com
-  - tiktokcdn.com
-  - tiktokd.net
-  - tiktokd.org
-  - tiktokmusic.app
-  - tiktokv.com
-  - tiktokv.us
-  - trae.ai
-  - ttwebview.com
+- bytedapm.com
+- bytegecko-i18n.com
+- byteintlapi.com
+- byteoversea.com
+- capcut.com
+- ibytedtos.com
+- ibyteimg.com
+- ipstatp.com
+- isnssdk.com
+- marscode.com
+- muscdn.com
+- musical.ly
+- sgpstatp.com
+- snssdk.com
+- tik-tokapi.com
+- tiktok.com
+- tiktokcdn-us.com
+- tiktokcdn.com
+- tiktokd.net
+- tiktokd.org
+- tiktokmusic.app
+- tiktokv.com
+- tiktokv.us
+- trae.ai
+- ttwebview.com
 domain_keyword_set:
-  - musical.ly
-  - tiktok
+- musical.ly
+- tiktok
 user_agent_set:
-  - "TikTok*"
-process_name_set:
-  - com.zhiliaoapp.musically
+- TikTok*

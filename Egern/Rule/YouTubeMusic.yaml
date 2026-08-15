@@ -5,9 +5,9 @@
 # 更新时间: 2026-08-14 08:49:37 +0800
 
 domain_set:
-  - music.youtube.com
+- music.youtube.com
 user_agent_set:
-  - "*YouTubeMusic*"
-  - "*com.google.ios.youtubemusic*"
-  - "YouTubeMusic*"
-  - "com.google.ios.youtubemusic*"
+- '*com.google.ios.youtubemusic*'
+- '*YouTubeMusic*'
+- com.google.ios.youtubemusic*
+- YouTubeMusic*
