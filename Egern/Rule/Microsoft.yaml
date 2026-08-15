@@ -1,8 +1,8 @@
 # 规则名称: Microsoft
-# 规则统计: 664
+# 规则统计: 671
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
-# 更新时间: 2026-08-15 12:38:54
+# 更新时间: 2026-08-15 22:27:52
 
 domain_set:
 - vsmarketplacebadge.apphb.com
@@ -42,6 +42,7 @@ domain_suffix_set:
 - azk8s.cn
 - aznbcontent.cn
 - aztask.cn
+- azure
 - azure-api.cn
 - azure-apihub.cn
 - azure-apim.net
@@ -112,6 +113,7 @@ domain_suffix_set:
 - binads.com
 - binb.com
 - binf.com
+- bing
 - bing.com
 - bing.com.cn
 - bing.net
@@ -216,6 +218,7 @@ domain_suffix_set:
 - heremaps.cn
 - hockeyapp.net
 - hololens.com
+- hotmail
 - hotmail.co
 - hotmail.com
 - hotmail.eu
@@ -270,6 +273,7 @@ domain_suffix_set:
 - mesh.com
 - mgmt-azure-api.cn
 - microbit.org
+- microsoft
 - microsoft-falcon.io
 - microsoft-give.com
 - microsoft-int.com
@@ -485,6 +489,7 @@ domain_suffix_set:
 - o365weve-ppe.com
 - o365weve.com
 - oaspapps.com
+- office
 - office.com
 - office.net
 - office365-net.cn
@@ -560,6 +565,7 @@ domain_suffix_set:
 - sharepoint.com
 - sharepointonline.com
 - signalr.net
+- skype
 - skype.com
 - skype.net
 - skypeassets.com
@@ -618,6 +624,7 @@ domain_suffix_set:
 - vscode.dev
 - wbd.ms
 - what-fan.net
+- windows
 - windows-int.net
 - windows-ppe.net
 - windows.com
