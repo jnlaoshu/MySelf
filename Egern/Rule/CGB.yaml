@@ -1,8 +1,11 @@
 # 规则名称: CGB
-# 规则统计: 1
+# 规则统计: 4
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/CGB.yaml
-# 更新时间: 2026-08-15 12:15:05
+# 更新时间: 2026-08-15 12:23:15
 
-domain_set:
-- unavailable.invalid
+domain_suffix_set:
+- 95508.com
+- cgbchina.cn
+- cgbchina.com.cn
+- gdb.com.cn
