@@ -448,13 +448,6 @@ jobs:
           # ------------------------------------------------------------------
           # Write helpers
           # ------------------------------------------------------------------
-          def yaml_scalar(value: str) -> str:
-              # 使用 safe_dump 生成合法的 YAML 标量（自动处理特殊字符转义）
-              # 去除末尾换行，避免影响后续拼接
-              return yaml.safe_dump(
-                  value, allow_unicode=True, default_flow_style=False, sort_keys=False
-              ).rstrip("\n")
-
           def normalize_rules(rules: list[str]) -> list[str]:
               unique: dict[str, str] = {}
               for rule in rules:
@@ -517,16 +510,24 @@ jobs:
               if not groups:
                   raise RuntimeError(f"No grouped rules for {path}")
 
-              lines: list[str] = []
+              # 构建 YAML 数据，直接使用 safe_dump 生成，避免手工拼接错误
+              yaml_data: dict[str, Any] = {}
               if needs_no_resolve:
-                  lines.append("no_resolve: true")
+                  yaml_data["no_resolve"] = True
               for key in ORDER:
                   if key in groups:
-                      lines.append(f"{key}:")
-                      for item in groups[key]:
-                          lines.append(f"  - {yaml_scalar(item)}")
+                      yaml_data[key] = groups[key]
 
-              content = "\n".join(lines) + "\n"
+              content = yaml.safe_dump(
+                  yaml_data,
+                  allow_unicode=True,
+                  default_flow_style=False,
+                  sort_keys=False,
+              )
+              if not content.endswith("\n"):
+                  content += "\n"
+
+              # 验证生成的 YAML
               try:
                   data = yaml.safe_load(content)
               except Exception as exc:
