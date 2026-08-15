@@ -1,16 +1,19 @@
 # =============================================================================
 # 工作流：Egern 规则自动构建
-# 更新：2026.08.14 17:15
+# 更新：2026.08.15 11:30
 #
-# 功能：
+# 主要功能：
 #   - 合并 AdGuard DNS Filter + AdRules + AWAvenue 生成 AdBlock.yaml
-#   - 同步 blackmatrix7 现有规则，并多源合并 Lan / AIGC / Telegram
-#   - 支持手动追加（Manual/*.txt）和排除（Manual/*.exclude.txt）
-#   - 输出符合 Egern 规则集格式 domain_set / domain_suffix_set 等
-#   - 行级检测 no-resolve 标志，精准添加 no_resolve: true
-#   - 对可能失效的上游规则创建占位文件，防止构建失败
-#   - 清理、去重、排序、校验 YAML 结构
-#   - 仅在内容变化时提交，避免空提交
+#   - 自动检测 Egern/Rule 目录下现有 YAML，同步 blackmatrix7 对应规则
+#   - 多源合并 AIGC / Telegram（Lan 已取消多源，走自动同步）
+#   - 支持 Manual/*.txt 手动追加规则，Manual/*.exclude.txt 排除规则
+#   - 支持 Surge classical / payload YAML / Egern grouped Rule Set YAML
+#   - 输出符合 Egern Rule Set 格式的分组 YAML
+#   - 正确处理 no_resolve（含一致性检测与警告）
+#   - 上游异常、解析归零、最终归零均触发 CI 失败
+#   - 特殊规则（如 CGB）强制生成
+#   - 两层最终 YAML 校验 + 稳定时间戳比较
+#   - 内容未变化时不刷新更新时间，不提交
 # =============================================================================
 name: Build
 
@@ -25,61 +28,86 @@ concurrency:
 
 permissions:
   contents: write
-  actions: write
 
 jobs:
   Build:
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     env:
       TZ: Asia/Shanghai
       PYTHONUNBUFFERED: "1"
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: "pip"
 
       - name: Install Python Dependencies
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
-          pip install requests pyyaml urllib3
+          pip install "requests==2.32.3" "PyYAML==6.0.2" "urllib3==2.2.3"
 
-      # =====================================================================
-      # Step 4: 构建 AdBlock.yaml
-      # =====================================================================
-      - name: Build AdBlock.yaml
+      - name: Get date
+        id: date
+        run: echo "date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Rule Sources
+        uses: actions/cache@v4
+        with:
+          path: .cache/sources
+          key: egern-sources-${{ runner.os }}-${{ steps.date.outputs.date }}
+
+      - name: Build All Rules
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p Egern/Rule .build .cache/sources Manual
+
           python3 <<'PY'
-          import ipaddress, os, re, tempfile
+          from __future__ import annotations
+
+          import hashlib
+          import ipaddress
+          import os
+          import re
+          import subprocess
+          import tempfile
           from collections import OrderedDict
           from datetime import datetime, timezone
-          import requests, yaml
+          from pathlib import Path
+          from typing import Any
+
+          import requests
+          import yaml
           from requests.adapters import HTTPAdapter
           from urllib3.util.retry import Retry
 
-          OUTPUT_FILE = "Egern/Rule/AdBlock.yaml"
-          REQUEST_TIMEOUT = 30
-          USER_AGENT = "Egern-AdBlock-Builder/2.0"
-          FINAL_MIN_DOMAINS = 100000
+          # ------------------------------------------------------------------
+          # Constants
+          # ------------------------------------------------------------------
+          RULE_DIR = Path("Egern/Rule")
+          MANUAL_DIR = Path("Manual")
+          CACHE_DIR = Path(".cache/sources")
+          REQUEST_TIMEOUT = 45
+          USER_AGENT = "Egern-Rule-Builder/3.1"
 
-          SOURCES = OrderedDict({
+          ADBLOCK_SOURCES = OrderedDict({
               "AdGuard_DNS": {
                   "url": "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt",
                   "parser": "adguard",
-                  "minimum": 100000,
+                  "minimum": 100_000,
               },
               "AdRules": {
                   "url": "https://raw.githubusercontent.com/Cats-Team/AdRules/refs/heads/main/dns.txt",
                   "parser": "adguard",
-                  "minimum": 100000,
+                  "minimum": 100_000,
               },
               "AWAvenue": {
                   "url": "https://raw.githubusercontent.com/TG-Twilight/AWAvenue-Ads-Rule/main/AWAvenue-Ads-Rule.txt",
@@ -87,10 +115,138 @@ jobs:
                   "minimum": 400,
               },
           })
+          ADBLOCK_FINAL_MIN = 100_000
+
+          # AIGC / Telegram 多源合并
+          MERGE_SOURCES = {
+              "AIGC": [
+                  "blackmatrix7/OpenAI|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list",
+                  "blackmatrix7/Claude|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list",
+                  "blackmatrix7/Gemini|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list",
+                  "ConnersHua|https://raw.githubusercontent.com/ConnersHua/RuleGo/master/Surge/Ruleset/Extra/AI.list",
+                  "Repcz|https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AI.yaml",
+              ],
+              "Telegram": [
+                  "blackmatrix7|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list",
+                  "SukkaW|https://ruleset.skk.moe/List/ip/telegram.conf",
+              ],
+          }
+
+          SPECIAL_RULES = {
+              "CGB": {
+                  "no_resolve": True,
+                  "domain_set": ["unavailable.invalid"],
+              },
+          }
+
+          CLASSIFIED_PREFIX_MAP = {
+              "domain_set": "DOMAIN",
+              "domain_suffix_set": "DOMAIN-SUFFIX",
+              "domain_keyword_set": "DOMAIN-KEYWORD",
+              "domain_regex_set": "DOMAIN-REGEX",
+              "domain_wildcard_set": "DOMAIN-WILDCARD",
+              "ip_cidr_set": "IP-CIDR",
+              "ip_cidr6_set": "IP-CIDR6",
+              "asn_set": "IP-ASN",
+              "geoip_set": "GEOIP",
+              "url_regex_set": "URL-REGEX",
+              "user_agent_set": "USER-AGENT",
+              "dest_port_set": "DEST-PORT",
+              "protocol_set": "PROTOCOL",
+              "ssid_set": "SSID",
+              "bssid_set": "BSSID",
+              "cellular_set": "CELLULAR",
+              "and_set": "AND",
+              "or_set": "OR",
+              "not_set": "NOT",
+          }
+
+          PREFIX_GROUP = {
+              "DOMAIN": "domain_set",
+              "DOMAIN-SUFFIX": "domain_suffix_set",
+              "DOMAIN-KEYWORD": "domain_keyword_set",
+              "DOMAIN-REGEX": "domain_regex_set",
+              "DOMAIN-WILDCARD": "domain_wildcard_set",
+              "IP-CIDR": "ip_cidr_set",
+              "IP-CIDR6": "ip_cidr6_set",
+              "IP6-CIDR": "ip_cidr6_set",
+              "IP-ASN": "asn_set",
+              "GEOIP": "geoip_set",
+              "URL-REGEX": "url_regex_set",
+              "USER-AGENT": "user_agent_set",
+              "DEST-PORT": "dest_port_set",
+              "DST-PORT": "dest_port_set",
+              "PROTOCOL": "protocol_set",
+              "SSID": "ssid_set",
+              "BSSID": "bssid_set",
+              "CELLULAR": "cellular_set",
+              "AND": "and_set",
+              "OR": "or_set",
+              "NOT": "not_set",
+          }
+
+          RULE_PREFIXES = tuple(f"{p}," for p in PREFIX_GROUP)
+          ORDER = list(CLASSIFIED_PREFIX_MAP.keys())
+          NO_RESOLVE_TYPES = {"IP-CIDR", "IP-CIDR6", "IP6-CIDR", "IP-ASN", "GEOIP"}
+          CLASSIFIED_KEYS = set(CLASSIFIED_PREFIX_MAP)
 
           DOMAIN_LABEL_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", re.IGNORECASE)
+          PURE_ADGUARD_DOMAIN = re.compile(
+              r"^\|\|([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)\^?$", re.IGNORECASE
+          )
+          HOSTS_LINE = re.compile(r"^(?:0\.0\.0\.0\s+|127\.0\.0\.1\s+)?(\S+)$")
+          YAML_MAPPING_PATTERN = re.compile(r"^([A-Za-z_][A-Za-z0-9_-]*):(?:\s|$)")
 
-          def normalize_domain(value):
+          # ------------------------------------------------------------------
+          # Session & Cache
+          # ------------------------------------------------------------------
+          def create_session() -> requests.Session:
+              session = requests.Session()
+              retry = Retry(
+                  total=4, connect=4, read=4, backoff_factor=1.2,
+                  status_forcelist=(429, 500, 502, 503, 504),
+                  allowed_methods=frozenset(["GET"]), raise_on_status=False,
+              )
+              adapter = HTTPAdapter(max_retries=retry, pool_connections=12, pool_maxsize=12)
+              session.mount("https://", adapter)
+              session.mount("http://", adapter)
+              session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
+              return session
+
+          SESSION = create_session()
+
+          def cache_path(url: str) -> Path:
+              h = hashlib.sha256(url.encode()).hexdigest()[:24]
+              return CACHE_DIR / f"{h}.txt"
+
+          def download(url: str, use_cache: bool = True) -> str:
+              print(f"Downloading: {url}")
+              cp = cache_path(url)
+              if use_cache and cp.exists():
+                  content = cp.read_text(encoding="utf-8")
+                  if content.strip():
+                      print(f"  Cache hit ({len(content):,} bytes)")
+                      return content
+
+              response = SESSION.get(url, timeout=REQUEST_TIMEOUT)
+              response.raise_for_status()
+              content = response.text
+              if not content.strip():
+                  raise RuntimeError(f"Empty content: {url}")
+              sample = content.lstrip()[:600].lower()
+              if "<html" in sample or "<!doctype html" in sample:
+                  raise RuntimeError(f"Downloaded content appears to be HTML: {url}")
+
+              # 写入缓存
+              if use_cache:
+                  cp.parent.mkdir(parents=True, exist_ok=True)
+                  cp.write_text(content, encoding="utf-8")
+              return content
+
+          # ------------------------------------------------------------------
+          # Domain normalization
+          # ------------------------------------------------------------------
+          def normalize_domain(value: str) -> str | None:
               if not isinstance(value, str):
                   return None
               domain = value.strip().lower()
@@ -129,227 +285,36 @@ jobs:
                   return None
               return domain
 
-          def create_session():
-              session = requests.Session()
-              retry = Retry(total=3, connect=3, read=3, backoff_factor=1,
-                            status_forcelist=(429,500,502,503,504),
-                            allowed_methods=frozenset(["GET"]), raise_on_status=False)
-              adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
-              session.mount("https://", adapter)
-              session.mount("http://", adapter)
-              session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
-              return session
-
-          def fetch_text(session, name, url):
-              print(f"\n{'='*72}\nDownloading: {name}\nURL: {url}")
-              response = session.get(url, timeout=REQUEST_TIMEOUT)
-              response.raise_for_status()
-              content = response.text
-              if not content.strip():
-                  raise RuntimeError(f"{name}: downloaded content is empty")
-              print(f"HTTP {response.status_code} | {len(content):,} bytes")
-              return content
-
-          PURE_ADGUARD_DOMAIN = re.compile(r"^\|\|([a-z0-9](?:[a-z0-9.-]{0,251}[a-z0-9])?)\^$", re.IGNORECASE)
-
-          def parse_adguard(content):
-              domains = set()
-              for raw_line in content.splitlines():
-                  line = raw_line.strip()
+          # ------------------------------------------------------------------
+          # Parsers
+          # ------------------------------------------------------------------
+          def parse_adguard(content: str) -> set[str]:
+              domains: set[str] = set()
+              for raw in content.splitlines():
+                  line = raw.strip()
                   if not line or line.startswith(("!", "#", "[", "@@")):
                       continue
-                  match = PURE_ADGUARD_DOMAIN.fullmatch(line)
-                  if not match:
+                  line = re.sub(r"\$.*$", "", line).strip()
+                  # 优先 hosts 格式
+                  m = HOSTS_LINE.match(line)
+                  if m:
+                      d = normalize_domain(m.group(1))
+                      if d:
+                          domains.add(d)
                       continue
-                  domain = normalize_domain(match.group(1))
-                  if domain:
-                      domains.add(domain)
+                  # 再尝试 ||domain^ 格式
+                  match = PURE_ADGUARD_DOMAIN.match(line)
+                  if match:
+                      d = normalize_domain(match.group(1))
+                      if d:
+                          domains.add(d)
               return domains
 
-          SURGE_DOMAIN = re.compile(r"^(DOMAIN|DOMAIN-SUFFIX),([^,\s]+)$", re.IGNORECASE)
-
-          def parse_surge(content):
-              domains = set()
-              for raw_line in content.splitlines():
-                  line = raw_line.strip()
-                  if not line or line.startswith(("#", "//", ";")):
-                      continue
-                  match = SURGE_DOMAIN.fullmatch(line)
-                  if not match:
-                      continue
-                  domain = normalize_domain(match.group(2))
-                  if domain:
-                      domains.add(domain)
-              return domains
-
-          def parse_source(parser, content):
-              if parser == "adguard":
-                  return parse_adguard(content)
-              if parser == "surge":
-                  return parse_surge(content)
-              raise ValueError(f"Unknown parser: {parser}")
-
-          def build_rules():
-              session = create_session()
-              source_domains = OrderedDict()
-              merged = set()
-              for name, config in SOURCES.items():
-                  content = fetch_text(session, name, config["url"])
-                  domains = parse_source(config["parser"], content)
-                  count = len(domains)
-                  print(f"Parsed valid domains: {count:,}")
-                  if count < config["minimum"]:
-                      raise RuntimeError(f"{name} failed safety check: {count:,} < {config['minimum']:,}")
-                  source_domains[name] = domains
-                  merged.update(domains)
-              return source_domains, merged
-
-          def print_diagnostics(source_domains, merged):
-              print("\n" + "="*72 + "\nSource statistics\n" + "="*72)
-              names = list(source_domains.keys())
-              for name in names:
-                  print(f"{name:<20} {len(source_domains[name]):>12,}")
-              print("\nExclusive domains")
-              for name in names:
-                  others = set()
-                  for other in names:
-                      if other != name:
-                          others.update(source_domains[other])
-                  exclusive = source_domains[name] - others
-                  print(f"{name:<20} {len(exclusive):>12,}")
-              print("\nPairwise intersections")
-              for i in range(len(names)):
-                  for j in range(i+1, len(names)):
-                      a, b = names[i], names[j]
-                      overlap = source_domains[a] & source_domains[b]
-                      print(f"{a} ∩ {b}: {len(overlap):,}")
-              if len(names) >= 3:
-                  common = set.intersection(*[source_domains[name] for name in names])
-                  print(f"\nAll-source intersection: {len(common):,}")
-              print("\nSequential contribution")
-              running = set()
-              for name in names:
-                  before = len(running)
-                  running.update(source_domains[name])
-                  print(f"{name:<20} +{len(running)-before:>11,}")
-              print("-"*72 + f"\n{'Unique merged domains':<20} {len(merged):>12,}\n" + "="*72)
-
-          def generate_yaml(domains):
-              domains = sorted(domains)
-              return "domain_set:\n" + "\n".join(f"  - {d}" for d in domains) + "\n"
-
-          def validate_output(content):
-              data = yaml.safe_load(content)
-              if not isinstance(data, dict):
-                  raise RuntimeError("Generated YAML root is invalid")
-              if "domain_set" not in data:
-                  raise RuntimeError("Generated YAML missing 'domain_set'")
-              payload = data["domain_set"]
-              if not isinstance(payload, list) or not payload:
-                  raise RuntimeError("domain_set list is invalid or empty")
-              normalized = []
-              for item in payload:
-                  domain = normalize_domain(item)
-                  if domain != item:
-                      raise RuntimeError(f"Invalid generated domain: {item}")
-                  normalized.append(domain)
-              if len(normalized) != len(set(normalized)):
-                  raise RuntimeError("Duplicate domains detected")
-              return len(normalized)
-
-          def write_if_changed(path, content):
-              old_content = None
-              if os.path.exists(path):
-                  with open(path, "r", encoding="utf-8") as f:
-                      old_content = f.read()
-              if old_content == content:
-                  print("\nNo AdBlock content changes detected.")
-                  return False
-              directory = os.path.dirname(path) or "."
-              os.makedirs(directory, exist_ok=True)
-              fd, temp_path = tempfile.mkstemp(prefix=".AdBlock.", suffix=".tmp", dir=directory, text=True)
-              try:
-                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-                      f.write(content)
-                  os.replace(temp_path, path)
-              except Exception:
-                  try:
-                      os.unlink(temp_path)
-                  except OSError:
-                      pass
-                  raise
-              return True
-
-          def main():
-              print("="*72 + "\nEgern AdBlock Rule Builder\nBuild time: " + datetime.now(timezone.utc).isoformat() + "\n" + "="*72)
-              try:
-                  source_domains, merged = build_rules()
-                  print_diagnostics(source_domains, merged)
-                  final_count = len(merged)
-                  if final_count < FINAL_MIN_DOMAINS:
-                      raise RuntimeError(f"Final domain count suspiciously low: {final_count:,} < {FINAL_MIN_DOMAINS:,}")
-                  content = generate_yaml(merged)
-                  validated_count = validate_output(content)
-                  changed = write_if_changed(OUTPUT_FILE, content)
-                  print(f"\n{'='*72}\nSUCCESS: {validated_count:,} domains {'generated' if changed else 'unchanged'}\n{'='*72}")
-              except Exception as exc:
-                  print(f"\n{'='*72}\nBUILD FAILED\n{str(exc)}\nExisting AdBlock.yaml was preserved.\n{'='*72}")
-                  raise SystemExit(1)
-
-          if __name__ == "__main__":
-              main()
-          PY
-
-      # =====================================================================
-      # Step 5: 下载并转换现有规则（含特殊规则容错）
-      # =====================================================================
-      - name: Download and Convert Existing Rules
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p Egern/Rule .build
-          python3 <<'PY'
-          import os, re, subprocess, tempfile
-          from pathlib import Path
-          import requests, yaml
-          from requests.adapters import HTTPAdapter
-          from urllib3.util.retry import Retry
-
-          RULE_DIR = Path("Egern/Rule")
-          MANUAL_DIR = Path("Manual")
-          TEMP_DIR = Path(".build/rules")
-          TEMP_DIR.mkdir(parents=True, exist_ok=True)
-          REQUEST_TIMEOUT = 30
-          USER_AGENT = "Egern-Rule-Builder/2.0"
-
-          def create_session():
-              session = requests.Session()
-              retry = Retry(total=3, connect=3, read=3, backoff_factor=1,
-                            status_forcelist=(429,500,502,503,504),
-                            allowed_methods=frozenset(["GET"]), raise_on_status=False)
-              adapter = HTTPAdapter(max_retries=retry, pool_connections=10, pool_maxsize=10)
-              session.mount("https://", adapter)
-              session.mount("http://", adapter)
-              session.headers.update({"User-Agent": USER_AGENT, "Accept": "*/*"})
-              return session
-          SESSION = create_session()
-
-          def download(url):
-              print(f"Downloading: {url}")
-              response = SESSION.get(url, timeout=REQUEST_TIMEOUT)
-              response.raise_for_status()
-              text = response.text
-              if not text.strip():
-                  raise RuntimeError(f"Downloaded content is empty: {url}")
-              return text
-
-          RULE_PREFIXES = ("DOMAIN,", "DOMAIN-SUFFIX,", "DOMAIN-KEYWORD,", "DOMAIN-WILDCARD,",
-                           "IP-CIDR,", "IP-CIDR6,", "IP-ASN,", "URL-REGEX,", "USER-AGENT,",
-                           "DEST-PORT,", "GEOIP,", "PROCESS-NAME,", "AND,", "OR,", "NOT,")
-
-          def clean_rule_line(line):
+          def clean_rule_line(line: str) -> str | None:
               line = line.strip()
-              if not line or line.startswith(("#", "//", ";", "!")):
+              if not line:
+                  return None
+              if line.startswith(("#", "//", ";", "!")):
                   return None
               if line in ("payload:", "---", "..."):
                   return None
@@ -360,514 +325,717 @@ jobs:
               line = re.sub(r"\s+#.*$", "", line).strip()
               if not line:
                   return None
-              if line.upper().startswith(RULE_PREFIXES):
-                  return line
+              upper = line.upper()
+              for prefix in RULE_PREFIXES:
+                  if upper.startswith(prefix):
+                      return line
               return None
 
-          def parse_surge(content):
-              rules, skipped = [], 0
+          def parse_surge_classical(content: str) -> tuple[list[str], int]:
+              rules: list[str] = []
+              skipped = 0
               for raw in content.splitlines():
                   rule = clean_rule_line(raw)
                   if rule:
                       rules.append(rule)
                   elif raw.strip():
                       skipped += 1
+              if not rules:
+                  raise RuntimeError("Classical source contains zero valid rules")
               return rules, skipped
 
-          def parse_egern_yaml(content):
-              data = yaml.safe_load(content)
-              if not isinstance(data, dict):
-                  raise RuntimeError("Egern YAML root must be a mapping")
-              rules = []
-              for key, val in data.items():
-                  if isinstance(val, list):
-                      for item in val:
-                          if isinstance(item, str) and any(item.upper().startswith(p) for p in RULE_PREFIXES):
-                              rules.append(item)
+          def looks_like_yaml_mapping(content: str) -> bool:
+              for raw in content.splitlines():
+                  line = raw.strip()
+                  if not line:
+                      continue
+                  if line.startswith(("#", "//", ";", "!")):
+                      continue
+                  if line in ("---", "...", "payload:"):
+                      return True
+                  if line.startswith("- "):
+                      return True
+                  if YAML_MAPPING_PATTERN.match(line):
+                      return True
+                  return False
+              return False
+
+          def get_rule_prefix(rule: str) -> str:
+              return rule.split(",", 1)[0].strip().upper()
+
+          def has_no_resolve(rule: str) -> bool:
+              parts = [p.strip().lower() for p in rule.split(",")]
+              return "no-resolve" in parts[2:]
+
+          def add_no_resolve(rule: str) -> str:
+              if has_no_resolve(rule):
+                  return rule
+              if get_rule_prefix(rule) not in NO_RESOLVE_TYPES:
+                  return rule
+              return rule + ",no-resolve"
+
+          def parse_payload_yaml(data: dict) -> tuple[list[str], int]:
+              if "payload" not in data:
+                  raise RuntimeError("payload YAML missing 'payload'")
+              payload = data["payload"]
+              if not isinstance(payload, list):
+                  raise RuntimeError("payload must be a list")
+              top_no_resolve = data.get("no_resolve", False)
+              if not isinstance(top_no_resolve, bool):
+                  raise RuntimeError("no_resolve must be boolean")
+              rules: list[str] = []
+              for item in payload:
+                  if not isinstance(item, str):
+                      continue
+                  rule = clean_rule_line(item)
+                  if not rule:
+                      continue
+                  if top_no_resolve:
+                      rule = add_no_resolve(rule)
+                  rules.append(rule)
               if not rules:
-                  payload = data.get("payload")
-                  if isinstance(payload, list):
-                      for item in payload:
-                          if isinstance(item, str):
-                              rule = clean_rule_line(item)
-                              if rule:
-                                  rules.append(rule)
+                  raise RuntimeError("payload YAML contains zero valid rules")
               return rules, 0
 
-          def parse_source(content):
-              try:
-                  data = yaml.safe_load(content)
-                  if isinstance(data, dict) and isinstance(data.get("payload"), list):
-                      return parse_egern_yaml(content)
-              except Exception:
-                  pass
-              return parse_surge(content)
+          def parse_classified_yaml(data: dict) -> tuple[list[str], int]:
+              recognized = set(data.keys()) & CLASSIFIED_KEYS
+              if not recognized:
+                  raise RuntimeError("No recognized Egern Rule Set keys")
+              no_resolve = data.get("no_resolve", False)
+              if not isinstance(no_resolve, bool):
+                  raise RuntimeError("no_resolve must be boolean")
+              unknown = set(data.keys()) - CLASSIFIED_KEYS - {"no_resolve"}
+              if unknown:
+                  raise RuntimeError("Unsupported keys: " + ", ".join(sorted(unknown)))
+              rules: list[str] = []
+              for key in ORDER:
+                  if key not in data:
+                      continue
+                  values = data[key]
+                  if not isinstance(values, list):
+                      raise RuntimeError(f"{key} must be a list")
+                  prefix = CLASSIFIED_PREFIX_MAP[key]
+                  for item in values:
+                      if not isinstance(item, str):
+                          raise RuntimeError(f"{key} contains non-string")
+                      value = item.strip()
+                      if not value:
+                          continue
+                      rule = f"{prefix},{value}"
+                      if no_resolve and prefix in NO_RESOLVE_TYPES:
+                          rule = add_no_resolve(rule)
+                      rules.append(rule)
+              if recognized and not rules:
+                  raise RuntimeError("Recognized keys present but all lists empty")
+              return rules, 0
 
-          def normalize_rules(rules):
-              unique = {}
+          def parse_source(content: str) -> tuple[list[str], int]:
+              if looks_like_yaml_mapping(content):
+                  try:
+                      data = yaml.safe_load(content)
+                  except Exception as exc:
+                      raise RuntimeError(f"YAML parse failed: {exc}") from exc
+                  if data is None:
+                      raise RuntimeError("YAML parsed to None")
+                  if not isinstance(data, dict):
+                      raise RuntimeError(f"YAML root must be mapping, got {type(data).__name__}")
+                  if "payload" in data:
+                      return parse_payload_yaml(data)
+                  if any(k in CLASSIFIED_KEYS for k in data):
+                      return parse_classified_yaml(data)
+                  raise RuntimeError("YAML mapping has no recognized rule structure")
+              return parse_surge_classical(content)
+
+          # ------------------------------------------------------------------
+          # Write helpers
+          # ------------------------------------------------------------------
+          def yaml_scalar(value: str) -> str:
+              dumped = yaml.safe_dump(
+                  value, allow_unicode=True, default_flow_style=False, sort_keys=False
+              ).strip()
+              if "\n" in dumped:
+                  raise RuntimeError(f"Multiline scalar not supported: {value!r}")
+              return dumped
+
+          def normalize_rules(rules: list[str]) -> list[str]:
+              unique: dict[str, str] = {}
               for rule in rules:
-                  unique[rule.lower()] = rule
-              return sorted(unique.values(), key=lambda x: (x.split(",", 1)[0].upper(), x.lower()))
+                  clean = rule.strip()
+                  if clean:
+                      unique[clean.lower()] = clean
+              return sorted(
+                  unique.values(),
+                  key=lambda x: (x.split(",", 1)[0].upper(), x.lower()),
+              )
 
-          PREFIX_GROUP = {
-              "DOMAIN": "domain_set",
-              "DOMAIN-SUFFIX": "domain_suffix_set",
-              "DOMAIN-KEYWORD": "domain_keyword_set",
-              "DOMAIN-WILDCARD": "domain_wildcard_set",
-              "IP-CIDR": "ip_cidr_set",
-              "IP-CIDR6": "ip_cidr6_set",
-              "IP-ASN": "asn_set",
-              "URL-REGEX": "url_regex_set",
-              "USER-AGENT": "user_agent_set",
-              "DEST-PORT": "dest_port_set",
-              "GEOIP": "geoip_set",
-              "PROCESS-NAME": "process_name_set",
-              "AND": "and_set",
-              "OR": "or_set",
-              "NOT": "not_set",
-          }
-          ORDER = ["domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
-                   "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
-                   "user_agent_set", "dest_port_set", "protocol_set",
-                   "ssid_set", "bssid_set", "cellular_set",
-                   "and_set", "or_set", "not_set", "default", "process_name_set"]
+          def check_no_resolve_consistency(rules: list[str]) -> bool:
+              ip_rules = [r for r in rules if get_rule_prefix(r) in NO_RESOLVE_TYPES]
+              if not ip_rules:
+                  return True
+              has_flag = [r for r in ip_rules if "no-resolve" in r.lower()]
+              if has_flag and len(has_flag) != len(ip_rules):
+                  print("  WARNING: Mixed no-resolve in IP rules → force file-level no_resolve: true")
+                  return False
+              return True
 
-          def write_egern_yaml(path, rules):
-              groups = {g: [] for g in ORDER}
-              needs_no_resolve = False
+          def write_egern_yaml(path: Path, rules: list[str]) -> int:
+              rules = normalize_rules(rules)
+              if not rules:
+                  raise RuntimeError(f"No valid rules for {path}")
+
+              inconsistent = not check_no_resolve_consistency(rules)
+              groups: dict[str, list[str]] = {k: [] for k in ORDER}
+              needs_no_resolve = inconsistent
+
               for rule in rules:
-                  prefix = rule.split(",", 1)[0].upper()
-                  value = rule.split(",", 1)[1].strip()
-                  if prefix in ("IP-CIDR", "IP-CIDR6", "IP-ASN") and ",no-resolve" in rule.lower():
-                      needs_no_resolve = True
-                      value = value.split(",", 1)[0]
+                  parts = rule.split(",", 1)
+                  if len(parts) != 2:
+                      continue
+                  prefix = parts[0].strip().upper()
+                  value = parts[1].strip()
                   group = PREFIX_GROUP.get(prefix)
-                  if group:
-                      groups[group].append(value)
-              groups = {k: sorted(set(v)) for k, v in groups.items() if v}
+                  if not group:
+                      continue
+
+                  if prefix in NO_RESOLVE_TYPES:
+                      value_parts = [p.strip() for p in value.split(",")]
+                      filtered = [p for p in value_parts if p.lower() != "no-resolve"]
+                      if len(filtered) != len(value_parts):
+                          needs_no_resolve = True
+                      if prefix != "GEOIP" and len(filtered) > 1:
+                          print(f"  WARNING: Extra parameters dropped in {rule}")
+                          filtered = filtered[:1]
+                      value = ",".join(filtered)
+
+                  if not value:
+                      continue
+                  groups[group].append(value)
+
+              groups = {
+                  k: sorted(set(v), key=str.lower)
+                  for k, v in groups.items()
+                  if v
+              }
               if not groups:
                   raise RuntimeError(f"No grouped rules for {path}")
 
-              lines = []
+              lines: list[str] = []
               if needs_no_resolve:
                   lines.append("no_resolve: true")
-
-              quoted_fields = {"domain_regex_set", "domain_wildcard_set", "ip_cidr6_set",
-                               "url_regex_set", "asn_set", "user_agent_set", "dest_port_set"}
               for key in ORDER:
                   if key in groups:
                       lines.append(f"{key}:")
                       for item in groups[key]:
-                          if key in quoted_fields:
-                              if item.startswith('"') and item.endswith('"'):
-                                  lines.append(f"  - {item}")
-                              else:
-                                  lines.append(f"  - \"{item}\"")
-                          else:
-                              lines.append(f"  - {item}")
+                          lines.append(f"  - {yaml_scalar(item)}")
+
               content = "\n".join(lines) + "\n"
-              data = yaml.safe_load(content)
+              try:
+                  data = yaml.safe_load(content)
+              except Exception as exc:
+                  raise RuntimeError(f"Invalid generated YAML {path}: {exc}") from exc
               if not isinstance(data, dict):
-                  raise RuntimeError(f"Invalid YAML generated: {path}")
-              total = sum(len(v) for v in data.values() if isinstance(v, list))
+                  raise RuntimeError(f"Invalid YAML root: {path}")
+              total = sum(
+                  len(v) for k, v in data.items()
+                  if k != "no_resolve" and isinstance(v, list)
+              )
               if total == 0:
-                  raise RuntimeError(f"No rules generated for {path}")
+                  raise RuntimeError(f"Zero rules generated for {path}")
 
               path.parent.mkdir(parents=True, exist_ok=True)
-              fd, temp_path = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True)
+              fd, tmp = tempfile.mkstemp(
+                  prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True
+              )
               try:
                   with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
                       f.write(content)
-                  os.replace(temp_path, path)
+                  Path(tmp).replace(path)
               except Exception:
-                  try:
-                      os.unlink(temp_path)
-                  except OSError:
-                      pass
+                  Path(tmp).unlink(missing_ok=True)
                   raise
               return total
 
-          # 同步 blackmatrix7 现有规则
-          existing_files = sorted(p.stem for p in RULE_DIR.glob("*.yaml")
-                                  if p.name not in ("AdBlock.yaml", "Lan.yaml", "AIGC.yaml", "Telegram.yaml"))
-          print("\n" + "="*72 + "\nExisting rule files\n" + "="*72)
-          if existing_files:
-              for name in existing_files:
-                  print(f"  {name}")
-          else:
-              print("  No existing rule files.")
+          def write_if_changed(path: Path, content: str) -> bool:
+              old = path.read_text(encoding="utf-8") if path.exists() else None
+              if old == content:
+                  return False
+              path.parent.mkdir(parents=True, exist_ok=True)
+              fd, tmp = tempfile.mkstemp(
+                  prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True
+              )
+              try:
+                  with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+                      f.write(content)
+                  Path(tmp).replace(path)
+              except Exception:
+                  Path(tmp).unlink(missing_ok=True)
+                  raise
+              return True
 
-          if existing_files:
-              print("\nCloning blackmatrix7/ios_rule_script...")
-              subprocess.run(["git", "clone", "--depth", "1",
-                              "https://github.com/blackmatrix7/ios_rule_script.git",
-                              ".build/BM7_Tmp"], check=True)
+          # ------------------------------------------------------------------
+          # Manual rules（支持所有规则）
+          # ------------------------------------------------------------------
+          def load_manual_additions(name: str) -> list[str]:
+              path = MANUAL_DIR / f"{name}.txt"
+              if not path.exists():
+                  return []
+              print(f"  Loading manual additions: {path}")
+              rules: list[str] = []
+              for line in path.read_text(encoding="utf-8").splitlines():
+                  rule = clean_rule_line(line)
+                  if not rule:
+                      continue
+                  if rule.upper().startswith(("DOMAIN,", "DOMAIN-SUFFIX,")):
+                      parts = rule.split(",", 1)
+                      if len(parts) == 2:
+                          d = normalize_domain(parts[1])
+                          if d:
+                              rule = f"{parts[0]},{d}"
+                          else:
+                              print(f"    WARNING: invalid domain skipped: {parts[1]}")
+                              continue
+                  rules.append(rule)
+              if rules:
+                  print(f"    +{len(rules):,} manual rules")
+              return rules
+
+          def apply_exclusions(name: str, rules: list[str]) -> list[str]:
+              path = MANUAL_DIR / f"{name}.exclude.txt"
+              if not path.exists():
+                  return rules
+              patterns = []
+              for line in path.read_text(encoding="utf-8").splitlines():
+                  s = line.strip()
+                  if s and not s.startswith(("#", "//", ";")):
+                      patterns.append(s.lower())
+              if not patterns:
+                  return rules
+              print(f"  Loading exclusions: {path} ({len(patterns)} patterns)")
+              filtered = [r for r in rules if not any(p in r.lower() for p in patterns)]
+              excluded = len(rules) - len(filtered)
+              if excluded:
+                  print(f"    Excluded {excluded:,} rules")
+              return filtered
+
+          # ------------------------------------------------------------------
+          # 1. AdBlock
+          # ------------------------------------------------------------------
+          def build_adblock() -> None:
+              print("\n" + "=" * 72)
+              print("Building AdBlock.yaml")
+              print("=" * 72)
+              source_domains: OrderedDict[str, set[str]] = OrderedDict()
+              merged: set[str] = set()
+
+              for name, cfg in ADBLOCK_SOURCES.items():
+                  content = download(cfg["url"])
+                  domains = parse_adguard(content)
+                  count = len(domains)
+                  print(f"  {name}: {count:,} domains")
+                  if count < cfg["minimum"]:
+                      raise RuntimeError(
+                          f"{name} safety check failed: {count:,} < {cfg['minimum']:,}"
+                      )
+                  source_domains[name] = domains
+                  merged.update(domains)
+
+              print("\nSource statistics")
+              for n, ds in source_domains.items():
+                  print(f"  {n:<20} {len(ds):>12,}")
+              print(f"  {'Unique merged':<20} {len(merged):>12,}")
+
+              if len(merged) < ADBLOCK_FINAL_MIN:
+                  raise RuntimeError(
+                      f"Final AdBlock count too low: {len(merged):,} < {ADBLOCK_FINAL_MIN:,}"
+                  )
+
+              extra = load_manual_additions("AdBlock")
+              for r in extra:
+                  upper = r.upper()
+                  if upper.startswith(("DOMAIN,", "DOMAIN-SUFFIX,")):
+                      d = normalize_domain(r.split(",", 1)[1])
+                      if d:
+                          merged.add(d)
+
+              exclude_file = MANUAL_DIR / "AdBlock.exclude.txt"
+              if exclude_file.exists():
+                  excl = {
+                      line.strip().lower()
+                      for line in exclude_file.read_text(encoding="utf-8").splitlines()
+                      if line.strip() and not line.strip().startswith(("#", "//", ";"))
+                  }
+                  before = len(merged)
+                  merged = {d for d in merged if d not in excl}
+                  print(f"  Excluded {before - len(merged):,} domains from AdBlock.exclude.txt")
+
+              content = "domain_set:\n" + "\n".join(f"  - {d}" for d in sorted(merged)) + "\n"
+              data = yaml.safe_load(content)
+              if not isinstance(data, dict) or "domain_set" not in data:
+                  raise RuntimeError("AdBlock YAML structure invalid")
+              if len(data["domain_set"]) != len(set(data["domain_set"])):
+                  raise RuntimeError("Duplicate domains in AdBlock")
+
+              changed = write_if_changed(RULE_DIR / "AdBlock.yaml", content)
+              state = "generated" if changed else "unchanged"
+              print(f"\nAdBlock: {len(merged):,} domains → {state}")
+
+          # ------------------------------------------------------------------
+          # 2. Special rules
+          # ------------------------------------------------------------------
+          def build_special() -> None:
+              for name, data in SPECIAL_RULES.items():
+                  path = RULE_DIR / f"{name}.yaml"
+                  rules: list[str] = []
+                  no_resolve = data.get("no_resolve", False)
+                  for key, values in data.items():
+                      if key == "no_resolve":
+                          continue
+                      if not isinstance(values, list):
+                          raise RuntimeError(f"{name}.{key} must be list")
+                      prefix = CLASSIFIED_PREFIX_MAP.get(key)
+                      if not prefix:
+                          raise RuntimeError(f"Unknown key in special rule: {key}")
+                      for v in values:
+                          rule = f"{prefix},{v}"
+                          if no_resolve and prefix in NO_RESOLVE_TYPES:
+                              rule = add_no_resolve(rule)
+                          rules.append(rule)
+                  count = write_egern_yaml(path, rules)
+                  print(f"Special rule {name}: {count} rules written")
+
+          # ------------------------------------------------------------------
+          # 3. blackmatrix7 自动同步（根据现有文件检测，非显式列表）
+          # ------------------------------------------------------------------
+          def build_blackmatrix7() -> None:
+              merge_names = set(MERGE_SOURCES)
+              excluded = merge_names | {"AdBlock"} | set(SPECIAL_RULES)
+              existing = sorted(
+                  p.stem for p in RULE_DIR.glob("*.yaml") if p.stem not in excluded
+              )
+              print("\n" + "=" * 72)
+              print("Detected blackmatrix7 rules to sync (folder-based)")
+              print("=" * 72)
+              if not existing:
+                  print("  (none)")
+                  return
+              for n in existing:
+                  print(f"  {n}")
+
+              missing: list[str] = []
+              for name in existing:
+                  raw_url = (
+                      f"https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/"
+                      f"master/rule/Surge/{name}/{name}.list"
+                  )
+                  try:
+                      content = download(raw_url)
+                      print(f"\nProcessing {name} (Raw)")
+                      rules, skipped = parse_source(content)
+                      rules.extend(load_manual_additions(name))
+                      rules = apply_exclusions(name, rules)
+                      if not rules:
+                          raise RuntimeError(f"{name}: zero rules after manual processing")
+                      count = write_egern_yaml(RULE_DIR / f"{name}.yaml", rules)
+                      print(f"  → {count:,} rules (skipped {skipped})")
+                  except Exception as exc:
+                      print(f"  Raw failed for {name}: {exc}")
+                      missing.append(name)
+
+              if not missing:
+                  return
+
+              print("\n" + "=" * 72)
+              print("Fallback: sparse clone blackmatrix7")
+              print("=" * 72)
+              subprocess.run(
+                  [
+                      "git", "clone", "--depth", "1", "--filter=blob:none", "--sparse",
+                      "https://github.com/blackmatrix7/ios_rule_script.git",
+                      ".build/BM7_Tmp",
+                  ],
+                  check=True,
+              )
+              subprocess.run(
+                  ["git", "-C", ".build/BM7_Tmp", "sparse-checkout", "set", "rule/Surge"],
+                  check=True,
+              )
               bm7_root = Path(".build/BM7_Tmp/rule/Surge")
-              for name in existing_files:
-                  candidates = [bm7_root / f"{name}.list"] + list(bm7_root.glob(f"**/{name}.list"))
+              for name in missing:
+                  candidates = [bm7_root / f"{name}.list"] + list(
+                      bm7_root.glob(f"**/{name}.list")
+                  )
                   src = next((p for p in candidates if p.is_file()), None)
                   if src is None:
-                      print(f"WARNING: {name}.list not found in blackmatrix7.")
-                      continue
-                  print(f"\nProcessing {name}\nSource: {src}")
+                      raise RuntimeError(f"blackmatrix7 source not found: {name}.list")
+                  print(f"\nProcessing {name} (sparse: {src})")
                   content = src.read_text(encoding="utf-8-sig")
                   rules, skipped = parse_source(content)
+                  rules.extend(load_manual_additions(name))
+                  rules = apply_exclusions(name, rules)
+                  if not rules:
+                      raise RuntimeError(f"{name}: zero rules after manual processing")
                   count = write_egern_yaml(RULE_DIR / f"{name}.yaml", rules)
-                  print(f"Valid rules: {count:,}\nSkipped lines: {skipped:,}")
+                  print(f"  → {count:,} rules (skipped {skipped})")
 
-          # 多源合并规则（Lan / AIGC / Telegram）
-          MERGE_SOURCES = {
-              "Lan": [
-                  "blackmatrix7|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Lan/Lan.list",
-                  "Repcz|https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/Lan.yaml",
-              ],
-              "AIGC": [
-                  "blackmatrix7/OpenAI|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/OpenAI/OpenAI.list",
-                  "blackmatrix7/Claude|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Claude/Claude.list",
-                  "blackmatrix7/Gemini|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Gemini/Gemini.list",
-                  "ConnersHua|https://raw.githubusercontent.com/ConnersHua/RuleGo/master/Surge/Ruleset/Extra/AI.list",
-                  "Repcz|https://raw.githubusercontent.com/Repcz/Tool/refs/heads/X/Egern/Rules/AI.yaml",
-              ],
-              "Telegram": [
-                  "blackmatrix7|https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/Telegram/Telegram.list",
-                  "SukkaW|https://ruleset.skk.moe/List/ip/telegram.conf",
-              ],
-          }
-
-          def build_merged_rule(output_name, source_items):
-              print("\n" + "="*72 + f"\nBuilding {output_name}.yaml\n" + "="*72)
-              all_rules = []
+          # ------------------------------------------------------------------
+          # 4. Multi-source merges（仅 AIGC / Telegram）
+          # ------------------------------------------------------------------
+          def build_merged(name: str, sources: list[str]) -> None:
+              print("\n" + "=" * 72)
+              print(f"Building {name}.yaml")
+              print("=" * 72)
+              all_rules: list[str] = []
               total_skipped = 0
-
-              for item in source_items:
-                  source_name, url = item.split("|", 1)
-                  print(f"\n[{source_name}]")
+              for item in sources:
+                  src_name, url = item.split("|", 1)
+                  print(f"\n[{src_name}]")
                   content = download(url)
                   rules, skipped = parse_source(content)
                   if not rules:
-                      print(f"Warning: {source_name} returned no valid rules, skipping.")
-                      continue
-                  print(f"Valid rules: {len(rules):,}\nSkipped lines: {skipped:,}")
+                      raise RuntimeError(f"{name}/{src_name}: zero valid rules")
+                  print(f"  Valid: {len(rules):,}  Skipped: {skipped}")
                   all_rules.extend(rules)
                   total_skipped += skipped
 
+              all_rules.extend(load_manual_additions(name))
+              all_rules = apply_exclusions(name, all_rules)
               if not all_rules:
-                  raise RuntimeError(f"{output_name}: no valid rules from any source")
+                  raise RuntimeError(f"{name}: all rules removed after exclusions")
+              count = write_egern_yaml(RULE_DIR / f"{name}.yaml", all_rules)
+              print(f"\n{name}: {count:,} unique rules (total skipped {total_skipped})")
 
-              manual_file = MANUAL_DIR / f"{output_name}.txt"
-              if manual_file.exists():
-                  print(f"\nLoading manual rules from {manual_file}")
-                  manual_rules = []
-                  with open(manual_file, "r", encoding="utf-8") as f:
-                      for line in f:
-                          rule = clean_rule_line(line)
-                          if rule:
-                              manual_rules.append(rule)
-                  if manual_rules:
-                      print(f"Added {len(manual_rules)} manual rules")
-                      all_rules.extend(manual_rules)
+          # ------------------------------------------------------------------
+          # Main
+          # ------------------------------------------------------------------
+          def main() -> None:
+              print("=" * 72)
+              print("Egern Unified Rule Builder")
+              print(f"Build time (UTC): {datetime.now(timezone.utc).isoformat()}")
+              print("=" * 72)
 
-              exclude_file = MANUAL_DIR / f"{output_name}.exclude.txt"
-              exclude_patterns = []
-              if exclude_file.exists():
-                  with open(exclude_file, "r", encoding="utf-8") as f:
-                      for line in f:
-                          kw = line.strip()
-                          if kw:
-                              exclude_patterns.append(kw.lower())
-                  print(f"Loaded {len(exclude_patterns)} exclude keywords")
+              build_adblock()
+              build_special()
+              build_blackmatrix7()
+              for name, sources in MERGE_SOURCES.items():
+                  build_merged(name, sources)
 
-              if exclude_patterns:
-                  filtered = []
-                  for rule in all_rules:
-                      rule_lower = rule.lower()
-                      if not any(kw in rule_lower for kw in exclude_patterns):
-                          filtered.append(rule)
-                  excluded_count = len(all_rules) - len(filtered)
-                  all_rules = filtered
-                  print(f"Excluded {excluded_count} rules containing keywords")
+              print("\n" + "=" * 72)
+              print("All rules built successfully.")
+              print("=" * 72)
 
-              count = write_egern_yaml(RULE_DIR / f"{output_name}.yaml", all_rules)
-              print(f"\n{output_name}: {count:,} unique rules\nTotal skipped lines: {total_skipped:,}")
-
-          for name, sources in MERGE_SOURCES.items():
-              build_merged_rule(name, sources)
-
-          print("\n" + "="*72 + "\nRule conversion completed successfully.\n" + "="*72)
-          PY
-
-      # =====================================================================
-      # Step 5.5: 处理特殊规则（如 CGB 等上游已删除的规则）
-      # =====================================================================
-      - name: Handle Special Rules
-        shell: bash
-        run: |
-          set -euo pipefail
-          RULE_DIR="Egern/Rule"
-          # 定义特殊规则列表及其占位内容
-          declare -A SPECIAL_RULES=(
-            ["CGB"]="no_resolve: true\ndomain_set:\n  - FUCK-CGB\n"
-            # 可继续添加其他规则，格式：["规则名"]="占位内容"
-          )
-          for rule_name in "${!SPECIAL_RULES[@]}"; do
-            file="${RULE_DIR}/${rule_name}.yaml"
-            if [ -f "$file" ]; then
-              echo "✅ Marked ${rule_name} as unavailable"
-              echo -e "${SPECIAL_RULES[$rule_name]}" > "$file"
-            fi
-          done
-
-      # =====================================================================
-      # Step 6: 标准化规则（清理、排序、去重）
-      # =====================================================================
-      - name: Normalize Rules
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 <<'PY'
-          from pathlib import Path
-          import re, tempfile, yaml
-          RULE_DIR = Path("Egern/Rule")
-
-          PREFIX_GROUP = {
-              "DOMAIN": "domain_set",
-              "DOMAIN-SUFFIX": "domain_suffix_set",
-              "DOMAIN-KEYWORD": "domain_keyword_set",
-              "DOMAIN-WILDCARD": "domain_wildcard_set",
-              "IP-CIDR": "ip_cidr_set",
-              "IP-CIDR6": "ip_cidr6_set",
-              "IP-ASN": "asn_set",
-              "URL-REGEX": "url_regex_set",
-              "USER-AGENT": "user_agent_set",
-              "DEST-PORT": "dest_port_set",
-              "GEOIP": "geoip_set",
-              "PROCESS-NAME": "process_name_set",
-              "AND": "and_set",
-              "OR": "or_set",
-              "NOT": "not_set",
-          }
-          ORDER = ["domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
-                   "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
-                   "user_agent_set", "dest_port_set", "protocol_set",
-                   "ssid_set", "bssid_set", "cellular_set",
-                   "and_set", "or_set", "not_set", "default", "process_name_set"]
-
-          def normalize_line(line):
-              line = line.strip()
-              if not line or line.startswith(("#","//",";","!")):
-                  return None
-              if line == "payload:":
-                  return None
-              if line.startswith("- "):
-                  line = line[2:].strip()
-              if len(line) >= 2 and line[0] == line[-1] and line[0] in ("'", '"'):
-                  line = line[1:-1].strip()
-              if not line:
-                  return None
-              if any(line.upper().startswith(k + ",") for k in PREFIX_GROUP):
-                  return line
-              return None
-
-          for path in sorted(RULE_DIR.glob("*.yaml")):
-              if path.name == "AdBlock.yaml":
-                  continue
-              print(f"Normalizing {path.name}...")
+          if __name__ == "__main__":
               try:
-                  data = yaml.safe_load(path.read_text(encoding="utf-8-sig"))
-              except Exception as exc:
-                  raise RuntimeError(f"{path}: YAML parse failed: {exc}")
-              if not isinstance(data, dict):
-                  raise RuntimeError(f"{path}: YAML root is invalid")
-
-              rules = []
-              if "payload" in data and isinstance(data["payload"], list):
-                  for item in data["payload"]:
-                      if isinstance(item, str):
-                          rule = normalize_line(item)
-                          if rule:
-                              rules.append(rule)
-              else:
-                  if all(k in set(ORDER) for k in data.keys()):
-                      print(f"  Already in grouped format, skipping.")
-                      continue
-                  print(f"  No valid rules found, skipping.")
-                  continue
-              if not rules:
-                  print(f"  No rules to normalize.")
-                  continue
-
-              groups = {g: [] for g in ORDER}
-              needs_no_resolve = False
-              for rule in rules:
-                  prefix = rule.split(",", 1)[0].upper()
-                  value = rule.split(",", 1)[1].strip()
-                  if prefix in ("IP-CIDR", "IP-CIDR6", "IP-ASN") and ",no-resolve" in rule.lower():
-                      needs_no_resolve = True
-                      value = value.split(",", 1)[0]
-                  group = PREFIX_GROUP.get(prefix)
-                  if group:
-                      groups[group].append(value)
-              groups = {k: sorted(set(v)) for k, v in groups.items() if v}
-              if not groups:
-                  raise RuntimeError(f"{path}: final grouped rules empty")
-
-              quoted_fields = {"domain_regex_set", "domain_wildcard_set", "ip_cidr6_set",
-                               "url_regex_set", "asn_set", "user_agent_set", "dest_port_set"}
-              lines = []
-              if needs_no_resolve:
-                  lines.append("no_resolve: true")
-              for key in ORDER:
-                  if key in groups:
-                      lines.append(f"{key}:")
-                      for item in groups[key]:
-                          if key in quoted_fields:
-                              if item.startswith('"') and item.endswith('"'):
-                                  lines.append(f"  - {item}")
-                              else:
-                                  lines.append(f"  - \"{item}\"")
-                          else:
-                              lines.append(f"  - {item}")
-              new_content = "\n".join(lines) + "\n"
-
-              data = yaml.safe_load(new_content)
-              if not isinstance(data, dict):
-                  raise RuntimeError(f"{path}: invalid YAML generated")
-              total = sum(len(v) for v in data.values() if isinstance(v, list))
-              if total == 0:
-                  raise RuntimeError(f"{path}: final payload is empty")
-
-              old_content = path.read_text(encoding="utf-8-sig")
-              if old_content != new_content:
-                  fd, temp_path = tempfile.mkstemp(prefix=f".{path.stem}.", suffix=".tmp", dir=path.parent, text=True)
-                  try:
-                      with open(temp_path, "w", encoding="utf-8", newline="\n") as f:
-                          f.write(new_content)
-                      Path(temp_path).replace(path)
-                  except Exception:
-                      Path(temp_path).unlink(missing_ok=True)
-                      raise
-                  print(f"  Updated: {total:,} rules")
-              else:
-                  print(f"  Unchanged: {total:,} rules")
-          print("\nNormalization completed.")
+                  main()
+              except Exception as e:
+                  print(f"\n{'=' * 72}\nBUILD FAILED\n{e}\n{'=' * 72}")
+                  raise SystemExit(1)
           PY
 
-      # =====================================================================
-      # Step 7: 最终 YAML 校验
-      # =====================================================================
       - name: Final YAML Validation
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
+          import ipaddress
+          import re
           from pathlib import Path
           import yaml
+
           RULE_DIR = Path("Egern/Rule")
-          ALLOWED_KEYS = {"domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
-                          "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
-                          "user_agent_set", "dest_port_set", "protocol_set",
-                          "ssid_set", "bssid_set", "cellular_set",
-                          "and_set", "or_set", "not_set", "default", "process_name_set", "no_resolve"}
+          ALLOWED_KEYS = {
+              "domain_set", "domain_suffix_set", "domain_keyword_set",
+              "domain_regex_set", "domain_wildcard_set",
+              "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set",
+              "url_regex_set", "user_agent_set", "dest_port_set",
+              "protocol_set", "ssid_set", "bssid_set", "cellular_set",
+              "and_set", "or_set", "not_set", "no_resolve",
+          }
+          DOMAIN_LABEL_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+
+          def validate_domain(value: str, *, allow_wildcard=False, allow_single_label=False) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              if not value:
+                  return False
+              if any(c in value for c in ("/", "\\", ",", " ", "\t", "\n", "\r")):
+                  return False
+              if not allow_wildcard and ("*" in value or "?" in value):
+                  return False
+              if allow_wildcard:
+                  value = value.replace("*", "x").replace("?", "x")
+              value = value.rstrip(".")
+              if not value:
+                  return False
+              try:
+                  ipaddress.ip_address(value)
+                  return False
+              except ValueError:
+                  pass
+              if len(value) > 253:
+                  return False
+              labels = value.split(".")
+              if not allow_single_label and len(labels) < 2:
+                  return False
+              return all(DOMAIN_LABEL_RE.fullmatch(lb) for lb in labels)
+
+          def validate_keyword(value: str) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              return bool(value) and not any(c in value for c in ("\n", "\r", "\t", ","))
+
+          summary = []
           for path in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Validating {path.name}...")
-              with open(path, "r", encoding="utf-8-sig") as f:
-                  data = yaml.safe_load(f)
+              text = path.read_text(encoding="utf-8-sig")
+              try:
+                  data = yaml.safe_load(text)
+              except Exception as e:
+                  raise RuntimeError(f"{path}: YAML parse failed: {e}") from e
               if not isinstance(data, dict):
-                  raise RuntimeError(f"{path}: YAML root must be mapping")
+                  raise RuntimeError(f"{path}: root must be mapping")
+
               total = 0
-              for key, val in data.items():
+              for key, values in data.items():
                   if key not in ALLOWED_KEYS:
                       raise RuntimeError(f"{path}: unknown key '{key}'")
                   if key == "no_resolve":
-                      if not isinstance(val, bool):
-                          raise RuntimeError(f"{path}: no_resolve must be boolean")
+                      if not isinstance(values, bool):
+                          raise RuntimeError(f"{path}: no_resolve must be bool")
                       continue
-                  if not isinstance(val, list):
-                      raise RuntimeError(f"{path}: '{key}' must be a list")
-                  if not val:
+                  if not isinstance(values, list):
+                      raise RuntimeError(f"{path}: '{key}' must be list")
+                  if not values:
                       raise RuntimeError(f"{path}: '{key}' is empty")
-                  if len(val) != len(set(val)):
+                  if any(not isinstance(v, str) for v in values):
+                      raise RuntimeError(f"{path}: '{key}' contains non-string")
+                  if len(values) != len(set(values)):
                       raise RuntimeError(f"{path}: duplicates in '{key}'")
-                  total += len(val)
+
+                  if key == "domain_set":
+                      for v in values:
+                          if not validate_domain(v, allow_single_label=False):
+                              raise RuntimeError(f"{path}: invalid domain: {v!r}")
+                  elif key == "domain_suffix_set":
+                      for v in values:
+                          if not validate_domain(v, allow_single_label=True):
+                              raise RuntimeError(f"{path}: invalid suffix: {v!r}")
+                  elif key == "domain_wildcard_set":
+                      for v in values:
+                          if not validate_domain(v, allow_wildcard=True):
+                              raise RuntimeError(f"{path}: invalid wildcard: {v!r}")
+                  elif key == "domain_keyword_set":
+                      for v in values:
+                          if not validate_keyword(v):
+                              raise RuntimeError(f"{path}: invalid keyword: {v!r}")
+                  total += len(values)
+
               if total == 0:
                   raise RuntimeError(f"{path}: no rules found")
-              print(f"  OK: {total:,} rules")
-          print("\nAll YAML files passed final validation.")
+              print(f"  OK → {total:,} rules")
+              summary.append((path.name, total))
+
+          print("\n" + "=" * 50)
+          print("Validation Summary")
+          print("=" * 50)
+          for name, cnt in summary:
+              print(f"  {name:<30} {cnt:>10,}")
+          print("=" * 50)
+          print("All YAML files passed final validation.")
           PY
 
-      # =====================================================================
-      # Step 8: 添加稳定头部
-      # =====================================================================
       - name: Add Stable Headers
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
-          import re, subprocess
+          import os
+          import re
+          import subprocess
           from datetime import datetime, timezone, timedelta
           from pathlib import Path
           import yaml
 
           RULE_DIR = Path("Egern/Rule")
-          REPO = "jnlaoshu/MySelf"
-          BRANCH = "main"
+          REPO = os.environ.get("GITHUB_REPOSITORY", "jnlaoshu/MySelf")
+          BRANCH = os.environ.get("GITHUB_REF_NAME", "main")
+
           SOURCE_MAP = {
               "AdBlock": "AdGuard DNS Filter, AdRules, AWAvenue",
-              "Lan": "blackmatrix7, Repcz",
               "AIGC": "blackmatrix7, ConnersHua, Repcz",
               "Telegram": "blackmatrix7, SukkaW",
           }
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
-          HEADER_PREFIXES = ("# 规则名称:", "# 规则统计:", "# 规则来源:", "# 引用链接:", "# 更新时间:")
+
+          HEADER_PREFIXES = (
+              "# 规则名称:", "# 规则统计:", "# 规则来源:",
+              "# 引用链接:", "# 更新时间:",
+          )
+          OLD_HEADER_PREFIXES = (
+              "# Egern AdBlock Rule", "# Total Domains:",
+              "# Sources:", "# Generated by",
+          )
           TIME_PATTERN = re.compile(r"^# 更新时间:\s*(.+?)\s*$", re.MULTILINE)
 
           bj_time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
           current_time = bj_time.strftime("%Y-%m-%d %H:%M:%S")
 
-          def count_rules(content):
+          def count_rules(content: str) -> int:
               try:
                   data = yaml.safe_load(content)
-                  if not isinstance(data, dict):
-                      return 0
-                  return sum(len(v) for v in data.values() if isinstance(v, list))
-              except:
+              except Exception:
                   return 0
+              if not isinstance(data, dict):
+                  return 0
+              return sum(
+                  len(v) for k, v in data.items()
+                  if k != "no_resolve" and isinstance(v, list)
+              )
 
-          def normalize_payload(content):
+          def semantic_payload(content: str):
               try:
                   data = yaml.safe_load(content)
-              except:
+              except Exception:
                   return None
               if not isinstance(data, dict):
                   return None
+              no_resolve = bool(data.get("no_resolve", False))
               items = []
-              for val in data.values():
-                  if isinstance(val, list):
-                      for item in val:
-                          if isinstance(item, str):
-                              items.append(item.strip().lower())
-              return tuple(sorted(set(items)))
+              for key, values in data.items():
+                  if key == "no_resolve" or not isinstance(values, list):
+                      continue
+                  for value in values:
+                      if isinstance(value, str):
+                          if key in ("domain_regex_set", "url_regex_set", "user_agent_set"):
+                              normalized = value.strip()
+                          else:
+                              normalized = value.strip().lower()
+                          items.append((key, normalized))
+              return (no_resolve, tuple(sorted(set(items))))
 
-          def get_git_head_content(path):
+          def get_git_head_content(path: Path) -> str:
               try:
-                  result = subprocess.run(["git", "show", f"HEAD:{path.as_posix()}"],
-                                          check=True, capture_output=True, text=True, encoding="utf-8")
-                  return result.stdout
+                  r = subprocess.run(
+                      ["git", "show", f"HEAD:{path.as_posix()}"],
+                      check=True, capture_output=True, text=True, encoding="utf-8",
+                  )
+                  return r.stdout
               except subprocess.CalledProcessError:
                   return ""
 
-          def get_old_update_time(old_content):
-              if not old_content:
+          def get_old_update_time(old: str) -> str | None:
+              if not old:
                   return None
-              match = TIME_PATTERN.search(old_content)
-              return match.group(1).strip() if match else None
+              m = TIME_PATTERN.search(old)
+              return m.group(1).strip() if m else None
 
-          def remove_old_headers(content):
+          def remove_old_headers(content: str) -> str:
               lines = []
-              generated_prefixes = ("# Egern AdBlock Rule", "# Total Domains:", "# Sources:", "# Generated by")
               for line in content.splitlines():
-                  stripped = line.strip()
-                  if any(stripped.startswith(p) for p in HEADER_PREFIXES) or any(stripped.startswith(p) for p in generated_prefixes):
+                  s = line.strip()
+                  if any(s.startswith(p) for p in HEADER_PREFIXES) or \
+                     any(s.startswith(p) for p in OLD_HEADER_PREFIXES):
                       continue
                   lines.append(line)
               while lines and not lines[0].strip():
@@ -878,18 +1046,18 @@ jobs:
 
           for yaml_file in sorted(RULE_DIR.glob("*.yaml")):
               print(f"Processing {yaml_file.name}...")
-              current_content = yaml_file.read_text(encoding="utf-8-sig")
-              current_payload = normalize_payload(current_content)
+              current = yaml_file.read_text(encoding="utf-8-sig")
+              current_payload = semantic_payload(current)
               if current_payload is None:
-                  raise RuntimeError(f"{yaml_file}: current payload cannot be parsed")
+                  raise RuntimeError(f"{yaml_file}: cannot parse current payload")
 
-              old_git_content = get_git_head_content(yaml_file)
-              if not old_git_content:
+              old_git = get_git_head_content(yaml_file)
+              if not old_git:
                   update_time = current_time
                   state = "new file"
               else:
-                  old_payload = normalize_payload(old_git_content)
-                  old_time = get_old_update_time(old_git_content)
+                  old_payload = semantic_payload(old_git)
+                  old_time = get_old_update_time(old_git)
                   if old_payload is None or old_payload != current_payload:
                       update_time = current_time
                       state = "payload changed"
@@ -900,78 +1068,172 @@ jobs:
                       update_time = current_time
                       state = "missing old timestamp"
 
-              count = count_rules(current_content)
+              count = count_rules(current)
               name = yaml_file.stem
               source = SOURCE_MAP.get(name, DEFAULT_SOURCE)
               url = f"https://raw.githubusercontent.com/{REPO}/{BRANCH}/Egern/Rule/{yaml_file.name}"
-              body = remove_old_headers(current_content)
-              header = f"# 规则名称: {name}\n# 规则统计: {count}\n# 规则来源: {source}\n# 引用链接: {url}\n# 更新时间: {update_time}\n\n"
+              body = remove_old_headers(current)
+              header = (
+                  f"# 规则名称: {name}\n"
+                  f"# 规则统计: {count}\n"
+                  f"# 规则来源: {source}\n"
+                  f"# 引用链接: {url}\n"
+                  f"# 更新时间: {update_time}\n\n"
+              )
               new_content = header + body + "\n"
-
-              if new_content != current_content:
+              if new_content != current:
                   yaml_file.write_text(new_content, encoding="utf-8", newline="\n")
                   print("  Header updated")
               else:
                   print("  Header unchanged")
-              print(f"  State: {state}\n  Payload: {count:,}\n  Update time: {update_time}")
+              print(f"  State: {state} | Payload: {count:,} | Time: {update_time}")
+
           print("\nStable header processing completed.")
           PY
 
-      # =====================================================================
-      # Step 9: 头部添加后最终校验
-      # =====================================================================
       - name: Final Post Header Validation
         shell: bash
         run: |
           set -euo pipefail
           python3 <<'PY'
+          import ipaddress
+          import re
           from pathlib import Path
           import yaml
+
           RULE_DIR = Path("Egern/Rule")
-          ALLOWED_KEYS = {"domain_set", "domain_suffix_set", "domain_keyword_set", "domain_regex_set", "domain_wildcard_set",
-                          "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set", "url_regex_set",
-                          "user_agent_set", "dest_port_set", "protocol_set",
-                          "ssid_set", "bssid_set", "cellular_set",
-                          "and_set", "or_set", "not_set", "default", "process_name_set", "no_resolve"}
+          ALLOWED_KEYS = {
+              "domain_set", "domain_suffix_set", "domain_keyword_set",
+              "domain_regex_set", "domain_wildcard_set",
+              "geoip_set", "ip_cidr_set", "ip_cidr6_set", "asn_set",
+              "url_regex_set", "user_agent_set", "dest_port_set",
+              "protocol_set", "ssid_set", "bssid_set", "cellular_set",
+              "and_set", "or_set", "not_set", "no_resolve",
+          }
+          DOMAIN_LABEL_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$")
+
+          def validate_domain(value: str, *, allow_wildcard=False, allow_single_label=False) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              if not value:
+                  return False
+              if any(c in value for c in ("/", "\\", ",", " ", "\t", "\n", "\r")):
+                  return False
+              if not allow_wildcard and ("*" in value or "?" in value):
+                  return False
+              if allow_wildcard:
+                  value = value.replace("*", "x").replace("?", "x")
+              value = value.rstrip(".")
+              if not value:
+                  return False
+              try:
+                  ipaddress.ip_address(value)
+                  return False
+              except ValueError:
+                  pass
+              if len(value) > 253:
+                  return False
+              labels = value.split(".")
+              if not allow_single_label and len(labels) < 2:
+                  return False
+              return all(DOMAIN_LABEL_RE.fullmatch(lb) for lb in labels)
+
+          def validate_keyword(value: str) -> bool:
+              if not isinstance(value, str):
+                  return False
+              value = value.strip()
+              return bool(value) and not any(c in value for c in ("\n", "\r", "\t", ","))
+
           for path in sorted(RULE_DIR.glob("*.yaml")):
+              print(f"Validating {path.name}...")
               text = path.read_text(encoding="utf-8-sig")
-              data = yaml.safe_load(text)
+              try:
+                  data = yaml.safe_load(text)
+              except Exception as e:
+                  raise RuntimeError(f"{path}: invalid YAML: {e}") from e
               if not isinstance(data, dict):
-                  raise RuntimeError(f"{path}: invalid YAML root")
+                  raise RuntimeError(f"{path}: invalid root")
+
               total = 0
-              for key, val in data.items():
+              for key, values in data.items():
                   if key not in ALLOWED_KEYS:
                       raise RuntimeError(f"{path}: unknown key '{key}'")
                   if key == "no_resolve":
-                      if not isinstance(val, bool):
-                          raise RuntimeError(f"{path}: no_resolve must be boolean")
+                      if not isinstance(values, bool):
+                          raise RuntimeError(f"{path}: no_resolve must be bool")
                       continue
-                  if not isinstance(val, list) or not val:
-                      raise RuntimeError(f"{path}: invalid or empty list for '{key}'")
-                  if len(val) != len(set(val)):
+                  if not isinstance(values, list) or not values:
+                      raise RuntimeError(f"{path}: '{key}' invalid")
+                  if any(not isinstance(v, str) for v in values):
+                      raise RuntimeError(f"{path}: non-string in '{key}'")
+                  if len(values) != len(set(values)):
                       raise RuntimeError(f"{path}: duplicates in '{key}'")
-                  total += len(val)
+
+                  if key == "domain_set":
+                      for v in values:
+                          if not validate_domain(v, allow_single_label=False):
+                              raise RuntimeError(f"{path}: bad domain {v!r}")
+                  elif key == "domain_suffix_set":
+                      for v in values:
+                          if not validate_domain(v, allow_single_label=True):
+                              raise RuntimeError(f"{path}: bad suffix {v!r}")
+                  elif key == "domain_wildcard_set":
+                      for v in values:
+                          if not validate_domain(v, allow_wildcard=True):
+                              raise RuntimeError(f"{path}: bad wildcard {v!r}")
+                  elif key == "domain_keyword_set":
+                      for v in values:
+                          if not validate_keyword(v):
+                              raise RuntimeError(f"{path}: bad keyword {v!r}")
+                  total += len(values)
+
               if total == 0:
-                  raise RuntimeError(f"{path}: no rules found")
-              print(f"OK: {path.name} {total:,} rules")
+                  raise RuntimeError(f"{path}: no rules")
+              print(f"  OK → {total:,}")
+
           print("\nPost-header validation passed.")
           PY
 
-      # =====================================================================
-      # Step 10: 提交并推送
-      # =====================================================================
-      - name: Commit and Push
+      - name: Pull and Push
         shell: bash
         run: |
           set -euo pipefail
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+
           git add Egern/Rule/
           if git diff --staged --quiet; then
             echo "No changes to commit."
             exit 0
           fi
+
           echo "Changes detected:"
           git diff --staged --stat
+
           git commit -m "update(rules): $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
+
+          for i in 1 2 3; do
+            if git pull --rebase origin "${GITHUB_REF_NAME:-main}"; then
+              break
+            fi
+            echo "Pull rebase failed (attempt $i), retrying..."
+            sleep $((i * 3))
+          done
+
+          for i in 1 2 3; do
+            if git push --force-with-lease origin "${GITHUB_REF_NAME:-main}"; then
+              echo "Push succeeded (force-with-lease)."
+              exit 0
+            fi
+            echo "force-with-lease failed (attempt $i), trying normal push..."
+            if git push origin "${GITHUB_REF_NAME:-main}"; then
+              echo "Push succeeded (normal)."
+              exit 0
+            fi
+            sleep $((i * 5))
+            git pull --rebase origin "${GITHUB_REF_NAME:-main}" || true
+          done
+
+          echo "Push ultimately failed after retries."
+          exit 1
