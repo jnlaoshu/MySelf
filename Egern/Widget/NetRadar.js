@@ -91,7 +91,7 @@ export default async function (ctx) {
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
-    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/favicon.ico`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 304)) ? 'OK' : 'ERR' }; }
+    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && [200, 301, 302, 307, 401].includes(res.status)) ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
     const getFlagEmoji = (cc) => {
@@ -139,7 +139,7 @@ export default async function (ctx) {
       if (isMedium || isSmall) {
         [yt, nf, dp, sp, gpt, cl, gm, gk] = await Promise.all([
           timed(checkYouTube, 3500), timed(checkNetflix, 3500), timed(checkDisney, 4500), timed(checkSpotify, 3500),
-          timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, 3500), timed(checkGrok, 3500)
+          timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, 4500), timed(checkGrok, 3500)
         ]);
       }
 
@@ -353,7 +353,7 @@ export default async function (ctx) {
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
-    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/favicon.ico`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 304)) ? 'OK' : 'ERR' }; }
+    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && [200, 301, 302, 307, 401].includes(res.status)) ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
     const d = ctx.device || {};
@@ -373,7 +373,7 @@ export default async function (ctx) {
       httpGet('https://my.ippure.com/v1/info'),
       httpGet('https://api64.ipify.org?format=json'),
       timed(checkYouTube, TIMEOUT_MS), timed(checkNetflix, TIMEOUT_MS), timed(checkDisney, 4500), timed(checkSpotify, TIMEOUT_MS),
-      timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, TIMEOUT_MS), timed(checkGrok, TIMEOUT_MS)
+      timed(checkChatGPT, 4500), timed(checkClaude, 4500), timed(checkGemini, 4500), timed(checkGrok, TIMEOUT_MS)
     ]);
 
     const local = localInfo.data || {};
