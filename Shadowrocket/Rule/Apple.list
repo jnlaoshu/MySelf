@@ -2,7 +2,7 @@
 # 规则统计: 43
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Shadowrocket/Rule/Apple.list
-# 更新时间: 2026-08-16 10:10:28
+# 更新时间: 2026-08-16 10:33:29
 
 DOMAIN-KEYWORD,apple-support.akadns.net
 DOMAIN-KEYWORD,apple.com.akadns.net
@@ -19,11 +19,11 @@ IP-CIDR,17.0.0.0/8,no-resolve
 IP-CIDR,192.35.50.0/24,no-resolve
 IP-CIDR,198.183.17.0/24,no-resolve
 IP-CIDR,205.180.175.0/24,no-resolve
+IP-CIDR,2403:300::/32,no-resolve
+IP-CIDR,2620:149::/32,no-resolve
+IP-CIDR,2a01:b740::/32,no-resolve
 IP-CIDR,63.92.224.0/19,no-resolve
 IP-CIDR,65.199.22.0/23,no-resolve
-IP-CIDR6,2403:300::/32,no-resolve
-IP-CIDR6,2620:149::/32,no-resolve
-IP-CIDR6,2a01:b740::/32,no-resolve
 USER-AGENT,*FindMyiPhone?
 USER-AGENT,*Music?
 USER-AGENT,*WeatherFoundation*

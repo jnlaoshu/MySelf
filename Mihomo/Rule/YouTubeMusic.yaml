@@ -2,6 +2,7 @@
 # 规则统计: 1
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Mihomo/Rule/YouTubeMusic.yaml
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:39
 
-DOMAIN,music.youtube.com
+payload:
+  - DOMAIN,music.youtube.com

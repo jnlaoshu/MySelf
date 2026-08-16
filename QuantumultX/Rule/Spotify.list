@@ -2,35 +2,35 @@
 # 规则统计: 30
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Spotify.list
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:36
 
-DOMAIN,audio4-ak-spotify-com.akamaized.net
-DOMAIN,cdn-spotify-experiments.conductrics.com
-DOMAIN,heads-ak-spotify-com.akamaized.net
-DOMAIN,spotify.com.edgesuite.net
-DOMAIN,spotify.map.fastly.net
-DOMAIN,spotify.map.fastlylb.net
-IP-CIDR,104.154.127.126/32,no-resolve
-IP-CIDR,35.186.224.47/32,no-resolve
-KEYWORD,spotify
-SUFFIX,audio-ak-spotify-com.akamaized.net
-SUFFIX,byspotify.com
-SUFFIX,heads4-ak-spotify-com.akamaized.net
-SUFFIX,pscdn.co
-SUFFIX,scdn.co
-SUFFIX,spoti.fi
-SUFFIX,spotify-com.akamaized.net
-SUFFIX,spotify-everywhere.com
-SUFFIX,spotify.app.link
-SUFFIX,spotify.com
-SUFFIX,spotify.design
-SUFFIX,spotifycdn.com
-SUFFIX,spotifycdn.net
-SUFFIX,spotifycharts.com
-SUFFIX,spotifycodes.com
-SUFFIX,spotifyforbrands.com
-SUFFIX,spotifyjobs.com
-SUFFIX,spotifynewsroom.jp
-SUFFIX,spotilocal.com
-SUFFIX,tospotify.com
-USER-AGENT,Spotify*
+HOST,audio4-ak-spotify-com.akamaized.net,Spotify
+HOST,cdn-spotify-experiments.conductrics.com,Spotify
+HOST,heads-ak-spotify-com.akamaized.net,Spotify
+HOST,spotify.com.edgesuite.net,Spotify
+HOST,spotify.map.fastly.net,Spotify
+HOST,spotify.map.fastlylb.net,Spotify
+HOST-KEYWORD,spotify,Spotify
+HOST-SUFFIX,audio-ak-spotify-com.akamaized.net,Spotify
+HOST-SUFFIX,byspotify.com,Spotify
+HOST-SUFFIX,heads4-ak-spotify-com.akamaized.net,Spotify
+HOST-SUFFIX,pscdn.co,Spotify
+HOST-SUFFIX,scdn.co,Spotify
+HOST-SUFFIX,spoti.fi,Spotify
+HOST-SUFFIX,spotify-com.akamaized.net,Spotify
+HOST-SUFFIX,spotify-everywhere.com,Spotify
+HOST-SUFFIX,spotify.app.link,Spotify
+HOST-SUFFIX,spotify.com,Spotify
+HOST-SUFFIX,spotify.design,Spotify
+HOST-SUFFIX,spotifycdn.com,Spotify
+HOST-SUFFIX,spotifycdn.net,Spotify
+HOST-SUFFIX,spotifycharts.com,Spotify
+HOST-SUFFIX,spotifycodes.com,Spotify
+HOST-SUFFIX,spotifyforbrands.com,Spotify
+HOST-SUFFIX,spotifyjobs.com,Spotify
+HOST-SUFFIX,spotifynewsroom.jp,Spotify
+HOST-SUFFIX,spotilocal.com,Spotify
+HOST-SUFFIX,tospotify.com,Spotify
+IP-CIDR,104.154.127.126/32,Spotify
+IP-CIDR,35.186.224.47/32,Spotify
+USER-AGENT,Spotify*,Spotify

@@ -2,9 +2,10 @@
 # 规则统计: 4
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Mihomo/Rule/Instagram.yaml
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:34
 
-DOMAIN-KEYWORD,instagram
-DOMAIN-SUFFIX,cdninstagram.com
-DOMAIN-SUFFIX,instagr.am
-DOMAIN-SUFFIX,instagram.com
+payload:
+  - DOMAIN-KEYWORD,instagram
+  - DOMAIN-SUFFIX,cdninstagram.com
+  - DOMAIN-SUFFIX,instagr.am
+  - DOMAIN-SUFFIX,instagram.com

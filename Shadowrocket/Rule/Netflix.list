@@ -2,7 +2,7 @@
 # 规则统计: 1157
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Shadowrocket/Rule/Netflix.list
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:35
 
 DOMAIN,e13252.dscg.akamaiedge.net
 DOMAIN,h-netflix.online-metrix.net
@@ -545,6 +545,10 @@ IP-CIDR,219.76.0.0/17,no-resolve
 IP-CIDR,23.23.189.144/28,no-resolve
 IP-CIDR,23.246.0.0/18,no-resolve
 IP-CIDR,23.78.0.0/16,no-resolve
+IP-CIDR,2607:fb10::/32,no-resolve
+IP-CIDR,2620:10c:7000::/44,no-resolve
+IP-CIDR,2a00:86c0::/32,no-resolve
+IP-CIDR,2a03:5640::/32,no-resolve
 IP-CIDR,3.0.5.224/27,no-resolve
 IP-CIDR,3.0.5.32/29,no-resolve
 IP-CIDR,3.10.127.32/27,no-resolve
@@ -1156,8 +1160,4 @@ IP-CIDR,99.79.20.192/26,no-resolve
 IP-CIDR,99.80.34.48/28,no-resolve
 IP-CIDR,99.80.34.64/26,no-resolve
 IP-CIDR,99.80.88.0/25,no-resolve
-IP-CIDR6,2607:fb10::/32,no-resolve
-IP-CIDR6,2620:10c:7000::/44,no-resolve
-IP-CIDR6,2a00:86c0::/32,no-resolve
-IP-CIDR6,2a03:5640::/32,no-resolve
 USER-AGENT,Argo*

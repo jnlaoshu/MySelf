@@ -2,7 +2,7 @@
 # 规则统计: 63
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Shadowrocket/Rule/BlockHttpDNS.list
-# 更新时间: 2026-08-16 10:10:28
+# 更新时间: 2026-08-16 10:33:30
 
 DOMAIN,dns.jd.com
 DOMAIN,dns.weibo.cn
@@ -53,6 +53,10 @@ IP-CIDR,182.254.118.119/32,no-resolve
 IP-CIDR,202.90.108.13/32,no-resolve
 IP-CIDR,202.90.110.46/32,no-resolve
 IP-CIDR,203.107.1.0/24,no-resolve
+IP-CIDR,2402:4e00:1200:ed00:0:9089:6dac:96b6/128,no-resolve
+IP-CIDR,2402:4e00:1900:1700:0:9554:1ad9:c3a/128,no-resolve
+IP-CIDR,2402:db40:5100:1011::5/128,no-resolve
+IP-CIDR,240e:928:1400:10::25/128,no-resolve
 IP-CIDR,39.97.128.148/32,no-resolve
 IP-CIDR,39.97.130.51/32,no-resolve
 IP-CIDR,42.187.182.106/32,no-resolve
@@ -63,7 +67,3 @@ IP-CIDR,47.100.123.169/32,no-resolve
 IP-CIDR,47.101.175.206/32,no-resolve
 IP-CIDR,59.111.239.61/32,no-resolve
 IP-CIDR,59.111.239.62/32,no-resolve
-IP-CIDR6,2402:4e00:1200:ed00:0:9089:6dac:96b6/128,no-resolve
-IP-CIDR6,2402:4e00:1900:1700:0:9554:1ad9:c3a/128,no-resolve
-IP-CIDR6,2402:db40:5100:1011::5/128,no-resolve
-IP-CIDR6,240e:928:1400:10::25/128,no-resolve

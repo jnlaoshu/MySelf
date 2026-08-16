@@ -2,14 +2,14 @@
 # 规则统计: 9
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Bing.list
-# 更新时间: 2026-08-16 10:10:28
+# 更新时间: 2026-08-16 10:33:30
 
-SUFFIX,bing.com
-SUFFIX,bing.com.cn
-SUFFIX,bing.net
-SUFFIX,bingads.com
-SUFFIX,bingagencyawards.com
-SUFFIX,bingapistatistics.com
-SUFFIX,bingsandbox.com
-SUFFIX,bingvisualsearch.com
-SUFFIX,bingworld.com
+HOST-SUFFIX,bing.com,Bing
+HOST-SUFFIX,bing.com.cn,Bing
+HOST-SUFFIX,bing.net,Bing
+HOST-SUFFIX,bingads.com,Bing
+HOST-SUFFIX,bingagencyawards.com,Bing
+HOST-SUFFIX,bingapistatistics.com,Bing
+HOST-SUFFIX,bingsandbox.com,Bing
+HOST-SUFFIX,bingvisualsearch.com,Bing
+HOST-SUFFIX,bingworld.com,Bing

@@ -2,7 +2,7 @@
 # 规则统计: 140
 # 规则来源: blackmatrix7, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Shadowrocket/Rule/Lan.list
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:35
 
 DOMAIN,asusrouter.com
 DOMAIN,instant.arubanetworks.com
@@ -140,7 +140,7 @@ IP-CIDR,198.18.0.0/15,no-resolve
 IP-CIDR,198.51.100.0/24,no-resolve
 IP-CIDR,203.0.113.0/24,no-resolve
 IP-CIDR,224.0.0.0/3,no-resolve
-IP-CIDR6,::/127,no-resolve
-IP-CIDR6,fc00::/7,no-resolve
-IP-CIDR6,fe80::/10,no-resolve
-IP-CIDR6,ff00::/8,no-resolve
+IP-CIDR,::/127,no-resolve
+IP-CIDR,fc00::/7,no-resolve
+IP-CIDR,fe80::/10,no-resolve
+IP-CIDR,ff00::/8,no-resolve

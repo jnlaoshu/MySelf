@@ -2,7 +2,7 @@
 # 规则统计: 698
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Shadowrocket/Rule/Google.list
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:33
 
 DOMAIN,voice.telephony.goog
 DOMAIN-KEYWORD,appspot
@@ -697,8 +697,8 @@ DOMAIN-SUFFIX,zynamics.com
 IP-CIDR,172.110.32.0/21,no-resolve
 IP-CIDR,173.194.0.0/16,no-resolve
 IP-CIDR,216.73.80.0/20,no-resolve
+IP-CIDR,2620:120:e000::/40,no-resolve
 IP-CIDR,74.125.0.0/16,no-resolve
-IP-CIDR6,2620:120:e000::/40,no-resolve
 USER-AGENT,%E4%BA%91%E7%AB%AF%E7%A1%AC%E7%9B%98*
 USER-AGENT,*com.google.Drive*
 USER-AGENT,Google.Drive*

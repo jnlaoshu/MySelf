@@ -2,38 +2,38 @@
 # 规则统计: 33
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Twitter.list
-# 更新时间: 2026-08-16 10:10:29
+# 更新时间: 2026-08-16 10:33:37
 
-IP-CIDR,192.133.76.0/22,no-resolve
-IP-CIDR,199.59.148.0/22,no-resolve
-IP-CIDR,199.96.56.0/21,no-resolve
-IP-CIDR,202.160.128.0/22,no-resolve
-IP-CIDR,209.237.192.0/19,no-resolve
-IP-CIDR,69.195.160.0/19,no-resolve
-KEYWORD,twitter
-SUFFIX,ads-twitter.com
-SUFFIX,cms-twdigitalassets.com
-SUFFIX,grok.com
-SUFFIX,periscope.tv
-SUFFIX,pscp.tv
-SUFFIX,t.co
-SUFFIX,tellapart.com
-SUFFIX,tweetdeck.com
-SUFFIX,twimg.co
-SUFFIX,twimg.com
-SUFFIX,twimg.org
-SUFFIX,twitpic.com
-SUFFIX,twitter.biz
-SUFFIX,twitter.com
-SUFFIX,twitter.jp
-SUFFIX,twittercommunity.com
-SUFFIX,twitterflightschool.com
-SUFFIX,twitterinc.com
-SUFFIX,twitteroauth.com
-SUFFIX,twitterstat.us
-SUFFIX,twtrdns.net
-SUFFIX,twttr.com
-SUFFIX,twttr.net
-SUFFIX,twvid.com
-SUFFIX,vine.co
-SUFFIX,x.com
+HOST-KEYWORD,twitter,Twitter
+HOST-SUFFIX,ads-twitter.com,Twitter
+HOST-SUFFIX,cms-twdigitalassets.com,Twitter
+HOST-SUFFIX,grok.com,Twitter
+HOST-SUFFIX,periscope.tv,Twitter
+HOST-SUFFIX,pscp.tv,Twitter
+HOST-SUFFIX,t.co,Twitter
+HOST-SUFFIX,tellapart.com,Twitter
+HOST-SUFFIX,tweetdeck.com,Twitter
+HOST-SUFFIX,twimg.co,Twitter
+HOST-SUFFIX,twimg.com,Twitter
+HOST-SUFFIX,twimg.org,Twitter
+HOST-SUFFIX,twitpic.com,Twitter
+HOST-SUFFIX,twitter.biz,Twitter
+HOST-SUFFIX,twitter.com,Twitter
+HOST-SUFFIX,twitter.jp,Twitter
+HOST-SUFFIX,twittercommunity.com,Twitter
+HOST-SUFFIX,twitterflightschool.com,Twitter
+HOST-SUFFIX,twitterinc.com,Twitter
+HOST-SUFFIX,twitteroauth.com,Twitter
+HOST-SUFFIX,twitterstat.us,Twitter
+HOST-SUFFIX,twtrdns.net,Twitter
+HOST-SUFFIX,twttr.com,Twitter
+HOST-SUFFIX,twttr.net,Twitter
+HOST-SUFFIX,twvid.com,Twitter
+HOST-SUFFIX,vine.co,Twitter
+HOST-SUFFIX,x.com,Twitter
+IP-CIDR,192.133.76.0/22,Twitter
+IP-CIDR,199.59.148.0/22,Twitter
+IP-CIDR,199.96.56.0/21,Twitter
+IP-CIDR,202.160.128.0/22,Twitter
+IP-CIDR,209.237.192.0/19,Twitter
+IP-CIDR,69.195.160.0/19,Twitter
