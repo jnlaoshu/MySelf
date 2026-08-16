@@ -3,6 +3,7 @@
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Profile.yaml
 # ⏱️ 更新时间: 2026.08.16 07:30
 # ==========================================
+
 # ==================== 基本配置 ====================
 ipv6: false
 http_port: 3080
@@ -12,6 +13,7 @@ vif_only: true
 hide_vpn_icon: false
 block_quic: true
 close_connections_on_policy_change: true
+
 # ==================== 网络与路由排除 ====================
 vif_excluded_routes:
   - "10.0.0.0/8"
@@ -61,6 +63,7 @@ real_ip_domains:
   - "*.steamcommunity.com"
   - "*.steamstatic.com"
   - "*.nvidia.com"
+
 # ==================== DNS 配置 ====================
 hijack_dns:
   - "*:53"
@@ -286,6 +289,7 @@ dns:
     - https://doh.pub/dns-query
     - h3://dns.google/dns-query
     - https://cloudflare-dns.com/dns-query
+
 # ==================== 策略组 ====================
 policy_groups:
   - auto_test:
@@ -492,6 +496,7 @@ policy_groups:
         - REJECT
       hidden: true
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
+
 # ==================== MITM ====================
 mitm:
   ca_p12: egern.p12
@@ -530,6 +535,7 @@ mitm:
     includes:
       - raw.githubusercontent.com
       - gist.githubusercontent.com
+
 # ==================== 路由规则 ====================
 rules:
   # 1. 局域网直连
@@ -744,6 +750,7 @@ rules:
   # 12. 终极兜底策略
   - default:
       policy: Proxy
+
 # ==================== 模块 ====================
 modules:
   - name: 常用小组件
