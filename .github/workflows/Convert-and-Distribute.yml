@@ -1,13 +1,13 @@
 # =============================================================================
 # 工作流：规则转换与多平台分发
-# 更新：2026.08.16 10:33
+# 更新：2026.08.16 11:25
 #
 # 功能：
-#   - 仅对 Egern/Rule 下的 AdBlock、AIGC、Telegram 多源合并规则进行转换
-#   - 转换后分发到各平台对应目录
+#   - 仅对 Egern/Rule 下的 AdBlock、AIGC、Telegram 多源合并规则进行转换，转换后分发到各平台对应目录
 #   - 其他规则直接从 blackmatrix7 各平台原生列表下载更新
-#   - Mihomo 平台从 blackmatrix7 的 Clash 目录下载
-#   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX
+#   - Mihomo 从 blackmatrix7 的 Clash 目录下载（Meta 内核）
+#   - Clash 从 blackmatrix7 的 Clash 目录下载（原版内核）
+#   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX、Clash
 #   - 清理、去重、排序、校验规则
 #   - 仅在内容变化时提交，避免空提交
 # =============================================================================
@@ -71,6 +71,7 @@ jobs:
               "Mihomo": {"dir": "Mihomo/Rule", "ext": ".yaml"},
               "Shadowrocket": {"dir": "Shadowrocket/Rule", "ext": ".list"},
               "QuantumultX": {"dir": "QuantumultX/Rule", "ext": ".list"},
+              "Clash": {"dir": "Clash/Rule", "ext": ".yaml"},
           }
 
           SOURCE_MAP = {
@@ -134,7 +135,21 @@ jobs:
                   "ip_cidr_set": "IP-CIDR",
                   "ip_cidr6_set": "IP-CIDR6",
                   "asn_set": "IP-ASN",
-                  "dest_port_set": "DEST-PORT",
+                  "dest_port_set": "DST-PORT",
+                  "geoip_set": "GEOIP",
+                  "process_name_set": "PROCESS-NAME",
+                  "and_set": "AND",
+                  "or_set": "OR",
+                  "not_set": "NOT",
+              },
+              # 原版 Clash：不支持 DOMAIN-WILDCARD、IP-ASN，使用 DST-PORT
+              "Clash": {
+                  "domain_set": "DOMAIN",
+                  "domain_suffix_set": "DOMAIN-SUFFIX",
+                  "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "ip_cidr_set": "IP-CIDR",
+                  "ip_cidr6_set": "IP-CIDR6",
+                  "dest_port_set": "DST-PORT",
                   "geoip_set": "GEOIP",
                   "process_name_set": "PROCESS-NAME",
                   "and_set": "AND",
@@ -174,6 +189,7 @@ jobs:
               "Stash": {"URL-REGEX", "USER-AGENT", "PROCESS-NAME", "AND", "OR", "NOT"},
               "Loon": {"PROCESS-NAME", "AND", "OR", "NOT"},
               "Mihomo": {"URL-REGEX", "USER-AGENT"},
+              "Clash": {"URL-REGEX", "USER-AGENT"},
               "Shadowrocket": {"PROCESS-NAME", "AND", "OR", "NOT"},
               "QuantumultX": {"PROCESS-NAME", "AND", "OR", "NOT"},
           }
@@ -235,6 +251,15 @@ jobs:
               unsupported = PLATFORM_UNSUPPORTED.get(platform, set())
               rules = []
               for egern_type, values in rule_data.items():
+                  # 对于原版 Clash，将 domain_wildcard_set 转为 DOMAIN-SUFFIX
+                  if platform == "Clash" and egern_type == "domain_wildcard_set":
+                      for value in values:
+                          if value.startswith("*."):
+                              value = value[2:]
+                          rule = f"DOMAIN-SUFFIX,{value}"
+                          rules.append(rule)
+                      continue
+
                   target_prefix = prefix_map.get(egern_type)
                   if target_prefix is None:
                       continue
@@ -242,7 +267,6 @@ jobs:
                       continue
                   for value in values:
                       rule = f"{target_prefix},{value}"
-                      # IP 规则统一追加 no-resolve（若需要）
                       if no_resolve and target_prefix in IP_TYPES and "no-resolve" not in rule.lower():
                           rule += ",no-resolve"
                       rules.append(rule)
@@ -318,7 +342,6 @@ jobs:
                   except Exception:
                       rules = []
                   if not rules:
-                      # 回退按行清理
                       for line in raw_text.splitlines():
                           cleaned = clean_rule_line(line)
                           if cleaned:
@@ -378,7 +401,6 @@ jobs:
               print(f"\nProcessing: {rule_name}")
 
               if rule_name in CONVERT_RULES:
-                  # 多源合并规则：从 Egern 源转换
                   rule_data, no_resolve = parse_egern_rule_file(source_file)
                   if not rule_data:
                       print(f"  Skipping {rule_name}: No valid rule data")
@@ -397,12 +419,10 @@ jobs:
                       write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
                       print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
               else:
-                  # 其他规则：直接从 blackmatrix7 各平台下载
                   for platform, config in TARGET_CONFIG.items():
                       ext = config["ext"]
                       output_path = Path(config["dir"]) / f"{rule_name}{ext}"
-                      # Mihomo 使用 Clash 目录
-                      source_platform = "Clash" if platform == "Mihomo" else platform
+                      source_platform = "Clash" if platform in ("Mihomo", "Clash") else platform
                       try:
                           download_platform_direct(platform, rule_name, output_path, source_platform)
                           print(f"  -> {platform}: direct download -> {output_path}")
@@ -430,12 +450,14 @@ jobs:
               "Mihomo": {"dir": "Mihomo/Rule", "ext": ".yaml"},
               "Shadowrocket": {"dir": "Shadowrocket/Rule", "ext": ".list"},
               "QuantumultX": {"dir": "QuantumultX/Rule", "ext": ".list"},
+              "Clash": {"dir": "Clash/Rule", "ext": ".yaml"},
           }
 
           EXTRA_REMOVE = {
               "Stash": ["USER-AGENT", "URL-REGEX", "PROCESS-NAME", "AND", "OR", "NOT"],
               "Loon": ["PROCESS-NAME", "AND", "OR", "NOT"],
               "Mihomo": ["USER-AGENT", "URL-REGEX"],
+              "Clash": ["USER-AGENT", "URL-REGEX"],
               "Shadowrocket": ["PROCESS-NAME", "AND", "OR", "NOT"],
               "QuantumultX": ["PROCESS-NAME", "AND", "OR", "NOT"],
           }
@@ -449,7 +471,6 @@ jobs:
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
 
           def read_rules_from_file(file_path):
-              """读取规则文件，返回规则列表，适配 yaml payload 和 list 格式"""
               ext = file_path.suffix
               rules = []
               with open(file_path, "r", encoding="utf-8") as f:
@@ -468,7 +489,7 @@ jobs:
                           rule = stripped[2:].strip()
                           if rule:
                               rules.append(rule)
-              else:  # .list
+              else:
                   for line in lines:
                       stripped = line.strip()
                       if not stripped or stripped.startswith(("#", "//", ";")):
@@ -562,7 +583,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          for dir in Surge/Rule Stash/Rule Loon/Rule Mihomo/Rule Shadowrocket/Rule QuantumultX/Rule; do
+          for dir in Surge/Rule Stash/Rule Loon/Rule Mihomo/Rule Shadowrocket/Rule QuantumultX/Rule Clash/Rule; do
             if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
               git add "$dir/"
             fi
