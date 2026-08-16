@@ -1,13 +1,12 @@
 # =============================================================================
 # 工作流：规则转换与多平台分发
-# 更新：2026.08.16 11:25
+# 更新：2026.08.16 11:33
 #
 # 功能：
 #   - 仅对 Egern/Rule 下的 AdBlock、AIGC、Telegram 多源合并规则进行转换，转换后分发到各平台对应目录
 #   - 其他规则直接从 blackmatrix7 各平台原生列表下载更新
-#   - Mihomo 从 blackmatrix7 的 Clash 目录下载（Meta 内核）
-#   - Clash 从 blackmatrix7 的 Clash 目录下载（原版内核）
-#   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX、Clash
+#   - Clash（Dreamacro/clash 原版内核）和 Mihomo（Meta 内核） 均从 blackmatrix7 的 Clash 目录下载
+#   - 支持的平台：Clash、Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX
 #   - 清理、去重、排序、校验规则
 #   - 仅在内容变化时提交，避免空提交
 # =============================================================================
@@ -35,12 +34,12 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -142,7 +141,6 @@ jobs:
                   "or_set": "OR",
                   "not_set": "NOT",
               },
-              # 原版 Clash：不支持 DOMAIN-WILDCARD、IP-ASN，使用 DST-PORT
               "Clash": {
                   "domain_set": "DOMAIN",
                   "domain_suffix_set": "DOMAIN-SUFFIX",
@@ -401,6 +399,7 @@ jobs:
               print(f"\nProcessing: {rule_name}")
 
               if rule_name in CONVERT_RULES:
+                  # 多源合并规则：从 Egern 源转换
                   rule_data, no_resolve = parse_egern_rule_file(source_file)
                   if not rule_data:
                       print(f"  Skipping {rule_name}: No valid rule data")
@@ -419,9 +418,11 @@ jobs:
                       write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
                       print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
               else:
+                  # 其他规则：直接从 blackmatrix7 各平台下载
                   for platform, config in TARGET_CONFIG.items():
                       ext = config["ext"]
                       output_path = Path(config["dir"]) / f"{rule_name}{ext}"
+                      # Mihomo 和 Clash 平台均从 Clash 目录下载
                       source_platform = "Clash" if platform in ("Mihomo", "Clash") else platform
                       try:
                           download_platform_direct(platform, rule_name, output_path, source_platform)
@@ -471,6 +472,7 @@ jobs:
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
 
           def read_rules_from_file(file_path):
+              """读取规则文件，返回规则列表，适配 yaml payload 和 list 格式"""
               ext = file_path.suffix
               rules = []
               with open(file_path, "r", encoding="utf-8") as f:
@@ -489,7 +491,7 @@ jobs:
                           rule = stripped[2:].strip()
                           if rule:
                               rules.append(rule)
-              else:
+              else:  # .list
                   for line in lines:
                       stripped = line.strip()
                       if not stripped or stripped.startswith(("#", "//", ";")):
