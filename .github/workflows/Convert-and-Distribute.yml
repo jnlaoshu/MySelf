@@ -1,12 +1,13 @@
 # =============================================================================
 # 工作流：规则转换与多平台分发
-# 更新：2026.08.15 22:55
+# 更新：2026.08.16 10:33
 #
 # 功能：
-#   - 读取本仓库 Egern/Rule 下的规则文件
-#   - 转换为各平台兼容格式，并分发到对应目录
+#   - 仅对 Egern/Rule 下的 AdBlock、AIGC、Telegram 多源合并规则进行转换
+#   - 转换后分发到各平台对应目录
+#   - 其他规则直接从 blackmatrix7 各平台原生列表下载更新
+#   - Mihomo 平台从 blackmatrix7 的 Clash 目录下载
 #   - 支持的平台：Surge、Stash、Loon、Mihomo、Shadowrocket、QuantumultX
-#   - Surge 除 AdBlock/AIGC/Telegram 三个整合源外，直接同步 blackmatrix7 原生列表
 #   - 清理、去重、排序、校验规则
 #   - 仅在内容变化时提交，避免空提交
 # =============================================================================
@@ -80,8 +81,8 @@ jobs:
           }
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
 
-          # Surge 非整合源直接从 blackmatrix7 下载
-          SURGE_DIRECT_SKIP = {"AdBlock", "AIGC", "Telegram"}
+          # 仅以下规则进行转换，其余规则直接下载 blackmatrix7 原生列表
+          CONVERT_RULES = {"AdBlock", "AIGC", "Telegram"}
 
           PLATFORM_PREFIX_MAP = {
               "Surge": {
@@ -129,11 +130,16 @@ jobs:
                   "domain_set": "DOMAIN",
                   "domain_suffix_set": "DOMAIN-SUFFIX",
                   "domain_keyword_set": "DOMAIN-KEYWORD",
+                  "domain_wildcard_set": "DOMAIN-WILDCARD",
                   "ip_cidr_set": "IP-CIDR",
                   "ip_cidr6_set": "IP-CIDR6",
                   "asn_set": "IP-ASN",
                   "dest_port_set": "DEST-PORT",
                   "geoip_set": "GEOIP",
+                  "process_name_set": "PROCESS-NAME",
+                  "and_set": "AND",
+                  "or_set": "OR",
+                  "not_set": "NOT",
               },
               "Shadowrocket": {
                   "domain_set": "DOMAIN",
@@ -165,9 +171,9 @@ jobs:
 
           PLATFORM_UNSUPPORTED = {
               "Surge": set(),
-              "Stash": {"URL-REGEX", "USER-AGENT", "AND", "OR", "NOT", "PROCESS-NAME"},
+              "Stash": {"URL-REGEX", "USER-AGENT", "PROCESS-NAME", "AND", "OR", "NOT"},
               "Loon": {"PROCESS-NAME", "AND", "OR", "NOT"},
-              "Mihomo": {"URL-REGEX", "USER-AGENT", "PROCESS-NAME", "DOMAIN-WILDCARD", "AND", "OR", "NOT"},
+              "Mihomo": {"URL-REGEX", "USER-AGENT"},
               "Shadowrocket": {"PROCESS-NAME", "AND", "OR", "NOT"},
               "QuantumultX": {"PROCESS-NAME", "AND", "OR", "NOT"},
           }
@@ -235,16 +241,9 @@ jobs:
                   if egern_type in unsupported or target_prefix in unsupported:
                       continue
                   for value in values:
-                      if platform == "Mihomo" and egern_type == "domain_wildcard_set":
-                          if value.startswith("*."):
-                              value = value[2:]
-                              rules.append(f"DOMAIN-SUFFIX,{value}")
-                          continue
                       rule = f"{target_prefix},{value}"
-                      # classical 平台自动附加 no-resolve 到 IP 规则
-                      if (no_resolve and TARGET_CONFIG[platform]["ext"] == ".list"
-                              and target_prefix in IP_TYPES
-                              and "no-resolve" not in rule.lower()):
+                      # IP 规则统一追加 no-resolve（若需要）
+                      if no_resolve and target_prefix in IP_TYPES and "no-resolve" not in rule.lower():
                           rule += ",no-resolve"
                       rules.append(rule)
               return rules
@@ -274,10 +273,13 @@ jobs:
                       f.write(f"# 引用链接: {reference_url}\n")
                       f.write(f"# 更新时间: {update_time}\n")
                       f.write("\n")
-                      if is_yaml and no_resolve:
-                          f.write("no_resolve: true\n")
-                      for rule in sorted_rules:
-                          f.write(f"{rule}\n")
+                      if is_yaml:
+                          f.write("payload:\n")
+                          for rule in sorted_rules:
+                              f.write(f"  - {rule}\n")
+                      else:
+                          for rule in sorted_rules:
+                              f.write(f"{rule}\n")
                   os.replace(temp_path, output_path)
               except Exception:
                   try:
@@ -286,19 +288,41 @@ jobs:
                       pass
                   raise
 
-          def download_surge_direct(rule_name, output_path):
-              """从 blackmatrix7 直接下载 Surge 原生列表"""
-              url = f"https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/Surge/{rule_name}/{rule_name}.list"
-              print(f"  Downloading Surge direct: {url}")
+          def download_platform_direct(platform, rule_name, output_path, source_platform=None):
+              """从 blackmatrix7 下载指定平台的原始规则文件，source_platform 可指定实际下载目录"""
+              ext = TARGET_CONFIG[platform]["ext"]
+              source_platform = source_platform or platform
+              url = f"https://raw.githubusercontent.com/blackmatrix7/ios_rule_script/master/rule/{source_platform}/{rule_name}/{rule_name}{ext}"
+              print(f"  Downloading {platform} direct (from {source_platform}): {url}")
               response = SESSION.get(url, timeout=30)
               response.raise_for_status()
-              raw_lines = response.text.splitlines()
+              raw_text = response.text
 
               rules = []
-              for line in raw_lines:
-                  cleaned = clean_rule_line(line)
-                  if cleaned:
-                      rules.append(cleaned)
+              if ext == ".list":
+                  for line in raw_text.splitlines():
+                      cleaned = clean_rule_line(line)
+                      if cleaned:
+                          rules.append(cleaned)
+              elif ext == ".yaml":
+                  try:
+                      data = yaml.safe_load(raw_text)
+                      if isinstance(data, dict) and "payload" in data:
+                          for item in data["payload"]:
+                              if isinstance(item, str):
+                                  rules.append(item.strip())
+                      elif isinstance(data, list):
+                          for item in data:
+                              if isinstance(item, str):
+                                  rules.append(item.strip())
+                  except Exception:
+                      rules = []
+                  if not rules:
+                      # 回退按行清理
+                      for line in raw_text.splitlines():
+                          cleaned = clean_rule_line(line)
+                          if cleaned:
+                              rules.append(cleaned)
 
               unique_rules = {}
               for rule in rules:
@@ -306,7 +330,7 @@ jobs:
               sorted_rules = sorted(unique_rules.values())
 
               if not sorted_rules:
-                  raise ValueError("Downloaded Surge list is empty")
+                  raise ValueError("Downloaded list is empty")
 
               output_path.parent.mkdir(parents=True, exist_ok=True)
               bj_time = datetime.now(timezone.utc).astimezone(timezone(timedelta(hours=8)))
@@ -322,8 +346,13 @@ jobs:
                       f.write(f"# 引用链接: {reference_url}\n")
                       f.write(f"# 更新时间: {update_time}\n")
                       f.write("\n")
-                      for rule in sorted_rules:
-                          f.write(f"{rule}\n")
+                      if ext == ".yaml":
+                          f.write("payload:\n")
+                          for rule in sorted_rules:
+                              f.write(f"  - {rule}\n")
+                      else:
+                          for rule in sorted_rules:
+                              f.write(f"{rule}\n")
                   os.replace(temp_path, output_path)
               except Exception:
                   try:
@@ -348,29 +377,18 @@ jobs:
               rule_name = source_file.stem
               print(f"\nProcessing: {rule_name}")
 
-              rule_data, no_resolve = parse_egern_rule_file(source_file)
-              if not rule_data:
-                  print(f"  Skipping {rule_name}: No valid rule data")
-                  continue
+              if rule_name in CONVERT_RULES:
+                  # 多源合并规则：从 Egern 源转换
+                  rule_data, no_resolve = parse_egern_rule_file(source_file)
+                  if not rule_data:
+                      print(f"  Skipping {rule_name}: No valid rule data")
+                      continue
 
-              source = SOURCE_MAP.get(rule_name, DEFAULT_SOURCE)
+                  source = SOURCE_MAP.get(rule_name, DEFAULT_SOURCE)
 
-              for platform, config in TARGET_CONFIG.items():
-                  ext = config["ext"]
-                  output_path = Path(config["dir"]) / f"{rule_name}{ext}"
-
-                  if platform == "Surge" and rule_name not in SURGE_DIRECT_SKIP:
-                      # Surge 非整合源直接下载
-                      try:
-                          download_surge_direct(rule_name, output_path)
-                          print(f"  -> Surge: direct download -> {output_path}")
-                      except Exception as e:
-                          print(f"  -> Surge direct download failed ({e}), falling back to conversion")
-                          rules = convert_to_platform_format(rule_data, platform, no_resolve)
-                          is_yaml = ext == ".yaml"
-                          write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
-                          print(f"  -> Surge: {len(rules)} rules converted -> {output_path}")
-                  else:
+                  for platform, config in TARGET_CONFIG.items():
+                      ext = config["ext"]
+                      output_path = Path(config["dir"]) / f"{rule_name}{ext}"
                       rules = convert_to_platform_format(rule_data, platform, no_resolve)
                       if not rules:
                           print(f"  -> {platform}: No rules generated (unsupported types)")
@@ -378,6 +396,18 @@ jobs:
                       is_yaml = ext == ".yaml"
                       write_rules_file(output_path, rules, rule_name, source, no_resolve, is_yaml)
                       print(f"  -> {platform}: {len(rules)} rules -> {output_path}")
+              else:
+                  # 其他规则：直接从 blackmatrix7 各平台下载
+                  for platform, config in TARGET_CONFIG.items():
+                      ext = config["ext"]
+                      output_path = Path(config["dir"]) / f"{rule_name}{ext}"
+                      # Mihomo 使用 Clash 目录
+                      source_platform = "Clash" if platform == "Mihomo" else platform
+                      try:
+                          download_platform_direct(platform, rule_name, output_path, source_platform)
+                          print(f"  -> {platform}: direct download -> {output_path}")
+                      except Exception as e:
+                          print(f"  -> {platform}: download failed ({e}), skipping")
 
           print("\n" + "=" * 72)
           print("Conversion completed successfully.")
@@ -403,9 +433,9 @@ jobs:
           }
 
           EXTRA_REMOVE = {
-              "Stash": ["USER-AGENT", "URL-REGEX", "AND", "OR", "NOT", "PROCESS-NAME"],
+              "Stash": ["USER-AGENT", "URL-REGEX", "PROCESS-NAME", "AND", "OR", "NOT"],
               "Loon": ["PROCESS-NAME", "AND", "OR", "NOT"],
-              "Mihomo": ["USER-AGENT", "URL-REGEX", "PROCESS-NAME", "AND", "OR", "NOT"],
+              "Mihomo": ["USER-AGENT", "URL-REGEX"],
               "Shadowrocket": ["PROCESS-NAME", "AND", "OR", "NOT"],
               "QuantumultX": ["PROCESS-NAME", "AND", "OR", "NOT"],
           }
@@ -418,17 +448,33 @@ jobs:
           }
           DEFAULT_SOURCE = "blackmatrix7/ios_rule_script"
 
-          def parse_no_resolve(file_path):
-              try:
-                  with open(file_path, "r", encoding="utf-8") as f:
-                      for line in f:
-                          if line.startswith("no_resolve:"):
-                              return True
-                          if len(line) > 100:
-                              break
-              except Exception:
-                  pass
-              return False
+          def read_rules_from_file(file_path):
+              """读取规则文件，返回规则列表，适配 yaml payload 和 list 格式"""
+              ext = file_path.suffix
+              rules = []
+              with open(file_path, "r", encoding="utf-8") as f:
+                  lines = f.readlines()
+
+              if ext == ".yaml":
+                  in_payload = False
+                  for line in lines:
+                      stripped = line.strip()
+                      if not stripped or stripped.startswith("#"):
+                          continue
+                      if stripped.startswith("payload:"):
+                          in_payload = True
+                          continue
+                      if in_payload and stripped.startswith("- "):
+                          rule = stripped[2:].strip()
+                          if rule:
+                              rules.append(rule)
+              else:  # .list
+                  for line in lines:
+                      stripped = line.strip()
+                      if not stripped or stripped.startswith(("#", "//", ";")):
+                          continue
+                      rules.append(stripped)
+              return rules
 
           for platform, config in PLATFORM_CONFIG.items():
               rule_dir = Path(config["dir"])
@@ -442,25 +488,13 @@ jobs:
               for file_path in sorted(rule_dir.glob(f"*{ext}")):
                   print(f"Normalizing {platform}/{file_path.name}...")
 
-                  with open(file_path, "r", encoding="utf-8") as f:
-                      lines = f.readlines()
+                  raw_rules = read_rules_from_file(file_path)
 
                   normalized = []
-                  for line in lines:
-                      stripped = line.strip()
-                      if not stripped:
+                  for rule in raw_rules:
+                      if remove_prefixes and rule.upper().startswith(remove_prefixes):
                           continue
-                      if stripped.startswith(("#", "//", ";")):
-                          continue
-                      if remove_prefixes and stripped.upper().startswith(remove_prefixes):
-                          continue
-                      if platform == "Mihomo" and stripped.upper().startswith("DOMAIN-WILDCARD,"):
-                          parts = stripped.split(",", 1)
-                          if len(parts) == 2 and parts[1].strip().startswith("*."):
-                              domain = parts[1].strip()[2:]
-                              normalized.append(f"DOMAIN-SUFFIX,{domain}")
-                          continue
-                      normalized.append(stripped)
+                      normalized.append(rule)
 
                   unique = {}
                   for rule in normalized:
@@ -471,13 +505,13 @@ jobs:
                       rule_name = file_path.stem
                       source = SOURCE_MAP.get(rule_name, DEFAULT_SOURCE)
                       reference_url = f"https://raw.githubusercontent.com/jnlaoshu/MySelf/main/{file_path.as_posix()}"
-                      no_resolve = parse_no_resolve(file_path)
 
                       old_update_time = None
-                      for line in lines:
-                          if line.startswith("# 更新时间:"):
-                              old_update_time = line.split(":", 1)[1].strip()
-                              break
+                      with open(file_path, "r", encoding="utf-8") as f:
+                          for line in f:
+                              if line.startswith("# 更新时间:"):
+                                  old_update_time = line.split(":", 1)[1].strip()
+                                  break
 
                       if old_update_time:
                           update_time = old_update_time
@@ -493,16 +527,19 @@ jobs:
                           f"# 更新时间: {update_time}\n",
                           "\n",
                       ]
-                      if no_resolve:
-                          header_lines.append(f"no_resolve: true\n")
 
                       fd, temp_path = tempfile.mkstemp(prefix=f".{file_path.stem}.", suffix=".tmp", dir=file_path.parent, text=True)
                       try:
                           with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
                               for h in header_lines:
                                   f.write(h)
-                              for rule in sorted_rules:
-                                  f.write(f"{rule}\n")
+                              if ext == ".yaml":
+                                  f.write("payload:\n")
+                                  for rule in sorted_rules:
+                                      f.write(f"  - {rule}\n")
+                              else:
+                                  for rule in sorted_rules:
+                                      f.write(f"{rule}\n")
                           os.replace(temp_path, file_path)
                       except Exception:
                           try:
