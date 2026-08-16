@@ -12,7 +12,7 @@
  * • 稳健防护：针对 Fallback 策略组深度调优 AI 并发熔断机制，显著提升 ChatGPT 探测成功率。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetRadar.js
- * ⏱️ 更新时间: 2026.08:09 23:00
+ * ⏱️ 更新时间: 2026.08.17 04:10
  * ==========================================
  */
 
@@ -91,7 +91,7 @@ export default async function (ctx) {
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
-    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
+    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/favicon.ico`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 304)) ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
     const getFlagEmoji = (cc) => {
@@ -353,7 +353,7 @@ export default async function (ctx) {
     async function checkSpotify() { const res = await ctx.http.get(`https://open.spotify.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
     async function checkChatGPT() { const res = await ctx.http.get(`https://chatgpt.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 302 || res.status === 401 || res.status === 404)) ? 'OK' : 'ERR' }; }
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
-    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/app`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
+    async function checkGemini() { const res = await ctx.http.get(`https://gemini.google.com/favicon.ico`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 200 || res.status === 304)) ? 'OK' : 'ERR' }; }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
     const d = ctx.device || {};
