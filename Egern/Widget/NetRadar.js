@@ -12,7 +12,7 @@
  * • 稳健防护：针对 Fallback 策略组深度调优 AI 并发熔断机制，显著提升 ChatGPT 探测成功率。
  *
  * 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/NetRadar.js
- * ⏱️ 更新时间: 2026.08.17 04:30
+ * ⏱️ 更新时间: 2026.08.17 09:00
  * ==========================================
  */
 
@@ -93,19 +93,20 @@ export default async function (ctx) {
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
     async function checkGemini() {
       const startTime = Date.now();
-      // 探测无 Geo-IP 强前端拦截的底层 API 模型接口
-      const res = await ctx.http.get("https://generativelanguage.googleapis.com/v1beta/models", {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        },
-        timeout: 4500
-      }).catch(() => null);
-
-      // 只要 API 有响应（包含 403），即代表链路畅通且节点解锁成功
-      if (!res) return { status: 'ERR', delay: '--' };
-
-      const delay = Date.now() - startTime;
-      return { status: 'OK', delay: `${delay}ms` };
+      try {
+        // 探测无 Geo-IP 强前端拦截的底层 API 模型接口
+        const res = await ctx.http.get("https://generativelanguage.googleapis.com/v1beta/models", {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          },
+          timeout: 4500
+        });
+        // 只要 API 有响应（包含 403），即代表链路畅通且节点解锁成功
+        const delay = Date.now() - startTime;
+        return { status: 'OK', delay: `${delay}ms` };
+      } catch (e) {
+        return { status: 'ERR', delay: '--' };
+      }
     }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: 3500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
@@ -371,19 +372,20 @@ export default async function (ctx) {
     async function checkClaude() { const res = await ctx.http.get(`https://api.anthropic.com/`, { timeout: 4500, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: (res && (res.status === 404 || res.status === 401 || res.status === 200)) ? 'OK' : 'ERR' }; }
     async function checkGemini() {
       const startTime = Date.now();
-      // 探测无 Geo-IP 强前端拦截的底层 API 模型接口
-      const res = await ctx.http.get("https://generativelanguage.googleapis.com/v1beta/models", {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        },
-        timeout: 4500
-      }).catch(() => null);
-
-      // 只要 API 有响应（包含 403），即代表链路畅通且节点解锁成功
-      if (!res) return { status: 'ERR', delay: '--' };
-
-      const delay = Date.now() - startTime;
-      return { status: 'OK', delay: `${delay}ms` };
+      try {
+        // 探测无 Geo-IP 强前端拦截的底层 API 模型接口
+        const res = await ctx.http.get("https://generativelanguage.googleapis.com/v1beta/models", {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          },
+          timeout: 4500
+        });
+        // 只要 API 有响应（包含 403），即代表链路畅通且节点解锁成功
+        const delay = Date.now() - startTime;
+        return { status: 'OK', delay: `${delay}ms` };
+      } catch (e) {
+        return { status: 'ERR', delay: '--' };
+      }
     }
     async function checkGrok() { const res = await ctx.http.get(`https://grok.com/`, { timeout: TIMEOUT_MS, headers: commonHeaders, followRedirect: false }).catch(() => null); return { code: res && res.status === 200 ? 'OK' : 'ERR' }; }
 
