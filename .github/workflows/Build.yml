@@ -62,7 +62,7 @@ jobs:
         run: echo "date=$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Rule Sources
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .cache/sources
           key: egern-sources-${{ runner.os }}-${{ steps.date.outputs.date }}
