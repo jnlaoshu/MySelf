@@ -1,7 +1,7 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.08.16 07:30
+# ⏱️ 更新时间: 2026.09.19 07:48
 # ==========================================
 
 # ==================== 基本配置 ====================
@@ -33,6 +33,10 @@ real_ip_domains:
   - "*.tailscale.net"
   - "*.apple-dns.net"
   - "*.safebrowsing.apple"
+  - "setup.icloud.com"
+  - "*.push.apple.com"
+  - "ocsp.apple.com"
+  - "ocsp2.apple.com"
   - "find.synology.com"
   - "*.synology.me"
   - "*.myqcloud.com"
@@ -41,12 +45,6 @@ real_ip_domains:
   - "*.unifi.ui.com"
   - "*.gl-inet.com"
   - "router.asus.com"
-  - "*.push.apple.com"
-  - "setup.icloud.com"
-  - "p*-buy.itunes.apple.com"
-  - "buy.itunes.apple.com"
-  - "ocsp.apple.com"
-  - "ocsp2.apple.com"
   - "*.battle.net"
   - "*.blzstatic.cn"
   - "*.battlenet.com"
@@ -71,6 +69,9 @@ geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Count
 proxy_latency_test_url: http://www.gstatic.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
 dns:
+  bootstrap:
+    - 223.5.5.5
+    - 119.29.29.29
   public_ip_lookup_url: https://ifconfig.me/ip
   block_ips:
     - "0.0.0.0/8"
@@ -91,9 +92,6 @@ dns:
     - "::/128"
     - "::1/128"
     - "ff00::/8"
-  bootstrap:
-    - 223.5.5.5
-    - 119.29.29.29
   upstreams:
     AliDNS:
       - h3://dns.alidns.com/dns-query
@@ -108,6 +106,11 @@ dns:
       - h3://dns.google/dns-query
       - https://dns.google/dns-query
     Default:
+      - h3://dns.google/dns-query
+      - https://cloudflare-dns.com/dns-query
+    ProxyDNS:
+      - h3://dns.alidns.com/dns-query
+      - https://doh.pub/dns-query
       - h3://dns.google/dns-query
       - https://cloudflare-dns.com/dns-query
   forward:
@@ -285,10 +288,7 @@ dns:
         match: "*"
         value: Default
   proxy_nameservers:
-    - h3://dns.alidns.com/dns-query
-    - https://doh.pub/dns-query
-    - h3://dns.google/dns-query
-    - https://cloudflare-dns.com/dns-query
+    - ProxyDNS
 
 # ==================== 策略组 ====================
 policy_groups:
@@ -350,7 +350,7 @@ policy_groups:
       policies:
         - 全部节点
       flatten: true
-      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b|🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b|🇸|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
+      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b|🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
       icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
   - select:
       name: Proxy
@@ -515,6 +515,7 @@ mitm:
       - "*.gstatic.com"
       - "*.googleapis.com"
       - "*.googlevideo.com"
+      - "*.googleusercontent.com"
       - "*.akamai.net"
       - "*.facebook.com"
       - "*.fbcdn.net"
@@ -525,7 +526,6 @@ mitm:
       - "*.openai.com"
       - "*.anthropic.com"
       - "*.claude.ai"
-      - "*.googleusercontent.com"
       - "*.douyin.com"
       - "*.toutiao.com"
       - "*.kuaishou.com"
@@ -538,13 +538,10 @@ mitm:
 
 # ==================== 路由规则 ====================
 rules:
-  # 1. 局域网直连
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
       policy: DIRECT
       update_interval: 604800
-
-  # 2. 广告拦截 - 域名类 + IP 类
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
       policy: 猎杀广告
@@ -561,8 +558,6 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/BlockHttpDNS.yaml
       policy: 猎杀广告
       update_interval: 604800
-
-  # 3. 高频国内 App 直连
   - domain_suffix:
       match: snssdk.com
       policy: DIRECT
@@ -635,26 +630,18 @@ rules:
   - domain_suffix:
       match: xhscdn.com
       policy: DIRECT
-
-  # 4. Apple 服务与隐私代理分流
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
       policy: Apple
       update_interval: 604800
-
-  # 5. AI 服务核心闭环
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
       policy: AIGC
       update_interval: 604800
-
-  # 6. Google 生态服务
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
       policy: Google
       update_interval: 604800
-
-  # 7. 微软 / GitHub / Cloudflare / Bing / Windows Update
   - domain_keyword:
       match: windowsupdate
       policy: DIRECT
@@ -682,8 +669,6 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
       policy: Bing
       update_interval: 604800
-
-  # 8. 影音娱乐流媒体
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
       policy: YouTube
@@ -712,14 +697,10 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
       policy: HBO
       update_interval: 604800
-
-  # 9. 金融支付账号
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
       policy: PayPal
       update_interval: 604800
-
-  # 10. 社交通讯
   - rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
       policy: Telegram
@@ -736,8 +717,6 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
       policy: WeChat
       update_interval: 604800
-
-  # 11. 国内规则与高性能 GeoIP 匹配
   - geoip:
       match: CN
       policy: DIRECT
@@ -746,8 +725,6 @@ rules:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Direct.yaml
       policy: DIRECT
       update_interval: 604800
-
-  # 12. 终极兜底策略
   - default:
       policy: Proxy
 
@@ -757,8 +734,8 @@ modules:
     url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Widget/Widgets.yaml
     env:
       TEACHING_WEEK_START: 2026/08/31
-      EXCLUSIVE_NAME_2: "0828"
-      EXCLUSIVE_DATE_2: "08/28"
+      EXCLUSIVE_NAME_2: "寒假"
+      EXCLUSIVE_DATE_2: "01/23"
     enabled: true
     update_interval: 86400
   - name: Sub-Store
@@ -807,15 +784,5 @@ modules:
     update_interval: 86400
   - name: App开屏广告跳过
     url: https://yfamilys.com/module/adultraplus.sgmodule
-    enabled: true
-    update_interval: 86400
-  - name: NodeSeek 签到
-    url: https://raw.githubusercontent.com/Nullwhy/Egern/main/Rewrite/NodeSeek.module
-    compat_arguments:
-      MINUTE: "31"
-      HOUR: "08"
-    env:
-      FIXED_LEGS: "false"
-      ENABLE_CAPTURE: "false"
     enabled: true
     update_interval: 86400
