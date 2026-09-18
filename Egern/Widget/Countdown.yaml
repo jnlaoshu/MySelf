@@ -68,7 +68,7 @@ env_schema:
   EXCLUSIVE_NAME_1:
     name: 🎁 专属纪念日 1
     description: "设定最重要的纪念日名称"
-    default_value: "我的生日"
+    default_value: "生日"
   EXCLUSIVE_DATE_1:
     name: 📅 纪念日 1 日期
     description: "日期格式必须严格为 MM/DD"
