@@ -1,788 +1,911 @@
 # ==========================================
 # 📌 配置文件: Egern@laoshu 专用配置
 # 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.09.19 07:48
+# ⏱️ 更新时间: 2026.09.21 09:00
 # ==========================================
 
-# ==================== 基本配置 ====================
-ipv6: false
-http_port: 3080
-socks_port: 3090
-allow_external_connections: false
-vif_only: true
-hide_vpn_icon: false
-block_quic: true
-close_connections_on_policy_change: true
-
-# ==================== 网络与路由排除 ====================
-vif_excluded_routes:
-  - "10.0.0.0/8"
-  - "172.16.0.0/12"
-  - "192.0.0.0/29"
-  - "192.168.0.0/16"
-  - "100.64.0.0/10"
-  - "169.254.0.0/16"
-  - "224.0.0.0/4"
-  - "fc00::/7"
-  - "fe80::/10"
-  - "ff00::/8"
-real_ip_domains:
-  - "*.lan"
-  - "*.local"
-  - "*.home.arpa"
-  - "*.tailscale.net"
-  - "*.apple-dns.net"
-  - "*.safebrowsing.apple"
-  - "setup.icloud.com"
-  - "*.push.apple.com"
-  - "ocsp.apple.com"
-  - "ocsp2.apple.com"
-  - "find.synology.com"
-  - "*.synology.me"
-  - "*.myqcloud.com"
-  - "*.myqnapcloud.com"
-  - "*.routerlogin.net"
-  - "*.unifi.ui.com"
-  - "*.gl-inet.com"
-  - "router.asus.com"
-  - "*.battle.net"
-  - "*.blzstatic.cn"
-  - "*.battlenet.com"
-  - "*.battlenet.com.cn"
-  - "*.xboxlive.com"
-  - "xbox.*.microsoft.com"
-  - "*.stun.playstation.net"
-  - "*.srv.nintendo.net"
-  - "*.msftncsi.com"
-  - "*.msftconnecttest.com"
-  - "*.epicgames.com"
-  - "*.riotgames.com"
-  - "*.steampowered.com"
-  - "*.steamcommunity.com"
-  - "*.steamstatic.com"
-  - "*.nvidia.com"
-
-# ==================== DNS 配置 ====================
+# ------------------------------------------
+# 一、全局基础设置
+# ------------------------------------------
+ipv6: false                          # 关闭 IPv6，避免双栈解析带来的分流不一致
+http_port: 3080                      # 本地 HTTP 代理端口
+socks_port: 3090                     # 本地 SOCKS5 代理端口
+allow_external_connections: false    # 禁止局域网内其他设备连接本机代理
+vif_only: true                       # 仅使用虚拟网卡（VIF）模式接管流量
+block_quic: true                     # 全局阻断 QUIC(UDP 443)，强制回落 TCP 以便 MITM/分流；需要 QUIC 的策略组单独设 block_quic: false
+close_connections_on_policy_change: true  # 切换策略组时关闭已有连接，使新策略立即生效
+hide_vpn_icon: false                 # 不隐藏状态栏 VPN 图标
 hijack_dns:
-  - "*:53"
+- '*:53'                             # 劫持所有 53 端口 DNS 请求，交由下方 dns 模块处理
+
+# GeoIP 数据库（Loyalsoldier 增强版）
 geoip_db_url: https://raw.githubusercontent.com/Loyalsoldier/geoip/release/Country.mmdb
+
+# 延迟测试地址：代理走 gstatic 204，直连走 Apple 测试页
 proxy_latency_test_url: http://www.gstatic.com/generate_204
 direct_latency_test_url: http://www.apple.com/library/test/success.html
+
+# 不经过虚拟网卡的路由（私网/保留/组播段，避免内网与本机互联被接管）
+vif_excluded_routes:
+- 10.0.0.0/8
+- 172.16.0.0/12
+- 192.0.0.0/29                       # IETF 保留段，与 dns.block_ips 中的 192.0.0.0/24 保持一致
+- 192.168.0.0/16
+- 100.64.0.0/10                      # CGNAT / Tailscale 常用段
+- 169.254.0.0/16                     # 链路本地
+- 224.0.0.0/4                        # 组播
+- fc00::/7
+- fe80::/10
+- ff00::/8
+
+# 回环（Hairpin）地址：允许访问该地址时经 VIF 回环，用于内网穿透/自建服务场景
+vif_hairpin_addresses:
+- 10.7.0.1
+
+# ------------------------------------------
+# 二、DNS 模块
+# ------------------------------------------
 dns:
+  # 引导 DNS：用于解析 DoH/DoT 服务器自身的域名（必须为国内可直连的明文 IP）
   bootstrap:
-    - 223.5.5.5
-    - 119.29.29.29
-  public_ip_lookup_url: https://ifconfig.me/ip
-  block_ips:
-    - "0.0.0.0/8"
-    - "10.0.0.0/8"
-    - "127.0.0.0/8"
-    - "169.254.0.0/16"
-    - "172.16.0.0/12"
-    - "192.0.0.0/24"
-    - "192.0.2.0/24"
-    - "192.88.99.0/24"
-    - "192.168.0.0/16"
-    - "198.18.0.0/15"
-    - "198.51.100.0/24"
-    - "203.0.113.0/24"
-    - "224.0.0.0/4"
-    - "240.0.0.0/4"
-    - "255.255.255.255/32"
-    - "::/128"
-    - "::1/128"
-    - "ff00::/8"
+  - 223.5.5.5                        # 阿里
+  - 119.29.29.29                     # 腾讯 DNSPod
+
+  # 上游 DNS 组：forward 规则通过组名引用
   upstreams:
-    AliDNS:
-      - h3://dns.alidns.com/dns-query
-      - https://dns.alidns.com/dns-query
-    DNSPod:
-      - https://doh.pub/dns-query
-      - https://sm2.doh.pub/dns-query
-    ByteDNS:
-      - udp://180.184.1.1:53
-      - udp://180.184.2.2:53
-    Google:
-      - h3://dns.google/dns-query
-      - https://dns.google/dns-query
-    Default:
-      - h3://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query
-    ProxyDNS:
-      - h3://dns.alidns.com/dns-query
-      - https://doh.pub/dns-query
-      - h3://dns.google/dns-query
-      - https://cloudflare-dns.com/dns-query
+    AliDNS:                          # 阿里系域名专用
+    - h3://dns.alidns.com/dns-query
+    - https://dns.alidns.com/dns-query
+    DNSPod:                          # 腾讯系 / 国内通用
+    - https://doh.pub/dns-query
+    - https://sm2.doh.pub/dns-query
+    ByteDNS:                         # 字节系域名专用（官方明文 UDP，无 DoH）
+    - udp://180.184.1.1:53
+    - udp://180.184.2.2:53
+    Google:                          # Google / YouTube 系域名专用
+    - h3://dns.google/dns-query
+    - https://dns.google/dns-query
+    Default:                         # 兜底（境外域名）：经代理隧道解析，国际 DoH 可用
+    - h3://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+    ProxyDNS:                        # 解析「代理节点服务器域名」专用；此时隧道尚未建立，必须国内优先
+    - h3://dns.alidns.com/dns-query
+    - https://doh.pub/dns-query
+    - h3://dns.google/dns-query
+    - https://cloudflare-dns.com/dns-query
+
+  # DNS 分流规则：自上而下首个命中生效，顺序不可随意调整
   forward:
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
-        value: reject
-        update_interval: 86400
-    - domain_suffix:
-        match: alibaba.com
-        value: AliDNS
-    - domain_suffix:
-        match: alipay.com
-        value: AliDNS
-    - domain_suffix:
-        match: alipayobjects.com
-        value: AliDNS
-    - domain_suffix:
-        match: aliapp.org
-        value: AliDNS
-    - domain_suffix:
-        match: alicdn.com
-        value: AliDNS
-    - domain_suffix:
-        match: aliyun.com
-        value: AliDNS
-    - domain_suffix:
-        match: aliyuncs.com
-        value: AliDNS
-    - domain_suffix:
-        match: taobao.com
-        value: AliDNS
-    - domain_suffix:
-        match: tmall.com
-        value: AliDNS
-    - domain_suffix:
-        match: amap.com
-        value: AliDNS
-    - domain_suffix:
-        match: ele.me
-        value: AliDNS
-    - domain_suffix:
-        match: dingtalk.com
-        value: AliDNS
-    - domain_suffix:
-        match: mzstatic.com
-        value: AliDNS
-    - domain_suffix:
-        match: qq.com
-        value: DNSPod
-    - domain_suffix:
-        match: wechat.com
-        value: DNSPod
-    - domain_suffix:
-        match: weixin.com
-        value: DNSPod
-    - domain_suffix:
-        match: tencent.com
-        value: DNSPod
-    - domain_suffix:
-        match: qcloud.com
-        value: DNSPod
-    - domain_suffix:
-        match: myqcloud.com
-        value: DNSPod
-    - domain_suffix:
-        match: tencdns.cn
-        value: DNSPod
-    - domain_suffix:
-        match: kuaishou.com
-        value: DNSPod
-    - domain_suffix:
-        match: gifshow.com
-        value: DNSPod
-    - domain_suffix:
-        match: yximgs.com
-        value: DNSPod
-    - domain_suffix:
-        match: kuaishoupay.com
-        value: DNSPod
-    - domain_suffix:
-        match: xiaohongshu.com
-        value: DNSPod
-    - domain_suffix:
-        match: xhscdn.com
-        value: DNSPod
-    - domain_suffix:
-        match: bytedance.com
-        value: ByteDNS
-    - domain_suffix:
-        match: bytecdn.com
-        value: ByteDNS
-    - domain_suffix:
-        match: bytecdn.cn
-        value: ByteDNS
-    - domain_suffix:
-        match: bytedns.net
-        value: ByteDNS
-    - domain_suffix:
-        match: bytednsdoc.com
-        value: ByteDNS
-    - domain_suffix:
-        match: douyin.com
-        value: ByteDNS
-    - domain_suffix:
-        match: douyincdn.com
-        value: ByteDNS
-    - domain_suffix:
-        match: douyinvod.com
-        value: ByteDNS
-    - domain_suffix:
-        match: pstatp.com
-        value: ByteDNS
-    - domain_suffix:
-        match: snssdk.com
-        value: ByteDNS
-    - domain_suffix:
-        match: amemv.com
-        value: ByteDNS
-    - domain_suffix:
-        match: toutiao.com
-        value: ByteDNS
-    - domain_suffix:
-        match: ixigua.com
-        value: ByteDNS
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Direct.yaml
-        value: DNSPod
-        update_interval: 604800
-    - domain_suffix:
-        match: itunes.apple.com
-        value: Default
-    - domain_suffix:
-        match: apps.apple.com
-        value: Default
-    - domain_suffix:
-        match: local
-        value: system
-    - domain_suffix:
-        match: lan
-        value: system
-    - domain_suffix:
-        match: arpa
-        value: system
-    - domain_suffix:
-        match: in-addr.arpa
-        value: system
-    - domain_suffix:
-        match: internal
-        value: system
-    - domain_suffix:
-        match: test
-        value: system
-    - domain_suffix:
-        match: example
-        value: system
-    - domain_suffix:
-        match: localhost
-        value: system
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
-        value: Google
-        update_interval: 604800
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
-        value: Google
-        update_interval: 604800
-    - proxy_rule_set:
-        match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
-        value: Google
-        update_interval: 604800
-    - domain_suffix:
-        match: cn
-        value: DNSPod
-    - domain_wildcard:
-        match: "*"
-        value: Default
-  proxy_nameservers:
-    - ProxyDNS
-
-# ==================== 策略组 ====================
-policy_groups:
-  - auto_test:
-      name: 全部节点
-      urls:
-        - https://sub.store/download/collection/AllServer?target=Egern
-      flatten: true
-      interval: 1200
-      tolerance: 100
-      timeout: 5
-      latency_test_url: http://www.gstatic.com/generate_204
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Global.png
-      hidden: true
-  - smart:
-      name: 香港节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
-  - smart:
-      name: 美国节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
-  - smart:
-      name: 台湾节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
-  - smart:
-      name: 日本节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
-  - smart:
-      name: 狮城节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
-  - smart:
-      name: 韩国节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)(?:🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
-  - select:
-      name: 其他节点
-      policies:
-        - 全部节点
-      flatten: true
-      filter: "(?i)^(?!.*(?:🇭🇰|香港|\\b(?:HK|HKG|Hong)\\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\\b(?:US|USA|United[\\s_-]*States|America)\\b|🇹🇼|台湾|\\b(?:TW|TWN|Tai|Taiwan)\\b|🇯🇵|日本|东京|大阪|\\b(?:JP|JPN|Japan)\\b|🇸🇬|新加坡|狮城|\\b(?:SG|SGP|Singapore)\\b|🇰🇷|韩国|首尔|仁川|\\b(?:KR|KOR|Korea)\\b)).*$"
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
-  - select:
-      name: Proxy
-      policies:
-        - 香港节点
-        - 美国节点
-        - 日本节点
-        - 狮城节点
-        - 台湾节点
-        - 韩国节点
-        - 其他节点
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png
-  - select:
-      name: AIGC
-      policies:
-        - 美国节点
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
-  - select:
-      name: Apple
-      policies:
-        - DIRECT
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
-  - select:
-      name: Google
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
-  - select:
-      name: Microsoft
-      policies:
-        - DIRECT
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
-  - select:
-      name: GitHub
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
-  - select:
-      name: Cloudflare
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Cloudflare.png
-  - select:
-      name: Bing
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
-  - select:
-      name: PayPal
-      policies:
-        - 美国节点
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
-  - select:
-      name: YouTube
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
-  - select:
-      name: YouTubeMusic
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
-  - select:
-      name: Spotify
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
-  - select:
-      name: TikTok
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
-  - select:
-      name: Netflix
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
-  - select:
-      name: Disney
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
-  - select:
-      name: HBO
-      policies:
-        - Proxy
-      flatten: true
-      block_quic: false
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
-  - select:
-      name: Telegram
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
-  - select:
-      name: Twitter
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
-  - select:
-      name: Instagram
-      policies:
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Instagram.png
-  - select:
-      name: WeChat
-      policies:
-        - DIRECT
-        - Proxy
-      flatten: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
-  - select:
-      name: 猎杀广告
-      policies:
-        - REJECT
-      hidden: true
-      icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
-
-# ==================== MITM ====================
-mitm:
-  ca_p12: egern.p12
-  ca_passphrase: egern
-  hostnames:
-    excludes:
-      - "*.wechat.com"
-      - "*.weixin.com"
-      - "*.alipay.com"
-      - "*.microsoft.com"
-      - "*.live.com"
-      - "*.office.com"
-      - "*.icloud.com"
-      - "*.amazonaws.com"
-      - "*.githubassets.com"
-      - "*.gstatic.com"
-      - "*.googleapis.com"
-      - "*.googlevideo.com"
-      - "*.googleusercontent.com"
-      - "*.akamai.net"
-      - "*.facebook.com"
-      - "*.fbcdn.net"
-      - "*.instagram.com"
-      - "*.whatsapp.net"
-      - "*.cloudflare.com"
-      - "*.pages.dev"
-      - "*.openai.com"
-      - "*.anthropic.com"
-      - "*.claude.ai"
-      - "*.douyin.com"
-      - "*.toutiao.com"
-      - "*.kuaishou.com"
-      - "*.xiaohongshu.com"
-      - "ocsp.apple.com"
-      - "ocsp2.apple.com"
-    includes:
-      - raw.githubusercontent.com
-      - gist.githubusercontent.com
-
-# ==================== 路由规则 ====================
-rules:
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
-      policy: DIRECT
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
-      policy: 猎杀广告
+  # ① DNS 层广告域名直接拒绝（Loyalsoldier 广告域名集；早于其他规则，节省无效解析）
+  #    与 rules 中的自建 AdBlock.yaml 分属不同解析阶段，互补而非重复
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/Loyalsoldier/clash-rules/release/reject.txt
+      value: reject
       update_interval: 86400
-  - rule_set:
-      match: https://ruleset.skk.moe/List/non_ip/reject.conf
-      policy: 猎杀广告
-      update_interval: 86400
-  - rule_set:
-      match: https://ruleset.skk.moe/List/ip/reject.conf
-      policy: 猎杀广告
-      update_interval: 86400
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/BlockHttpDNS.yaml
-      policy: 猎杀广告
-      update_interval: 604800
+  # ② 阿里系 → AliDNS
   - domain_suffix:
-      match: snssdk.com
-      policy: DIRECT
+      match: alibaba.com
+      value: AliDNS
   - domain_suffix:
-      match: isnssdk.com
-      policy: DIRECT
+      match: alipay.com
+      value: AliDNS
   - domain_suffix:
-      match: awemeughun.com
-      policy: DIRECT
+      match: alipayobjects.com
+      value: AliDNS
   - domain_suffix:
-      match: amemv.com
-      policy: DIRECT
+      match: aliapp.org
+      value: AliDNS
   - domain_suffix:
-      match: bytecdn.com
-      policy: DIRECT
+      match: alicdn.com
+      value: AliDNS
   - domain_suffix:
-      match: bytecdn.cn
-      policy: DIRECT
+      match: aliyun.com
+      value: AliDNS
   - domain_suffix:
-      match: byteimg.com
-      policy: DIRECT
+      match: aliyuncs.com
+      value: AliDNS
   - domain_suffix:
-      match: bytegoofy.com
-      policy: DIRECT
+      match: taobao.com
+      value: AliDNS
   - domain_suffix:
-      match: toutiao.com
-      policy: DIRECT
+      match: tmall.com
+      value: AliDNS
   - domain_suffix:
-      match: toutiaocdn.com
-      policy: DIRECT
+      match: amap.com
+      value: AliDNS
   - domain_suffix:
-      match: douyin.com
-      policy: DIRECT
+      match: ele.me
+      value: AliDNS
   - domain_suffix:
-      match: douyincdn.com
-      policy: DIRECT
+      match: dingtalk.com
+      value: AliDNS
   - domain_suffix:
-      match: douyinpic.com
-      policy: DIRECT
+      match: mzstatic.com            # Apple 静态资源 CDN，走国内解析以获得就近节点
+      value: AliDNS
+  # ③ 腾讯系 / 快手 / 小红书 → DNSPod
   - domain_suffix:
-      match: douyinstatic.com
-      policy: DIRECT
+      match: qq.com
+      value: DNSPod
   - domain_suffix:
-      match: douyinvod.com
-      policy: DIRECT
+      match: wechat.com
+      value: DNSPod
   - domain_suffix:
-      match: idouyinvod.com
-      policy: DIRECT
+      match: weixin.com
+      value: DNSPod
   - domain_suffix:
-      match: iesdouyin.com
-      policy: DIRECT
+      match: tencent.com
+      value: DNSPod
   - domain_suffix:
-      match: pstatp.com
-      policy: DIRECT
+      match: qcloud.com
+      value: DNSPod
+  - domain_suffix:
+      match: myqcloud.com
+      value: DNSPod
+  - domain_suffix:
+      match: tencdns.cn
+      value: DNSPod
   - domain_suffix:
       match: kuaishou.com
-      policy: DIRECT
-  - domain_suffix:
-      match: kuaishoupay.com
-      policy: DIRECT
+      value: DNSPod
   - domain_suffix:
       match: gifshow.com
-      policy: DIRECT
+      value: DNSPod
   - domain_suffix:
       match: yximgs.com
-      policy: DIRECT
+      value: DNSPod
+  - domain_suffix:
+      match: kuaishoupay.com
+      value: DNSPod
   - domain_suffix:
       match: xiaohongshu.com
-      policy: DIRECT
+      value: DNSPod
   - domain_suffix:
       match: xhscdn.com
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
-      policy: Apple
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-      policy: AIGC
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
-      policy: Google
-      update_interval: 604800
-  - domain_keyword:
-      match: windowsupdate
-      policy: DIRECT
+      value: DNSPod
+  # ④ 字节系 → ByteDNS
   - domain_suffix:
-      match: update.microsoft.com
-      policy: DIRECT
+      match: bytedance.com
+      value: ByteDNS
   - domain_suffix:
-      match: delivery.mp.microsoft.com
-      policy: DIRECT
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
-      policy: Microsoft
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/GitHub.yaml
-      policy: GitHub
-      update_interval: 604800
+      match: bytecdn.com
+      value: ByteDNS
   - domain_suffix:
-      match: workers.dev
-      policy: Cloudflare
+      match: bytecdn.cn
+      value: ByteDNS
   - domain_suffix:
-      match: pages.dev
-      policy: Cloudflare
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-      policy: Bing
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
-      policy: YouTube
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
-      policy: YouTubeMusic
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
-      policy: Spotify
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
-      policy: TikTok
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
-      policy: Netflix
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
-      policy: Disney
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
-      policy: HBO
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
-      policy: PayPal
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
-      policy: Telegram
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
-      policy: Twitter
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Instagram.yaml
-      policy: Instagram
-      update_interval: 604800
-  - rule_set:
-      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
-      policy: WeChat
-      update_interval: 604800
-  - geoip:
-      match: CN
-      policy: DIRECT
-      no_resolve: true
-  - rule_set:
+      match: bytedns.net
+      value: ByteDNS
+  - domain_suffix:
+      match: bytednsdoc.com
+      value: ByteDNS
+  - domain_suffix:
+      match: douyin.com
+      value: ByteDNS
+  - domain_suffix:
+      match: douyincdn.com
+      value: ByteDNS
+  - domain_suffix:
+      match: douyinvod.com
+      value: ByteDNS
+  - domain_suffix:
+      match: pstatp.com
+      value: ByteDNS
+  - domain_suffix:
+      match: snssdk.com
+      value: ByteDNS
+  - domain_suffix:
+      match: amemv.com
+      value: ByteDNS
+  - domain_suffix:
+      match: toutiao.com
+      value: ByteDNS
+  - domain_suffix:
+      match: ixigua.com
+      value: ByteDNS
+  # ⑤ 自建国内直连域名集 → DNSPod
+  - proxy_rule_set:
       match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Direct.yaml
-      policy: DIRECT
+      value: DNSPod
       update_interval: 604800
-  - default:
-      policy: Proxy
+  # ⑥ App Store 域名走境外 DNS（配合 Apple 策略组，避免解析到不匹配的 CDN）
+  - domain_suffix:
+      match: itunes.apple.com
+      value: Default
+  - domain_suffix:
+      match: apps.apple.com
+      value: Default
+  # ⑦ 本地/保留域名处理
+  #    ⚠️ 顺序要点：home.arpa 与 lan 必须放在 arpa 之前，
+  #    否则 home.arpa 会被上层的 arpa 规则先行命中而被 reject
+  - domain_suffix:
+      match: lan
+      value: system                  # 局域网域名交给系统 DNS（路由器）解析
+  - domain_suffix:
+      match: home.arpa
+      value: system                  # RFC 8375 家庭网络域名，交给系统 DNS
+  - domain_suffix:
+      match: local
+      value: reject                  # mDNS 域名不走单播 DNS
+  - domain_suffix:
+      match: arpa
+      value: reject
+  - domain_suffix:
+      match: in-addr.arpa            # 已被 arpa 覆盖，属冗余项，保留无副作用
+      value: reject
+  - domain_suffix:
+      match: internal
+      value: reject
+  - domain_suffix:
+      match: test
+      value: reject
+  - domain_suffix:
+      match: example
+      value: reject
+  - domain_suffix:
+      match: localhost
+      value: reject
+  # ⑧ Google 系 → Google DNS（避免被国内 DNS 污染/错误解析）
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
+      value: Google
+      update_interval: 604800
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
+      value: Google
+      update_interval: 604800
+  - proxy_rule_set:
+      match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
+      value: Google
+      update_interval: 604800
+  # ⑨ 兜底：.cn 走国内，其余全部走 Default（境外）
+  - domain_suffix:
+      match: cn
+      value: DNSPod
+  - domain_wildcard:
+      match: '*'
+      value: Default
 
-# ==================== 模块 ====================
-modules:
-  - name: 常用小组件
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Widget/Widgets.yaml
-    env:
-      TEACHING_WEEK_START: 2026/08/31
-      EXCLUSIVE_NAME_2: "寒假"
-      EXCLUSIVE_DATE_2: "01/23"
-    enabled: true
-    update_interval: 86400
-  - name: Sub-Store
-    url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/refs/heads/master/config/Egern.yaml
-    enabled: true
-    update_interval: 259200
-  - name: BoxJs
-    url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
-    enabled: true
-    update_interval: 259200
-  - name: Script Hub
-    url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/refs/heads/main/modules/script-hub.beta.egern.yaml
-    enabled: true
-    update_interval: 259200
-  - name: WeatherKit
-    url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
-    enabled: true
-    update_interval: 259200
-  - name: 雪球去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
-    enabled: true
-    update_interval: 86400
-  - name: 综合电商去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
-    enabled: true
-    update_interval: 86400
-  - name: 地图三合一去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
-    enabled: true
-    update_interval: 86400
-  - name: 差旅出行去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
-    enabled: true
-    update_interval: 86400
-  - name: 音乐流媒体去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
-    enabled: true
+  # 解析代理节点服务器域名所用的 DNS 组（引用上方 ProxyDNS）
+  proxy_nameservers:
+  - ProxyDNS
+
+  # 丢弃解析结果落在下列网段的响应（防 DNS 污染/劫持）
+  # ⚠️ 注意：含私网段，若自建域名公网 DNS 解析到内网 IP 会被拦截
+  block_ips:
+  - 0.0.0.0/8
+  - 10.0.0.0/8
+  - 127.0.0.0/8
+  - 169.254.0.0/16
+  - 172.16.0.0/12
+  - 192.0.0.0/24
+  - 192.0.2.0/24
+  - 192.88.99.0/24
+  - 192.168.0.0/16
+  - 198.18.0.0/15
+  - 198.51.100.0/24
+  - 203.0.113.0/24
+  - 224.0.0.0/4
+  - 240.0.0.0/4
+  - 255.255.255.255/32
+  - ::/128
+  - ::1/128
+  - ff00::/8
+  public_ip_lookup_url: https://ifconfig.me/ip   # 查询本机公网 IP 的地址
+
+# ------------------------------------------
+# 三、真实 IP 域名（不使用 Fake-IP 的域名）
+#    这些服务依赖真实 IP：局域网设备、NAS、路由器、游戏联机/NAT 检测、Apple 推送与证书校验等
+# ------------------------------------------
+real_ip_domains:
+# 局域网 / 家庭网络
+- '*.lan'
+- '*.local'
+- '*.home.arpa'
+- '*.tailscale.net'
+# Apple 基础服务（推送、证书校验、安全浏览）
+- '*.apple-dns.net'
+- '*.safebrowsing.apple'
+- setup.icloud.com
+- '*.push.apple.com'
+- ocsp.apple.com
+- ocsp2.apple.com
+# NAS / 路由器
+- find.synology.com
+- '*.synology.me'
+- '*.myqcloud.com'
+- '*.myqnapcloud.com'
+- '*.routerlogin.net'
+- '*.unifi.ui.com'
+- '*.gl-inet.com'
+- router.asus.com
+# 游戏平台（联机 / NAT 类型检测）
+- '*.battle.net'
+- '*.blzstatic.cn'
+- '*.battlenet.com'
+- '*.battlenet.com.cn'
+- '*.xboxlive.com'
+- xbox.*.microsoft.com
+- '*.stun.playstation.net'
+- '*.srv.nintendo.net'
+# 系统联网检测
+- '*.msftncsi.com'
+- '*.msftconnecttest.com'
+# 游戏 / 下载平台
+- '*.epicgames.com'
+- '*.riotgames.com'
+- '*.steampowered.com'
+- '*.steamcommunity.com'
+- '*.steamstatic.com'
+- '*.nvidia.com'
+
+# ------------------------------------------
+# 四、策略组
+#    分类顺序：节点池 → 地区节点 → 总入口 → AI → 系统生态 → 开发/搜索 → 金融 → 影音 → 社交 → 拦截
+# ------------------------------------------
+policy_groups:
+# —— 4.1 节点池（隐藏）：从 Sub-Store 合集拉取全部节点，所有地区组由此过滤 ——
+- auto_test:
+    name: 全部节点
+    policies: []
+    flatten: true
+    urls:
+    - https://sub.store/download/collection/AllServer?target=Egern   # 依赖 Sub-Store 模块已启用
+    interval: 1200
+    latency_test_url: http://www.gstatic.com/generate_204
+    tolerance: 100
+    timeout: 5
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Global.png
+    hidden: true
+
+# —— 4.2 地区节点（smart 智能选择，按 filter 正则从节点池筛选；含 emoji/中文/英文缩写/三字母代码） ——
+- smart:
+    name: 香港节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇭🇰|香港|\b(?:HK|HKG|Hong)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HongKong.png
+- smart:
+    name: 美国节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\b(?:US|USA|United[\s_-]*States|America)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/UnitedStates.png
+- smart:
+    name: 台湾节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇹🇼|台湾|\b(?:TW|TWN|Tai|Taiwan)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Taiwan.png
+- smart:
+    name: 日本节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇯🇵|日本|东京|大阪|\b(?:JP|JPN|Japan)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Japan.png
+- smart:
+    name: 狮城节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇸🇬|新加坡|狮城|\b(?:SG|SGP|Singapore)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Singapore.png
+- smart:
+    name: 韩国节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)(?:🇰🇷|韩国|首尔|仁川|\b(?:KR|KOR|Korea)\b)
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
+# 其他节点：排除以上所有地区后剩余的节点（手动选择）
+# ⚠️ 维护提示：此正则的排除项必须与上方 6 个地区 filter 保持同步，
+#    历史上 🇸🇬 emoji 与 \b 边界曾多次被误删，改动后请逐项核对
+- select:
+    name: 其他节点
+    policies:
+    - 全部节点
+    flatten: true
+    filter: (?i)^(?!.*(?:🇭🇰|香港|\b(?:HK|HKG|Hong)\b|🇺🇸|美国|洛杉矶|硅谷|西雅图|芝加哥|达拉斯|纽约|迈阿密|休斯顿|亚特兰大|波特兰|丹佛|凤凰城|底特律|盐湖城|拉斯维加斯|华盛顿|圣何塞|\b(?:US|USA|United[\s_-]*States|America)\b|🇹🇼|台湾|\b(?:TW|TWN|Tai|Taiwan)\b|🇯🇵|日本|东京|大阪|\b(?:JP|JPN|Japan)\b|🇸🇬|新加坡|狮城|\b(?:SG|SGP|Singapore)\b|🇰🇷|韩国|首尔|仁川|\b(?:KR|KOR|Korea)\b)).*$
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WorldMap.png
+
+# —— 4.3 总代理入口：默认兜底策略，其余服务组多以此为出口 ——
+- select:
+    name: Proxy
+    policies:
+    - 香港节点
+    - 美国节点
+    - 日本节点
+    - 狮城节点
+    - 台湾节点
+    - 韩国节点
+    - 其他节点
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Proxy.png
+
+# —— 4.4 AI 服务：优先美国节点（部分 AI 服务对港区不友好）；关闭 QUIC 阻断 ——
+- select:
+    name: AIGC
+    policies:
+    - 美国节点
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/ChatGPT.png
+
+# —— 4.5 系统与基础生态 ——
+- select:
+    name: Apple
+    policies:
+    - DIRECT
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Apple.png
+- select:
+    name: Google
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false                # Google 服务依赖 QUIC 提速
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Google.png
+- select:
+    name: Microsoft
+    policies:
+    - DIRECT
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Microsoft.png
+
+# —— 4.6 开发 / 网络 / 搜索 ——
+- select:
+    name: GitHub
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
+- select:
+    name: Cloudflare
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Cloudflare.png
+- select:
+    name: Bing
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Bing.png
+
+# —— 4.7 金融支付：优先美国节点 ——
+- select:
+    name: PayPal
+    policies:
+    - 美国节点
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/PayPal.png
+
+# —— 4.8 影音娱乐流媒体：均关闭 QUIC 阻断以保证播放流畅（Spotify 除外） ——
+- select:
+    name: YouTube
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTube.png
+- select:
+    name: YouTubeMusic
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/YouTubeMusic.png
+- select:
+    name: Spotify
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Spotify.png
+- select:
+    name: TikTok
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/TikTok.png
+- select:
+    name: Netflix
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Netflix.png
+- select:
+    name: Disney
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Disney.png
+- select:
+    name: HBO
+    policies:
+    - Proxy
+    flatten: true
+    block_quic: false
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/HBO.png
+
+# —— 4.9 社交通讯（WeChat 默认直连，可手动切换代理） ——
+- select:
+    name: Telegram
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Telegram.png
+- select:
+    name: Twitter
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Twitter.png
+- select:
+    name: Instagram
+    policies:
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Instagram.png
+- select:
+    name: WeChat
+    policies:
+    - DIRECT
+    - Proxy
+    flatten: true
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/WeChat.png
+
+# —— 4.10 广告拦截（隐藏）：仅 REJECT，供 rules 中的广告规则引用 ——
+- select:
+    name: 猎杀广告
+    policies:
+    - REJECT
+    icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/AdBlock.png
+    hidden: true
+
+# ------------------------------------------
+# 五、分流规则（自上而下首个命中生效）
+#    总体顺序：LAN → 广告拦截 → 国内 App 直连 → 各服务 → GeoIP → 直连集 → 兜底
+#    ⚠️ 注意：靠前的 rule_set 若包含后面服务的域名，后者将被遮蔽（如 Google→YouTube、Microsoft→Bing）
+# ------------------------------------------
+rules:
+# —— 1. 局域网直连 ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
+    policy: DIRECT
     update_interval: 604800
-  - name: 视频流媒体去广告
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
-    enabled: true
+
+# —— 2. 广告拦截（三层 + HTTPDNS）——
+#    必须早于「国内 App 直连」，否则 ad.douyin.com 之类的子域会被更宽的 DIRECT 规则先行放行
+- rule_set:                          # 自建广告域名集
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AdBlock.yaml
+    policy: 猎杀广告
     update_interval: 86400
-  - name: 京东比价
-    url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/JDPrice.yaml
-    enabled: true
+- rule_set:                          # skk.moe 域名类广告/追踪
+    match: https://ruleset.skk.moe/List/non_ip/reject.conf
+    policy: 猎杀广告
     update_interval: 86400
-  - name: App开屏广告跳过
-    url: https://yfamilys.com/module/adultraplus.sgmodule
-    enabled: true
+- rule_set:                          # skk.moe IP 类广告（需在 App 直连之前）
+    match: https://ruleset.skk.moe/List/ip/reject.conf
+    policy: 猎杀广告
     update_interval: 86400
+- rule_set:                          # 拦截 HTTPDNS，迫使 App 回落系统 DNS，使域名类广告规则得以生效
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/BlockHttpDNS.yaml
+    policy: 猎杀广告
+    update_interval: 604800
+
+# —— 3. 高频国内 App 直连（字节系 / 快手 / 小红书，使用精确 domain_suffix） ——
+# 字节系
+- domain_suffix:
+    match: snssdk.com
+    policy: DIRECT
+- domain_suffix:
+    match: isnssdk.com
+    policy: DIRECT
+- domain_suffix:
+    match: awemeughun.com
+    policy: DIRECT
+- domain_suffix:
+    match: amemv.com
+    policy: DIRECT
+- domain_suffix:
+    match: bytecdn.com
+    policy: DIRECT
+- domain_suffix:
+    match: bytecdn.cn
+    policy: DIRECT
+- domain_suffix:
+    match: byteimg.com
+    policy: DIRECT
+- domain_suffix:
+    match: bytegoofy.com
+    policy: DIRECT
+- domain_suffix:
+    match: toutiao.com
+    policy: DIRECT
+- domain_suffix:
+    match: toutiaocdn.com
+    policy: DIRECT
+- domain_suffix:
+    match: douyin.com
+    policy: DIRECT
+- domain_suffix:
+    match: douyincdn.com
+    policy: DIRECT
+- domain_suffix:
+    match: douyinpic.com
+    policy: DIRECT
+- domain_suffix:
+    match: douyinstatic.com
+    policy: DIRECT
+- domain_suffix:
+    match: douyinvod.com
+    policy: DIRECT
+- domain_suffix:
+    match: idouyinvod.com
+    policy: DIRECT
+- domain_suffix:
+    match: iesdouyin.com
+    policy: DIRECT
+- domain_suffix:
+    match: pstatp.com
+    policy: DIRECT
+# 快手
+- domain_suffix:
+    match: kuaishou.com
+    policy: DIRECT
+- domain_suffix:
+    match: kuaishoupay.com
+    policy: DIRECT
+- domain_suffix:
+    match: gifshow.com
+    policy: DIRECT
+- domain_suffix:
+    match: yximgs.com
+    policy: DIRECT
+# 小红书
+- domain_suffix:
+    match: xiaohongshu.com
+    policy: DIRECT
+- domain_suffix:
+    match: xhscdn.com
+    policy: DIRECT
+
+# —— 4. Apple ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Apple.yaml
+    policy: Apple
+    update_interval: 604800
+
+# —— 5. AI 服务 ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
+    policy: AIGC
+    update_interval: 604800
+
+# —— 6. Google 生态（通用 Google 服务，非 AI） ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
+    policy: Google
+    update_interval: 604800
+
+# —— 7. 微软 / GitHub / Cloudflare / Bing（顺序与策略组声明一致） ——
+# Windows 更新与微软分发网络走直连（体积大，国内 CDN 更快）
+- domain_keyword:
+    match: windowsupdate
+    policy: DIRECT
+- domain_suffix:
+    match: update.microsoft.com
+    policy: DIRECT
+- domain_suffix:
+    match: delivery.mp.microsoft.com
+    policy: DIRECT
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
+    policy: Microsoft
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/GitHub.yaml
+    policy: GitHub
+    update_interval: 604800
+# Cloudflare 自建站点（Workers / Pages）
+- domain_suffix:
+    match: workers.dev
+    policy: Cloudflare
+- domain_suffix:
+    match: pages.dev
+    policy: Cloudflare
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+    policy: Bing
+    update_interval: 604800
+
+# —— 8. 影音娱乐流媒体（顺序与策略组声明一致） ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
+    policy: YouTube
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
+    policy: YouTubeMusic
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
+    policy: Spotify
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
+    policy: TikTok
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Netflix.yaml
+    policy: Netflix
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Disney.yaml
+    policy: Disney
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/HBO.yaml
+    policy: HBO
+    update_interval: 604800
+
+# —— 9. 金融支付 ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
+    policy: PayPal
+    update_interval: 604800
+
+# —— 10. 社交通讯 ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
+    policy: Telegram
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Twitter.yaml
+    policy: Twitter
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Instagram.yaml
+    policy: Instagram
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/WeChat.yaml
+    policy: WeChat
+    update_interval: 604800
+
+# —— 11. GeoIP 与国内直连集 ——
+- geoip:
+    match: CN
+    policy: DIRECT
+    no_resolve: true                 # 不为匹配 GeoIP 而主动解析域名，避免额外 DNS 开销
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Direct.yaml
+    policy: DIRECT
+    update_interval: 604800
+
+# —— 12. 兜底：未命中任何规则的流量走 Proxy ——
+- default:
+    policy: Proxy
+
+# ------------------------------------------
+# 六、MITM（HTTPS 解密）
+#    仅对 includes 及各模块声明的域名解密；excludes 为永不解密的域名（证书固定 / 银行 / 系统服务等）
+# ------------------------------------------
+mitm:
+  ca_p12: egern.p12                  # ⚠️ 请确认 CA 证书已在 App 内生成/安装并信任
+  ca_passphrase: egern
+  hostnames:
+    includes:
+    - raw.githubusercontent.com
+    - gist.githubusercontent.com
+    excludes:
+    # 通讯 / 支付
+    - '*.wechat.com'
+    - '*.weixin.com'
+    - '*.alipay.com'
+    # 微软 / Apple 系统服务
+    - '*.microsoft.com'
+    - '*.live.com'
+    - '*.office.com'
+    - '*.icloud.com'
+    # 云 / CDN / 开发平台（多有证书固定）
+    - '*.amazonaws.com'
+    - '*.githubassets.com'
+    - '*.gstatic.com'
+    - '*.googleapis.com'
+    - '*.googlevideo.com'
+    - '*.googleusercontent.com'
+    - '*.akamai.net'
+    # Meta 系
+    - '*.facebook.com'
+    - '*.fbcdn.net'
+    - '*.instagram.com'
+    - '*.whatsapp.net'
+    # Cloudflare / AI 服务
+    - '*.cloudflare.com'
+    - '*.pages.dev'
+    - '*.openai.com'
+    - '*.anthropic.com'
+    - '*.claude.ai'
+    # 字节 / 快手 / 小红书（避免解密影响播放与风控）
+    - '*.douyin.com'
+    - '*.toutiao.com'
+    - '*.kuaishou.com'
+    - '*.xiaohongshu.com'
+    # Apple 证书状态校验
+    - ocsp.apple.com
+    - ocsp2.apple.com
+
+# ------------------------------------------
+# 七、模块
+# ------------------------------------------
+modules:
+# 自建小组件合集（env 为组件参数）
+- name: 常用小组件
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Widget/Widgets.yaml
+  update_interval: 86400
+  env:
+    TEACHING_WEEK_START: 2026/08/31  # 教学周起始日（用于计算当前第几周）
+    EXCLUSIVE_NAME_2: 寒假           # 自定义倒计时 2 的名称
+    EXCLUSIVE_DATE_2: 01/23          # 自定义倒计时 2 的日期（月/日）
+  enabled: true
+# 订阅管理（提供 sub.store 合集地址，节点池依赖此模块）
+- name: Sub-Store
+  url: https://raw.githubusercontent.com/sub-store-org/Sub-Store/refs/heads/master/config/Egern.yaml
+  update_interval: 259200
+  enabled: true
+- name: BoxJs
+  url: https://raw.githubusercontent.com/chavyleung/scripts/master/box/rewrite/boxjs.rewrite.surge.sgmodule
+  update_interval: 259200
+  enabled: true
+- name: Script Hub                   # 脚本/模块格式转换工具
+  url: https://raw.githubusercontent.com/Script-Hub-Org/Script-Hub/refs/heads/main/modules/script-hub.beta.egern.yaml
+  update_interval: 259200
+  enabled: true
+- name: WeatherKit                   # iRingo 天气服务增强
+  url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
+  update_interval: 259200
+  enabled: true
+# —— 自建去广告模块 ——
+- name: 雪球去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
+  update_interval: 86400
+  enabled: true
+- name: 综合电商去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/EcommerceAdBlock.yaml
+  update_interval: 86400
+  enabled: true
+- name: 地图三合一去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MapAdBlock.yaml
+  update_interval: 86400
+  enabled: true
+- name: 差旅出行去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/TravelAdBlock.yaml
+  update_interval: 86400
+  enabled: true
+- name: 音乐流媒体去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/MusicAdBlock.yaml
+  update_interval: 604800
+  enabled: true
+- name: 视频流媒体去广告
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/VideoAdBlock.yaml
+  update_interval: 86400
+  enabled: true
+- name: 京东比价
+  url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/JDPrice.yaml
+  update_interval: 86400
+  enabled: true
+# —— 第三方：App 开屏广告跳过（MITM 脚本类，第三方域名托管，注意其 MITM 范围）——
+- name: App开屏广告跳过
+  url: https://yfamilys.com/module/adultraplus.sgmodule
+  update_interval: 86400
+  enabled: true
