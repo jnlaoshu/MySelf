@@ -132,7 +132,7 @@ export default async function (ctx) {
   const pinnedHolidays  = getStr("PINNED_HOLIDAY").split(",").map(s => s.trim()).filter(Boolean);
 
   const customDays = [1,2,3,4,5,6].map(i => ({
-    name: getStr(`EXCLUSIVE_NAME_${i}`, i === 1 ? getStr("EXCLUSIVE_NAME", "我的生日") : ""),
+    name: getStr(`EXCLUSIVE_NAME_${i}`, i === 1 ? getStr("EXCLUSIVE_NAME", "生日") : ""),
     date: getStr(`EXCLUSIVE_DATE_${i}`, i === 1 ? getStr("EXCLUSIVE_DATE", "11/10") : "")
   })).filter(item => item.name && /^\d{1,2}\/\d{1,2}$/.test(item.date));
 
