@@ -1,7 +1,7 @@
 # ==========================================
-# 📌 配置文件: Egern@laoshu 专用配置
-# 🔗 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Profile.yaml
-# ⏱️ 更新时间: 2026.09.21 09:00
+# 配置文件: Egern@laoshu 专用配置
+# 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Profile.yaml
+# 更新时间: 2026.09.22 15:36
 # ==========================================
 
 # ------------------------------------------
@@ -71,8 +71,6 @@ dns:
     ProxyDNS:                        # 解析「代理节点服务器域名」专用；此时隧道尚未建立，必须国内优先
     - h3://dns.alidns.com/dns-query
     - https://doh.pub/dns-query
-    - h3://dns.google/dns-query
-    - https://cloudflare-dns.com/dns-query
 
   # DNS 分流规则：自上而下首个命中生效，顺序不可随意调整
   forward:
@@ -191,9 +189,6 @@ dns:
       match: pstatp.com
       value: ByteDNS
   - domain_suffix:
-      match: snssdk.com
-      value: ByteDNS
-  - domain_suffix:
       match: amemv.com
       value: ByteDNS
   - domain_suffix:
@@ -201,6 +196,33 @@ dns:
       value: ByteDNS
   - domain_suffix:
       match: ixigua.com
+      value: ByteDNS
+  - domain_suffix:
+      match: isnssdk.com
+      value: ByteDNS
+  - domain_suffix:
+      match: awemeughun.com
+      value: ByteDNS
+  - domain_suffix:
+      match: byteimg.com
+      value: ByteDNS
+  - domain_suffix:
+      match: bytegoofy.com
+      value: ByteDNS
+  - domain_suffix:
+      match: toutiaocdn.com
+      value: ByteDNS
+  - domain_suffix:
+      match: douyinpic.com
+      value: ByteDNS
+  - domain_suffix:
+      match: douyinstatic.com
+      value: ByteDNS
+  - domain_suffix:
+      match: idouyinvod.com
+      value: ByteDNS
+  - domain_suffix:
+      match: iesdouyin.com
       value: ByteDNS
   # ⑤ 自建国内直连域名集 → DNSPod
   - proxy_rule_set:
@@ -215,7 +237,7 @@ dns:
       match: apps.apple.com
       value: Default
   # ⑦ 本地/保留域名处理
-  #    ⚠️ 顺序要点：home.arpa 与 lan 必须放在 arpa 之前，
+  #    顺序要点：home.arpa 与 lan 必须放在 arpa 之前，
   #    否则 home.arpa 会被上层的 arpa 规则先行命中而被 reject
   - domain_suffix:
       match: lan
@@ -228,9 +250,6 @@ dns:
       value: reject                  # mDNS 域名不走单播 DNS
   - domain_suffix:
       match: arpa
-      value: reject
-  - domain_suffix:
-      match: in-addr.arpa            # 已被 arpa 覆盖，属冗余项，保留无副作用
       value: reject
   - domain_suffix:
       match: internal
@@ -264,13 +283,12 @@ dns:
   - domain_wildcard:
       match: '*'
       value: Default
-
-  # 解析代理节点服务器域名所用的 DNS 组（引用上方 ProxyDNS）
+  # 解析代理节点服务器域名所用的 DNS 组（引用上方 ProxyDNS） 
   proxy_nameservers:
   - ProxyDNS
 
   # 丢弃解析结果落在下列网段的响应（防 DNS 污染/劫持）
-  # ⚠️ 注意：含私网段，若自建域名公网 DNS 解析到内网 IP 会被拦截
+  # 注意：含私网段，若自建域名公网 DNS 解析到内网 IP 会被拦截
   block_ips:
   - 0.0.0.0/8
   - 10.0.0.0/8
@@ -291,6 +309,7 @@ dns:
   - ::1/128
   - ff00::/8
   public_ip_lookup_url: https://ifconfig.me/ip   # 查询本机公网 IP 的地址
+  skip_tls_verify: false              # [优化] 显式声明不跳过 TLS 校验（安全最佳实践）
 
 # ------------------------------------------
 # 三、真实 IP 域名（不使用 Fake-IP 的域名）
@@ -400,9 +419,6 @@ policy_groups:
     flatten: true
     filter: (?i)(?:🇰🇷|韩国|首尔|仁川|\b(?:KR|KOR|Korea)\b)
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/Korea.png
-# 其他节点：排除以上所有地区后剩余的节点（手动选择）
-# ⚠️ 维护提示：此正则的排除项必须与上方 6 个地区 filter 保持同步，
-#    历史上 🇸🇬 emoji 与 \b 边界曾多次被误删，改动后请逐项核对
 - select:
     name: 其他节点
     policies:
@@ -464,6 +480,8 @@ policy_groups:
     - Proxy
     flatten: true
     icon: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/image/GitHub.png
+# [优化] 说明：Cloudflare 策略组当前仅指向 Proxy，与 default 规则效果相同。
+#   若未来需要专用 CF 节点或独立切换，此组才有实际意义；否则可移除以简化。
 - select:
     name: Cloudflare
     policies:
@@ -574,7 +592,7 @@ policy_groups:
 # ------------------------------------------
 # 五、分流规则（自上而下首个命中生效）
 #    总体顺序：LAN → 广告拦截 → 国内 App 直连 → 各服务 → GeoIP → 直连集 → 兜底
-#    ⚠️ 注意：靠前的 rule_set 若包含后面服务的域名，后者将被遮蔽（如 Google→YouTube、Microsoft→Bing）
+#    注意：靠前的 rule_set 若包含后面服务的域名，后者将被遮蔽
 # ------------------------------------------
 rules:
 # —— 1. 局域网直连 ——
@@ -691,16 +709,25 @@ rules:
     policy: AIGC
     update_interval: 604800
 
-# —— 6. Google 生态（通用 Google 服务，非 AI） ——
+# —— 6. 影音娱乐流媒体 ——
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
+    policy: YouTube
+    update_interval: 604800
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
+    policy: YouTubeMusic
+    update_interval: 604800
+
+# —— 7. Google 生态（通用 Google 服务，非 AI） ——
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Google.yaml
     policy: Google
     update_interval: 604800
 
-# —— 7. 微软 / GitHub / Cloudflare / Bing（顺序与策略组声明一致） ——
-# Windows 更新与微软分发网络走直连（体积大，国内 CDN 更快）
-- domain_keyword:
-    match: windowsupdate
+# —— 8. 微软 / GitHub / Cloudflare / Bing ——
+- domain_suffix:
+    match: windowsupdate.com
     policy: DIRECT
 - domain_suffix:
     match: update.microsoft.com
@@ -708,6 +735,10 @@ rules:
 - domain_suffix:
     match: delivery.mp.microsoft.com
     policy: DIRECT
+- rule_set:
+    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
+    policy: Bing
+    update_interval: 604800
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Microsoft.yaml
     policy: Microsoft
@@ -723,20 +754,8 @@ rules:
 - domain_suffix:
     match: pages.dev
     policy: Cloudflare
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Bing.yaml
-    policy: Bing
-    update_interval: 604800
 
-# —— 8. 影音娱乐流媒体（顺序与策略组声明一致） ——
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTube.yaml
-    policy: YouTube
-    update_interval: 604800
-- rule_set:
-    match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/YouTubeMusic.yaml
-    policy: YouTubeMusic
-    update_interval: 604800
+# —— 9. 其余流媒体（顺序与策略组声明一致） ——
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Spotify.yaml
     policy: Spotify
@@ -758,13 +777,13 @@ rules:
     policy: HBO
     update_interval: 604800
 
-# —— 9. 金融支付 ——
+# —— 10. 金融支付 ——
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/PayPal.yaml
     policy: PayPal
     update_interval: 604800
 
-# —— 10. 社交通讯 ——
+# —— 11. 社交通讯 ——
 - rule_set:
     match: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Telegram.yaml
     policy: Telegram
@@ -782,7 +801,7 @@ rules:
     policy: WeChat
     update_interval: 604800
 
-# —— 11. GeoIP 与国内直连集 ——
+# —— 12. GeoIP 与国内直连集 ——
 - geoip:
     match: CN
     policy: DIRECT
@@ -792,7 +811,7 @@ rules:
     policy: DIRECT
     update_interval: 604800
 
-# —— 12. 兜底：未命中任何规则的流量走 Proxy ——
+# —— 13. 兜底：未命中任何规则的流量走 Proxy ——
 - default:
     policy: Proxy
 
@@ -801,8 +820,8 @@ rules:
 #    仅对 includes 及各模块声明的域名解密；excludes 为永不解密的域名（证书固定 / 银行 / 系统服务等）
 # ------------------------------------------
 mitm:
-  ca_p12: egern.p12                  # ⚠️ 请确认 CA 证书已在 App 内生成/安装并信任
-  ca_passphrase: egern
+  ca_p12: egern.p12                  # 请确认 CA 证书已在 App 内生成/安装并信任
+  ca_passphrase: egern               # 安全提醒：当前为默认密码，建议更换为强密码
   hostnames:
     includes:
     - raw.githubusercontent.com
