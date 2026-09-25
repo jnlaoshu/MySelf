@@ -18,7 +18,7 @@
  * AREA_INDEX   — 多区域特殊索引 (数字，可选)
  * OFFSET_SCALE — 涨跌幅系数缩放 (默认: 1)
  * * 🔗 链接引用 https://raw.githubusercontent.com/jnlaoshu/MySelf/master/Egern/Widget/GasPrice.js
- * * ⏱️ 更新时间 2026.08.09 23:00
+ * * ⏱️ 更新时间 2026.09.25 09:30
  * ==========================================
  */
 
@@ -146,7 +146,6 @@ async function loadData(ctx, province) {
 }
 
 // 从汽油价格网 (qiyoujiage.com) 按省份抓取"下轮调价预测"涨跌幅
-// 返回 { up: boolean, minV: number, maxV: number } 或 null（未抓到/无法解析）
 async function loadPrediction(ctx, provinceCode) {
   const slug = QYJ_SLUGS[provinceCode];
   if (!slug) return null;
@@ -160,16 +159,21 @@ async function loadPrediction(ctx, provinceCode) {
   });
   const html = await resp.text();
 
-  // 主格式："目前预计上调油价780元/吨(0.59元/升-0.70元/升)"
-  let m = html.match(/预计(上调|下调)(?:油价)?[\d.]+元\/吨\((\d+(?:\.\d+)?)元\/升-(\d+(?:\.\d+)?)元\/升\)/);
-  // 兜底格式："油价上涨0.32元/升-0.38元/升"
-  if (!m) m = html.match(/(上涨|上调|下调|下跌)(\d+(?:\.\d+)?)元\/升-(\d+(?:\.\d+)?)元\/升/);
+  // 1. 搁浅或不作调整
+  if (/预计(?:油价)?(?:搁浅|不作?调整|停滞)/.test(html)) {
+    return { flat: true };
+  }
+
+  // 2. 主格式："目前预计上调油价780元/吨(0.59元/升-0.70元/升)" 或 单值 "(0.59元/升)"
+  let m = html.match(/预计(上调|下调|上涨|下跌)(?:油价)?[\d.]+元\/吨\((\d+(?:\.\d+)?)元\/升(?:[-~至](\d+(?:\.\d+)?)元\/升)?\)/);
+  // 3. 兜底格式："油价上涨0.32元/升-0.38元/升" 或 单值 "0.32元/升"
+  if (!m) m = html.match(/(上涨|上调|下调|下跌)(?:油价)?(\d+(?:\.\d+)?)元\/升(?:[-~至](\d+(?:\.\d+)?)元\/升)?/);
   if (!m) return null;
 
   const up = m[1] === '上调' || m[1] === '上涨';
   const minV = parseFloat(m[2]);
-  const maxV = parseFloat(m[3]);
-  if (!Number.isFinite(minV) || !Number.isFinite(maxV)) return null;
+  const maxV = m[3] ? parseFloat(m[3]) : minV;
+  if (!Number.isFinite(minV)) return null;
 
   return { up, minV, maxV };
 }
@@ -247,9 +251,10 @@ export default async function (ctx) {
     divider: { light: '#E5E5EA', dark: '#38383A' }
   };
 
+  // 2026年发改委调价窗口（已修正 9.24 调价日）
   const CALENDAR_2026 = [
     [1,12],[1,23],[2,9],[2,23],[3,9],[3,23],[4,7],[4,21],[5,8],[5,22],
-    [6,5],[6,19],[7,3],[7,17],[7,31],[8,14],[8,28],[9,11],[9,25],
+    [6,5],[6,19],[7,3],[7,17],[7,31],[8,14],[8,28],[9,11],[9,24],
     [10,14],[10,28],[11,11],[11,25],[12,9],[12,23]
   ];
 
@@ -261,7 +266,7 @@ export default async function (ctx) {
     const days    = Math.floor(totalMinutes / 1440);
     const hours   = Math.floor((totalMinutes % 1440) / 60);
     const minutes = totalMinutes % 60;
-    // 不足 1 天时不再显示 "0d"，改为精确到分钟的 "Xh Ym后"
+    // 不足 1 天时切换为精确到分钟的 "Xh Ym后"
     const countdownBody = days > 0 ? `${days}d${hours}h后` : `${hours}h${minutes}m后`;
     return {
       dateStr:   `${P(targetDate.getMonth() + 1)}.${P(targetDate.getDate())} 24:00`,
@@ -274,7 +279,6 @@ export default async function (ctx) {
   const prices = { p92: null, p95: null, p98: null, diesel: null };
   const items  = { p92: null, p95: null, p98: null, diesel: null };
   let regionName = cityName || "全国";
-  // 调价临近（≤3天）时，左下角标签默认切换为"下轮预测"；若预测抓取失败则回退为"较上次调整"
   let trendLabel = nextAdjust.isUrgent ? "下轮预测: " : "较上次调整: ";
   let trendInfo  = "";
   let trendColor = C.muted;
@@ -317,19 +321,25 @@ export default async function (ctx) {
       trendInfo  = `${overallUp ? "↑" : "↓"} ${rangeStr}`;
     }
 
-    // 调价临近（≤3天）：尝试从汽油价格网抓取真实的下轮调价预测涨跌幅并覆盖显示
-    // 抓取失败时静默回退到上面算出的"较上次调整"历史涨跌幅，不影响整体渲染
+    // 调价临近（≤3天）：尝试拉取真实预测并覆盖显示，失败或平时均显示“较上次调整”
     if (nextAdjust.isUrgent) {
       try {
         const prediction = await loadPrediction(ctx, provinceCode);
         if (prediction) {
-          const rangeStr = prediction.minV === prediction.maxV
-            ? `${prediction.minV.toFixed(2)}¥/L`
-            : `${prediction.minV.toFixed(2)}-${prediction.maxV.toFixed(2)}¥/L`;
-          trendLabel = "下轮预测: ";
-          trendColor = prediction.up ? C.red : C.teal;
-          trendInfo  = `${prediction.up ? "↑" : "↓"} ${rangeStr}`;
-          hasTrendData = true;
+          if (prediction.flat) {
+            trendLabel = "下轮预测: ";
+            trendColor = C.muted;
+            trendInfo  = "搁浅/暂不调整";
+            hasTrendData = true;
+          } else {
+            const rangeStr = prediction.minV === prediction.maxV
+              ? `${prediction.minV.toFixed(2)}¥/L`
+              : `${prediction.minV.toFixed(2)}-${prediction.maxV.toFixed(2)}¥/L`;
+            trendLabel = "下轮预测: ";
+            trendColor = prediction.up ? C.red : C.teal;
+            trendInfo  = `${prediction.up ? "↑" : "↓"} ${rangeStr}`;
+            hasTrendData = true;
+          }
         } else {
           trendLabel = "较上次调整: ";
         }
