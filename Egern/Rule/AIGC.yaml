@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 136
+# 规则统计: 139
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新时间: 2026-09-27 13:36:01
+# 更新时间: 2026-10-13 14:59:27
 
 no_resolve: true
 domain_set:
@@ -37,6 +37,7 @@ domain_set:
 - gspe1-ssl.ls.apple.com
 - guzzoni.apple.com
 - imagine.meta.com
+- inference.codeium.com
 - jules.google.com
 - makersuite.google.com
 - o33249.ingest.sentry.io
@@ -49,6 +50,8 @@ domain_set:
 - production-openaicom-storage.azureedge.net
 - robinfrontend-pa.googleapis.com
 - servd-anthropic-website.b-cdn.net
+- server.codeium.com
+- server.self-serve.windsurf.com
 - static.cloudflareinsights.com
 - sydney.bing.com
 - www.bing.com
