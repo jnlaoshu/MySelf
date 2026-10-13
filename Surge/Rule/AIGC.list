@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 136
+# 规则统计: 139
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Rule/AIGC.list
-# 更新时间: 2026-10-12 14:31:21
+# 更新时间: 2026-10-13 15:05:54
 
 DOMAIN,ai.google.dev
 DOMAIN,aida.googleapis.com
@@ -35,6 +35,7 @@ DOMAIN,gemini.google.com
 DOMAIN,gspe1-ssl.ls.apple.com
 DOMAIN,guzzoni.apple.com
 DOMAIN,imagine.meta.com
+DOMAIN,inference.codeium.com
 DOMAIN,jules.google.com
 DOMAIN,makersuite.google.com
 DOMAIN,o33249.ingest.sentry.io
@@ -47,6 +48,8 @@ DOMAIN,pplx-res.cloudinary.com
 DOMAIN,production-openaicom-storage.azureedge.net
 DOMAIN,robinfrontend-pa.googleapis.com
 DOMAIN,servd-anthropic-website.b-cdn.net
+DOMAIN,server.codeium.com
+DOMAIN,server.self-serve.windsurf.com
 DOMAIN,static.cloudflareinsights.com
 DOMAIN,sydney.bing.com
 DOMAIN,www.bing.com
