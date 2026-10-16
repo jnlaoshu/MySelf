@@ -1,8 +1,8 @@
 # 规则名称: TikTok
-# 规则统计: 32
+# 规则统计: 35
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/TikTok.yaml
-# 更新时间: 2026-10-15 13:11:45
+# 更新时间: 2026-10-16 12:59:21
 
 payload:
   - DOMAIN,lf16-effectcdn.byteeffecttos-g.com
@@ -16,6 +16,9 @@ payload:
   - DOMAIN-SUFFIX,byteintlapi.com
   - DOMAIN-SUFFIX,byteoversea.com
   - DOMAIN-SUFFIX,capcut.com
+  - DOMAIN-SUFFIX,capcutapi.com
+  - DOMAIN-SUFFIX,capcutapi.us
+  - DOMAIN-SUFFIX,capcutstatic.com
   - DOMAIN-SUFFIX,ibytedtos.com
   - DOMAIN-SUFFIX,ibyteimg.com
   - DOMAIN-SUFFIX,ipstatp.com

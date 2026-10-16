@@ -1,8 +1,8 @@
 # 规则名称: TikTok
-# 规则统计: 32
+# 规则统计: 35
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/TikTok.list
-# 更新时间: 2026-10-15 13:11:45
+# 更新时间: 2026-10-16 12:59:21
 
 HOST,lf16-effectcdn.byteeffecttos-g.com,TikTok
 HOST,lf16-pkgcdn.pitaya-clientai.com,TikTok
@@ -15,6 +15,9 @@ HOST-SUFFIX,bytegecko-i18n.com,TikTok
 HOST-SUFFIX,byteintlapi.com,TikTok
 HOST-SUFFIX,byteoversea.com,TikTok
 HOST-SUFFIX,capcut.com,TikTok
+HOST-SUFFIX,capcutapi.com,TikTok
+HOST-SUFFIX,capcutapi.us,TikTok
+HOST-SUFFIX,capcutstatic.com,TikTok
 HOST-SUFFIX,ibytedtos.com,TikTok
 HOST-SUFFIX,ibyteimg.com,TikTok
 HOST-SUFFIX,ipstatp.com,TikTok
