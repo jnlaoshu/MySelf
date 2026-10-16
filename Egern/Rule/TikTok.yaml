@@ -1,8 +1,8 @@
 # 规则名称: TikTok
-# 规则统计: 32
+# 规则统计: 35
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/TikTok.yaml
-# 更新时间: 2026-08-15 12:15:05
+# 更新时间: 2026-10-16 12:50:46
 
 domain_set:
 - lf16-effectcdn.byteeffecttos-g.com
@@ -15,6 +15,9 @@ domain_suffix_set:
 - byteintlapi.com
 - byteoversea.com
 - capcut.com
+- capcutapi.com
+- capcutapi.us
+- capcutstatic.com
 - ibytedtos.com
 - ibyteimg.com
 - ipstatp.com
