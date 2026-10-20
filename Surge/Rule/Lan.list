@@ -1,12 +1,14 @@
 # 规则名称: Lan
-# 规则统计: 140
+# 规则统计: 142
 # 规则来源: blackmatrix7, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Surge/Rule/Lan.list
-# 更新时间: 2026-10-19 13:19:05
+# 更新时间: 2026-10-20 13:17:24
 
 DOMAIN,asusrouter.com
 DOMAIN,instant.arubanetworks.com
 DOMAIN,local.adguard.org
+DOMAIN,localhost.weixin.qq.com
+DOMAIN,localhost.work.weixin.qq.com
 DOMAIN,oasisauth.h3c.com
 DOMAIN,router.asus.com
 DOMAIN,setmeup.arubanetworks.com

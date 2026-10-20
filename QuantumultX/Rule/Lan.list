@@ -1,12 +1,14 @@
 # 规则名称: Lan
-# 规则统计: 140
+# 规则统计: 142
 # 规则来源: blackmatrix7, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Lan.list
-# 更新时间: 2026-10-19 13:19:05
+# 更新时间: 2026-10-20 13:17:24
 
 HOST,asusrouter.com,Lan
 HOST,instant.arubanetworks.com,Lan
 HOST,local.adguard.org,Lan
+HOST,localhost.weixin.qq.com,Lan
+HOST,localhost.work.weixin.qq.com,Lan
 HOST,oasisauth.h3c.com,Lan
 HOST,router.asus.com,Lan
 HOST,setmeup.arubanetworks.com,Lan
