@@ -1,14 +1,16 @@
 # 规则名称: Lan
-# 规则统计: 140
+# 规则统计: 142
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/Lan.yaml
-# 更新时间: 2026-08-14 17:16:24
+# 更新时间: 2026-10-20 13:08:09
 
 no_resolve: true
 domain_set:
 - asusrouter.com
 - instant.arubanetworks.com
 - local.adguard.org
+- localhost.weixin.qq.com
+- localhost.work.weixin.qq.com
 - oasisauth.h3c.com
 - router.asus.com
 - setmeup.arubanetworks.com
