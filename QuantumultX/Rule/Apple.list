@@ -1,8 +1,8 @@
 # 规则名称: Apple
-# 规则统计: 1881
+# 规则统计: 1880
 # 规则来源: blackmatrix7/ios_rule_script
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/Apple.list
-# 更新时间: 2026-10-25 13:18:07
+# 更新时间: 2026-10-26 13:17:16
 
 HOST,a1.mzstatic.com,Apple
 HOST,a2.mzstatic.com,Apple
@@ -1285,7 +1285,6 @@ HOST-SUFFIX,icloud-content.com.cn,Apple
 HOST-SUFFIX,icloud-isupport.com,Apple
 HOST-SUFFIX,icloud-sandbox.com,Apple
 HOST-SUFFIX,icloud.ch,Apple
-HOST-SUFFIX,icloud.cn,Apple
 HOST-SUFFIX,icloud.com,Apple
 HOST-SUFFIX,icloud.com.cn,Apple
 HOST-SUFFIX,icloud.de,Apple
