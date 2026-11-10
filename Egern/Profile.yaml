@@ -894,6 +894,8 @@ modules:
   url: https://github.com/NSRingo/WeatherKit/releases/latest/download/iRingo.WeatherKit.sgmodule
   update_interval: 259200
   enabled: true
+- url: https://raw.githubusercontent.com/mieqq/mieqq/master/skip-proxy-lists.sgmodule
+  enabled: true
 # —— 自建去广告模块 ——
 - name: 雪球去广告
   url: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Module/Xueqiu.yaml
