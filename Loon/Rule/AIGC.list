@@ -1,10 +1,11 @@
 # 规则名称: AIGC
-# 规则统计: 139
+# 规则统计: 141
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Loon/Rule/AIGC.list
-# 更新时间: 2026-11-15 15:11:38
+# 更新时间: 2026-11-16 15:16:44
 
 DOMAIN,ai.google.dev
+DOMAIN,aicode.googleapis.com
 DOMAIN,aida.googleapis.com
 DOMAIN,aisandbox-pa.googleapis.com
 DOMAIN,aistudio.google.com
@@ -29,6 +30,7 @@ DOMAIN,chat.openai.com.cdn.cloudflare.net
 DOMAIN,copilot.microsoft.com
 DOMAIN,cp4.cloudflare.com
 DOMAIN,daily-cloudcode-pa.googleapis.com
+DOMAIN,daily-cloudcode-pa.sandbox.googleapis.com
 DOMAIN,file.oaiusercontent.com
 DOMAIN,gateway.ai.cloudflare.com
 DOMAIN,gemini.google.com
