@@ -1,12 +1,13 @@
 # 规则名称: AIGC
-# 规则统计: 139
+# 规则统计: 141
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新时间: 2026-10-13 14:59:27
+# 更新时间: 2026-11-16 15:05:46
 
 no_resolve: true
 domain_set:
 - ai.google.dev
+- aicode.googleapis.com
 - aida.googleapis.com
 - aisandbox-pa.googleapis.com
 - aistudio.google.com
@@ -31,6 +32,7 @@ domain_set:
 - copilot.microsoft.com
 - cp4.cloudflare.com
 - daily-cloudcode-pa.googleapis.com
+- daily-cloudcode-pa.sandbox.googleapis.com
 - file.oaiusercontent.com
 - gateway.ai.cloudflare.com
 - gemini.google.com
