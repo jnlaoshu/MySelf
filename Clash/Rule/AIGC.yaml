@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 139
+# 规则统计: 142
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Clash/Rule/AIGC.yaml
-# 更新时间: 2026-11-16 15:16:44
+# 更新时间: 2026-11-17 16:28:43
 
 payload:
   - DOMAIN,ai.google.dev
@@ -28,6 +28,7 @@ payload:
   - DOMAIN,browser-intake-datadoghq.com
   - DOMAIN,cdn.usefathom.com
   - DOMAIN,chat.openai.com.cdn.cloudflare.net
+  - DOMAIN,cloud.zed.dev
   - DOMAIN,copilot.microsoft.com
   - DOMAIN,cp4.cloudflare.com
   - DOMAIN,daily-cloudcode-pa.googleapis.com
@@ -35,6 +36,7 @@ payload:
   - DOMAIN,file.oaiusercontent.com
   - DOMAIN,gateway.ai.cloudflare.com
   - DOMAIN,gemini.google.com
+  - DOMAIN,graph.facebook.com
   - DOMAIN,gspe1-ssl.ls.apple.com
   - DOMAIN,guzzoni.apple.com
   - DOMAIN,imagine.meta.com
@@ -134,6 +136,7 @@ payload:
   - DOMAIN-SUFFIX,poe.com
   - DOMAIN-SUFFIX,pplx.ai
   - DOMAIN-SUFFIX,proactivebackend-pa.googleapis.com
+  - DOMAIN-SUFFIX,scontent-*.xx.fbcdn.net
   - DOMAIN-SUFFIX,segment.io
   - DOMAIN-SUFFIX,sentry.io
   - DOMAIN-SUFFIX,smoot.apple.com
