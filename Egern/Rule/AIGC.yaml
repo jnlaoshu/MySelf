@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 141
+# 规则统计: 144
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新时间: 2026-11-16 15:05:46
+# 更新时间: 2026-11-17 16:19:11
 
 no_resolve: true
 domain_set:
@@ -29,6 +29,7 @@ domain_set:
 - browser-intake-datadoghq.com
 - cdn.usefathom.com
 - chat.openai.com.cdn.cloudflare.net
+- cloud.zed.dev
 - copilot.microsoft.com
 - cp4.cloudflare.com
 - daily-cloudcode-pa.googleapis.com
@@ -36,6 +37,7 @@ domain_set:
 - file.oaiusercontent.com
 - gateway.ai.cloudflare.com
 - gemini.google.com
+- graph.facebook.com
 - gspe1-ssl.ls.apple.com
 - guzzoni.apple.com
 - imagine.meta.com
@@ -145,6 +147,8 @@ domain_keyword_set:
 - openai
 - openaiapi
 - openaicom
+domain_wildcard_set:
+- scontent-*.xx.fbcdn.net
 ip_cidr_set:
 - 24.199.123.28/32
 - 64.23.132.171/32
