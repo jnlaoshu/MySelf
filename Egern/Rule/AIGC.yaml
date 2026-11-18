@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 144
+# 规则统计: 145
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新时间: 2026-11-17 16:19:11
+# 更新时间: 2026-11-18 15:51:00
 
 no_resolve: true
 domain_set:
@@ -115,6 +115,7 @@ domain_suffix_set:
 - livekit.cloud
 - makersuite.google.com
 - meta.ai
+- muse.ai
 - notebooklm.google
 - notebooklm.google.com
 - oaistatic.com
