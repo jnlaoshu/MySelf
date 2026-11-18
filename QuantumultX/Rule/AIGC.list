@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 144
+# 规则统计: 145
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/QuantumultX/Rule/AIGC.list
-# 更新时间: 2026-11-17 16:28:43
+# 更新时间: 2026-11-18 15:56:09
 
 DOMAIN,ai.google.dev
 DOMAIN,aicode.googleapis.com
@@ -124,6 +124,7 @@ SUFFIX,launchdarkly.com
 SUFFIX,livekit.cloud
 SUFFIX,makersuite.google.com
 SUFFIX,meta.ai
+SUFFIX,muse.ai
 SUFFIX,notebooklm.google
 SUFFIX,notebooklm.google.com
 SUFFIX,oaistatic.com

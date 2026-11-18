@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 143
+# 规则统计: 144
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Mihomo/Rule/AIGC.yaml
-# 更新时间: 2026-11-17 16:28:43
+# 更新时间: 2026-11-18 15:56:09
 
 payload:
   - DOMAIN,ai.google.dev
@@ -122,6 +122,7 @@ payload:
   - DOMAIN-SUFFIX,livekit.cloud
   - DOMAIN-SUFFIX,makersuite.google.com
   - DOMAIN-SUFFIX,meta.ai
+  - DOMAIN-SUFFIX,muse.ai
   - DOMAIN-SUFFIX,notebooklm.google
   - DOMAIN-SUFFIX,notebooklm.google.com
   - DOMAIN-SUFFIX,oaistatic.com
