@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 144
+# 规则统计: 146
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Mihomo/Rule/AIGC.yaml
-# 更新时间: 2026-11-19 15:55:47
+# 更新时间: 2026-11-20 15:44:47
 
 payload:
   - DOMAIN,ai.google.dev
@@ -25,9 +25,11 @@ payload:
   - DOMAIN,apple-relay.cloudflare.com
   - DOMAIN,apple-relay.fastly-edge.com
   - DOMAIN,bard.google.com
+  - DOMAIN,bridge.claudeusercontent.com
   - DOMAIN,browser-intake-datadoghq.com
   - DOMAIN,cdn.usefathom.com
   - DOMAIN,chat.openai.com.cdn.cloudflare.net
+  - DOMAIN,claude.site
   - DOMAIN,cloud.zed.dev
   - DOMAIN,copilot.microsoft.com
   - DOMAIN,cp4.cloudflare.com
