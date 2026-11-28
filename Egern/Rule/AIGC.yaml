@@ -1,8 +1,8 @@
 # 规则名称: AIGC
-# 规则统计: 147
+# 规则统计: 146
 # 规则来源: blackmatrix7, ConnersHua, Repcz
 # 引用链接: https://raw.githubusercontent.com/jnlaoshu/MySelf/main/Egern/Rule/AIGC.yaml
-# 更新时间: 2026-11-20 15:39:03
+# 更新时间: 2026-11-28 16:17:35
 
 no_resolve: true
 domain_set:
@@ -43,7 +43,6 @@ domain_set:
 - gspe1-ssl.ls.apple.com
 - guzzoni.apple.com
 - imagine.meta.com
-- inference.codeium.com
 - jules.google.com
 - makersuite.google.com
 - o33249.ingest.sentry.io
